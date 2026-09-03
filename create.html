@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Создать именную книгу — анкета о ребёнке | Своя Сказка</title>
+<meta name="description" content="Расскажите о характере, привычках и близких вашего ребёнка — мы напишем историю, в которой он узнает себя.">
+<style>
+/* ===========================================================
+   Дизайн-система «Своя Сказка» — тёплая книжная эстетика
+   =========================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400&family=Caveat:wght@500;600;700&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root{
+  /* --- палитра --- */
+  --ink:        #232C4D;   /* тёмно-синий — ночь, обложка, навигация */
+  --ink-2:      #2E3861;   /* чуть светлее для градаций на тёмном фоне */
+  --paper:      #EFE6D2;   /* тёплый овсяный фон */
+  --paper-2:    #F7F2E6;   /* светлее — карточки на фоне paper */
+  --cream:      #FBF7ED;   /* почти белый для страниц "разворота книги" */
+  --gold:       #D79A3A;   /* мёд/маригольд — акцент, CTA */
+  --gold-dark:  #B87F27;
+  --berry:      #B4495A;   /* приглушённая ягода — второй акцент, редко */
+  --sage:       #75906B;   /* шалфей — природа/приключения */
+  --text:       #241F33;   /* основной текст на светлом */
+  --text-soft:  #514A63;   /* приглушённый текст на светлом */
+  --text-light: #F4EFE0;   /* текст на тёмном фоне */
+  --text-light-soft: #C9CBDB;
+  --line:       #DCCEA9;   /* тонкий разделитель на paper */
+  --line-dark:  #3C4670;
+
+  --radius-s: 6px;
+  --radius-m: 14px;
+  --radius-l: 28px;
+
+  --font-display: 'Merriweather', Georgia, serif;
+  --font-script:  'Caveat', cursive;
+  --font-body:    'PT Sans', Arial, sans-serif;
+
+  --shadow-soft: 0 18px 40px -20px rgba(35,44,77,.35);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  background:var(--paper);
+  color:var(--text);
+  line-height:1.6;
+  font-size:17px;
+  -webkit-font-smoothing:antialiased;
+}
+img{ max-width:100%; display:block; }
+a{ color:inherit; }
+h1,h2,h3,h4{
+  font-family:var(--font-display);
+  margin:0 0 .5em;
+  line-height:1.22;
+  font-weight:700;
+  letter-spacing:-.01em;
+}
+p{ margin:0 0 1.1em; }
+.container{
+  max-width:1160px;
+  margin:0 auto;
+  padding:0 32px;
+}
+.measure{ max-width:640px; }
+.script{ font-family:var(--font-script); font-weight:600; }
+
+/* focus visibility */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+  outline:3px solid var(--gold-dark);
+  outline-offset:2px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+}
+
+/* ---------- шапка сайта ---------- */
+.site-header{
+  background:var(--ink);
+  color:var(--text-light);
+  position:sticky; top:0; z-index:50;
+  border-bottom:1px solid var(--line-dark);
+}
+.site-header .container{
+  display:flex; align-items:center; justify-content:space-between;
+  padding-top:16px; padding-bottom:16px;
+  gap:24px;
+}
+.logo{
+  font-family:var(--font-display);
+  font-size:22px;
+  font-weight:700;
+  color:var(--text-light);
+  text-decoration:none;
+  display:flex; align-items:baseline; gap:6px;
+  white-space:nowrap;
+}
+.logo em{
+  font-family:var(--font-script);
+  font-style:normal;
+  color:var(--gold);
+  font-size:26px;
+}
+.main-nav{
+  display:flex; gap:28px; flex-wrap:wrap;
+  font-size:15px;
+}
+.main-nav a{
+  text-decoration:none;
+  color:var(--text-light-soft);
+  padding:6px 0;
+  border-bottom:2px solid transparent;
+}
+.main-nav a:hover, .main-nav a.active{
+  color:var(--text-light);
+  border-bottom-color:var(--gold);
+}
+.header-cta{
+  background:var(--gold);
+  color:var(--ink);
+  padding:10px 20px;
+  border-radius:999px;
+  text-decoration:none;
+  font-weight:700;
+  font-size:15px;
+  white-space:nowrap;
+  transition:background .15s ease;
+}
+.header-cta:hover{ background:var(--gold-dark); color:var(--text-light); }
+
+.nav-toggle{ display:none; }
+
+@media (max-width:880px){
+  .main-nav{ display:none; }
+  .nav-toggle{
+    display:inline-flex; background:none; border:1px solid var(--line-dark);
+    color:var(--text-light); padding:8px 12px; border-radius:8px; font-size:14px;
+  }
+}
+
+/* ---------- кнопки ---------- */
+.btn{
+  display:inline-flex; align-items:center; gap:10px;
+  padding:15px 30px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:16px;
+  text-decoration:none;
+  border:2px solid transparent;
+  cursor:pointer;
+  font-family:var(--font-body);
+}
+.btn-primary{ background:var(--gold); color:var(--ink); }
+.btn-primary:hover{ background:var(--gold-dark); }
+.btn-ghost-light{ border-color:rgba(244,239,224,.4); color:var(--text-light); background:transparent; }
+.btn-ghost-light:hover{ border-color:var(--text-light); }
+.btn-ghost-dark{ border-color:var(--ink); color:var(--ink); background:transparent; }
+.btn-ghost-dark:hover{ background:var(--ink); color:var(--text-light); }
+.btn-berry{ background:var(--berry); color:var(--text-light); }
+.btn-berry:hover{ background:#983746; }
+
+/* ---------- секции общие ---------- */
+section{ padding:88px 0; }
+section.tight{ padding:56px 0; }
+.section-ink{ background:var(--ink); color:var(--text-light); }
+.section-cream{ background:var(--cream); }
+.section-paper2{ background:var(--paper-2); }
+.section-head{ max-width:640px; margin-bottom:52px; }
+.section-head p{ color:var(--text-soft); font-size:18px; }
+.section-ink .section-head p{ color:var(--text-light-soft); }
+.kicker{
+  font-family:var(--font-script);
+  color:var(--gold);
+  font-size:22px;
+  display:block;
+  margin-bottom:6px;
+}
+
+/* ---------- футер ---------- */
+.site-footer{
+  background:var(--ink);
+  color:var(--text-light-soft);
+  padding:64px 0 32px;
+  font-size:14.5px;
+}
+.footer-grid{
+  display:grid;
+  grid-template-columns:1.4fr 1fr 1fr 1fr;
+  gap:32px;
+  padding-bottom:40px;
+  border-bottom:1px solid var(--line-dark);
+}
+.footer-grid h4{
+  font-family:var(--font-body);
+  color:var(--text-light);
+  font-size:15px;
+  margin-bottom:14px;
+}
+.footer-grid ul{ list-style:none; padding:0; margin:0; display:grid; gap:9px; }
+.footer-grid a{ text-decoration:none; color:var(--text-light-soft); }
+.footer-grid a:hover{ color:var(--gold); }
+.footer-bottom{
+  padding-top:24px;
+  display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;
+}
+@media (max-width:760px){
+  .footer-grid{ grid-template-columns:1fr 1fr; }
+}
+
+/* ---------- звёздный узор для тёмных секций ---------- */
+.stars{ position:relative; overflow:hidden; }
+.stars::before{
+  content:"";
+  position:absolute; inset:0;
+  background-image:
+    radial-gradient(2px 2px at 10% 20%, rgba(244,239,224,.5) 0, transparent 60%),
+    radial-gradient(2px 2px at 80% 15%, rgba(244,239,224,.4) 0, transparent 60%),
+    radial-gradient(1.5px 1.5px at 60% 55%, rgba(215,154,58,.6) 0, transparent 60%),
+    radial-gradient(2px 2px at 30% 75%, rgba(244,239,224,.35) 0, transparent 60%),
+    radial-gradient(1.5px 1.5px at 92% 70%, rgba(244,239,224,.4) 0, transparent 60%),
+    radial-gradient(1.5px 1.5px at 45% 12%, rgba(244,239,224,.35) 0, transparent 60%);
+  pointer-events:none;
+}
+
+/* ---------- разворот книги ---------- */
+.spread{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  background:var(--cream);
+  border-radius:var(--radius-l);
+  box-shadow:var(--shadow-soft);
+  overflow:hidden;
+}
+.spread-page{ padding:48px 44px; }
+.spread-page + .spread-page{ border-left:1px dashed var(--line); }
+.spread-text{ font-size:18px; color:var(--text); }
+.spread-illustration{
+  background:linear-gradient(160deg,#E7DAB9,#D9C79B);
+  min-height:280px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text-soft);
+  font-family:var(--font-script);
+  font-size:20px;
+  text-align:center;
+  padding:24px;
+}
+@media (max-width:760px){
+  .spread{ grid-template-columns:1fr; }
+  .spread-page + .spread-page{ border-left:none; border-top:1px dashed var(--line); }
+}
+
+/* ---------- утилиты сетки ---------- */
+.grid{ display:grid; gap:32px; }
+.grid-2{ grid-template-columns:1fr 1fr; }
+.grid-3{ grid-template-columns:repeat(3,1fr); }
+.grid-4{ grid-template-columns:repeat(4,1fr); }
+@media (max-width:880px){
+  .grid-2, .grid-3, .grid-4{ grid-template-columns:1fr; }
+}
+
+.eyebrow-plain{ color:var(--sage); font-weight:700; }
+
+/* карточка темы (не единый SaaS-шаблон — своя форма под каждую) */
+.theme-card{
+  border-radius:var(--radius-m);
+  padding:36px 30px;
+  text-decoration:none;
+  color:var(--text);
+  display:block;
+  position:relative;
+  min-height:220px;
+}
+.theme-card h3{ margin-bottom:10px; }
+.theme-card p{ color:var(--text-soft); margin-bottom:0; }
+.theme-card--adventure{ background:linear-gradient(155deg,#E4DCC2,#CFDCC1); }
+.theme-card--fairytale{ background:linear-gradient(155deg,#EBD9DD,#E7CFD9); }
+.theme-card--holiday{ background:linear-gradient(155deg,#F1DFC0,#EAC98F); }
+
+/* ---------- форма (страница /create/) ---------- */
+.form-shell{
+  background:var(--cream);
+  border-radius:var(--radius-l);
+  box-shadow:var(--shadow-soft);
+  overflow:hidden;
+}
+.form-step{
+  padding:44px 48px;
+}
+.form-step + .form-step{ border-top:1px dashed var(--line); }
+.form-step-label{
+  font-family:var(--font-script);
+  color:var(--gold-dark);
+  font-size:24px;
+  margin-bottom:2px;
+  display:block;
+}
+.form-step h2{ font-size:26px; margin-bottom:8px; }
+.form-step > p.help{ color:var(--text-soft); margin-bottom:28px; max-width:620px; }
+
+.field{ margin-bottom:24px; }
+.field label{
+  display:block; font-weight:700; margin-bottom:8px; font-size:15px;
+}
+.field .hint{ font-weight:400; color:var(--text-soft); font-size:14px; display:block; margin-top:4px; }
+.field input[type="text"],
+.field input[type="number"],
+.field select,
+.field textarea{
+  width:100%;
+  padding:13px 16px;
+  border:1.5px solid var(--line);
+  border-radius:var(--radius-s);
+  font-family:var(--font-body);
+  font-size:16px;
+  background:#fff;
+  color:var(--text);
+}
+.field textarea{ min-height:130px; resize:vertical; line-height:1.55; }
+.field-row{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+@media (max-width:640px){ .field-row{ grid-template-columns:1fr; } }
+
+.choice-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+@media (max-width:640px){ .choice-cards{ grid-template-columns:1fr 1fr; } }
+.choice-card{
+  border:1.5px solid var(--line);
+  border-radius:var(--radius-s);
+  padding:16px 12px;
+  text-align:center;
+  background:#fff;
+  cursor:pointer;
+}
+.choice-card.is-selected{
+  border-color:var(--gold-dark);
+  background:#FBF2DF;
+  box-shadow:0 0 0 3px rgba(215,154,58,.18);
+}
+.choice-card .emoji{ font-size:26px; display:block; margin-bottom:8px; }
+.choice-card .name{ font-weight:700; font-size:14.5px; }
+
+.photo-drop{
+  border:1.5px dashed var(--line);
+  border-radius:var(--radius-m);
+  padding:34px 20px;
+  text-align:center;
+  color:var(--text-soft);
+  background:#fff;
+}
+.photo-drop strong{ color:var(--text); display:block; margin-bottom:4px; }
+
+.upsell-row{
+  display:flex; align-items:flex-start; gap:16px;
+  background:var(--paper-2);
+  border-radius:var(--radius-m);
+  padding:20px 22px;
+  margin-top:6px;
+}
+.upsell-row input{ margin-top:5px; width:18px; height:18px; }
+.upsell-row strong{ display:block; margin-bottom:3px; }
+.upsell-row span.tag{
+  background:var(--sage); color:#fff; font-size:12px; font-weight:700;
+  padding:2px 9px; border-radius:999px; margin-left:8px; vertical-align:middle;
+}
+
+.form-actions{
+  padding:36px 48px 48px;
+  display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+}
+.form-actions .price{ font-family:var(--font-display); font-size:20px; }
+.form-actions .price small{ display:block; font-family:var(--font-body); font-size:13px; color:var(--text-soft); font-weight:400; }
+
+/* прогресс анкеты */
+.progress-track{ display:flex; gap:8px; padding:22px 48px 0; }
+.progress-track span{ height:5px; flex:1; background:var(--line); border-radius:3px; }
+.progress-track span.done{ background:var(--gold); }
+
+/* ---------- таблица цен ---------- */
+.price-card{
+  background:var(--cream);
+  border-radius:var(--radius-m);
+  padding:36px 30px;
+  border:1.5px solid var(--line);
+}
+.price-card.is-popular{
+  border-color:var(--gold-dark);
+  box-shadow:var(--shadow-soft);
+  position:relative;
+}
+.price-card .badge{
+  position:absolute; top:-14px; left:30px;
+  background:var(--gold); color:var(--ink);
+  font-weight:700; font-size:13px; padding:5px 14px; border-radius:999px;
+}
+.price-card .amount{ font-family:var(--font-display); font-size:40px; margin:14px 0 4px; }
+.price-card ul{ list-style:none; padding:0; margin:20px 0 26px; display:grid; gap:10px; }
+.price-card li{ padding-left:26px; position:relative; color:var(--text-soft); }
+.price-card li::before{ content:"✓"; position:absolute; left:0; color:var(--sage); font-weight:700; }
+
+/* ---------- faq ---------- */
+.faq-item{ border-bottom:1px solid var(--line); padding:22px 0; }
+.faq-item summary{ font-weight:700; cursor:pointer; font-size:17px; list-style:none; display:flex; justify-content:space-between; gap:16px; }
+.faq-item summary::-webkit-details-marker{ display:none; }
+.faq-item summary::after{ content:"+"; font-family:var(--font-display); font-size:22px; color:var(--gold-dark); }
+.faq-item[open] summary::after{ content:"–"; }
+.faq-item p{ margin-top:12px; color:var(--text-soft); max-width:680px; }
+
+/* ---------- галерея примеров ---------- */
+.example-card{
+  background:var(--cream); border-radius:var(--radius-m); overflow:hidden;
+  box-shadow:var(--shadow-soft);
+}
+.example-cover{
+  aspect-ratio:4/3;
+  background:linear-gradient(160deg,#E7DAB9,#D9C79B);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-script); font-size:20px; color:var(--text-soft); text-align:center; padding:20px;
+}
+.example-body{ padding:20px 22px 24px; }
+.example-body h3{ font-size:19px; margin-bottom:4px; }
+.example-meta{ color:var(--text-soft); font-size:14px; margin-bottom:10px; }
+
+/* hero split */
+.hero{
+  padding:76px 0 90px;
+}
+.hero .container{
+  display:grid; grid-template-columns:1.05fr .95fr; gap:56px; align-items:center;
+}
+.hero h1{ font-size:44px; color:var(--text-light); }
+.hero .lead{ font-size:19px; color:var(--text-light-soft); max-width:520px; }
+.hero-cta-row{ display:flex; gap:16px; flex-wrap:wrap; margin-top:32px; }
+@media (max-width:900px){
+  .hero .container{ grid-template-columns:1fr; }
+  .hero h1{ font-size:34px; }
+}
+
+.hero-art{
+  background:linear-gradient(160deg,var(--ink-2),#1A2140);
+  border-radius:var(--radius-l);
+  min-height:380px;
+  position:relative;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid var(--line-dark);
+}
+.hero-art .frame{
+  width:78%;
+  background:var(--cream);
+  border-radius:var(--radius-m);
+  padding:26px 24px;
+  transform:rotate(-3deg);
+  box-shadow:0 30px 60px -20px rgba(0,0,0,.5);
+}
+.hero-art .frame p{ font-family:var(--font-script); font-size:19px; color:var(--text); margin:0; }
+.hero-art .frame .name{ font-weight:700; color:var(--gold-dark); font-family:var(--font-body); }
+
+/* breadcrumb-ish page intro for inner pages */
+.page-intro{ padding:56px 0 20px; }
+.page-intro h1{ font-size:38px; }
+.page-intro p{ color:var(--text-soft); font-size:18px; max-width:640px; }
+
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="logo">Своя <em>Сказка</em></a>
+    <nav class="main-nav">
+      <a href="create.html" class="active">Создать книгу</a>
+      <a href="how-it-works.html">Как это работает</a>
+      <a href="examples.html">Примеры</a>
+      <a href="pricing.html">Цены</a>
+      <a href="audiobook.html">Аудиокниги</a>
+    </nav>
+    <a href="create.html" class="header-cta">Создать книгу</a>
+  </div>
+</header>
+
+<section class="page-intro section-cream tight">
+  <div class="container">
+    <span class="kicker">Анкета о ребёнке</span>
+    <h1>Чем больше вы расскажете — тем сильнее ребёнок узнает себя</h1>
+    <p>Это не техническая форма, а разговор о вашем ребёнке. Особенно важные поля — про характер и близких — можно писать свободно, в двух словах или в десяти абзацах.</p>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="container">
+
+    <form class="form-shell">
+      <div class="progress-track">
+        <span class="done"></span><span class="done"></span><span></span><span></span><span></span>
+      </div>
+
+      <!-- Шаг 1 — герой -->
+      <div class="form-step">
+        <span class="form-step-label">Шаг 1</span>
+        <h2>Кто главный герой?</h2>
+        <p class="help">Основные данные — они определят, как будет выглядеть и как к нему будут обращаться в тексте.</p>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="name">Имя ребёнка</label>
+            <input type="text" id="name" placeholder="Например, Милена">
+          </div>
+          <div class="field">
+            <label for="age">Возраст</label>
+            <input type="number" id="age" placeholder="Например, 7">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Пол</label>
+            <div class="choice-cards" style="grid-template-columns:1fr 1fr;">
+              <div class="choice-card is-selected"><span class="emoji">👧</span><span class="name">Девочка</span></div>
+              <div class="choice-card"><span class="emoji">👦</span><span class="name">Мальчик</span></div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="eyes">Цвет глаз</label>
+            <select id="eyes">
+              <option>Карие</option>
+              <option>Голубые</option>
+              <option>Зелёные</option>
+              <option>Серые</option>
+              <option>Разноцветные (гетерохромия)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Фото ребёнка <span class="hint" style="display:inline; font-weight:400;">— необязательно, но иллюстрации станут заметно точнее</span></label>
+          <div class="photo-drop">
+            <strong>Перетащите фото сюда или нажмите, чтобы выбрать</strong>
+            Лучше всего работает чёткое фото лица анфас, без солнечных очков и головных уборов
+          </div>
+        </div>
+      </div>
+
+      <!-- Шаг 2 — стиль -->
+      <div class="form-step">
+        <span class="form-step-label">Шаг 2</span>
+        <h2>Стиль иллюстраций</h2>
+        <p class="help">Выберите, в какой манере будет нарисована книга — от этого зависит вся атмосфера.</p>
+        <div class="choice-cards">
+          <div class="choice-card is-selected"><span class="emoji">🎨</span><span class="name">Акварель</span></div>
+          <div class="choice-card"><span class="emoji">✏️</span><span class="name">Мультяшный</span></div>
+          <div class="choice-card"><span class="emoji">📖</span><span class="name">Классическая книжная графика</span></div>
+          <div class="choice-card"><span class="emoji">🧸</span><span class="name">Пластилиновый / 3D</span></div>
+          <div class="choice-card"><span class="emoji">✨</span><span class="name">Аниме</span></div>
+          <div class="choice-card"><span class="emoji">🖍️</span><span class="name">Как будто нарисовал ребёнок</span></div>
+        </div>
+      </div>
+
+      <!-- Шаг 3 — тема -->
+      <div class="form-step">
+        <span class="form-step-label">Шаг 3</span>
+        <h2>О чём будет книга?</h2>
+        <p class="help">Самые популярные темы — можно выбрать одну или совместить несколько.</p>
+        <div class="choice-cards" style="grid-template-columns:repeat(3,1fr);">
+          <div class="choice-card is-selected"><span class="emoji">🗺️</span><span class="name">Приключения</span></div>
+          <div class="choice-card"><span class="emoji">🪄</span><span class="name">Сказка</span></div>
+          <div class="choice-card"><span class="emoji">🎉</span><span class="name">Праздник / повод</span></div>
+        </div>
+        <div class="field" style="margin-top:22px;">
+          <label for="occasion">Если выбрали «Праздник» — какой повод?</label>
+          <input type="text" id="occasion" placeholder="День рождения, первый день в садике, Новый год…">
+        </div>
+      </div>
+
+      <!-- Шаг 4 — характер и близкие -->
+      <div class="form-step">
+        <span class="form-step-label">Шаг 4 — самое главное</span>
+        <h2>Характер, привычки и близкие ребёнка</h2>
+        <p class="help">Именно этот раздел превращает обычную сказку в историю, где ребёнок узнаёт себя. Пишите свободно — своими словами, без структуры. Чем ребёнок старше, тем важнее подробности: подросткам особенно нужно почувствовать, что книга «прямо про него».</p>
+
+        <div class="field">
+          <label for="habits">Привычки, поведение, смешные словечки</label>
+          <textarea id="habits" placeholder="Например: боится темноты, но никогда в этом не признаётся; говорит «на секундочку» и задерживается на час; обожает собирать камни на прогулках…"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="friends">Лучшие друзья</label>
+          <textarea id="friends" placeholder="Имена друзей, что их связывает, какие-то общие «внутренние шутки»"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="cast">Кого ещё включить в сюжет</label>
+          <textarea id="cast" placeholder="Мама, папа, бабушка, домашний питомец — с именами, если хотите, и парой слов о каждом"></textarea>
+          <span class="hint">Например: «мама Лена — она обычно всех успокаивает», «кот Барсик, важный, как король»</span>
+        </div>
+      </div>
+
+      <!-- Шаг 5 — формат -->
+      <div class="form-step">
+        <span class="form-step-label">Шаг 5</span>
+        <h2>Формат книги</h2>
+        <p class="help">Книга — электронная: читается на любом экране и всегда под рукой, без ожидания доставки.</p>
+
+        <div class="upsell-row">
+          <input type="checkbox" id="audio" checked>
+          <div>
+            <strong>Добавить озвучку книги <span class="tag">рекомендуем</span></strong>
+            <span style="color:var(--text-soft); font-size:14.5px;">Голос рассказчика читает историю вслух — удобно перед сном, когда читать самим уже нет сил.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <div class="price">от 1 900 ₽ <small>точная цена — на следующем шаге, после выбора объёма книги</small></div>
+        <button type="button" class="btn btn-primary">Показать бесплатное превью</button>
+      </div>
+    </form>
+
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom" style="border-top:1px solid var(--line-dark); padding-top:20px; flex-wrap:wrap;">
+      <span>© 2026 Своя Сказка</span>
+      <span style="display:flex; gap:18px; flex-wrap:wrap;">
+        <a href="contacts.html">Контакты</a>
+        <a href="offer.html">Оферта</a>
+        <a href="privacy.html">Политика конфиденциальности</a>
+        <a href="index.html">На главную</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
