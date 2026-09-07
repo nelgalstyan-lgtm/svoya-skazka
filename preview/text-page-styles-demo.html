@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Варианты текстовых страниц — 4 стиля</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&family=Caveat:wght@600;700&family=PT+Sans:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;700;800&display=swap');
+
+*{box-sizing:border-box;}
+body{
+  margin:0; padding:40px 20px; background:#1a1f38;
+  font-family:'PT Sans',sans-serif;
+  display:flex; flex-wrap:wrap; gap:34px; justify-content:center;
+}
+.label{
+  color:#F4EFE0; text-align:center; margin-bottom:10px; font-size:14px; opacity:.7;
+}
+.col{ display:flex; flex-direction:column; align-items:center; }
+.page{
+  width:300px; aspect-ratio:2/3;
+  position:relative; overflow:hidden;
+  box-shadow:0 25px 55px -20px rgba(0,0,0,.6);
+}
+.page p{ margin:0; }
+
+/* ============ 1. АКВАРЕЛЬ ============ */
+.page-watercolor{
+  background:#FBF7ED;
+  border-radius:6px;
+}
+.page-watercolor::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 220px 160px at 8% 6%, rgba(122,150,120,.20), transparent 60%),
+    radial-gradient(ellipse 260px 200px at 96% 100%, rgba(178,132,58,.16), transparent 60%),
+    radial-gradient(ellipse 180px 140px at 90% 8%, rgba(90,120,160,.10), transparent 60%);
+}
+.page-watercolor::after{
+  content:"";
+  position:absolute; inset:10px;
+  border:1.5px solid rgba(122,90,50,.28);
+  border-radius:3px;
+  pointer-events:none;
+}
+.wc-inner{
+  position:relative; z-index:1;
+  padding:15% 11%; height:100%;
+  display:flex; flex-direction:column;
+}
+.wc-leaf{ position:absolute; top:14px; left:14px; width:46px; opacity:.55; }
+.wc-leaf2{ position:absolute; bottom:14px; right:14px; width:46px; opacity:.5; transform:rotate(180deg); }
+.wc-dropcap{
+  font-family:'Caveat',cursive; font-size:52px; color:#B2843A; line-height:1;
+  float:left; margin-right:8px; margin-top:-4px;
+}
+.wc-text{ font-family:'Merriweather',serif; font-size:13.5px; line-height:1.7; color:#241F33; overflow-y:auto; }
+
+/* ============ 2. МУЛЬТЯШНЫЙ ============ */
+.page-cartoon{
+  background:#FFF3D6;
+  border-radius:22px;
+  border:6px solid #232C4D;
+}
+.page-cartoon::before{
+  content:"";
+  position:absolute; inset:0;
+  background-image: radial-gradient(rgba(35,44,77,.06) 2px, transparent 2px);
+  background-size:14px 14px;
+}
+.cn-inner{ position:relative; z-index:1; padding:13% 10%; height:100%; display:flex; flex-direction:column; }
+.cn-star{ position:absolute; font-size:22px; }
+.cn-title-bar{
+  background:#E8A33D; color:#232C4D; font-family:'Nunito',sans-serif; font-weight:800;
+  font-size:12px; padding:4px 12px; border-radius:999px; display:inline-block;
+  margin-bottom:10px; border:2px solid #232C4D; align-self:flex-start;
+}
+.cn-text{ font-family:'Nunito',sans-serif; font-weight:400; font-size:13.5px; line-height:1.65; color:#232C4D; overflow-y:auto; }
+
+/* ============ 3. КЛАССИЧЕСКАЯ ГРАФИКА ============ */
+.page-classic{
+  background:#F1E8D2;
+  border-radius:2px;
+}
+.page-classic::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(circle 60px at 15% 85%, rgba(120,90,50,.10), transparent 70%),
+    radial-gradient(circle 50px at 85% 20%, rgba(120,90,50,.08), transparent 70%);
+}
+.cl-inner{ position:relative; z-index:1; padding:11% 10%; height:100%; display:flex; flex-direction:column; }
+.cl-rule{ border:none; border-top:1px solid #2A2118; height:3px; border-bottom:1px solid #2A2118; margin:0 0 14px; }
+.cl-rule-bottom{ border:none; border-top:1px solid #2A2118; height:3px; border-bottom:1px solid #2A2118; margin-top:auto; }
+.cl-ornament{ text-align:center; font-size:16px; color:#7A5A32; margin-bottom:10px; letter-spacing:8px; }
+.cl-dropcap{
+  font-family:'Merriweather',serif; font-weight:700; font-size:44px; color:#2A2118; line-height:.85;
+  float:left; margin-right:6px;
+}
+.cl-text{ font-family:'Merriweather',serif; font-style:italic; font-size:13px; line-height:1.75; color:#2A2118; overflow-y:auto; }
+
+/* ============ 4. 3D-АНИМАЦИЯ ============ */
+.page-3d{
+  background:linear-gradient(155deg,#2E3861 0%,#1A2140 60%,#232C4D 100%);
+  border-radius:26px;
+}
+.page-3d::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(circle 5px at 20% 20%, rgba(244,239,224,.7), transparent 70%),
+    radial-gradient(circle 4px at 75% 15%, rgba(215,154,58,.8), transparent 70%),
+    radial-gradient(circle 4px at 85% 70%, rgba(244,239,224,.5), transparent 70%),
+    radial-gradient(circle 6px at 30% 85%, rgba(215,154,58,.6), transparent 70%);
+}
+.d3-inner{ position:relative; z-index:1; padding:12% 10%; height:100%; display:flex; flex-direction:column; }
+.d3-card{
+  background:rgba(251,247,237,.94);
+  border-radius:16px;
+  padding:16px 15px;
+  box-shadow:0 15px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.6);
+  flex:1; display:flex; flex-direction:column;
+}
+.d3-text{ font-family:'PT Sans',sans-serif; font-size:13px; line-height:1.65; color:#241F33; overflow-y:auto; }
+.d3-glow-line{ height:3px; width:40px; background:linear-gradient(90deg,#D79A3A,transparent); border-radius:3px; margin-bottom:10px; }
+
+::-webkit-scrollbar{ width:4px; }
+::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.2); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div class="col">
+  <div class="label">1. Акварель</div>
+  <div class="page page-watercolor">
+    <svg class="wc-leaf" viewBox="0 0 60 60"><path d="M5 55 Q10 20 50 5 Q35 25 30 45 Q20 35 5 55Z" fill="#7A906B"/></svg>
+    <svg class="wc-leaf2" viewBox="0 0 60 60"><path d="M5 55 Q10 20 50 5 Q35 25 30 45 Q20 35 5 55Z" fill="#B2843A"/></svg>
+    <div class="wc-inner">
+      <div class="wc-text"><span class="wc-dropcap">В</span> комнате Милены, в коробке из-под зимних сапог, лежали сорок три камня. Особенными их делало не то, что она могла бы толком объяснить — просто у каждого камня была своя история.</div>
+    </div>
+  </div>
+</div>
+
+<div class="col">
+  <div class="label">2. Мультяшный</div>
+  <div class="page page-cartoon">
+    <div class="cn-inner">
+      <span class="cn-title-bar">Глава 1</span>
+      <div class="cn-star" style="top:16%; right:10%; color:#D96666;">✦</div>
+      <div class="cn-star" style="bottom:12%; left:8%; color:#75906B;">✦</div>
+      <div class="cn-text">В комнате Милены, в коробке из-под зимних сапог, лежали сорок три камня. Особенными их делало не то, что она могла бы толком объяснить — просто у каждого камня была своя история!</div>
+    </div>
+  </div>
+</div>
+
+<div class="col">
+  <div class="label">3. Классическая графика</div>
+  <div class="page page-classic">
+    <div class="cl-inner">
+      <hr class="cl-rule">
+      <div class="cl-ornament">❧</div>
+      <div class="cl-text"><span class="cl-dropcap">В</span>комнате Милены, в коробке из-под зимних сапог, лежали сорок три камня. Особенными их делало не то, что она могла бы толком объяснить — просто у каждого камня была своя история.</div>
+      <hr class="cl-rule-bottom">
+    </div>
+  </div>
+</div>
+
+<div class="col">
+  <div class="label">4. 3D-анимация</div>
+  <div class="page page-3d">
+    <div class="d3-inner">
+      <div class="d3-card">
+        <div class="d3-glow-line"></div>
+        <div class="d3-text">В комнате Милены, в коробке из-под зимних сапог, лежали сорок три камня. Особенными их делало не то, что она могла бы толком объяснить — просто у каждого камня была своя история.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
