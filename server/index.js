@@ -41,23 +41,62 @@ function extractPromptValue(value) {
   if (typeof value.prompt === 'string') return value.prompt;
   if (typeof value.text === 'string') return value.text;
   if (typeof value.content === 'string') return value.content;
+
   if (Array.isArray(value.prompts)) {
     const first = value.prompts.find((item) => typeof item === 'string' || (item && typeof item.prompt === 'string'));
     if (typeof first === 'string') return first;
     if (first && typeof first.prompt === 'string') return first.prompt;
   }
+
   if (Array.isArray(value.backgrounds)) {
-    const candidate = value.backgrounds.find((item) => item && item.id === promptId);
-    if (candidate && typeof candidate.prompt === 'string') return candidate.prompt;
+    const candidate = value.backgrounds.find((item) => item && (item.id === promptId || item.promptId === promptId));
+    if (candidate) {
+      const backgroundPrompt = extractPromptValue(candidate);
+      if (backgroundPrompt) return backgroundPrompt;
+    }
   }
 
   return null;
 }
 
+function listPromptCandidateFiles() {
+  const dirCandidates = [
+    path.resolve(process.cwd(), './data'),
+    path.resolve(process.cwd(), './prompts'),
+    path.resolve(process.cwd(), '../data'),
+    path.resolve(process.cwd(), '../prompts')
+  ];
+
+  const seen = new Set();
+  const files = [];
+
+  for (const dir of dirCandidates) {
+    if (!fs.existsSync(dir)) continue;
+
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+      const fullPath = path.join(dir, entry.name);
+
+      if (!seen.has(fullPath)) {
+        seen.add(fullPath);
+        files.push(fullPath);
+      }
+    }
+  }
+
+  return files;
+}
+
 function resolvePromptById(promptId) {
-  const candidatePaths = [
+  if (!promptId) return null;
+
+  const candidateFiles = [
     path.resolve(process.cwd(), `./data/${promptId}.json`),
     path.resolve(process.cwd(), `./data/background-prompts.json`),
+    path.resolve(process.cwd(), `./data/background-prompts-full.json`),
+    path.resolve(process.cwd(), `./data/background-prompts-cartoon-classic.json`),
+    ...listPromptCandidateFiles(),
     path.resolve(process.cwd(), `./prompts/${promptId}.json`),
     path.resolve(process.cwd(), `./prompts/background-prompts.json`),
     path.resolve(process.cwd(), `../data/${promptId}.json`),
@@ -65,15 +104,24 @@ function resolvePromptById(promptId) {
     path.resolve(process.cwd(), `../prompts/${promptId}.json`)
   ];
 
-  for (const filePath of candidatePaths) {
+  for (const filePath of candidateFiles) {
     if (!fs.existsSync(filePath)) continue;
 
     try {
       const raw = fs.readFileSync(filePath, 'utf8');
       const parsed = JSON.parse(raw);
 
-      if (Array.isArray(parsed)) {
-        const item = parsed.find((entry) => entry && entry.id === promptId);
+      const arraysToCheck = [];
+      if (Array.isArray(parsed)) arraysToCheck.push(parsed);
+      if (parsed && typeof parsed === 'object') {
+        if (Array.isArray(parsed.prompts)) arraysToCheck.push(parsed.prompts);
+        if (Array.isArray(parsed.backgrounds)) arraysToCheck.push(parsed.backgrounds);
+        if (Array.isArray(parsed.items)) arraysToCheck.push(parsed.items);
+        if (Array.isArray(parsed.scenes)) arraysToCheck.push(parsed.scenes);
+      }
+
+      for (const arr of arraysToCheck) {
+        const item = arr.find((entry) => entry && (entry.id === promptId || entry.promptId === promptId));
         if (item) {
           const prompt = extractPromptValue(item);
           if (prompt) return prompt;
@@ -88,18 +136,6 @@ function resolvePromptById(promptId) {
 
         if (parsed[promptId]) {
           const prompt = extractPromptValue(parsed[promptId]);
-          if (prompt) return prompt;
-        }
-
-        if (Array.isArray(parsed.prompts)) {
-          const item = parsed.prompts.find((entry) => entry && (entry.id === promptId || entry.promptId === promptId));
-          const prompt = item ? extractPromptValue(item) : null;
-          if (prompt) return prompt;
-        }
-
-        if (Array.isArray(parsed.backgrounds)) {
-          const item = parsed.backgrounds.find((entry) => entry && (entry.id === promptId || entry.promptId === promptId));
-          const prompt = item ? extractPromptValue(item) : null;
           if (prompt) return prompt;
         }
       }

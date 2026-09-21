@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const promptFile = path.resolve(process.cwd(), 'data/background-prompts.json');
 const outputDir = path.resolve(process.cwd(), 'data/generated');
 
 function ensureDirectory(dirPath) {
@@ -10,7 +9,25 @@ function ensureDirectory(dirPath) {
   }
 }
 
+function resolvePromptFile() {
+  const args = process.argv.slice(2);
+  const fileIndex = args.findIndex((arg) => arg === '--file');
+
+  if (fileIndex >= 0) {
+    const filePath = args[fileIndex + 1];
+    if (!filePath) throw new Error('Missing value for --file');
+    return path.resolve(process.cwd(), filePath);
+  }
+
+  const defaultFile = path.resolve(process.cwd(), 'data/background-prompts-cartoon-classic.json');
+  if (fs.existsSync(defaultFile)) return defaultFile;
+
+  return path.resolve(process.cwd(), 'data/background-prompts.json');
+}
+
 function loadPrompts() {
+  const promptFile = resolvePromptFile();
+
   if (!fs.existsSync(promptFile)) {
     throw new Error(`Prompt file not found: ${promptFile}`);
   }
@@ -57,7 +74,11 @@ async function requestGeneration(promptId, retries = 3) {
 }
 
 async function main() {
-  const requested = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const fileIndex = args.findIndex((arg) => arg === '--file');
+  const positional = fileIndex >= 0 ? args.slice(fileIndex + 2) : args;
+  const requested = positional.filter((value) => !value.startsWith('--'));
+
   const prompts = loadPrompts();
   const selected = requested.length > 0
     ? prompts.filter((item) => requested.includes(item.id))
