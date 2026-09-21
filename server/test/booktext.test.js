@@ -64,7 +64,7 @@ test('оформление по теме: море → канат, поиски 
     { t: 'p', text: 'Шторм, якорь, шхуна, лодка, пристань, штурвал.' }] }] };
   const mystery = { title: 'Тайна старых часов', chapters: [{ title: 'Чердак', blocks: [{ t: 'p', text: 'Артур нашёл карту и старый компас на чердаке.' }] }] };
   assert.equal(inferFrame(sea), 'rope');
-  assert.equal(inferFrame(mystery), 'rope');
+  assert.equal(inferFrame(mystery), 'chart'); // нейтральная тайна: карта, а не морской канат
   assert.equal(normalizeBook({ ...mystery, frame: 'vine' }, { name: 'Артур' }).frame, 'vine', 'явно заданное оформление не меняется');
 });
 
@@ -87,4 +87,17 @@ test('жанры путешествия: у каждого своё оформл
   assert.equal(fixed.footer, 'wild');
   assert.equal(fixed.frame, 'fern');
   assert.equal(normalizeBook({ ...mk('x'), footer: 'treasure' }, { name: 'Ян' }).footer, 'treasure', 'явно заданное сохраняется');
+});
+
+test('загадка в лесу и пещере — это «тайны и экспедиции», а не дикая природа', async () => {
+  const { inferGenre, TRAVEL_STYLES } = await import('../lib/booktext.js');
+  const mk = (text) => ({ title: 'Книга', chapters: [{ title: 'Глава', blocks: [{ t: 'p', text }] }] });
+  // как в книге про часы: природы (лес, тропа, пещера) больше, но вся история — поиск детали механизма и старая карта
+  const mixed = mk('Лес тропа пещера '.repeat(15) + 'Карта, тайна, загадка, механизм, ключ. '.repeat(4));
+  assert.equal(inferGenre(mixed), 'treasure');
+  // явная природа без загадки остаётся природой
+  assert.equal(inferGenre(mk('Лес тропа волк следы костёр палатка '.repeat(4))), 'wild');
+  // нейтральное оформление по умолчанию — карта и предметы, а не морское
+  assert.deepEqual(TRAVEL_STYLES.universal, { frame: 'chart', footer: 'treasure' });
+  assert.equal(normalizeBook(mk('Обычный день.'), { name: 'Ян' }).footer, 'treasure');
 });

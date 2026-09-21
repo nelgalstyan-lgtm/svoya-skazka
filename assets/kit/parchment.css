@@ -163,6 +163,17 @@
 /* ряд украшений выше птичек — текст заканчивается чуть раньше */
 .bk-footer-treasure .bk-content, .bk-footer-wild .bk-content, .bk-footer-sea .bk-content{ height:640px; }
 
+/* ---------- верхний колонтитул и разделитель главы по жанру (значки и линия) ---------- */
+.bk-footer-treasure .bk-run img, .bk-footer-wild .bk-run img, .bk-footer-sea .bk-run img{ height:19px; width:auto; opacity:.92; }
+.bk-run img.bk-mirror{ transform:scaleX(-1); }
+.bk-footer-treasure .bk-divider img, .bk-footer-wild .bk-divider img, .bk-footer-sea .bk-divider img{ height:17px; }
+/* экспедиции — сплошная линия, как в нижнем колонтитуле; дикая природа — «тире-точка» */
+.bk-footer-treasure .bk-run-rule{ left:var(--l); width:var(--w); height:1.6px; background:#4a3323; opacity:.75; }
+.bk-footer-wild .bk-run-rule{
+  left:var(--l); width:var(--w); height:1.6px; opacity:.8;
+  background:repeating-linear-gradient(90deg,#4a3323 0 11px,transparent 11px 15px,#4a3323 15px 18px,transparent 18px 22px);
+}
+
 /* ---------- «срез книги» — только при чтении на экране ---------- */
 @media screen{
   .bk-book-view .bk-wrap{ position:relative; }

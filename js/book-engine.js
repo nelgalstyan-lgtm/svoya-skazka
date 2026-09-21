@@ -49,10 +49,18 @@
     return node;
   }
 
+  // значки верхнего колонтитула и разделителя — по жанру (footer): [слева, справа, зеркалить правый]
+  var HEADER_ICONS = {
+    sea: ['hdr-sea.svg', 'hdr-sea.svg', false],
+    treasure: ['hdr-treasure-l.png', 'hdr-treasure-r.png', false],
+    wild: ['hdr-wild.png', 'hdr-wild.png', true]
+  };
+
   function divider(withLines) {
     var d = h('div', 'bk-divider');
+    var icons = HEADER_ICONS[FOOTER];
     d.appendChild(h('i'));
-    d.appendChild(img(KIT + 'trefoil.png', '', ''));
+    d.appendChild(img(KIT + (icons ? icons[1] : 'trefoil.png'), '', ''));
     d.appendChild(h('i'));
     return d;
   }
@@ -80,9 +88,10 @@
       page.appendChild(head);
     } else {
       var run = h('div', 'bk-run');
-      run.appendChild(img(KIT + 'fleuron-l.png', '', ''));
+      var icons = HEADER_ICONS[FOOTER];
+      run.appendChild(img(KIT + (icons ? icons[0] : 'fleuron-l.png'), '', ''));
       run.appendChild(h('span', '', chapter.title));
-      run.appendChild(img(KIT + 'fleuron-r.png', '', ''));
+      run.appendChild(img(KIT + (icons ? icons[1] : 'fleuron-r.png'), icons && icons[2] ? 'bk-mirror' : '', ''));
       page.appendChild(run);
       page.appendChild(h('div', 'bk-run-rule'));
     }
@@ -216,7 +225,7 @@
   }
 
   function preloadImages(book) {
-    var urls = [KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png'];
+    var urls = [KIT + 'hdr-treasure-l.png', KIT + 'hdr-treasure-r.png', KIT + 'hdr-wild.png', KIT + 'hdr-sea.svg', KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png'];
     book.chapters.forEach(function (c) {
       if (c.initial) urls.push(KIT + 'initials/' + c.initial + '.png');
       c.blocks.forEach(function (b) { if (b.t === 'image') urls.push(imageSrc(b)); });

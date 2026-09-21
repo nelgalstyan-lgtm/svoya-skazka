@@ -89,11 +89,11 @@ export const TRAVEL_STYLES = {
   sea: { frame: 'rope', footer: 'sea' },            // морская история: канат, розы ветров
   treasure: { frame: 'chart', footer: 'treasure' }, // экспедиции и поиск сокровищ: карта, ряд предметов
   wild: { frame: 'fern', footer: 'wild' },          // дикая природа, джунгли, суша: папоротник с лозой, следы
-  universal: { frame: 'rope', footer: 'sea' }       // если жанр не определён: канат и розы ветров
+  universal: { frame: 'chart', footer: 'treasure' } // жанр не определён (нейтральная тайна, загадка): карта и предметы исследователя
 };
 
 const SEA_WORDS = /(море|моря|морю|морем|морск|корабл|парус|остров|пират|шторм|капитан|якор|шхун|волн[аыуе]|лодк|пристан|штурвал|маяк)/gi;
-const TREASURE_WORDS = /(клад|сокровищ|экспедиц|ключ|сундук|тайник|шифр|компас|карту|карты|карта)/gi;
+const TREASURE_WORDS = /(клад|сокровищ|экспедиц|ключ|сундук|тайник|шифр|компас|карту|карты|карта|тайн|секрет|загадк|улик|головоломк|расследов|механизм)/gi;
 const WILD_WORDS = /(лес|гор[аыуеоы]|тропа|тропин|следы|следа|волк|олен|медвед|костёр|костер|палатк|поход|река|реки|болот|пещер|зверь|зверей|дерев)/gi;
 
 /** Жанр из плана; «mystery» — прежнее название «поисков и загадок» — считается экспедицией. */
@@ -113,8 +113,10 @@ export function inferGenre(book) {
   const treasure = count(TREASURE_WORDS);
   const wild = count(WILD_WORDS);
   if (sea >= 8) return 'sea';
-  if (wild >= 8 && wild > treasure) return 'wild';
-  if (treasure >= 4) return 'treasure';
+  // природа — только когда она явно главная и без загадки: лес и пещера бывают просто местом действия детектива
+  if (wild >= 15 && wild > treasure * 3) return 'wild';
+  if (treasure >= 3) return 'treasure';
+  if (wild >= 8) return 'wild';
   return 'universal';
 }
 
