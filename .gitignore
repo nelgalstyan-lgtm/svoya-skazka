@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment secrets
+.env
+**/.env
+!.env.example
+!**/.env.example
+
+# Local runtime artifacts
+server/uploads/
+**/uploads/
+server/data/generated/
+**/data/generated/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS junk
+.DS_Store
+Thumbs.db

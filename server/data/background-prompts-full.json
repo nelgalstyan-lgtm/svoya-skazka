@@ -1,0 +1,202 @@
+[
+  {
+    "id": "map_table_A_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: An old attic room at dusk with a wooden map table and an open treasure chest beneath a round window. Dust motes drift through a warm golden beam. A hand-drawn map lies on the table beside a compass, a lantern, and stacks of forgotten boxes. Lighting and palette: warm sunset light, amber and dusty brown palette with soft blue shadows. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "map_table_A_classic",
+    "style": "classic",
+    "prompt": "Scene: An old attic room at dusk with a wooden map table and an open treasure chest beneath a round window. Dust motes drift through a warm golden beam. A hand-drawn map lies on the table beside a compass, a lantern, and stacks of forgotten boxes. Lighting and palette: warm sunset light, amber and dusty brown palette with soft blue shadows. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "map_table_B_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A sturdy expedition table in a secret tower room, covered with folded maps, puzzle pieces, and a brass magnifying glass. A candle flickers beside a small wooden box filled with carved tokens and trinkets. Lighting and palette: warm amber candlelight with dusky blue corners and soft shadowed browns. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "map_table_B_classic",
+    "style": "classic",
+    "prompt": "Scene: A sturdy expedition table in a secret tower room, covered with folded maps, puzzle pieces, and a brass magnifying glass. A candle flickers beside a small wooden box filled with carved tokens and trinkets. Lighting and palette: warm amber candlelight with dusky blue corners and soft shadowed browns. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "map_table_C_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A hidden map room with a round table covered in thread, old paper diagrams, and a cracked lantern. A tiny stone key sits on top of an open atlas, while tool hooks and stacked crates line the walls. Lighting and palette: golden lamplight with soft warm browns and cool shadowed blue. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "map_table_C_classic",
+    "style": "classic",
+    "prompt": "Scene: A hidden map room with a round table covered in thread, old paper diagrams, and a cracked lantern. A tiny stone key sits on top of an open atlas, while tool hooks and stacked crates line the walls. Lighting and palette: golden lamplight with soft warm browns and cool shadowed blue. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "forest_path_A_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A narrow forest path winds through tall pines, with soft wildflowers growing near a fallen log and a lantern glowing at the edge of the trail. Strong trunks and layered foliage frame the road in a calm, adventurous mood. Lighting and palette: gentle golden afternoon light with cool green shadows and warm amber highlights. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "forest_path_A_classic",
+    "style": "classic",
+    "prompt": "Scene: A narrow forest path winds through tall pines, with soft wildflowers growing near a fallen log and a lantern glowing at the edge of the trail. Strong trunks and layered foliage frame the road in a calm, adventurous mood. Lighting and palette: gentle golden afternoon light with cool green shadows and warm amber highlights. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "forest_path_B_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A woodland trail curves between mossy stones and a glowing campfire, with branches overhead forming a gentle arch. A basket of berries and a small hiking satchel rest beside the path, suggesting a recent adventure. Lighting and palette: soft warm daylight with cool forest greens and a golden campfire glow. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "forest_path_B_classic",
+    "style": "classic",
+    "prompt": "Scene: A woodland trail curves between mossy stones and a glowing campfire, with branches overhead forming a gentle arch. A basket of berries and a small hiking satchel rest beside the path, suggesting a recent adventure. Lighting and palette: soft warm daylight with cool forest greens and a golden campfire glow. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "forest_path_C_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A forest clearing opens into a tiny camp and a narrow trail lined with ferns and lantern posts. In the distance, a hill rises behind the trees, and a beaded bundle hangs from a branch near a stone marker. Lighting and palette: glowing late-afternoon light with soft shadows and rich earth-tone greens. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "forest_path_C_classic",
+    "style": "classic",
+    "prompt": "Scene: A forest clearing opens into a tiny camp and a narrow trail lined with ferns and lantern posts. In the distance, a hill rises behind the trees, and a beaded bundle hangs from a branch near a stone marker. Lighting and palette: glowing late-afternoon light with soft shadows and rich earth-tone greens. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "night_camp_A_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A cozy night camp under twinkling stars, with a low fire glowing warmly, a tent in the background, and a wooden trunk beside the fire. Lantern shadows stretch softly across the grass, making the entire clearing feel safe and adventurous. Lighting and palette: moonlit blue night with warm campfire glow and deep dark green shadows. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "night_camp_A_classic",
+    "style": "classic",
+    "prompt": "Scene: A cozy night camp under twinkling stars, with a low fire glowing warmly, a tent in the background, and a wooden trunk beside the fire. Lantern shadows stretch softly across the grass, making the entire clearing feel safe and adventurous. Lighting and palette: moonlit blue night with warm campfire glow and deep dark green shadows. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "night_camp_B_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A moonlit encampment with a small tent, stacked blankets, and a glowing campfire surrounded by stones. Nearby sits a crate of supplies and a lantern hanging from a branch, creating a memorable night adventure atmosphere. Lighting and palette: cool night blue with warm golden firelight and muted green shadows. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "night_camp_B_classic",
+    "style": "classic",
+    "prompt": "Scene: A moonlit encampment with a small tent, stacked blankets, and a glowing campfire surrounded by stones. Nearby sits a crate of supplies and a lantern hanging from a branch, creating a memorable night adventure atmosphere. Lighting and palette: cool night blue with warm golden firelight and muted green shadows. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "night_camp_C_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A hidden forest campsite with a low glow from the fire and a lantern hanging from a tree branch. A small gear bag, rolled blanket, and canvas satchel rest nearby, while cool night mist settles over the ground. Lighting and palette: deep evening blues with warm golden firelight and soft silver fog accents. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "night_camp_C_classic",
+    "style": "classic",
+    "prompt": "Scene: A hidden forest campsite with a low glow from the fire and a lantern hanging from a tree branch. A small gear bag, rolled blanket, and canvas satchel rest nearby, while cool night mist settles over the ground. Lighting and palette: deep evening blues with warm golden firelight and soft silver fog accents. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "treasure_room_A_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A hidden treasure room filled with stacked chests, glowing gems, and old coins scattered across the floor. A stone arch frames the room while small curiosities, maps, and polished trinkets line the walls like a collector's dream. Lighting and palette: warm golden lantern light with jewel-toned highlights and deep shadowy brown corners. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "treasure_room_A_classic",
+    "style": "classic",
+    "prompt": "Scene: A hidden treasure room filled with stacked chests, glowing gems, and old coins scattered across the floor. A stone arch frames the room while small curiosities, maps, and polished trinkets line the walls like a collector's dream. Lighting and palette: warm golden lantern light with jewel-toned highlights and deep shadowy brown corners. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "treasure_room_B_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A treasure chamber with open cedar chests, shiny coins, and a dusty bookshelf of keepsakes. Sunbeams spill in through a high arch and illuminate a sparkling stone key and a carefully stacked pile of antique relics. Lighting and palette: warm golden light with deep earthy shadows and bright jewel accents. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "treasure_room_B_classic",
+    "style": "classic",
+    "prompt": "Scene: A treasure chamber with open cedar chests, shiny coins, and a dusty bookshelf of keepsakes. Sunbeams spill in through a high arch and illuminate a sparkling stone key and a carefully stacked pile of antique relics. Lighting and palette: warm golden light with deep earthy shadows and bright jewel accents. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "treasure_room_C_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A luxurious hidden vault with crystal jars, golden coins, and a small display of relics under a glowing lamp. The walls are lined with shelves of forgotten treasure and old maps, all beneath a softly lit stone ceiling. Lighting and palette: warm amber lantern glow with jewel-toned reflections and shadowy brown edges. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "treasure_room_C_classic",
+    "style": "classic",
+    "prompt": "Scene: A luxurious hidden vault with crystal jars, golden coins, and a small display of relics under a glowing lamp. The walls are lined with shelves of forgotten treasure and old maps, all beneath a softly lit stone ceiling. Lighting and palette: warm amber lantern glow with jewel-toned reflections and shadowy brown edges. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "cave_entrance_A_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A grand cave entrance framed by stone arches, with damp moss along the edge and a trail of glowing stones leading into the darkness. The opening is mysterious yet inviting, with soft natural light creeping in from above. Lighting and palette: cool blue-grey cave shadows with warm natural daylight at the mouth and gentle amber highlights. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "cave_entrance_A_classic",
+    "style": "classic",
+    "prompt": "Scene: A grand cave entrance framed by stone arches, with damp moss along the edge and a trail of glowing stones leading into the darkness. The opening is mysterious yet inviting, with soft natural light creeping in from above. Lighting and palette: cool blue-grey cave shadows with warm natural daylight at the mouth and gentle amber highlights. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "cave_entrance_B_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: The entrance to an underground cave sits behind a curtain of hanging roots and shimmering water, with a narrow path leading deeper into the stone. A cluster of illuminated crystals gleams softly, inviting the next step into the mystery. Lighting and palette: cool cave blue and green tones with bright crystal highlights and soft warm opening light. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "cave_entrance_B_classic",
+    "style": "classic",
+    "prompt": "Scene: The entrance to an underground cave sits behind a curtain of hanging roots and shimmering water, with a narrow path leading deeper into the stone. A cluster of illuminated crystals gleams softly, inviting the next step into the mystery. Lighting and palette: cool cave blue and green tones with bright crystal highlights and soft warm opening light. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "mountain_bridge_A_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A swaying wooden bridge stretches over a mountain ravine, surrounded by pines and rocky cliffs. The bridge is simple and sturdy, with a strong sense of height and above-the-clouds adventure. Lighting and palette: bright mountain daylight with cool stone grays, warm wood tones, and soft blue sky. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "mountain_bridge_A_classic",
+    "style": "classic",
+    "prompt": "Scene: A swaying wooden bridge stretches over a mountain ravine, surrounded by pines and rocky cliffs. The bridge is simple and sturdy, with a strong sense of height and above-the-clouds adventure. Lighting and palette: bright mountain daylight with cool stone grays, warm wood tones, and soft blue sky. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "mountain_bridge_B_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A mountain bridge leads across a bright valley, with steep cliffs dropping away beneath it and soft clouds drifting beneath the planks. The bridge stands in a dramatic but friendly adventure setting. Lighting and palette: crisp daylight with cool blue mountain air, warm wood, and dusty granite tones. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "mountain_bridge_B_classic",
+    "style": "classic",
+    "prompt": "Scene: A mountain bridge leads across a bright valley, with steep cliffs dropping away beneath it and soft clouds drifting beneath the planks. The bridge stands in a dramatic but friendly adventure setting. Lighting and palette: crisp daylight with cool blue mountain air, warm wood, and dusty granite tones. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "ship_deck_A_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A small ship deck under bright sky, with a wooden rail, folded sail, and a lantern near a crate of supplies. The ocean glints beyond the railing, with a sense of open-air exploration and a gentle sea breeze. Lighting and palette: warm sunlight with cool ocean blues and weathered wood browns. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "ship_deck_A_classic",
+    "style": "classic",
+    "prompt": "Scene: A small ship deck under bright sky, with a wooden rail, folded sail, and a lantern near a crate of supplies. The ocean glints beyond the railing, with a sense of open-air exploration and a gentle sea breeze. Lighting and palette: warm sunlight with cool ocean blues and weathered wood browns. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "castle_gate_A_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A grand stone castle gate rises in the distance, framed by towers and a wide archway beneath a bright sky. A pathway leads forward through the gateway toward a hidden adventure beyond the walls. Lighting and palette: warm daytime light with cool stone grays, golden highlights, and deep blue shadows. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "castle_gate_A_classic",
+    "style": "classic",
+    "prompt": "Scene: A grand stone castle gate rises in the distance, framed by towers and a wide archway beneath a bright sky. A pathway leads forward through the gateway toward a hidden adventure beyond the walls. Lighting and palette: warm daytime light with cool stone grays, golden highlights, and deep blue shadows. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "castle_gate_B_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: An ancient fortress gate with towers, vines, and a climbing path beneath the open sky. The gate stands tall and mysterious, with warm sunlight catching the stone while the road leads toward the next chapter of the quest. Lighting and palette: bright late-afternoon light with cool stone casts and warm golden glows. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "castle_gate_B_classic",
+    "style": "classic",
+    "prompt": "Scene: An ancient fortress gate with towers, vines, and a climbing path beneath the open sky. The gate stands tall and mysterious, with warm sunlight catching the stone while the road leads toward the next chapter of the quest. Lighting and palette: bright late-afternoon light with cool stone casts and warm golden glows. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "ship_deck_B_cartoon",
+    "style": "cartoon",
+    "prompt": "Scene: A ship deck under a blue evening sky, with ropes, lanterns, and a crisp sea horizon beyond the railing. A low wooden crate and folded sail add depth while the open ocean suggests the start of a grand journey. Lighting and palette: soft dusk blue sky with warm lantern light and cool sea reflections. Art style: modern flat-color cartoon illustration style, bold clean black outlines, simplified shapes, smooth flat shading with minimal texture, bright saturated colors. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  },
+  {
+    "id": "ship_deck_B_classic",
+    "style": "classic",
+    "prompt": "Scene: A ship deck under a blue evening sky, with ropes, lanterns, and a crisp sea horizon beyond the railing. A low wooden crate and folded sail add depth while the open ocean suggests the start of a grand journey. Lighting and palette: soft dusk blue sky with warm lantern light and cool sea reflections. Art style: classic mid-century children's book illustration style, fine ink cross-hatching and detailed linework, gouache and colored-pencil texture, traditional printed picture book aesthetic from the 1960s-1980s. Composition: a single full-page book illustration with a portrait aspect ratio of approximately 2:3, no characters or people in the scene. The scene fills the entire page edge to edge with no text, letters, writing, signs or symbols rendered anywhere in the image."
+  }
+]
