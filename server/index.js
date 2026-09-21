@@ -3,14 +3,35 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { GoogleGenAI } from '@google/genai';
+import { createJobQueue } from './lib/jobs.js';
+import { generateStory, buildTemplateStory, describeProviders } from './lib/story.js';
+import { generateBigBook, templateBook } from './lib/bigstory.js';
+import { normalizeBook } from './lib/booktext.js';
+import { sharedHealth } from './lib/providers.js';
+
+const SERVER_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
-const JOB_TIMEOUT_MS = 60_000;
-const jobs = new Map();
+
+// Первичный лимит на генерацию — защищает бесплатные квоты от случайного спама.
+const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 10);
+const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
+const rateBuckets = new Map();
+
+const BIG_TIMEOUT_MS = Number(process.env.BIG_BOOK_TIMEOUT_MS || 8 * 60_000);
+
+const queue = createJobQueue({
+  runner: (input, ctx) => (input.tariff === 'big' ? generateBigBook(input, { progress: ctx.progress }) : generateStory(input)),
+  fallback: (input) => (input.tariff === 'big' ? { book: templateBook(input) } : buildTemplateStory(input)),
+  timeoutFor: (input) => (input.tariff === 'big' ? BIG_TIMEOUT_MS : null),
+  concurrency: Number(process.env.QUEUE_CONCURRENCY || 3),
+  storeDir: path.join(SERVER_DIR, 'data', 'generated')
+});
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -18,9 +39,14 @@ app.use(express.json({ limit: '10mb' }));
 app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
-    message: 'Gemini backend is running',
+    message: 'Book generation backend is running',
     hasApiKey: Boolean(process.env.GEMINI_API_KEY),
-    model: process.env.GEMINI_MODEL || 'gemini-3.6-flash'
+    model: process.env.GEMINI_MODEL || 'gemini-3.6-flash',
+    // какие провайдеры подключены и какие сейчас «отдыхают» после сбоя (секунды)
+    providers: describeProviders(),
+    cooldowns: sharedHealth.snapshot(),
+    queue: queue.stats(),
+    guaranteedFallback: true
   });
 });
 
@@ -149,24 +175,6 @@ function resolvePromptById(promptId) {
   return null;
 }
 
-function createFallbackResult(job) {
-  return {
-    ok: true,
-    fallback: true,
-    source: 'prebuilt-template',
-    jobId: job.id,
-    promptId: job.promptId || null,
-    model: job.model,
-    message: 'Gemini is temporarily unavailable. A fallback template was returned so the flow stays usable.',
-    content: {
-      title: job.title || 'Story scene',
-      scene: job.promptId || 'fallback-scene',
-      status: 'fallback',
-      note: 'This is a safe fallback output for UX continuity while the AI backend recovers.'
-    }
-  };
-}
-
 async function generateWithGemini(prompt, model, retries = 3) {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is missing. Copy .env.example to .env and add your key.');
@@ -201,67 +209,10 @@ async function generateWithGemini(prompt, model, retries = 3) {
   throw new Error(`Gemini generation failed after ${retries + 1} attempts`);
 }
 
-function scheduleJobTimeout(jobId) {
-  setTimeout(() => {
-    const job = jobs.get(jobId);
-    if (!job) return;
-
-    if (job.status === 'queued' || job.status === 'processing') {
-      job.status = 'fallback';
-      job.updatedAt = Date.now();
-      job.progress = 'Timed out after 60s';
-      job.error = 'AI generation exceeded the 60-second safety limit.';
-      job.result = createFallbackResult(job);
-    }
-  }, JOB_TIMEOUT_MS);
-}
-
-async function processJob(jobId) {
-  const job = jobs.get(jobId);
-  if (!job) return;
-
-  job.timeoutHandle = scheduleJobTimeout(jobId);
-
-  try {
-    job.status = 'processing';
-    job.updatedAt = Date.now();
-    job.progress = 'Generating with Gemini';
-
-    const result = await generateWithGemini(job.prompt, job.model, 3);
-
-    if (job.timeoutHandle) {
-      clearTimeout(job.timeoutHandle);
-      job.timeoutHandle = null;
-    }
-
-    job.status = 'completed';
-    job.updatedAt = Date.now();
-    job.progress = 'Completed';
-    job.result = {
-      ok: true,
-      promptId: job.promptId || null,
-      model: job.model,
-      response: result,
-      fallback: false
-    };
-  } catch (error) {
-    if (job.timeoutHandle) {
-      clearTimeout(job.timeoutHandle);
-      job.timeoutHandle = null;
-    }
-
-    const fallback = createFallbackResult(job);
-    job.status = 'fallback';
-    job.updatedAt = Date.now();
-    job.progress = 'Fallback activated';
-    job.error = error?.message || 'Unknown Gemini error';
-    job.result = fallback;
-  }
-}
-
+// Служебный эндпоинт для генерации фонов (прямой вызов Gemini, без очереди).
 app.post('/api/generate-background', async (req, res) => {
   try {
-    const { promptId, prompt, model, async: asyncMode } = req.body || {};
+    const { promptId, prompt, model } = req.body || {};
 
     if (!prompt && !promptId) {
       return res.status(400).json({
@@ -280,35 +231,6 @@ app.post('/api/generate-background', async (req, res) => {
     }
 
     const selectedModel = model || process.env.GEMINI_MODEL || 'gemini-3.6-flash';
-
-    if (asyncMode === true || req.query.async === '1') {
-      const jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      jobs.set(jobId, {
-        id: jobId,
-        status: 'queued',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        promptId: promptId || null,
-        title: req.body?.title || 'Generated scene',
-        prompt: finalPrompt,
-        model: selectedModel,
-        progress: 'Queued',
-        result: null,
-        error: null,
-        timeoutHandle: null
-      });
-
-      setTimeout(() => processJob(jobId), 0);
-
-      return res.json({
-        ok: true,
-        async: true,
-        jobId,
-        status: 'queued',
-        message: 'Generation started in background.'
-      });
-    }
-
     const response = await generateWithGemini(finalPrompt, selectedModel, 3);
 
     res.json({
@@ -328,93 +250,86 @@ app.post('/api/generate-background', async (req, res) => {
   }
 });
 
-app.post('/api/book/generate', async (req, res) => {
-  const { promptId, prompt, model, title } = req.body || {};
+function rateLimited(ip, max = RATE_LIMIT_MAX) {
+  const now = Date.now();
+  const recent = (rateBuckets.get(ip) || []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  if (recent.length >= max) {
+    rateBuckets.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  rateBuckets.set(ip, recent);
+  return false;
+}
 
-  if (!prompt && !promptId) {
-    return res.status(400).json({ ok: false, error: 'Need either body.prompt or body.promptId' });
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, times] of rateBuckets) {
+    if (!times.some((t) => now - t < RATE_LIMIT_WINDOW_MS)) rateBuckets.delete(ip);
+  }
+}, RATE_LIMIT_WINDOW_MS).unref();
+
+// Создать задачу «сгенерировать книгу». Тело — поля анкеты:
+// { name, age, gender, eyes, occasion, habits, friends, cast, style, theme }
+app.post('/api/book/generate', (req, res) => {
+  const big = req.body?.tariff === 'big';
+  // большая книга — 7 запросов к ИИ, поэтому лимит строже и считается отдельно
+  if (rateLimited(big ? `${req.ip}:big` : req.ip, big ? Number(process.env.BIG_RATE_LIMIT_MAX || 3) : RATE_LIMIT_MAX)) {
+    return res.status(429).json({ ok: false, error: 'Слишком много запросов подряд. Подождите пару минут и попробуйте снова.' });
   }
 
-  const finalPrompt = prompt || resolvePromptById(promptId);
-  if (!finalPrompt) {
-    return res.status(404).json({ ok: false, error: `Prompt not found. Tried promptId: ${promptId || 'n/a'}` });
+  const body = req.body || {};
+  const input = {};
+  for (const key of ['name', 'age', 'gender', 'eyes', 'occasion', 'habits', 'friends', 'cast', 'style', 'theme', 'interests', 'special']) {
+    input[key] = typeof body[key] === 'string' || typeof body[key] === 'number' ? String(body[key]).slice(0, 500) : '';
   }
+  if (big) input.tariff = 'big';
 
-  const jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const selectedModel = model || process.env.GEMINI_MODEL || 'gemini-3.6-flash';
-
-  jobs.set(jobId, {
-    id: jobId,
-    status: 'queued',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    promptId: promptId || null,
-    title: title || 'Generated story scene',
-    prompt: finalPrompt,
-    model: selectedModel,
-    progress: 'Queued',
-    result: null,
-    error: null,
-    timeoutHandle: null
-  });
-
-  setTimeout(() => processJob(jobId), 0);
+  const job = queue.submit(input);
 
   res.json({
     ok: true,
-    async: true,
-    jobId,
-    status: 'queued',
-    message: 'Book generation started. Poll status endpoint until completion.'
+    jobId: job.id,
+    status: job.status,
+    position: queue.position(job)
   });
 });
 
-app.get('/api/book/:jobId/status', (req, res) => {
-  const job = jobs.get(req.params.jobId);
-
-  if (!job) {
-    return res.status(404).json({ ok: false, error: 'Job not found' });
-  }
-
-  return res.json({
+function jobView(job) {
+  const done = job.status === 'completed';
+  return {
     ok: true,
     jobId: job.id,
     status: job.status,
-    progress: job.progress,
-    createdAt: job.createdAt,
-    updatedAt: job.updatedAt,
-    timeoutMs: JOB_TIMEOUT_MS
-  });
+    ready: done,
+    position: queue.position(job),
+    progress: done ? '' : job.progress || '',
+    elapsedMs: (job.finishedAt || Date.now()) - job.createdAt,
+    // клиенту отдаём только книгу; источник (ИИ/шаблон) — служебная информация
+    result: !done ? null : job.result.book ? { kind: 'book', book: normalizeBook(job.result.book, { name: job.input?.name, girl: !/^(мал|boy|male)/i.test(job.input?.gender || '') }) } : { title: job.result.title, pages: job.result.pages }
+  };
+}
+
+app.get('/api/book/:jobId/status', (req, res) => {
+  const job = queue.get(req.params.jobId);
+  if (!job) return res.status(404).json({ ok: false, error: 'Job not found' });
+  res.json(jobView(job));
 });
 
 app.get('/api/book/:jobId/result', (req, res) => {
-  const job = jobs.get(req.params.jobId);
+  const job = queue.get(req.params.jobId);
+  if (!job) return res.status(404).json({ ok: false, error: 'Job not found' });
+  res.json(jobView(job));
+});
 
-  if (!job) {
-    return res.status(404).json({ ok: false, error: 'Job not found' });
-  }
-
-  if (!job.result) {
-    return res.json({
-      ok: true,
-      jobId: job.id,
-      status: job.status,
-      ready: false,
-      progress: job.progress,
-      result: null
-    });
-  }
-
-  return res.json({
-    ok: true,
-    ready: true,
-    jobId: job.id,
-    status: job.status,
-    progress: job.progress,
-    result: job.result
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  app.listen(PORT, () => {
+    const providers = describeProviders();
+    console.log(`Backend listening on http://localhost:${PORT}`);
+    console.log(providers.length
+      ? `AI providers: ${providers.map((p) => p.name).join(' → ')} → local template`
+      : 'AI providers: none configured — books are generated from the local template');
   });
-});
+}
 
-app.listen(PORT, () => {
-  console.log(`Gemini backend listening on http://localhost:${PORT}`);
-});
+export { app, queue, resolvePromptById, generateWithGemini };

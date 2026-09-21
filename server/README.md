@@ -1,62 +1,77 @@
-# Gemini backend for Svoya Skazka
+# Backend «Своя Сказка»
 
-This minimal backend is meant to be the bridge between the static site and Google Gemini for image generation.
+Бэкенд генерации книг. Главный принцип: **клиент всегда получает книгу**, даже если все ИИ-сервисы недоступны.
 
-## 1) Install dependencies
+## Как это работает
+
+```
+Форма (create.html)
+   │  POST /api/book/generate  → сразу получает jobId
+   │  GET  /api/book/:id/status (опрос каждые 2 с)
+   ▼
+Очередь задач (server/lib/jobs.js)
+   ▼
+Цепочка провайдеров (server/lib/providers.js)
+   Gemini → Groq → OpenRouter → Cerebras → (OpenAI, только если задан ключ)
+   ▼  если никто не ответил за 40 с / все в лимите / вернули мусор
+Локальный шаблон (js/story-template.js) — мгновенно, без интернета
+```
+
+- Упавший провайдер (429, 503, таймаут) «остывает» 30–60 с и пропускается — следующие заказы не тормозят.
+- Ответ ИИ проверяется: валидный JSON, 4–12 страниц, русский язык, есть имя ребёнка. Иначе — следующий провайдер.
+- Если очередь забита, заказ сразу получает шаблонную книгу.
+- Если не отвечает сам сервер, `create.html` собирает книгу локально в браузере тем же шаблоном.
+- Готовые книги сохраняются в `server/data/generated/` и удаляются через 7 дней (в них имя и данные ребёнка).
+
+## Запуск
 
 ```bash
 cd server
 npm install
-```
-
-## 2) Create environment file
-
-```bash
-cp .env.example .env
-```
-
-Then fill in your actual value:
-
-```env
-GEMINI_API_KEY=your_key_here
-GEMINI_MODEL=gemini-2.5-flash
-PORT=3000
-```
-
-## 3) Start the server
-
-```bash
+cp .env.example .env   # впишите ключи
 npm start
+npm test               # проверка отказоустойчивости
 ```
 
-or in watch mode:
+Проверка: `curl http://localhost:3000/api/health` — покажет подключённые провайдеры и те, что сейчас на паузе.
 
-```bash
-npm run dev
-```
+## Бесплатные ключи
 
-## 4) Health check
+Достаточно одного, но чем больше — тем надёжнее. Ключи только в `server/.env`, на фронтенд они не попадают.
 
-```bash
-curl http://localhost:3000/api/health
-```
+| Провайдер | Где взять | Переменная |
+|---|---|---|
+| Google Gemini | https://aistudio.google.com/apikey | `GEMINI_API_KEY` |
+| Groq | https://console.groq.com/keys | `GROQ_API_KEY` |
+| OpenRouter | https://openrouter.ai/keys | `OPENROUTER_API_KEY` |
+| Cerebras | https://cloud.cerebras.ai | `CEREBRAS_API_KEY` |
 
-## 5) Generate from a prompt string
+Лимиты бесплатных тарифов и списки моделей у провайдеров меняются — список моделей можно поправить в `.env` (`GROQ_MODELS=...`), недоступные модели пропускаются автоматически.
 
-```bash
-curl -X POST http://localhost:3000/api/generate-background \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "A cozy storybook room with a map table, warm light, portrait aspect ratio 2:3, no text or people."
-  }'
-```
+## API
 
-## 6) Generate from a prompt ID
+- `POST /api/book/generate` — тело: `{ name, age, gender, eyes, occasion, habits, friends, cast, style, theme }` → `{ jobId }`
+- `GET /api/book/:jobId/status` — `{ status, ready, position, result: { title, pages[] } }`
+- `POST /api/generate-background` — служебный прямой вызов Gemini для генерации фонов (не для клиентов)
 
-If you later keep prompts in a JSON file, you can pass `promptId` and the server will try to resolve it from a few standard paths.
+## Важно
 
-## Important
+- Ключи не хранить во фронтенде и не коммитить `.env`.
+- Шаблонная книга проще ИИ-версии. Когда подключите платный тариф, сервис сам будет чаще отдавать ИИ-версию — код менять не нужно.
 
-- The key must stay on the backend.
-- Never store `GEMINI_API_KEY` in frontend code.
-- Use this server only as the API layer between the site and Gemini.
+## Тариф «Большая история» (многошаговая генерация)
+
+`POST /api/book/generate` с полем `tariff: "big"` запускает конвейер из `server/lib/bigstory.js`:
+
+1. **План** (1 запрос): название, сквозные мотивы, 6 глав по 6–8 сцен, места 6–8 иллюстраций, фраза «Из записей» для каждой главы.
+2. **Главы** (6 запросов, по очереди): каждая получает план, краткое содержание прошлых глав и хвост предыдущей. Иллюстрация вставляется в поток текста
+   сразу после нужной сцены (и не между вопросом и ответом на него).
+3. **Проверка** каждой главы: русский язык, нет иероглифов и латиницы, объём, повторы фирменных фраз. Замечания «мягкие»
+   (короткая, повторы) — лучший вариант принимается после двух попыток; «жёсткие» — берётся другой провайдер.
+   Если глава не получилась совсем — она собирается из плана. Если не получился план — книга из локального шаблона.
+
+Ход работы виден в `GET /api/book/:id/status` (поле `progress`). Результат — `result.book` (главы и блоки) для `book-pro.html`.
+Лимит заказов: `BIG_RATE_LIMIT_MAX` (по умолчанию 3 за 10 минут с одного IP), таймаут: `BIG_BOOK_TIMEOUT_MS` (по умолчанию 8 минут).
+
+Проверка на сайте: запустить сервер и открыть `create.html?tariff=big`, заполнить анкету — откроется `book-pro.html` с прогрессом.
+Дополнительные необязательные поля анкеты для этого тарифа: `interests` (увлечения), `special` (особое место или событие).
