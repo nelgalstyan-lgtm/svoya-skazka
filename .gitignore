@@ -23,3 +23,10 @@ yarn-error.log*
 # OS junk
 .DS_Store
 Thumbs.db
+
+# Личные данные образцов и тестовых книг (репозиторий публичный)
+assets/kit/alex/
+assets/hero/
+preview/alex-*
+preview/*TEST*
+preview/*.pdf

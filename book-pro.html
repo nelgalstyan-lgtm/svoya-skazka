@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ваша книга — Своя Сказка</title>
+<link rel="stylesheet" href="assets/kit/parchment.css">
+<style>
+:root{ --ink:#232C4D; --gold:#D79A3A; --text-light:#F4EFE0; --bk-scale:1; }
+*{ box-sizing:border-box; }
+html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
+/* при чтении на экране — «стол» из тёмного дерева; в печать не попадает */
+@media screen{ body{ background:#2a1c11 radial-gradient(ellipse at 50% 15%, rgba(255,205,140,.13), transparent 62%) fixed; } #book{ padding-left:26px; } }
+.toolbar{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 20px; background:rgba(35,44,77,.96); color:var(--text-light); }
+.toolbar a.logo{ color:var(--text-light); text-decoration:none; font-family:Georgia,serif; font-size:18px; }
+.btn{ background:var(--gold); color:var(--ink); border:none; cursor:pointer; text-decoration:none; padding:10px 20px; border-radius:999px; font-weight:700; font-size:15px; }
+.btn.ghost{ background:transparent; color:var(--text-light); border:1px solid rgba(255,255,255,.35); }
+.hint{ text-align:center; color:rgba(244,239,224,.6); font-size:13px; margin:14px 16px 0; }
+#book{ padding:20px 12px 60px; display:flex; flex-direction:column; align-items:center; gap:24px; }
+.empty{ max-width:520px; margin:80px auto; padding:0 20px; color:var(--text-light); text-align:center; line-height:1.6; }
+@media print{
+  body{ background:#fff; }
+  .no-print{ display:none !important; }
+  #book{ padding:0; gap:0; display:block; }
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar no-print">
+  <a class="logo" href="index.html">Своя Сказка</a>
+  <div>
+    <span id="count" style="color:rgba(244,239,224,.7); margin-right:12px; font-size:14px;"></span>
+    <button class="btn" id="pdfBtn" type="button">Скачать PDF</button>
+  </div>
+</div>
+<p class="hint no-print">В окне печати выберите «Сохранить как PDF» и поля «Нет».</p>
+
+<main id="book" class="bk-book-view"></main>
+
+<script src="js/book-engine.js"></script>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var root = document.getElementById('book');
+
+  function scale() {
+    var s = Math.min(1.45, Math.max(0.4, (window.innerWidth - 24) / 582));
+    document.documentElement.style.setProperty('--bk-scale', String(s));
+  }
+  scale();
+  window.addEventListener('resize', scale);
+
+  function start(book) {
+    window.SkazkaBook.render(book, root, { frame: params.get('frame'), footer: params.get('footer') }).then(function (res) {
+      document.title = book.title + ' — Своя Сказка';
+      document.getElementById('count').textContent = res.pages + ' стр.';
+      window.__bookReady = res;
+      if (params.get('print') === '1') setTimeout(function () { window.print(); }, 400);
+    });
+  }
+
+  document.getElementById('pdfBtn').addEventListener('click', function () { window.print(); });
+
+  var isLocal = location.protocol === 'file:' || ['localhost', '127.0.0.1'].indexOf(location.hostname) !== -1;
+  var API_BASE = window.SKAZKA_API_BASE || (isLocal ? 'http://localhost:3000' : '');
+
+  // Книга заказана: ждём готовности на сервере и показываем ход работы (пишется глава за главой, это несколько минут)
+  function waitForJob(jobId) {
+    var box = document.createElement('div');
+    box.className = 'empty';
+    box.innerHTML = '<h2>Пишем вашу книгу</h2><p id="jobText">Начинаем…</p><p style="opacity:.6;font-size:14px">Большая история пишется глава за главой, это занимает несколько минут. Страницу можно не закрывать.</p>';
+    root.appendChild(box);
+    var text = box.querySelector('#jobText');
+    var errors = 0;
+    var started = Date.now();
+    (function poll() {
+      fetch(API_BASE + '/api/book/' + jobId + '/status').then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).then(function (d) {
+        errors = 0;
+        if (d.ready && d.result && d.result.book) { root.textContent = ''; start(d.result.book); return; }
+        text.textContent = d.progress || (d.position > 1 ? 'Ваша книга в очереди…' : 'Пишем книгу…');
+        setTimeout(poll, 2500);
+      }).catch(function () {
+        errors += 1;
+        if (errors >= 8) { text.textContent = 'Не удаётся связаться с сервером. Обновите страницу через минуту — книга сохранится.'; return; }
+        setTimeout(poll, 4000);
+      });
+    })();
+  }
+
+  if (params.get('job')) {
+    waitForJob(params.get('job'));
+  } else if (params.get('demo') === 'alex') {
+    // локальный тест на образце: данные лежат только на компьютере автора
+    var s = document.createElement('script');
+    s.src = 'assets/kit/alex/alex-book.js';
+    s.onload = function () { start(window.SKAZKA_ALEX_BOOK); };
+    s.onerror = function () { root.innerHTML = '<div class="empty">Тестовая книга не найдена.</div>'; };
+    document.body.appendChild(s);
+  } else {
+    root.innerHTML = '<div class="empty"><h2>Книга пока не создана</h2><p>Эта страница показывает книгу тарифа «Большая история».</p></div>';
+  }
+})();
+</script>
+</body>
+</html>

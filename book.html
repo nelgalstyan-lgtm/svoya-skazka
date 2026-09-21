@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ваша книга — Своя Сказка</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Caveat:wght@600;700&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root{
+  --ink:#232C4D; --gold:#D79A3A; --gold-dark:#B87F27;
+  --cream:#FBF7ED; --text:#241F33; --text-soft:#514A63; --text-light:#F4EFE0; --line:#DCCEA9;
+  --font-display:'Merriweather',Georgia,serif; --font-script:'Caveat',cursive; --font-body:'PT Sans',Arial,sans-serif;
+  --scale:1;
+}
+*{box-sizing:border-box;}
+html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(--text); }
+
+/* ---------- Верхняя панель ---------- */
+.toolbar{
+  position:sticky; top:0; z-index:10;
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  padding:12px 20px; background:rgba(35,44,77,.96); color:var(--text-light);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.logo{ font-family:var(--font-display); font-size:18px; color:var(--text-light); text-decoration:none; }
+.logo em{ font-family:var(--font-script); font-style:normal; color:var(--gold); }
+.toolbar-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.btn{
+  background:var(--gold); color:var(--ink); border:none; cursor:pointer; text-decoration:none;
+  padding:10px 20px; border-radius:999px; font-weight:700; font-size:15px; font-family:var(--font-body);
+}
+.btn.ghost{ background:transparent; color:var(--text-light); border:1px solid rgba(255,255,255,.35); }
+.hint{ text-align:center; color:rgba(244,239,224,.6); font-size:13px; margin:14px 16px 0; }
+
+/* ---------- Лист книги (A4, 794×1123 px, масштабируется на экране) ---------- */
+.book{ padding:20px 12px 60px; display:flex; flex-direction:column; align-items:center; gap:26px; }
+.sheet-wrap{ width:calc(794px * var(--scale)); height:calc(1123px * var(--scale)); flex:none; }
+.sheet{
+  width:794px; height:1123px; position:relative; overflow:hidden;
+  transform:scale(var(--scale)); transform-origin:0 0;
+  background:
+    radial-gradient(ellipse 320px 240px at 6% 4%, rgba(122,150,120,.20), transparent 62%),
+    radial-gradient(ellipse 380px 300px at 98% 100%, rgba(178,132,58,.16), transparent 62%),
+    radial-gradient(ellipse 260px 200px at 94% 6%, rgba(90,120,160,.10), transparent 62%),
+    var(--cream);
+  box-shadow:0 25px 55px -20px rgba(0,0,0,.6);
+  display:flex; flex-direction:column;
+}
+.sheet::after{
+  content:""; position:absolute; inset:16px; border:1.5px solid rgba(122,90,50,.28); border-radius:4px; pointer-events:none;
+}
+
+/* Иллюстрация-сцена сверху */
+.scene{
+  margin:60px 60px 0; height:334px; flex:none; border-radius:6px; overflow:hidden;
+  box-shadow:0 10px 26px -12px rgba(60,40,10,.55);
+}
+.scene img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+/* Текст */
+.story{
+  flex:1; overflow:hidden; padding:30px 68px 74px; font-family:var(--font-display);
+  font-size:calc(var(--fs, 19.5px)); line-height:1.72; color:var(--text);
+}
+.story p{ margin:0 0 .55em; }
+.story .dropcap{
+  font-family:var(--font-script); font-weight:700; font-size:4.1em; color:var(--gold-dark);
+  float:left; line-height:.82; margin:.04em .1em 0 0;
+}
+.hero-page .story{ padding-top:60px; }
+.hero{
+  float:left; width:318px; height:486px; margin:2px 30px 14px 0; border-radius:8px; overflow:hidden;
+  box-shadow:0 14px 30px -14px rgba(60,40,10,.6); shape-outside:margin-box;
+}
+.hero img{ width:100%; height:100%; object-fit:cover; display:block; }
+.pageno{
+  position:absolute; bottom:34px; left:0; right:0; text-align:center;
+  font-family:var(--font-script); font-size:22px; color:var(--gold-dark);
+}
+
+/* Обложка и финал */
+.cover, .finale{ align-items:center; text-align:center; }
+.kicker{ margin-top:92px; font-size:14px; letter-spacing:.32em; text-transform:uppercase; color:var(--text-soft); }
+.cover h1{
+  margin:26px 84px 0; font-family:var(--font-display); font-weight:700; font-size:50px; line-height:1.22; color:var(--ink);
+}
+.orn{ margin:26px 0 0; color:var(--gold-dark); font-size:22px; letter-spacing:.7em; padding-left:.7em; }
+.cover .scene{ margin:44px 60px 0; height:440px; align-self:stretch; }
+.for{ margin-top:46px; font-family:var(--font-script); font-weight:700; font-size:40px; color:var(--gold-dark); }
+.for small{ display:block; font-family:var(--font-body); font-weight:400; font-size:14px; letter-spacing:.2em; text-transform:uppercase; color:var(--text-soft); margin-bottom:4px; }
+.brand{ position:absolute; bottom:44px; left:0; right:0; font-family:var(--font-display); font-size:17px; color:var(--text-soft); }
+.brand em{ font-family:var(--font-script); font-style:normal; font-size:1.3em; color:var(--gold-dark); }
+.finale .scene{ margin:150px 70px 0; align-self:stretch; height:327px; }
+.finale h2{ margin:64px 70px 0; font-family:var(--font-script); font-weight:700; font-size:78px; color:var(--gold-dark); line-height:1; }
+.finale p{ margin:20px 110px 0; font-family:var(--font-display); font-size:19px; line-height:1.8; color:var(--text); }
+
+.empty{ max-width:520px; margin:80px auto; padding:0 20px; color:var(--text-light); text-align:center; line-height:1.6; }
+.empty h2{ font-family:var(--font-display); }
+
+/* ---------- Печать / PDF ---------- */
+@page{ size:210mm 297mm; margin:0; }
+@media print{
+  body{ background:#fff; }
+  .no-print{ display:none !important; }
+  .book{ padding:0; gap:0; display:block; }
+  .sheet-wrap{ width:210mm !important; height:297mm !important; overflow:hidden; page-break-after:always; break-after:page; }
+  .sheet-wrap:last-child{ page-break-after:auto; break-after:auto; }
+  .sheet{ transform:none !important; box-shadow:none; }
+  * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar no-print">
+  <a class="logo" href="index.html">Своя <em>Сказка</em></a>
+  <div class="toolbar-actions">
+    <a class="btn ghost" href="create.html">← К анкете</a>
+    <button class="btn" id="pdfBtn" type="button">Скачать PDF</button>
+  </div>
+</div>
+<p class="hint no-print" id="pdfHint">Нажмите «Скачать PDF» и в окне печати выберите принтер «Сохранить как PDF».</p>
+
+<main class="book" id="book"></main>
+
+<script src="js/story-template.js"></script>
+<script src="assets/demo-book.js"></script>
+<script>
+(function () {
+  const SHEET_W = 794;
+  const STORAGE_KEY = 'skazka:lastBook';
+
+  // Пока иллюстрации с лицом ребёнка готовятся вручную, они подключаются по имени.
+  // Для всех остальных «геройский» разворот получает фоновую сцену — то же самое произойдёт,
+  // если генерация иллюстрации в будущем не удастся.
+  const HERO_IMAGES = { 'милена': 'assets/hero/milena-watercolor.jpg' };
+
+  const params = new URLSearchParams(location.search);
+  const root = document.getElementById('book');
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function loadBook() {
+    if (params.get('demo') === '1') return window.SKAZKA_DEMO_BOOK || null;
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      if (saved && saved.book && Array.isArray(saved.book.pages)) return saved;
+    } catch (e) { /* хранилище недоступно */ }
+    return null;
+  }
+
+  // Абзацы: диалог начинается с новой строки, длинные куски делим по предложениям
+  function toParagraphs(text) {
+    let parts = String(text).split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
+    if (parts.length === 1 && parts[0].length > 420) {
+      const sentences = parts[0].split(/(?<=[.!?…»])\s+(?=[А-ЯЁA-Z—«])/);
+      parts = [];
+      let buf = '';
+      sentences.forEach(function (s) {
+        const dialogue = /^[—«]/.test(s);
+        if (buf && (dialogue || buf.length > 300)) { parts.push(buf); buf = ''; }
+        buf += (buf ? ' ' : '') + s;
+      });
+      if (buf) parts.push(buf);
+    }
+    return parts;
+  }
+
+  function sheet(className) {
+    const wrap = el('div', 'sheet-wrap');
+    const node = el('div', 'sheet' + (className ? ' ' + className : ''));
+    wrap.appendChild(node);
+    root.appendChild(wrap);
+    return node;
+  }
+
+  function sceneBlock(tag, alt) {
+    const box = el('div', 'scene');
+    const img = document.createElement('img');
+    img.src = 'assets/scenes/' + tag + '.jpg';
+    img.alt = alt || '';
+    img.loading = 'eager';
+    box.appendChild(img);
+    return box;
+  }
+
+  function addStory(parent, text) {
+    const story = el('div', 'story');
+    toParagraphs(text).forEach(function (para, i) {
+      const p = el('p');
+      if (i === 0) {
+        p.appendChild(el('span', 'dropcap', para.charAt(0)));
+        p.appendChild(document.createTextNode(para.slice(1)));
+      } else {
+        p.textContent = para;
+      }
+      story.appendChild(p);
+    });
+    parent.appendChild(story);
+    return story;
+  }
+
+  function render(data) {
+    const book = data.book;
+    const name = (data.answers && data.answers.name) || '';
+    const heroSrc = HERO_IMAGES[name.trim().toLowerCase()];
+    document.title = book.title + ' — Своя Сказка';
+
+    // Обложка
+    const cover = sheet('cover');
+    cover.appendChild(el('div', 'kicker', 'Персональная книга'));
+    cover.appendChild(el('h1', '', book.title));
+    cover.appendChild(el('div', 'orn', '✦ ✦ ✦'));
+    cover.appendChild(sceneBlock('castle_gate', 'Обложка'));
+    if (name) {
+      const who = el('div', 'for');
+      who.appendChild(el('small', '', 'Главный герой'));
+      who.appendChild(document.createTextNode(name));
+      cover.appendChild(who);
+    }
+    const brand = el('div', 'brand');
+    brand.append('Своя ', el('em', '', 'Сказка'));
+    cover.appendChild(brand);
+
+    // Развороты
+    book.pages.forEach(function (page, index) {
+      const useHero = page.hero && heroSrc;
+      const s = sheet(useHero ? 'hero-page' : '');
+      const scene = page.scene || 'forest_path';
+
+      if (useHero) {
+        const story = el('div', 'story');
+        const frame = el('div', 'hero');
+        const img = document.createElement('img');
+        img.src = heroSrc;
+        img.alt = name;
+        frame.appendChild(img);
+        story.appendChild(frame);
+        toParagraphs(page.text).forEach(function (para, i) {
+          const p = el('p');
+          if (i === 0) {
+            p.appendChild(el('span', 'dropcap', para.charAt(0)));
+            p.appendChild(document.createTextNode(para.slice(1)));
+          } else { p.textContent = para; }
+          story.appendChild(p);
+        });
+        s.appendChild(story);
+      } else {
+        s.appendChild(sceneBlock(scene));
+        addStory(s, page.text);
+      }
+      s.appendChild(el('div', 'pageno', String(index + 1)));
+    });
+
+    // Финал
+    const end = sheet('finale');
+    end.appendChild(sceneBlock('treasure_room'));
+    end.appendChild(el('h2', '', 'Конец'));
+    end.appendChild(el('p', '', 'Эта книга написана по вашей анкете — со всеми привычками, друзьями и близкими героя. Пусть она возвращается к вам снова и снова.'));
+    end.appendChild(el('div', 'orn', '✦ ✦ ✦'));
+    const brand2 = el('div', 'brand');
+    brand2.append('Своя ', el('em', '', 'Сказка'));
+    end.appendChild(brand2);
+  }
+
+  // Подгоняем размер шрифта, чтобы текст целиком помещался на листе (и на экране, и в PDF)
+  function fitText() {
+    document.querySelectorAll('.story').forEach(function (story) {
+      let size = 19.5;
+      story.style.setProperty('--fs', size + 'px');
+      while (story.scrollHeight > story.clientHeight + 1 && size > 10) {
+        size -= 0.25;
+        story.style.setProperty('--fs', size + 'px');
+      }
+    });
+  }
+
+  function updateScale() {
+    const scale = Math.min(1, (window.innerWidth - 24) / SHEET_W);
+    document.documentElement.style.setProperty('--scale', String(scale));
+  }
+
+  function showEmpty() {
+    document.getElementById('pdfBtn').style.display = 'none';
+    document.getElementById('pdfHint').style.display = 'none';
+    const box = el('div', 'empty');
+    box.appendChild(el('h2', '', 'Книги пока нет'));
+    box.appendChild(el('p', '', 'Заполните анкету и нажмите «Показать бесплатное превью» — книга появится здесь.'));
+    const actions = el('p');
+    const a1 = el('a', 'btn', 'К анкете'); a1.href = 'create.html';
+    const a2 = el('a', 'btn ghost', 'Посмотреть пример'); a2.href = 'book.html?demo=1'; a2.style.marginLeft = '10px';
+    actions.append(a1, a2);
+    box.appendChild(actions);
+    root.appendChild(box);
+  }
+
+  function waitForImages() {
+    return Promise.all(Array.prototype.map.call(document.images, function (img) {
+      return img.complete ? null : new Promise(function (resolve) { img.onload = img.onerror = resolve; });
+    }));
+  }
+
+  const data = loadBook();
+  updateScale();
+  window.addEventListener('resize', updateScale);
+
+  if (!data) {
+    showEmpty();
+    return;
+  }
+
+  render(data);
+  fitText();
+  // шрифты подгружаются с задержкой — после этого раскладка меняется, поэтому подгоняем ещё раз
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitText);
+
+  document.getElementById('pdfBtn').addEventListener('click', function () { window.print(); });
+  if (params.get('print') === '1') {
+    Promise.all([waitForImages(), document.fonts ? document.fonts.ready : null]).then(function () {
+      fitText();
+      setTimeout(function () { window.print(); }, 300);
+    });
+  }
+})();
+</script>
+</body>
+</html>

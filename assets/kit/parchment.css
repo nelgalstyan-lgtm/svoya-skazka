@@ -1,0 +1,182 @@
+/*
+ * Комплект оформления «Пергамент» — книга для тарифа «Большая история».
+ * Страница 154×235 мм (582×888 px при 96 dpi). Все размеры в px этой сетки.
+ * Меняется только содержимое (текст, иллюстрации); оформление берётся из этого файла и картинок рядом.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&family=Marck+Script&family=Caveat:wght@600;700&display=swap');
+
+.bk-wrap{ width:calc(582px * var(--bk-scale, 1)); height:calc(888px * var(--bk-scale, 1)); flex:none; }
+.bk-page{
+  --paper:#e6cf9c; --ink:#2b1e14; --brown:#5a4327; --line:#8b6f43; --muted:#7a6440;
+  --l:91px; --w:457px; /* левый край и ширина области текста */
+  width:582px; height:888px; position:relative; overflow:hidden;
+  transform:scale(var(--bk-scale, 1)); transform-origin:0 0;
+  background:var(--paper) url(parchment.jpg) center/100% 100% no-repeat;
+  color:var(--ink); font-family:'Tinos','Times New Roman',serif;
+  box-shadow:0 25px 55px -20px rgba(0,0,0,.6);
+}
+
+/* ---------- текстовая страница ---------- */
+.bk-strip{ position:absolute; left:0; top:0; bottom:0; width:71.5px; background:url(strip.png) repeat-y left top; background-size:71.5px auto; }
+
+.bk-run{
+  position:absolute; left:var(--l); width:var(--w); top:78px; height:26px;
+  display:flex; justify-content:center; align-items:center; gap:14px;
+  font:600 22px/26px 'Cormorant Garamond',serif; letter-spacing:.05em; color:var(--brown);
+}
+.bk-run img{ height:16px; width:auto; opacity:.9; }
+.bk-run-rule{ position:absolute; left:calc(var(--l) + var(--w) / 2 - 112px); width:224px; top:118px; height:1.5px; background:linear-gradient(90deg,transparent,#a58a5c 25%,#a58a5c 75%,transparent); }
+
+.bk-content{
+  position:absolute; left:var(--l); width:var(--w); top:150px; height:650px;
+  overflow:hidden; display:flow-root; font-size:23px; line-height:39px; text-align:left;
+}
+.bk-content p{ margin:0 0 15px; }
+.bk-content .bk-date{ font-weight:700; }
+
+.bk-folio{ position:absolute; left:var(--l); width:var(--w); top:803px; height:38px; display:flex; justify-content:center; align-items:flex-end; }
+.bk-folio img{ height:37px; width:auto; }
+.bk-folio .bk-no{ width:44px; text-align:center; font:700 17px/1 'Tinos',serif; color:var(--brown); margin-bottom:5px; }
+.bk-folio::after{ content:""; position:absolute; left:0; right:0; bottom:-7px; height:1.5px; background:var(--line); }
+
+/* ---------- открытие главы ---------- */
+.bk-opener .bk-content{ top:246px; height:554px; }
+.bk-opener-head{ position:absolute; left:var(--l); width:var(--w); top:78px; text-align:center; }
+.bk-chapter-no{ font:500 20px/26px 'Cormorant Garamond',serif; letter-spacing:.34em; padding-left:.34em; text-transform:uppercase; color:var(--muted); }
+.bk-divider{ display:flex; justify-content:center; align-items:center; gap:14px; margin:19px 0 0; height:12px; }
+.bk-divider i{ display:block; width:68px; height:1.5px; background:#a58a5c; }
+.bk-divider img{ height:12px; width:auto; }
+.bk-chapter-title{ margin:24px 0 0; font:700 46px/56px 'Cormorant Garamond',serif; color:#4a3220; }
+
+.bk-initial{ float:left; margin:2px 14px 4px 0; display:block; }
+.bk-dropcap{
+  float:left; font:700 84px/64px 'Cormorant Garamond',serif; color:#8a5a2b; margin:6px 12px 0 0;
+  text-shadow:1px 1px 0 rgba(255,255,255,.35), 2px 3px 5px rgba(60,35,10,.35);
+}
+
+/* ---------- иллюстрация на всю страницу ---------- */
+.bk-ill{ background:#1c1410; }
+.bk-ill-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+.bk-plate{ z-index:1;
+  position:absolute; left:4.4%; right:4.4%; top:81.3%; height:15%;
+  background:linear-gradient(#ecd7a4,#e5cd96); box-shadow:0 6px 18px rgba(0,0,0,.45);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px 34px 12px;
+}
+.bk-plate::before, .bk-plate::after{ content:""; position:absolute; left:0; right:0; height:11px; background:url(plate-band.png) repeat-x left center; background-size:auto 11px; opacity:.85; }
+.bk-plate::before{ top:0; } .bk-plate::after{ bottom:0; transform:scaleY(-1); }
+.bk-rosette{ z-index:2; position:absolute; left:50%; top:79.1%; width:11.8%; height:auto; transform:translateX(-50%); filter:drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
+.bk-plate-div{ display:flex; align-items:center; gap:10px; margin:0 0 9px; }
+.bk-plate-div i{ display:block; width:46px; height:1.5px; background:#9a7c4a; }
+.bk-plate-div b{ display:block; width:8px; height:8px; background:#7d5f33; transform:rotate(45deg); }
+.bk-plate-cap{ font:700 25px/1.16 'Cormorant Garamond',serif; color:#4f3519; -webkit-text-stroke:.45px #4f3519; text-shadow:0 1px 0 rgba(255,255,255,.4); }
+
+/* ---------- вставки ---------- */
+.bk-card{
+  margin:10px 4px 24px; padding:20px 24px 18px; text-align:center; position:relative;
+  background:linear-gradient(#f3e3b2,#ebd59c); border:1.5px solid #c1a05a; border-radius:4px;
+  box-shadow:0 8px 18px -8px rgba(80,55,20,.5); font:italic 700 25px/1.4 'Tinos',serif; color:#4a3220;
+}
+.bk-card::before{ content:""; position:absolute; left:50%; top:-6px; width:9px; height:9px; margin-left:-4.5px; background:#8a6a35; transform:rotate(45deg); }
+
+.bk-scrap, .bk-note{
+  position:relative; margin:8px 6px 22px; padding:16px 22px 15px; background:#f5efdf; border-radius:3px;
+  box-shadow:0 8px 16px -8px rgba(70,45,15,.45), 0 0 0 1px rgba(120,90,40,.12);
+  font:26px/1.3 'Marck Script','Caveat',cursive; color:#2d3f93; transform:rotate(-1.2deg);
+}
+.bk-scrap::before, .bk-note::before{ content:""; position:absolute; left:50%; top:-10px; width:84px; height:20px; margin-left:-42px; background:rgba(214,190,120,.65); transform:rotate(-2deg); box-shadow:0 1px 2px rgba(0,0,0,.15); }
+.bk-note-lbl{ font:700 13px/1 'Cormorant Garamond',serif; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); margin-bottom:9px; }
+.bk-note{ transform:rotate(-.8deg); }
+
+.bk-search{
+  display:flex; align-items:center; gap:12px; margin:8px auto 22px; width:fit-content; min-width:230px; padding:12px 26px 12px 18px;
+  background:#fff; border-radius:999px; box-shadow:0 5px 14px rgba(60,40,10,.28); font:22px/1.2 Arial,'Helvetica Neue',sans-serif; color:#3b3b3b;
+}
+.bk-search svg{ width:20px; height:20px; flex:none; opacity:.55; }
+
+.bk-end{ text-align:center; margin-top:26px; font:600 15px/1 'Cormorant Garamond',serif; letter-spacing:.32em; text-transform:uppercase; color:var(--muted); }
+.bk-end::before{ content:""; display:block; width:8px; height:8px; margin:0 auto 14px; background:#7d5f33; transform:rotate(45deg); }
+
+/* ---------- посвящение ---------- */
+.bk-ded::after{ content:""; position:absolute; inset:17px; border:1.5px solid var(--line); opacity:.55; pointer-events:none; }
+.bk-ded-title{ position:absolute; left:0; right:0; top:150px; text-align:center; font:700 35px/44px 'Cormorant Garamond',serif; letter-spacing:.22em; padding-left:.22em; text-transform:uppercase; color:#3f2b1a; }
+.bk-ded .bk-divider{ position:absolute; left:0; right:0; top:208px; margin:0; justify-content:center; }
+.bk-ded-lead{ position:absolute; left:60px; right:60px; top:232px; text-align:center; font:italic 700 17.5px/1.45 'Tinos',serif; color:#3a2717; }
+.bk-ded-body{ position:absolute; left:42px; right:42px; top:296px; font:italic 15.2px/1.4 'Tinos',serif; color:#3a2717; text-align:justify; }
+.bk-ded-body p{ margin:0 0 9px; text-indent:2.2em; }
+.bk-ded-foot{ position:absolute; left:0; right:0; bottom:66px; text-align:center; }
+.bk-ded-date{ font:700 15px/1 'Tinos',serif; letter-spacing:.06em; color:#5a4327; }
+.bk-ded-sign{ margin-top:8px; font:700 31px/1.05 'Caveat',cursive; color:#2b1e14; white-space:pre-line; }
+.bk-ded-rule{ position:absolute; left:122px; right:122px; bottom:47px; height:1.5px; background:var(--line); }
+
+/* ---------- варианты боковой отделки (book.frame: 'rope' | 'chart' | 'vine') ---------- */
+/* «Канат»: рамка из морского каната со всех сторон; текст чуть уже и подальше от каната */
+.bk-f-rope{ --l:66px; --w:450px; }
+.bk-f-rope .bk-strip{ display:none; }
+.bk-f-rope.bk-text::before, .bk-f-rope.bk-ded::before{
+  content:""; position:absolute; inset:0; background:url(rope-frame.svg) no-repeat center/100% 100%; pointer-events:none; z-index:3;
+}
+.bk-f-rope .bk-run-rule{ height:9px; top:114px; background:url(rope-rule.svg) no-repeat center/100% 100%; }
+.bk-f-rope .bk-folio::after{ background:none; border-top:1.5px solid var(--line); height:0; opacity:.7; }
+.bk-f-rope.bk-ded::after{ display:none; }
+
+/* «Карта»: полоса старинной карты слева — корабли, роза ветров, морской змей, береговая линия «Terra Incognita».
+   Роза ветров плавно уходит под текст, поэтому текст начинается чуть правее. */
+.bk-f-chart{ --l:112px; --w:436px; }
+.bk-f-chart .bk-strip{ width:104px; background:url(strip-map.png) no-repeat left top; background-size:102.5px 888px; }
+
+/* «Папоротник»: джунгли и дикая природа — вертикальная лоза с папоротником и ключиками слева */
+.bk-f-fern{ --l:95px; --w:453px; }
+.bk-f-fern .bk-strip{ width:82px; background:url(strip-fern.png) no-repeat left top; background-size:80px 928px; }
+
+/* «Лоза» (исходный вариант образца) — по умолчанию стили выше */
+
+/* ---------- табличка-подпись для морского и поискового оформления: дерево, латунь, «стежки» ---------- */
+.bk-f-rope .bk-plate, .bk-f-chart .bk-plate{
+  background:linear-gradient(#f3e6bc,#ebdaa6); border-radius:3px; box-shadow:0 8px 22px rgba(0,0,0,.5);
+  padding:36px 34px 14px;
+}
+.bk-f-rope .bk-plate::before, .bk-f-chart .bk-plate::before{
+  content:""; position:absolute; left:-2px; right:-2px; top:-12px; height:24px; bottom:auto; transform:none;
+  background:url(bead-row.svg) repeat-x left center; background-size:auto 24px; opacity:1;
+}
+.bk-f-rope .bk-plate::after, .bk-f-chart .bk-plate::after{
+  content:""; position:absolute; left:10px; right:10px; top:15px; bottom:9px; height:auto; transform:none;
+  border:1.6px dashed rgba(125,94,48,.75); border-radius:9px; background:none; opacity:1;
+}
+.bk-f-rope .bk-plate-div, .bk-f-chart .bk-plate-div{ display:none; }
+.bk-f-rope .bk-plate-cap, .bk-f-chart .bk-plate-cap{ position:relative; z-index:1; }
+.bk-medal{ z-index:2; position:absolute; left:50%; top:76.9%; width:13.5%; height:auto; transform:translateX(-50%); filter:drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+
+/* ---------- колонтитул с номером: ряд украшений по теме путешествия (footer: treasure | wild | sea | birds) ---------- */
+.bk-fo{
+  display:block; width:var(--w); height:calc(var(--w) * .1273); top:calc(848px - var(--w) * .1203);
+  background:no-repeat center/100% 100%;
+}
+.bk-page .bk-fo::after{ display:none !important; }
+.bk-fo-treasure{ background-image:url(footer-treasure.png); --nx:48%; }   /* экспедиции и поиск сокровищ */
+.bk-fo-wild{ background-image:url(footer-wild.png); --nx:47.6%; }          /* дикая природа, путешествия по суше */
+.bk-fo-sea{ background-image:url(footer-sea.png); --nx:47.5%; }            /* морская / картографическая (универсальная) */
+.bk-fo .bk-no{
+  position:absolute; left:var(--nx); top:42.9%; width:50px; margin:0; transform:translate(-50%,-50%);
+  font:700 21px/1 'Tinos',serif; letter-spacing:.04em; color:#4a3323;
+}
+/* ряд украшений выше птичек — текст заканчивается чуть раньше */
+.bk-footer-treasure .bk-content, .bk-footer-wild .bk-content, .bk-footer-sea .bk-content{ height:640px; }
+
+/* ---------- «срез книги» — только при чтении на экране ---------- */
+@media screen{
+  .bk-book-view .bk-wrap{ position:relative; }
+  .bk-book-view .bk-wrap::before{
+    content:""; position:absolute; top:4px; bottom:2px; left:-14px; width:15px; border-radius:3px 0 0 3px;
+    background:repeating-linear-gradient(90deg,#eadcb4 0 1.3px,#b7a277 1.3px 2.5px);
+    box-shadow:-3px 0 0 #5a3a20,-6px 3px 12px rgba(0,0,0,.55), inset -4px 0 6px rgba(70,45,15,.35);
+  }
+}
+
+/* ---------- экран и печать ---------- */
+@page{ size:154mm 235mm; margin:0; }
+@media print{
+  .bk-wrap{ width:154mm !important; height:235mm !important; overflow:hidden; break-after:page; page-break-after:always; }
+  .bk-wrap:last-child{ break-after:auto; page-break-after:auto; }
+  .bk-page{ transform:none !important; box-shadow:none; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}

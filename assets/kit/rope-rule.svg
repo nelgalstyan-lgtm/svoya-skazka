@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 10" width="240" height="10" preserveAspectRatio="none">
+  <defs>
+    <pattern id="twist" width="5.2" height="5.2" patternUnits="userSpaceOnUse" patternTransform="rotate(52)">
+      <rect width="5.2" height="5.2" fill="#b9996a"/>
+      <rect width="2.1" height="5.2" fill="#6d5230"/>
+      <rect x="2.1" width="0.9" height="5.2" fill="#d9be8c" opacity=".55"/>
+    </pattern>
+    <filter id="soft" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0.8" dy="1.4" stdDeviation="1.1" flood-color="#3a2810" flood-opacity=".35"/>
+    </filter>
+  </defs><g filter="url(#soft)"><path d="M5 5 L235 5" fill="none" stroke="url(#twist)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 5 L235 5" fill="none" stroke="#fff5dc" stroke-opacity=".28" stroke-width="1.5" stroke-linecap="round" transform="translate(-1.5,-1.5)"/><path d="M5 5 L235 5" fill="none" stroke="#2a1b08" stroke-opacity=".34" stroke-width="1.6" stroke-linecap="round" transform="translate(1.7,1.7)"/></g></svg>

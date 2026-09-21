@@ -334,7 +334,9 @@ section.tight{ padding:56px 0; }
   text-align:center;
   background:#fff;
   cursor:pointer;
+  transition:all .18s ease;
 }
+.choice-card:hover{ transform:translateY(-1px); border-color:var(--gold-dark); }
 .choice-card.is-selected{
   border-color:var(--gold-dark);
   background:#FBF2DF;
@@ -342,6 +344,25 @@ section.tight{ padding:56px 0; }
 }
 .choice-card .emoji{ font-size:26px; display:block; margin-bottom:8px; }
 .choice-card .name{ font-weight:700; font-size:14.5px; }
+.status-panel{
+  display:none;
+  margin:0 48px 24px;
+  padding:18px 20px;
+  border-radius:14px;
+  background:#f6efe0;
+  border:1px solid #d9c8a4;
+  color:#2a2b34;
+  line-height:1.5;
+}
+.preview-panel{
+  display:none;
+  margin:0 48px 32px;
+  padding:24px 20px;
+  border-radius:16px;
+  background:#fff;
+  border:1px solid #d9c8a4;
+  box-shadow:0 18px 35px -24px rgba(35,44,77,.35);
+}
 
 .photo-drop{
   border:1.5px dashed var(--line);
@@ -518,8 +539,8 @@ section.tight{ padding:56px 0; }
           <div class="field">
             <label>Пол</label>
             <div class="choice-cards" style="grid-template-columns:1fr 1fr;">
-              <div class="choice-card is-selected"><span class="emoji">👧</span><span class="name">Девочка</span></div>
-              <div class="choice-card"><span class="emoji">👦</span><span class="name">Мальчик</span></div>
+              <div class="choice-card is-selected" data-choice-group="gender"><span class="emoji">👧</span><span class="name">Девочка</span></div>
+              <div class="choice-card" data-choice-group="gender"><span class="emoji">👦</span><span class="name">Мальчик</span></div>
             </div>
           </div>
           <div class="field">
@@ -549,12 +570,12 @@ section.tight{ padding:56px 0; }
         <h2>Стиль иллюстраций</h2>
         <p class="help">Выберите, в какой манере будет нарисована книга — от этого зависит вся атмосфера.</p>
         <div class="choice-cards">
-          <div class="choice-card is-selected"><span class="emoji">🎨</span><span class="name">Акварель</span></div>
-          <div class="choice-card"><span class="emoji">✏️</span><span class="name">Мультяшный</span></div>
-          <div class="choice-card"><span class="emoji">📖</span><span class="name">Классическая книжная графика</span></div>
-          <div class="choice-card"><span class="emoji">🧸</span><span class="name">Пластилиновый / 3D</span></div>
-          <div class="choice-card"><span class="emoji">✨</span><span class="name">Аниме</span></div>
-          <div class="choice-card"><span class="emoji">🖍️</span><span class="name">Как будто нарисовал ребёнок</span></div>
+          <div class="choice-card is-selected" data-choice-group="style"><span class="emoji">🎨</span><span class="name">Акварель</span></div>
+          <div class="choice-card" data-choice-group="style"><span class="emoji">✏️</span><span class="name">Мультяшный</span></div>
+          <div class="choice-card" data-choice-group="style"><span class="emoji">📖</span><span class="name">Классическая книжная графика</span></div>
+          <div class="choice-card" data-choice-group="style"><span class="emoji">🧸</span><span class="name">Пластилиновый / 3D</span></div>
+          <div class="choice-card" data-choice-group="style"><span class="emoji">✨</span><span class="name">Аниме</span></div>
+          <div class="choice-card" data-choice-group="style"><span class="emoji">🖍️</span><span class="name">Как будто нарисовал ребёнок</span></div>
         </div>
       </div>
 
@@ -564,9 +585,9 @@ section.tight{ padding:56px 0; }
         <h2>О чём будет книга?</h2>
         <p class="help">Самые популярные темы — можно выбрать одну или совместить несколько.</p>
         <div class="choice-cards" style="grid-template-columns:repeat(3,1fr);">
-          <div class="choice-card is-selected"><span class="emoji">🗺️</span><span class="name">Приключения</span></div>
-          <div class="choice-card"><span class="emoji">🪄</span><span class="name">Сказка</span></div>
-          <div class="choice-card"><span class="emoji">🎉</span><span class="name">Праздник / повод</span></div>
+          <div class="choice-card is-selected" data-choice-group="theme"><span class="emoji">🗺️</span><span class="name">Приключения</span></div>
+          <div class="choice-card" data-choice-group="theme"><span class="emoji">🪄</span><span class="name">Сказка</span></div>
+          <div class="choice-card" data-choice-group="theme"><span class="emoji">🎉</span><span class="name">Праздник / повод</span></div>
         </div>
         <div class="field" style="margin-top:22px;">
           <label for="occasion">Если выбрали «Праздник» — какой повод?</label>
@@ -614,8 +635,11 @@ section.tight{ padding:56px 0; }
 
       <div class="form-actions">
         <div class="price">от 1 900 ₽ <small>точная цена — на следующем шаге, после выбора объёма книги</small></div>
-        <button type="button" class="btn btn-primary">Показать бесплатное превью</button>
+        <button type="button" class="btn btn-primary" id="generatePreviewBtn">Показать бесплатное превью</button>
       </div>
+
+      <div id="generationStatus" class="status-panel" aria-live="polite" style="display:none; margin:0 48px 24px; padding:18px 20px; border-radius:14px; background:#f6efe0; border:1px solid #d9c8a4; color:#2a2b34;"></div>
+      <div id="previewResult" class="preview-panel" style="display:none; margin:0 48px 32px; padding:24px 20px; border-radius:16px; background:#fff; border:1px solid #d9c8a4; box-shadow:0 18px 35px -24px rgba(35,44,77,.35);"></div>
     </form>
 
   </div>
@@ -635,5 +659,245 @@ section.tight{ padding:56px 0; }
   </div>
 </footer>
 
+<script src="js/story-template.js"></script>
+<script>
+  (function () {
+    // Адрес бэкенда: локально — localhost:3000; на боевом сайте можно задать window.SKAZKA_API_BASE до этого скрипта.
+    const isLocal = location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
+    const API_BASE = window.SKAZKA_API_BASE || (isLocal ? 'http://localhost:3000' : '');
+
+    const POLL_EVERY_MS = 2000;
+    const MAX_WAIT_MS = 90000;      // дольше не ждём — показываем локальную книгу
+    const MAX_POLL_ERRORS = 5;
+
+    const generateBtn = document.getElementById('generatePreviewBtn');
+    const statusBox = document.getElementById('generationStatus');
+    const previewBox = document.getElementById('previewResult');
+    let runId = 0;
+
+    function setStatus(message, tone) {
+      statusBox.style.display = 'block';
+      statusBox.textContent = message;
+      statusBox.style.borderColor = tone === 'error' ? '#b4495a' : '#d9c8a4';
+      statusBox.style.background = tone === 'error' ? '#fef1f3' : '#f6efe0';
+      statusBox.style.color = tone === 'error' ? '#7f1d2c' : '#2a2b34';
+    }
+
+    function readInput(id) {
+      const el = document.getElementById(id);
+      return el ? el.value.trim() : '';
+    }
+
+    function readChoiceText(groupName) {
+      const active = document.querySelector('.choice-card[data-choice-group="' + groupName + '"].is-selected');
+      if (!active) return '';
+      const label = active.querySelector('.name');
+      return (label || active).textContent.replace(/\s+/g, ' ').trim();
+    }
+
+    function attachChoiceSelection() {
+      document.querySelectorAll('.choice-card').forEach(function (card) {
+        card.addEventListener('click', function () {
+          const group = card.getAttribute('data-choice-group');
+          if (!group) return;
+          document.querySelectorAll('.choice-card[data-choice-group="' + group + '"]').forEach(function (item) {
+            item.classList.remove('is-selected');
+          });
+          card.classList.add('is-selected');
+        });
+      });
+    }
+
+    function collectAnswers() {
+      return {
+        name: readInput('name'),
+        age: readInput('age'),
+        gender: readChoiceText('gender'),
+        eyes: readInput('eyes'),
+        occasion: readInput('occasion'),
+        habits: readInput('habits'),
+        friends: readInput('friends'),
+        cast: readInput('cast'),
+        style: readChoiceText('style'),
+        theme: readChoiceText('theme')
+      };
+    }
+
+    const STORAGE_KEY = 'skazka:lastBook';
+
+    function saveBook(answers, book) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers: answers, book: book, savedAt: Date.now() }));
+        return true;
+      } catch (e) {
+        return false; // приватный режим или заблокированное хранилище
+      }
+    }
+
+    function pageText(page) {
+      return typeof page === 'string' ? page : page.text;
+    }
+
+    // Всё выводим через textContent — текст приходит от ИИ и не должен исполняться как HTML.
+    function renderReady(book, saved) {
+      previewBox.style.display = 'block';
+      previewBox.textContent = '';
+
+      const label = document.createElement('div');
+      label.textContent = 'Ваша книга готова';
+      label.style.cssText = 'font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#7a6a49; font-weight:700;';
+
+      const title = document.createElement('h3');
+      title.textContent = book.title;
+      title.style.cssText = 'margin:6px 0 8px; font-size:26px;';
+
+      const meta = document.createElement('p');
+      meta.textContent = book.pages.length + ' разворотов с иллюстрациями · чтение онлайн и PDF';
+      meta.style.cssText = 'margin:0 0 20px; color:#5f6378;';
+
+      previewBox.append(label, title, meta);
+
+      if (saved) {
+        const actions = document.createElement('div');
+        actions.style.cssText = 'display:flex; gap:12px; flex-wrap:wrap;';
+
+        const read = document.createElement('a');
+        read.href = 'book.html';
+        read.target = '_blank';
+        read.className = 'btn btn-primary';
+        read.textContent = 'Читать книгу';
+
+        const pdf = document.createElement('a');
+        pdf.href = 'book.html?print=1';
+        pdf.target = '_blank';
+        pdf.className = 'btn';
+        pdf.textContent = 'Скачать PDF';
+        pdf.style.cssText = 'border:1.5px solid #B87F27; color:#B87F27; background:transparent;';
+
+        actions.append(read, pdf);
+        previewBox.appendChild(actions);
+      } else {
+        // хранилище браузера недоступно — показываем книгу текстом прямо здесь
+        book.pages.forEach(function (page, index) {
+          const block = document.createElement('div');
+          block.style.cssText = 'margin-bottom:16px; padding:14px 16px; border-radius:12px; background:#fbf6ea; border:1px solid #eadfc4; white-space:pre-wrap; line-height:1.7; color:#2b2f3a;';
+          block.textContent = (index + 1) + '. ' + pageText(page);
+          previewBox.appendChild(block);
+        });
+      }
+
+      previewBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function finish(book, answers) {
+      statusBox.style.display = 'none';
+      renderReady(book, saveBook(answers, book));
+      generateBtn.disabled = false;
+      generateBtn.textContent = 'Создать ещё раз';
+    }
+
+    // Последний рубеж: сервер недоступен — книгу собираем прямо в браузере.
+    function finishLocally(answers, reason) {
+      if (reason) console.warn('[book] используем локальную книгу:', reason);
+      finish(window.SkazkaTemplate.buildTemplateStory(answers), answers);
+    }
+
+    function progressMessage(elapsedMs, position) {
+      if (position > 1) return 'Ваша сказка в очереди, скоро начнём писать…';
+      if (elapsedMs < 6000) return 'Знакомимся с героем…';
+      if (elapsedMs < 14000) return 'Придумываем сюжет…';
+      if (elapsedMs < 28000) return 'Пишем страницы сказки…';
+      return 'Добавляем последние штрихи…';
+    }
+
+    async function fetchJson(url, options, timeoutMs) {
+      const controller = new AbortController();
+      const timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+      try {
+        const response = await fetch(url, Object.assign({ signal: controller.signal }, options));
+        if (!response.ok) {
+          const error = new Error('HTTP ' + response.status);
+          error.status = response.status;
+          try { error.payload = await response.json(); } catch (e) { /* не JSON */ }
+          throw error;
+        }
+        return await response.json();
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function waitForBook(jobId, answers, myRun, startedAt) {
+      let errors = 0;
+
+      while (myRun === runId) {
+        await new Promise(function (resolve) { setTimeout(resolve, POLL_EVERY_MS); });
+        if (myRun !== runId) return;
+
+        const elapsed = Date.now() - startedAt;
+        if (elapsed > MAX_WAIT_MS) return finishLocally(answers, 'таймаут ожидания');
+
+        try {
+          const data = await fetchJson(API_BASE + '/api/book/' + jobId + '/status', {}, 8000);
+          errors = 0;
+
+          if (data.ready && data.result && Array.isArray(data.result.pages) && data.result.pages.length) {
+            return finish(data.result, answers);
+          }
+          setStatus(progressMessage(elapsed, data.position));
+        } catch (error) {
+          if (error.status === 404) return finishLocally(answers, 'задача потеряна на сервере');
+          errors += 1;
+          if (errors >= MAX_POLL_ERRORS) return finishLocally(answers, 'сервер не отвечает');
+        }
+      }
+    }
+
+    attachChoiceSelection();
+
+    // ?tariff=big — заказ книги тарифа «Большая история» (для проверки до появления выбора тарифа на сайте)
+    const bigTariff = new URLSearchParams(location.search).get('tariff') === 'big';
+
+    generateBtn.addEventListener('click', async function () {
+      const answers = collectAnswers();
+      if (bigTariff) answers.tariff = 'big';
+
+      if (!answers.name) {
+        setStatus('Впишите имя ребёнка — без него история не получится.', 'error');
+        document.getElementById('name').focus();
+        return;
+      }
+
+      const myRun = ++runId;
+      const startedAt = Date.now();
+
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Создаём книгу…';
+      previewBox.style.display = 'none';
+      setStatus('Начинаем писать вашу сказку…');
+
+      try {
+        const data = await fetchJson(API_BASE + '/api/book/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(answers)
+        }, 12000);
+
+        if (!data.jobId) throw new Error('нет jobId');
+        if (bigTariff) { location.href = 'book-pro.html?job=' + encodeURIComponent(data.jobId); return; }
+        await waitForBook(data.jobId, answers, myRun, startedAt);
+      } catch (error) {
+        if (error.status === 429) {
+          // лимит запросов — единственный случай, когда просим подождать
+          setStatus((error.payload && error.payload.error) || 'Слишком много запросов. Попробуйте чуть позже.', 'error');
+          generateBtn.disabled = false;
+          generateBtn.textContent = 'Показать бесплатное превью';
+          return;
+        }
+        if (myRun === runId) finishLocally(answers, error.message);
+      }
+    });
+  })();
+</script>
 </body>
 </html>
