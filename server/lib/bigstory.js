@@ -11,6 +11,7 @@
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
 import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, TRAVEL_STYLES } from './booktext.js';
+import { generateHeroImage, normalizePhoto } from './illustrate.js';
 
 const { buildTemplateStory, normalizeInput, SCENES } = template;
 
@@ -374,11 +375,27 @@ function assemble(input, plan, chapters, meta) {
       n: i + 1,
       title: plan.chapters[i].title,
       initial: null,
-      blocks: ch.blocks.map((b) => (b.t === 'image' ? { ...b, src: fileFor(b.scene), caption: b.caption || defaultCaption(b.scene) } : b))
+      blocks: ch.blocks.map((b) => (b.t === 'image' ? { ...b, src: b.src || fileFor(b.scene), caption: b.caption || defaultCaption(b.scene) } : b))
     }))
   };
   book.meta = { ...meta, heroName: c.name, heroGirl: c.girl };
   return book;
+}
+
+/** Рисует лицо ребёнка на всех hero-иллюстрациях книги. Сбой одной картинки не портит остальные и не рвёт книгу. */
+async function attachHeroImages(input, chapters, illustrate, progress, log) {
+  const photo = normalizePhoto(input.photo);
+  if (!photo) return;
+
+  const heroBlocks = chapters.flatMap((ch) => ch.blocks.filter((b) => b.t === 'image' && b.hero));
+  if (!heroBlocks.length) return;
+
+  const c = normalizeInput(input);
+  for (let i = 0; i < heroBlocks.length; i++) {
+    progress(`Рисуем иллюстрацию с лицом ребёнка (${i + 1} из ${heroBlocks.length})…`, 0.97);
+    const image = await illustrate({ photo, styleLabel: input.style, eyes: c.eyes, brief: heroBlocks[i].brief, log });
+    if (image) heroBlocks[i].src = `data:${image.mime};base64,${image.data}`;
+  }
 }
 
 let defaultProviders = null;
@@ -393,7 +410,8 @@ export async function generateBigBook(input, {
   progress = () => {},
   log = console.warn,
   stepDeadlineMs = 75_000,
-  attemptTimeoutMs = 45_000
+  attemptTimeoutMs = 45_000,
+  illustrate = generateHeroImage
 } = {}) {
   const started = Date.now();
   const c = normalizeInput(input);
@@ -461,7 +479,9 @@ export async function generateBigBook(input, {
     tail = chapter.blocks.filter((b) => b.t === 'p').slice(-6).map((b) => b.text);
   }
 
-  progress('Собираем книгу…', 0.97);
+  await attachHeroImages(input, chapters, illustrate, progress, log);
+
+  progress('Собираем книгу…', 0.99);
   meta.tookMs = Date.now() - started;
   if (meta.fallbackChapters.length === plan.chapters.length) meta.source = 'template';
   const book = assemble(input, plan, chapters, meta);

@@ -1,5 +1,6 @@
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
+import { generateHeroImage, normalizePhoto } from './illustrate.js';
 
 const { buildTemplateStory, normalizeInput, SCENES } = template;
 
@@ -26,9 +27,10 @@ const SYSTEM_PROMPT = `Ты — опытный детский писатель. 
 К каждой странице добавь "scene" — тег иллюстрации, которая лучше всего подходит месту действия на этой странице. Разрешённые теги:
 ${SCENE_TAGS.map((tag) => `- ${tag}: ${SCENES[tag]}`).join('\n')}
 Не повторяй один и тот же тег на соседних страницах. Ровно одна страница — самая яркая кульминация с героем в действии — получает "hero": true, остальные — "hero": false.
+К КАЖДОЙ странице добавь "heroBrief" — краткое описание (1-2 предложения, на английском языке) того, что делает герой в этот момент и что его окружает: поза, действие, окружение, освещение. Без описания лица и эмоций — это добавится отдельно. Понадобится только для страницы с hero=true, но пиши его для каждой на случай, если разметка сместится.
 
 Ответ — строго JSON без пояснений и без markdown:
-{"title": "Название книги", "pages": [{"text": "текст страницы", "scene": "тег", "hero": false}]}`;
+{"title": "Название книги", "pages": [{"text": "текст страницы", "scene": "тег", "hero": false, "heroBrief": "краткое описание сцены по-английски"}]}`;
 
 export function buildPrompt(rawInput) {
   const c = normalizeInput(rawInput);
@@ -72,7 +74,7 @@ export function parseStory(raw, name) {
 
   const pages = (Array.isArray(data.pages) ? data.pages : [])
     .map((p) => (typeof p === 'string' ? { text: p } : p || {}))
-    .map((p) => ({ text: stripTags(p.text), scene: String(p.scene || '').trim(), hero: p.hero === true }))
+    .map((p) => ({ text: stripTags(p.text), scene: String(p.scene || '').trim(), hero: p.hero === true, heroBrief: stripTags(p.heroBrief).slice(0, 500) }))
     .filter((p) => p.text);
 
   if (!title || title.length > 140) throw new Error('bad title');
@@ -115,12 +117,26 @@ export function describeProviders(providers = getDefaultProviders()) {
  * Главная функция: ВСЕГДА возвращает готовую книгу.
  * Сначала ИИ (с переключением между провайдерами), если не вышло — локальный шаблон.
  */
+/** Если есть фото и ключ Gemini — рисует лицо ребёнка на геройской странице. Не мешает выдаче книги при сбое. */
+async function attachHeroImage(rawInput, story, illustrate, log) {
+  const photo = normalizePhoto(rawInput.photo);
+  if (!photo) return;
+
+  const heroPage = story.pages.find((p) => p.hero);
+  if (!heroPage) return;
+
+  const c = normalizeInput(rawInput);
+  const image = await illustrate({ photo, styleLabel: rawInput.style, eyes: c.eyes, brief: heroPage.heroBrief, log });
+  if (image) heroPage.heroImage = `data:${image.mime};base64,${image.data}`;
+}
+
 export async function generateStory(rawInput, {
   providers = getDefaultProviders(),
   deadlineMs = Number(process.env.AI_DEADLINE_MS || 55_000),
   attemptTimeoutMs = Number(process.env.AI_ATTEMPT_TIMEOUT_MS || 35_000),
   health = sharedHealth,
-  log = console.warn
+  log = console.warn,
+  illustrate = generateHeroImage
 } = {}) {
   const started = Date.now();
   const name = normalizeInput(rawInput).name;
@@ -134,7 +150,9 @@ export async function generateStory(rawInput, {
         health,
         log
       });
-      return { ...value, source: 'ai', provider, model, tookMs: Date.now() - started };
+      const result = { ...value, source: 'ai', provider, model, tookMs: Date.now() - started };
+      await attachHeroImage(rawInput, result, illustrate, log);
+      return result;
     } catch (error) {
       log(`[story] AI unavailable, using template: ${error?.message || error}`);
     }

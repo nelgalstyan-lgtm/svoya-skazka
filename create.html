@@ -371,8 +371,13 @@ section.tight{ padding:56px 0; }
   text-align:center;
   color:var(--text-soft);
   background:#fff;
+  cursor:pointer;
 }
 .photo-drop strong{ color:var(--text); display:block; margin-bottom:4px; }
+.photo-drop-preview{ width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0 auto 12px; display:none; border:2px solid var(--line); }
+.photo-drop.has-photo .photo-drop-preview{ display:block; }
+.photo-drop-remove{ display:none; margin-top:10px; font-size:13px; color:#B87F27; text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; }
+.photo-drop.has-photo .photo-drop-remove{ display:inline-block; }
 
 .upsell-row{
   display:flex; align-items:flex-start; gap:16px;
@@ -557,9 +562,12 @@ section.tight{ padding:56px 0; }
 
         <div class="field">
           <label>Фото ребёнка <span class="hint" style="display:inline; font-weight:400;">— необязательно, но иллюстрации станут заметно точнее</span></label>
-          <div class="photo-drop">
-            <strong>Перетащите фото сюда или нажмите, чтобы выбрать</strong>
-            Лучше всего работает чёткое фото лица анфас, без солнечных очков и головных уборов
+          <div class="photo-drop" id="photoDrop" tabindex="0" role="button" aria-label="Загрузить фото ребёнка">
+            <img class="photo-drop-preview" id="photoDropPreview" alt="">
+            <strong id="photoDropTitle">Перетащите фото сюда или нажмите, чтобы выбрать</strong>
+            <span id="photoDropHint">Лучше всего работает чёткое фото лица анфас, без солнечных очков и головных уборов</span>
+            <button type="button" class="photo-drop-remove" id="photoDropRemove">✕ убрать фото</button>
+            <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" hidden>
           </div>
         </div>
       </div>
@@ -693,6 +701,71 @@ section.tight{ padding:56px 0; }
       if (!active) return '';
       const label = active.querySelector('.name');
       return (label || active).textContent.replace(/\s+/g, ' ').trim();
+    }
+
+    // Фото держим только в памяти вкладки: не кладём в localStorage вместе с answers (незачем разрастать хранилище)
+    // и не показываем его повторно при чтении сохранённой книги — на сервер оно уходит один раз, при заказе.
+    const PHOTO_MAX_BYTES = 8 * 1024 * 1024;
+    let selectedPhoto = null;
+
+    function attachPhotoUpload() {
+      const drop = document.getElementById('photoDrop');
+      const input = document.getElementById('photoInput');
+      const preview = document.getElementById('photoDropPreview');
+      const title = document.getElementById('photoDropTitle');
+      const hint = document.getElementById('photoDropHint');
+      const removeBtn = document.getElementById('photoDropRemove');
+      if (!drop || !input) return;
+
+      const defaultTitle = title.textContent;
+      const defaultHint = hint.textContent;
+
+      function setPhoto(file) {
+        if (!file) return;
+        if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+          setStatus('Нужен файл в формате JPEG, PNG или WEBP.', 'error');
+          return;
+        }
+        if (file.size > PHOTO_MAX_BYTES) {
+          setStatus('Фото слишком большое (максимум 8 МБ) — выберите файл поменьше.', 'error');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function () {
+          selectedPhoto = String(reader.result);
+          preview.src = selectedPhoto;
+          drop.classList.add('has-photo');
+          title.textContent = 'Фото загружено: ' + file.name;
+          hint.textContent = 'Нажмите, чтобы выбрать другое фото';
+        };
+        reader.onerror = function () {
+          setStatus('Не получилось прочитать файл. Попробуйте другое фото.', 'error');
+        };
+        reader.readAsDataURL(file);
+      }
+
+      drop.addEventListener('click', function () { input.click(); });
+      drop.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
+      });
+      input.addEventListener('change', function () { setPhoto(input.files && input.files[0]); });
+
+      drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.style.background = '#fbf6ea'; });
+      drop.addEventListener('dragleave', function () { drop.style.background = ''; });
+      drop.addEventListener('drop', function (e) {
+        e.preventDefault();
+        drop.style.background = '';
+        setPhoto(e.dataTransfer.files && e.dataTransfer.files[0]);
+      });
+
+      removeBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        selectedPhoto = null;
+        input.value = '';
+        drop.classList.remove('has-photo');
+        title.textContent = defaultTitle;
+        hint.textContent = defaultHint;
+      });
     }
 
     function attachChoiceSelection() {
@@ -854,6 +927,7 @@ section.tight{ padding:56px 0; }
     }
 
     attachChoiceSelection();
+    attachPhotoUpload();
 
     // ?tariff=big — заказ книги тарифа «Большая история» (для проверки до появления выбора тарифа на сайте)
     const bigTariff = new URLSearchParams(location.search).get('tariff') === 'big';
@@ -868,6 +942,9 @@ section.tight{ padding:56px 0; }
         return;
       }
 
+      // Фото уходит на сервер вместе с анкетой, но не попадает в то, что сохраняется в localStorage (answers)
+      const payload = selectedPhoto ? Object.assign({ photo: selectedPhoto }, answers) : answers;
+
       const myRun = ++runId;
       const startedAt = Date.now();
 
@@ -880,7 +957,7 @@ section.tight{ padding:56px 0; }
         const data = await fetchJson(API_BASE + '/api/book/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(answers)
+          body: JSON.stringify(payload)
         }, 12000);
 
         if (!data.jobId) throw new Error('нет jobId');

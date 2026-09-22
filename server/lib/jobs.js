@@ -36,6 +36,8 @@ export function createJobQueue({
 
   function finish(job, story) {
     if (job.status === 'completed') return;
+    // Фото ребёнка нужно только на время генерации — дальше не храним даже в памяти, а тем более на диске
+    if (job.input && job.input.photo) job.input = { ...job.input, photo: undefined };
     job.status = 'completed';
     job.result = story;
     job.finishedAt = Date.now();

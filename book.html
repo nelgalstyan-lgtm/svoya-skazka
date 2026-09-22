@@ -210,7 +210,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   function render(data) {
     const book = data.book;
     const name = (data.answers && data.answers.name) || '';
-    const heroSrc = HERO_IMAGES[name.trim().toLowerCase()];
+    const demoHeroSrc = HERO_IMAGES[name.trim().toLowerCase()];
     document.title = book.title + ' — Своя Сказка';
 
     // Обложка
@@ -231,6 +231,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
     // Развороты
     book.pages.forEach(function (page, index) {
+      // сгенерированная иллюстрация с реальным лицом ребёнка — в приоритете; демо-фото по имени — запасной вариант для примеров
+      const heroSrc = page.heroImage || demoHeroSrc;
       const useHero = page.hero && heroSrc;
       const s = sheet(useHero ? 'hero-page' : '');
       const scene = page.scene || 'forest_path';

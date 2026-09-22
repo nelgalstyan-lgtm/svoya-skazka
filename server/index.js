@@ -23,15 +23,33 @@ const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 10);
 const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
 const rateBuckets = new Map();
 
-const BIG_TIMEOUT_MS = Number(process.env.BIG_BOOK_TIMEOUT_MS || 8 * 60_000);
+// Большая книга — план + 6 глав + до 5 геройских иллюстраций, короткая с фото — текст + 1 иллюстрация
+const BIG_TIMEOUT_MS = Number(process.env.BIG_BOOK_TIMEOUT_MS || 9 * 60_000);
+const PHOTO_TIMEOUT_MS = Number(process.env.PHOTO_BOOK_TIMEOUT_MS || 110_000);
 
 const queue = createJobQueue({
   runner: (input, ctx) => (input.tariff === 'big' ? generateBigBook(input, { progress: ctx.progress }) : generateStory(input)),
   fallback: (input) => (input.tariff === 'big' ? { book: templateBook(input) } : buildTemplateStory(input)),
-  timeoutFor: (input) => (input.tariff === 'big' ? BIG_TIMEOUT_MS : null),
+  timeoutFor: (input) => (input.tariff === 'big' ? BIG_TIMEOUT_MS : (input.photo ? PHOTO_TIMEOUT_MS : null)),
   concurrency: Number(process.env.QUEUE_CONCURRENCY || 3),
   storeDir: path.join(SERVER_DIR, 'data', 'generated')
 });
+
+// Фото ребёнка для геройских иллюстраций: только data URL, разумный размер, без хранения дольше генерации (см. jobs.js).
+const PHOTO_MAX_BYTES = 8 * 1024 * 1024;
+const PHOTO_RE = /^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=]+)$/i;
+
+function parsePhoto(raw) {
+  if (typeof raw !== 'string' || !raw) return null;
+  const match = PHOTO_RE.exec(raw.trim());
+  if (!match) return null;
+  const mimeSub = match[1].toLowerCase();
+  const mime = mimeSub === 'jpg' ? 'image/jpeg' : `image/${mimeSub}`;
+  const data = match[2];
+  const bytes = Math.floor((data.length * 3) / 4);
+  if (bytes > PHOTO_MAX_BYTES) return null;
+  return { mime, data };
+}
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -42,6 +60,9 @@ app.get('/api/health', (req, res) => {
     message: 'Book generation backend is running',
     hasApiKey: Boolean(process.env.GEMINI_API_KEY),
     model: process.env.GEMINI_MODEL || 'gemini-3.6-flash',
+    // геройские иллюстрации (лицо ребёнка) работают только через Gemini — на том же ключе, что и текст
+    heroIllustrations: Boolean(process.env.GEMINI_API_KEY),
+    imageModel: process.env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image',
     // какие провайдеры подключены и какие сейчас «отдыхают» после сбоя (секунды)
     providers: describeProviders(),
     cooldowns: sharedHealth.snapshot(),
@@ -283,6 +304,8 @@ app.post('/api/book/generate', (req, res) => {
   for (const key of ['name', 'age', 'gender', 'eyes', 'occasion', 'habits', 'friends', 'cast', 'style', 'theme', 'interests', 'special']) {
     input[key] = typeof body[key] === 'string' || typeof body[key] === 'number' ? String(body[key]).slice(0, 500) : '';
   }
+  const photo = parsePhoto(body.photo);
+  if (photo) input.photo = photo;
   if (big) input.tariff = 'big';
 
   const job = queue.submit(input);
@@ -332,4 +355,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { app, queue, resolvePromptById, generateWithGemini };
+export { app, queue, resolvePromptById, generateWithGemini, parsePhoto };
