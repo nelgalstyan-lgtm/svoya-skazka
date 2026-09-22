@@ -207,10 +207,21 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     return story;
   }
 
+  // Обложка и финал берут сцену под тему+повод — праздничная книга не должна открываться замком из «Путешествия»
+  const COVER_SCENE = { adventure: 'castle_gate', fairytale: 'castle_gate', birthday: 'party_room', newyear: 'tree_lights' };
+  const FINALE_SCENE = { adventure: 'treasure_room', fairytale: 'treasure_room', birthday: 'confetti_moment', newyear: 'midnight_fireworks' };
+
+  function coverAndFinaleScenes(answers) {
+    const c = window.SkazkaTemplate.normalizeInput(answers || {});
+    const kind = c.kind === 'holiday' ? window.SkazkaTemplate.occasionKind(c.occasion) : c.kind;
+    return { cover: COVER_SCENE[kind] || 'castle_gate', finale: FINALE_SCENE[kind] || 'treasure_room' };
+  }
+
   function render(data) {
     const book = data.book;
     const name = (data.answers && data.answers.name) || '';
     const demoHeroSrc = HERO_IMAGES[name.trim().toLowerCase()];
+    const scenes = coverAndFinaleScenes(data.answers);
     document.title = book.title + ' — Своя Сказка';
 
     // Обложка
@@ -218,7 +229,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     cover.appendChild(el('div', 'kicker', 'Персональная книга'));
     cover.appendChild(el('h1', '', book.title));
     cover.appendChild(el('div', 'orn', '✦ ✦ ✦'));
-    cover.appendChild(sceneBlock('castle_gate', 'Обложка'));
+    cover.appendChild(sceneBlock(scenes.cover, 'Обложка'));
     if (name) {
       const who = el('div', 'for');
       who.appendChild(el('small', '', 'Главный герой'));
@@ -263,7 +274,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
     // Финал
     const end = sheet('finale');
-    end.appendChild(sceneBlock('treasure_room'));
+    end.appendChild(sceneBlock(scenes.finale));
     end.appendChild(el('h2', '', 'Конец'));
     end.appendChild(el('p', '', 'Эта книга написана по вашей анкете — со всеми привычками, друзьями и близкими героя. Пусть она возвращается к вам снова и снова.'));
     end.appendChild(el('div', 'orn', '✦ ✦ ✦'));

@@ -2,14 +2,13 @@ import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
 import { generateHeroImage, normalizePhoto } from './illustrate.js';
 
-const { buildTemplateStory, normalizeInput, SCENES } = template;
+const { buildTemplateStory, normalizeInput, sceneLibraryFor } = template;
 
 const PAGES_TARGET = 8;
-const SCENE_TAGS = Object.keys(SCENES);
-// Запасной порядок сцен, если модель не указала или перепутала тег
-const DEFAULT_SCENE_ORDER = ['map_table', 'forest_path', 'mountain_bridge', 'cave_entrance', 'night_camp', 'castle_gate', 'ship_deck', 'treasure_room'];
 
-const SYSTEM_PROMPT = `Ты — опытный детский писатель. Пишешь по-русски настоящую историю с сюжетом, а не пересказ анкеты.
+function buildSystemPrompt(library) {
+  const tags = Object.keys(library.scenes);
+  return `Ты — опытный детский писатель. Пишешь по-русски настоящую историю с сюжетом, а не пересказ анкеты.
 
 Правила:
 1. Арка: завязка → происшествие → препятствие, из-за которого кажется, что не получится → кульминация → тёплая развязка.
@@ -25,14 +24,15 @@ const SYSTEM_PROMPT = `Ты — опытный детский писатель. 
 
 Структура: ровно ${PAGES_TARGET} страниц по 130–170 слов каждая.
 К каждой странице добавь "scene" — тег иллюстрации, которая лучше всего подходит месту действия на этой странице. Разрешённые теги:
-${SCENE_TAGS.map((tag) => `- ${tag}: ${SCENES[tag]}`).join('\n')}
+${tags.map((tag) => `- ${tag}: ${library.scenes[tag]}`).join('\n')}
 Не повторяй один и тот же тег на соседних страницах. Ровно одна страница — самая яркая кульминация с героем в действии — получает "hero": true, остальные — "hero": false.
 К КАЖДОЙ странице добавь "heroBrief" — краткое описание (1-2 предложения, на английском языке) того, что делает герой в этот момент и что его окружает: поза, действие, окружение, освещение. Без описания лица и эмоций — это добавится отдельно. Понадобится только для страницы с hero=true, но пиши его для каждой на случай, если разметка сместится.
 
 Ответ — строго JSON без пояснений и без markdown:
 {"title": "Название книги", "pages": [{"text": "текст страницы", "scene": "тег", "hero": false, "heroBrief": "краткое описание сцены по-английски"}]}`;
+}
 
-export function buildPrompt(rawInput) {
+export function buildPrompt(rawInput, library = sceneLibraryFor(normalizeInput(rawInput).kind, rawInput.occasion)) {
   const c = normalizeInput(rawInput);
   const kindName = { adventure: 'приключения', fairytale: 'сказка', holiday: 'праздник' }[c.kind];
   const user = [
@@ -50,7 +50,7 @@ export function buildPrompt(rawInput) {
     'Напиши историю и верни JSON.'
   ].join('\n');
 
-  return { system: SYSTEM_PROMPT, user };
+  return { system: buildSystemPrompt(library), user };
 }
 
 function cyrillicShare(text) {
@@ -63,7 +63,7 @@ const FOREIGN_SCRIPT = new RegExp('[\\u3000-\\u9fff\\uac00-\\ud7af]');
 const stripTags = (value) => String(value || '').replace(/<[^>]*>/g, '').trim();
 
 /** Разбирает и проверяет ответ модели. Бросает ошибку, если книга получилась негодной. */
-export function parseStory(raw, name) {
+export function parseStory(raw, name, library = sceneLibraryFor('adventure')) {
   const text = String(raw || '').replace(/```(?:json)?/gi, '');
   const start = text.indexOf('{');
   const end = text.lastIndexOf('}');
@@ -93,8 +93,9 @@ export function parseStory(raw, name) {
   if (words < pages.length * 80) throw new Error(`story too short: ${words} words`);
 
   // Теги сцен и «геройская» страница — приводим к гарантированно рабочему виду
+  const sceneTags = Object.keys(library.scenes);
   pages.forEach((p, i) => {
-    if (!SCENE_TAGS.includes(p.scene)) p.scene = DEFAULT_SCENE_ORDER[i % DEFAULT_SCENE_ORDER.length];
+    if (!sceneTags.includes(p.scene)) p.scene = library.order[i % library.order.length];
   });
   let heroIndex = pages.findIndex((p) => p.hero);
   if (heroIndex === -1) heroIndex = Math.min(pages.length - 2, Math.round(pages.length * 0.6));
@@ -139,12 +140,14 @@ export async function generateStory(rawInput, {
   illustrate = generateHeroImage
 } = {}) {
   const started = Date.now();
-  const name = normalizeInput(rawInput).name;
+  const c = normalizeInput(rawInput);
+  const name = c.name;
+  const library = sceneLibraryFor(c.kind, rawInput.occasion);
 
   if (providers.length) {
     try {
-      const { value, provider, model } = await generateWithFailover(providers, buildPrompt(rawInput), {
-        validate: (raw) => parseStory(raw, name),
+      const { value, provider, model } = await generateWithFailover(providers, buildPrompt(rawInput, library), {
+        validate: (raw) => parseStory(raw, name, library),
         deadlineAt: started + deadlineMs,
         attemptTimeoutMs,
         health,

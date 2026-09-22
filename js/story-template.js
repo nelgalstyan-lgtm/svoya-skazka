@@ -35,7 +35,7 @@
     return 'лет';
   }
 
-  // Библиотека фоновых сцен (файлы: assets/scenes/<тег>.jpg)
+  // Библиотека фоновых сцен темы «Приключения» (файлы: assets/scenes/<тег>.jpg)
   var SCENES = {
     map_table: 'чердак со столом и старой картой',
     forest_path: 'лесная тропа',
@@ -47,11 +47,46 @@
     castle_gate: 'старинный замок'
   };
 
+  // Тема «Праздник» — свой набор сцен на каждый повод (первый набор: день рождения и Новый год,
+  // остальные поводы пока используют набор дня рождения как нейтральный «праздничный» вариант)
+  var BIRTHDAY_SCENES = {
+    party_room: 'комната с шариками и гирляндами, украшенная к празднику',
+    gift_pile: 'гора ярких подарков с бантами и лентами',
+    birthday_table: 'праздничный стол с тортом и зажжёнными свечами',
+    confetti_moment: 'момент залпа конфетти и серпантина в воздухе'
+  };
+  var NEWYEAR_SCENES = {
+    tree_lights: 'наряженная ёлка с игрушками и гирляндой',
+    snow_yard: 'заснеженный двор со снеговиком',
+    fireplace_stockings: 'камин с носками и подарками',
+    midnight_fireworks: 'окно с ночным салютом под бой курантов'
+  };
+
+  // Библиотека сцен для текущего повода/темы + запасной порядок для замены неверных тегов
+  var SCENE_LIBRARIES = {
+    adventure: { scenes: SCENES, order: ['map_table', 'forest_path', 'mountain_bridge', 'cave_entrance', 'night_camp', 'castle_gate', 'ship_deck', 'treasure_room'] },
+    birthday: { scenes: BIRTHDAY_SCENES, order: ['party_room', 'gift_pile', 'birthday_table', 'confetti_moment'] },
+    newyear: { scenes: NEWYEAR_SCENES, order: ['snow_yard', 'tree_lights', 'fireplace_stockings', 'midnight_fireworks'] }
+  };
+
+  var NEWYEAR_RE = /нов.{0,3}год|нг\b|ёлк|елк|рождеств|снегурочк|дед\s*мороз/i;
+  /** День рождения — нейтральный «праздничный» вариант по умолчанию, если повод не назван или это не Новый год. */
+  function occasionKind(occasion) {
+    return NEWYEAR_RE.test(String(occasion || '')) ? 'newyear' : 'birthday';
+  }
+
+  /** Библиотека сцен для темы+повода. Сказка пока не имеет своей — использует библиотеку «Приключения». */
+  function sceneLibraryFor(kind, occasion) {
+    if (kind === 'holiday') return SCENE_LIBRARIES[occasionKind(occasion)];
+    return SCENE_LIBRARIES.adventure;
+  }
+
   // Сцены по страницам для шаблонных историй; hero — страница с ребёнком (4-я по счёту с нуля)
   var TEMPLATE_SCENES = {
     adventure: ['map_table', 'forest_path', 'mountain_bridge', 'cave_entrance', 'cave_entrance', 'treasure_room'],
     fairytale: ['treasure_room', 'night_camp', 'forest_path', 'castle_gate', 'castle_gate', 'castle_gate'],
-    holiday: ['treasure_room', 'forest_path', 'forest_path', 'night_camp', 'night_camp', 'treasure_room']
+    birthday: ['party_room', 'gift_pile', 'party_room', 'birthday_table', 'gift_pile', 'confetti_moment'],
+    newyear: ['snow_yard', 'tree_lights', 'fireplace_stockings', 'tree_lights', 'snow_yard', 'midnight_fireworks']
   };
 
   function themeKind(theme) {
@@ -140,12 +175,19 @@
       ];
     }
 
-    var scenes = TEMPLATE_SCENES[c.kind];
+    var scenes = c.kind === 'holiday' ? TEMPLATE_SCENES[occasionKind(c.occasion)] : TEMPLATE_SCENES[c.kind];
     return {
       title: title,
       pages: pages.map(function (text, i) { return { text: text, scene: scenes[i], hero: i === 4 }; })
     };
   }
 
-  return { buildTemplateStory: buildTemplateStory, normalizeInput: normalize, cleanText: clean, SCENES: SCENES };
+  return {
+    buildTemplateStory: buildTemplateStory,
+    normalizeInput: normalize,
+    cleanText: clean,
+    SCENES: SCENES,
+    sceneLibraryFor: sceneLibraryFor,
+    occasionKind: occasionKind
+  };
 });
