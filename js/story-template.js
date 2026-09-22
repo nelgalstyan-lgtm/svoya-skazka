@@ -62,11 +62,32 @@
     midnight_fireworks: 'окно с ночным салютом под бой курантов'
   };
 
+  // Тема «Сказка» — три волшебных мира (жанр решает ИИ по сюжету, как sea/treasure/wild у «Путешествия»);
+  // теги общие для всех трёх — сказка про королевство иногда идёт через лес, и наоборот
+  var FAIRYTALE_SCENES = {
+    throne_hall: 'тронный зал с витражами',
+    castle_ballroom: 'бальный зал замка',
+    garden_maze: 'дворцовый сад с фонтаном и живой изгородью',
+    dragon_tower: 'башня с драконом или стражей',
+    fairy_clearing: 'лесная поляна со светлячками и грибами-домиками',
+    talking_grove: 'роща с говорящими деревьями',
+    witch_hut: 'избушка на опушке леса',
+    moonlit_thicket: 'ночная чаща в лунном свете',
+    coral_palace: 'дворец из кораллов',
+    pearl_cave: 'подводная пещера с жемчугом',
+    sunken_ship: 'затонувший корабль',
+    kelp_forest: 'заросли водорослей с рыбками'
+  };
+
   // Библиотека сцен для текущего повода/темы + запасной порядок для замены неверных тегов
   var SCENE_LIBRARIES = {
     adventure: { scenes: SCENES, order: ['map_table', 'forest_path', 'mountain_bridge', 'cave_entrance', 'night_camp', 'castle_gate', 'ship_deck', 'treasure_room'] },
     birthday: { scenes: BIRTHDAY_SCENES, order: ['party_room', 'gift_pile', 'birthday_table', 'confetti_moment'] },
-    newyear: { scenes: NEWYEAR_SCENES, order: ['snow_yard', 'tree_lights', 'fireplace_stockings', 'midnight_fireworks'] }
+    newyear: { scenes: NEWYEAR_SCENES, order: ['snow_yard', 'tree_lights', 'fireplace_stockings', 'midnight_fireworks'] },
+    fairytale: {
+      scenes: FAIRYTALE_SCENES,
+      order: ['throne_hall', 'fairy_clearing', 'coral_palace', 'castle_ballroom', 'talking_grove', 'pearl_cave', 'dragon_tower', 'witch_hut', 'sunken_ship', 'garden_maze', 'moonlit_thicket', 'kelp_forest']
+    }
   };
 
   var NEWYEAR_RE = /нов.{0,3}год|нг\b|ёлк|елк|рождеств|снегурочк|дед\s*мороз/i;
@@ -75,16 +96,18 @@
     return NEWYEAR_RE.test(String(occasion || '')) ? 'newyear' : 'birthday';
   }
 
-  /** Библиотека сцен для темы+повода. Сказка пока не имеет своей — использует библиотеку «Приключения». */
+  /** Библиотека сцен для темы+повода. */
   function sceneLibraryFor(kind, occasion) {
     if (kind === 'holiday') return SCENE_LIBRARIES[occasionKind(occasion)];
+    if (kind === 'fairytale') return SCENE_LIBRARIES.fairytale;
     return SCENE_LIBRARIES.adventure;
   }
 
-  // Сцены по страницам для шаблонных историй; hero — страница с ребёнком (4-я по счёту с нуля)
+  // Сцены по страницам для шаблонных историй; hero — страница с ребёнком (4-я по счёту с нуля).
+  // Сказка в локальном шаблоне всегда про «королевство» (так написан сам текст) — поэтому только тэги королевства.
   var TEMPLATE_SCENES = {
     adventure: ['map_table', 'forest_path', 'mountain_bridge', 'cave_entrance', 'cave_entrance', 'treasure_room'],
-    fairytale: ['treasure_room', 'night_camp', 'forest_path', 'castle_gate', 'castle_gate', 'castle_gate'],
+    fairytale: ['castle_ballroom', 'throne_hall', 'garden_maze', 'dragon_tower', 'throne_hall', 'castle_ballroom'],
     birthday: ['party_room', 'gift_pile', 'party_room', 'birthday_table', 'gift_pile', 'confetti_moment'],
     newyear: ['snow_yard', 'tree_lights', 'fireplace_stockings', 'tree_lights', 'snow_yard', 'midnight_fireworks']
   };

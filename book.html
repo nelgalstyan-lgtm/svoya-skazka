@@ -208,8 +208,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   }
 
   // Обложка и финал берут сцену под тему+повод — праздничная книга не должна открываться замком из «Путешествия»
-  const COVER_SCENE = { adventure: 'castle_gate', fairytale: 'castle_gate', birthday: 'party_room', newyear: 'tree_lights' };
-  const FINALE_SCENE = { adventure: 'treasure_room', fairytale: 'treasure_room', birthday: 'confetti_moment', newyear: 'midnight_fireworks' };
+  // Сказка в короткой книге пока без выбора жанра (kingdom/forest/underwater — это только у «Большой истории»),
+  // поэтому обложка и финал берут вариант «королевство» — как и локальный текстовый шаблон сказки
+  const COVER_SCENE = { adventure: 'castle_gate', fairytale: 'castle_ballroom', birthday: 'party_room', newyear: 'tree_lights' };
+  const FINALE_SCENE = { adventure: 'treasure_room', fairytale: 'garden_maze', birthday: 'confetti_moment', newyear: 'midnight_fireworks' };
 
   function coverAndFinaleScenes(answers) {
     const c = window.SkazkaTemplate.normalizeInput(answers || {});

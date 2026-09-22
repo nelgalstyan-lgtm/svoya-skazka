@@ -128,7 +128,36 @@
 .bk-f-fern{ --l:95px; --w:453px; }
 .bk-f-fern .bk-strip{ width:82px; background:url(strip-fern.png) no-repeat left top; background-size:80px 928px; }
 
-/* «Лоза» (исходный вариант образца) — по умолчанию стили выше */
+/* «Лоза»: сказка — королевство. Исходный вариант образца (золотая лоза с виноградом, strip.png) — уже готов,
+   поэтому у book.frame:'vine' нет отдельных правил, работают стили по умолчанию выше. */
+
+/* «Листва»: сказка — заколдованный лес, тёмная зелень (отличается от «папоротника» дикой природы — тот золотой) */
+.bk-f-leaf{ --l:93px; --w:453px; }
+.bk-f-leaf .bk-strip{
+  width:80px; background-color:#243a24;
+  background-image:
+    radial-gradient(ellipse 11px 17px at 50% 20%, rgba(150,200,130,.6) 60%, transparent 63%),
+    radial-gradient(ellipse 11px 17px at 18% 55%, rgba(150,200,130,.45) 60%, transparent 63%),
+    radial-gradient(ellipse 11px 17px at 72% 80%, rgba(150,200,130,.45) 60%, transparent 63%),
+    linear-gradient(90deg, rgba(0,0,0,.14), transparent 14px);
+  background-size:40px 60px, 40px 60px, 40px 60px, 14px 100%;
+  background-position:0 0, 8px 20px, 24px 4px, 0 0;
+  background-repeat:repeat-y, repeat-y, repeat-y, no-repeat;
+}
+
+/* «Волна»: сказка — подводное царство, пузыри и волны на глубоком бирюзовом */
+.bk-f-wave{ --l:93px; --w:453px; }
+.bk-f-wave .bk-strip{
+  width:80px; background-color:#0f3d4a;
+  background-image:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,.35) 3px, transparent 3.5px),
+    radial-gradient(circle at 60% 50%, rgba(255,255,255,.25) 2px, transparent 2.5px),
+    radial-gradient(circle at 25% 78%, rgba(255,255,255,.3) 2.5px, transparent 3px),
+    repeating-linear-gradient(0deg, transparent 0 26px, rgba(120,200,220,.25) 26px 30px),
+    linear-gradient(90deg, rgba(0,0,0,.12), transparent 14px);
+  background-size:50px 50px, 50px 50px, 50px 50px, 100% 30px, 14px 100%;
+  background-repeat:repeat-y, repeat-y, repeat-y, repeat-y, no-repeat;
+}
 
 /* «Лента»: день рождения — полоса из ленты-бантинга слева, чистый CSS без растровых картинок */
 .bk-f-ribbon{ --l:93px; --w:453px; }
@@ -195,13 +224,31 @@
   background-size:30px 30px;
 }
 .bk-fo-newyear .bk-no{ color:#f4efe0; }
+/* сказка — королевство (тон в цвет золотой лозы), лес (тёмная зелень), подводное царство (глубокий бирюзовый) */
+.bk-fo-kingdom{
+  background-color:#e6cf9c; --nx:50%;
+  background-image:repeating-linear-gradient(90deg, transparent 0 24px, rgba(122,90,40,.55) 24px 27px, transparent 27px 51px);
+}
+.bk-fo-forest{
+  background-color:#243a24; --nx:50%;
+  background-image:radial-gradient(circle at 50% 50%, rgba(180,220,150,.6) 2px, transparent 2.3px);
+  background-size:26px 26px;
+}
+.bk-fo-forest .bk-no{ color:#f4efe0; }
+.bk-fo-underwater{
+  background-color:#0f3d4a; --nx:50%;
+  background-image:radial-gradient(circle at 50% 50%, rgba(255,255,255,.4) 2px, transparent 2.2px);
+  background-size:26px 26px;
+}
+.bk-fo-underwater .bk-no{ color:#f4efe0; }
 .bk-fo .bk-no{
   position:absolute; left:var(--nx); top:42.9%; width:50px; margin:0; transform:translate(-50%,-50%);
   font:700 21px/1 'Tinos',serif; letter-spacing:.04em; color:#4a3323;
 }
 /* ряд украшений выше птичек — текст заканчивается чуть раньше */
 .bk-footer-treasure .bk-content, .bk-footer-wild .bk-content, .bk-footer-sea .bk-content,
-.bk-footer-birthday .bk-content, .bk-footer-newyear .bk-content{ height:640px; }
+.bk-footer-birthday .bk-content, .bk-footer-newyear .bk-content,
+.bk-footer-kingdom .bk-content, .bk-footer-forest .bk-content, .bk-footer-underwater .bk-content{ height:640px; }
 
 /* ---------- верхний колонтитул и разделитель главы по жанру (значки и линия) ---------- */
 .bk-footer-treasure .bk-run img, .bk-footer-wild .bk-run img, .bk-footer-sea .bk-run img{ height:19px; width:auto; opacity:.92; }
@@ -221,6 +268,16 @@
 .bk-footer-newyear .bk-run-rule{
   left:var(--l); width:var(--w); height:1.6px; opacity:.8;
   background:repeating-linear-gradient(90deg,#274267 0 3px,transparent 3px 13px);
+}
+/* королевство — тонкая золотая линия; лес — «листовой» пунктир; подводное царство — редкие «пузырьки» */
+.bk-footer-kingdom .bk-run-rule{ left:var(--l); width:var(--w); height:1.6px; background:#7a5a28; opacity:.75; }
+.bk-footer-forest .bk-run-rule{
+  left:var(--l); width:var(--w); height:1.6px; opacity:.8;
+  background:repeating-linear-gradient(90deg,#5f9a52 0 7px,transparent 7px 9px,#5f9a52 9px 12px,transparent 12px 20px);
+}
+.bk-footer-underwater .bk-run-rule{
+  left:var(--l); width:var(--w); height:1.6px; opacity:.8;
+  background:repeating-linear-gradient(90deg,#5fb8c9 0 3px,transparent 3px 17px);
 }
 
 /* ---------- «срез книги» — только при чтении на экране ---------- */

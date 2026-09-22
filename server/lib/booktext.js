@@ -92,7 +92,10 @@ export const TRAVEL_STYLES = {
   wild: { frame: 'fern', footer: 'wild' },          // дикая природа, джунгли, суша: папоротник с лозой, следы
   universal: { frame: 'chart', footer: 'treasure' }, // жанр не определён (нейтральная тайна, загадка): карта и предметы исследователя
   birthday: { frame: 'ribbon', footer: 'birthday' }, // день рождения: лента с флажками, воздушные шары
-  newyear: { frame: 'frost', footer: 'newyear' }     // новый год: морозный узор, снежинки
+  newyear: { frame: 'frost', footer: 'newyear' },    // новый год: морозный узор, снежинки
+  kingdom: { frame: 'vine', footer: 'kingdom' },     // сказка — королевство: готовая золотая лоза с виноградом (была не задействована)
+  forest: { frame: 'leaf', footer: 'forest' },       // сказка — заколдованный лес: листва на тёмной зелени
+  underwater: { frame: 'wave', footer: 'underwater' } // сказка — подводное царство: пузыри и волны на глубоком бирюзовом
 };
 
 const SEA_WORDS = /(море|моря|морю|морем|морск|корабл|парус|остров|пират|шторм|капитан|якор|шхун|волн[аыуе]|лодк|пристан|штурвал|маяк)/gi;
