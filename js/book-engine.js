@@ -126,8 +126,8 @@
     var page = newSheet(root, 'bk-ill');
     var pic = img(imageSrc(block), 'bk-ill-img', block.caption || '');
     page.appendChild(pic);
-    // у морского и поискового оформления на табличке деревянный медальон, у «лозы» — исходная розетка образца
-    var wood = FRAME !== 'vine';
+    // у оформлений темы «Путешествие» на табличке деревянный медальон; у праздничных (лента/изморозь) — бумажная розетка
+    var wood = FRAME === 'rope' || FRAME === 'chart' || FRAME === 'fern';
     var rosette = img(KIT + (wood ? 'medallion.png' : 'rosette.png'), wood ? 'bk-medal' : 'bk-rosette', '');
     page.appendChild(rosette);
     var plate = h('div', 'bk-plate');

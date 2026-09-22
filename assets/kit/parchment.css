@@ -130,6 +130,29 @@
 
 /* «Лоза» (исходный вариант образца) — по умолчанию стили выше */
 
+/* «Лента»: день рождения — полоса из ленты-бантинга слева, чистый CSS без растровых картинок */
+.bk-f-ribbon{ --l:93px; --w:453px; }
+.bk-f-ribbon .bk-strip{
+  width:80px;
+  background:
+    repeating-linear-gradient(155deg, #E8735C 0 18px, #F2A93C 18px 36px, #4FB0A5 36px 54px) left top / 80px 54px repeat-y,
+    linear-gradient(90deg, rgba(0,0,0,.08), transparent 14px);
+}
+
+/* «Изморозь»: Новый год — морозная синяя полоса со снежинками-точками, тоже чистый CSS */
+.bk-f-frost{ --l:93px; --w:453px; }
+.bk-f-frost .bk-strip{
+  width:80px; background-color:#274267;
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.9) 1.6px, transparent 1.8px),
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,.55) 1.2px, transparent 1.4px),
+    radial-gradient(circle at 70% 65%, rgba(255,255,255,.55) 1.2px, transparent 1.4px),
+    linear-gradient(90deg, rgba(0,0,0,.12), transparent 14px);
+  background-size:40px 40px, 40px 40px, 40px 40px, 14px 100%;
+  background-position:0 0, 10px 18px, 26px 6px, 0 0;
+  background-repeat:repeat-y, repeat-y, repeat-y, no-repeat;
+}
+
 /* ---------- табличка-подпись для морского и поискового оформления: дерево, латунь, «стежки» ---------- */
 .bk-f-rope .bk-plate, .bk-f-chart .bk-plate{
   background:linear-gradient(#f3e6bc,#ebdaa6); border-radius:3px; box-shadow:0 8px 22px rgba(0,0,0,.5);
@@ -156,12 +179,29 @@
 .bk-fo-treasure{ background-image:url(footer-treasure.png); --nx:48%; }   /* экспедиции и поиск сокровищ */
 .bk-fo-wild{ background-image:url(footer-wild.png); --nx:47.6%; }          /* дикая природа, путешествия по суше */
 .bk-fo-sea{ background-image:url(footer-sea.png); --nx:47.5%; }            /* морская / картографическая (универсальная) */
+/* день рождения и Новый год — колонтитулы из чистого CSS (лента-бантинг / снежинки), без растровых картинок */
+.bk-fo-birthday{
+  background-color:#f3e3b2; --nx:50%;
+  background-image:
+    repeating-linear-gradient(135deg, transparent 0 10px, rgba(232,115,92,.9) 10px 12px, transparent 12px 22px),
+    repeating-linear-gradient(45deg, transparent 0 10px, rgba(217,164,65,.9) 10px 12px, transparent 12px 22px);
+}
+.bk-fo-newyear{
+  background-color:#274267; --nx:50%;
+  background-image:
+    radial-gradient(circle at 50% 30%, rgba(255,255,255,.85) 1.6px, transparent 1.8px),
+    radial-gradient(circle at 20% 65%, rgba(255,255,255,.55) 1.3px, transparent 1.5px),
+    radial-gradient(circle at 75% 60%, rgba(255,255,255,.55) 1.3px, transparent 1.5px);
+  background-size:30px 30px;
+}
+.bk-fo-newyear .bk-no{ color:#f4efe0; }
 .bk-fo .bk-no{
   position:absolute; left:var(--nx); top:42.9%; width:50px; margin:0; transform:translate(-50%,-50%);
   font:700 21px/1 'Tinos',serif; letter-spacing:.04em; color:#4a3323;
 }
 /* ряд украшений выше птичек — текст заканчивается чуть раньше */
-.bk-footer-treasure .bk-content, .bk-footer-wild .bk-content, .bk-footer-sea .bk-content{ height:640px; }
+.bk-footer-treasure .bk-content, .bk-footer-wild .bk-content, .bk-footer-sea .bk-content,
+.bk-footer-birthday .bk-content, .bk-footer-newyear .bk-content{ height:640px; }
 
 /* ---------- верхний колонтитул и разделитель главы по жанру (значки и линия) ---------- */
 .bk-footer-treasure .bk-run img, .bk-footer-wild .bk-run img, .bk-footer-sea .bk-run img{ height:19px; width:auto; opacity:.92; }
@@ -172,6 +212,15 @@
 .bk-footer-wild .bk-run-rule{
   left:var(--l); width:var(--w); height:1.6px; opacity:.8;
   background:repeating-linear-gradient(90deg,#4a3323 0 11px,transparent 11px 15px,#4a3323 15px 18px,transparent 18px 22px);
+}
+/* день рождения — пунктир-гирлянда; Новый год — редкий «снежный» пунктир */
+.bk-footer-birthday .bk-run-rule{
+  left:var(--l); width:var(--w); height:2px; opacity:.85;
+  background:repeating-linear-gradient(90deg,#E8735C 0 6px,transparent 6px 12px,#4FB0A5 12px 18px,transparent 18px 24px);
+}
+.bk-footer-newyear .bk-run-rule{
+  left:var(--l); width:var(--w); height:1.6px; opacity:.8;
+  background:repeating-linear-gradient(90deg,#274267 0 3px,transparent 3px 13px);
 }
 
 /* ---------- «срез книги» — только при чтении на экране ---------- */
