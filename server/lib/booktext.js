@@ -99,6 +99,26 @@ export const TRAVEL_STYLES = {
   underwater: { frame: 'wave', footer: 'underwater' } // сказка — подводное царство: пузыри и волны на глубоком бирюзовом
 };
 
+/** Возрастная группа по возрасту ребёнка: 0–4, 5–10, 11–16. Возраст не указан — самая массовая, 5–10. */
+export function ageGroupFor(age) {
+  const a = Number(age);
+  if (!Number.isFinite(a) || a <= 0) return '5-10';
+  if (a <= 4) return '0-4';
+  if (a <= 10) return '5-10';
+  return '11-16';
+}
+
+// Оформление по возрасту. «Пергамент» (TRAVEL_STYLES) — взрослее, для 11–16; для 5–10 (и пока для 0–4, у них своего нет)
+// путешествие оформлено яркими иллюстрированными рамками: пираты и карта сокровищ, джунгли-сафари.
+const PIRATES = { frame: 'pirates', footer: 'pirates' };
+const AGE_STYLES = { '5-10': { sea: PIRATES, treasure: PIRATES, universal: PIRATES, wild: { frame: 'jungle', footer: 'jungle' } } };
+
+/** Рамка+колонтитул для жанра с учётом возраста; если для группы отдельного оформления нет — общее. */
+export function styleFor(genre, ageGroup) {
+  const group = ageGroup === '0-4' ? '5-10' : ageGroup;
+  return (AGE_STYLES[group] && AGE_STYLES[group][genre]) || TRAVEL_STYLES[genre];
+}
+
 const SEA_WORDS = /(море|моря|морю|морем|морск|корабл|парус|остров|пират|шторм|капитан|якор|шхун|волн[аыуе]|лодк|пристан|штурвал|маяк)/gi;
 const TREASURE_WORDS = /(клад|сокровищ|экспедиц|ключ|сундук|тайник|шифр|компас|карту|карты|карта|тайн|секрет|загадк|улик|головоломк|расследов|механизм)/gi;
 const WILD_WORDS = /(лес|гор[аыуеоы]|тропа|тропин|следы|следа|волк|олен|медвед|костёр|костер|палатк|поход|река|реки|болот|пещер|зверь|зверей|дерев)/gi;
@@ -133,7 +153,7 @@ export const inferFrame = (book) => TRAVEL_STYLES[inferGenre(book)].frame;
 export function normalizeBook(book, { name, girl } = {}) {
   return {
     ...book,
-    ...(() => { const genre = normalizeGenre(book.genre) || inferGenre(book); const st = TRAVEL_STYLES[genre]; return { genre, frame: book.frame || st.frame, footer: book.footer || st.footer }; })(),
+    ...(() => { const genre = normalizeGenre(book.genre) || inferGenre(book); const st = styleFor(genre, book.ageGroup); return { genre, frame: book.frame || st.frame, footer: book.footer || st.footer }; })(),
     chapters: (book.chapters || []).map((c) => ({ ...c, blocks: normalizeChapterBlocks(c.blocks.map((b) => ({ ...b })), { name, girl }) }))
   };
 }

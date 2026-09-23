@@ -143,12 +143,23 @@ test('повторы фирменных фраз ловятся, имена из
   assert.deepEqual(repeatedPhrases([{ t: 'p', text: 'Один раз сказал Тигран и пошёл дальше по дороге.' }], names), []);
 });
 
-test('жанр из плана выбирает оформление книги', async () => {
+test('жанр из плана выбирает оформление книги (11–16 лет — «Пергамент»)', async () => {
   for (const [genre, frame, footer] of [['sea', 'rope', 'sea'], ['treasure', 'chart', 'treasure'], ['wild', 'fern', 'wild'], ['mystery', 'chart', 'treasure']]) {
     const { providers, close } = await providersFor((user) => (/Это ПЛАН/.test(user) ? JSON.stringify({ ...planJson, genre }) : chapterJson(chapterNo(user))));
-    const r = await generateBigBook(INPUT, { providers, health: createHealth(), log: quiet });
+    const r = await generateBigBook({ ...INPUT, age: '13' }, { providers, health: createHealth(), log: quiet });
     close();
     assert.equal(r.book.frame, frame, genre);
     assert.equal(r.book.footer, footer, genre);
+  }
+});
+
+test('5–10 лет: путешествие оформлено яркими рамками — «дикая природа» это джунгли, море и клад — пираты', async () => {
+  for (const [genre, frame] of [['wild', 'jungle'], ['sea', 'pirates']]) {
+    const { providers, close } = await providersFor((user) => (/Это ПЛАН/.test(user) ? JSON.stringify({ ...planJson, genre }) : chapterJson(chapterNo(user))));
+    const r = await generateBigBook(INPUT, { providers, health: createHealth(), log: quiet }); // INPUT: 7 лет
+    close();
+    assert.equal(r.book.ageGroup, '5-10');
+    assert.equal(r.book.frame, frame, genre);
+    assert.equal(r.book.footer, frame, genre);
   }
 });

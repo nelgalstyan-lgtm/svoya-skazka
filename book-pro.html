@@ -106,6 +106,15 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       start(b);
     };
     document.body.appendChild(sd);
+  } else if (params.get('demo') === 'travel') {
+    // образец оформлений «Путешествия»: design=pirates|jungle (5–10 лет) или rope|chart|fern («Пергамент», 11–16)
+    var tdesign = params.get('design') || 'pirates';
+    var tmap = { pirates: ['pirates', 'pirates'], jungle: ['jungle', 'jungle'], rope: ['rope', 'sea'], chart: ['chart', 'treasure'], fern: ['fern', 'wild'] };
+    var tpair = tmap[tdesign] || tmap.pirates;
+    var st = document.createElement('script');
+    st.src = 'assets/demo-travel.js';
+    st.onload = function () { var b = window.SKAZKA_DEMO_TRAVEL; b.frame = tpair[0]; b.footer = tpair[1]; start(b); };
+    document.body.appendChild(st);
   } else if (params.get('demo') === 'alex') {
     // локальный тест на образце: данные лежат только на компьютере автора
     var s = document.createElement('script');

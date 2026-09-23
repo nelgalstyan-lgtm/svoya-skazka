@@ -101,3 +101,17 @@ test('загадка в лесу и пещере — это «тайны и эк
   assert.deepEqual(TRAVEL_STYLES.universal, { frame: 'chart', footer: 'treasure' });
   assert.equal(normalizeBook(mk('Обычный день.'), { name: 'Ян' }).footer, 'treasure');
 });
+
+test('возрастные группы и оформление путешествия по возрасту', async () => {
+  const { ageGroupFor, styleFor, TRAVEL_STYLES } = await import('../lib/booktext.js');
+  assert.deepEqual([3, 4, 5, 10, 11, 16].map(ageGroupFor), ['0-4', '0-4', '5-10', '5-10', '11-16', '11-16']);
+  assert.equal(ageGroupFor(undefined), '5-10');
+  assert.equal(ageGroupFor(''), '5-10');
+  // 5–10 (и пока 0–4): яркие рамки; 11–16 и старые книги без возраста — «Пергамент»
+  assert.deepEqual(styleFor('treasure', '5-10'), { frame: 'pirates', footer: 'pirates' });
+  assert.deepEqual(styleFor('wild', '0-4'), { frame: 'jungle', footer: 'jungle' });
+  assert.deepEqual(styleFor('sea', '11-16'), TRAVEL_STYLES.sea);
+  assert.deepEqual(styleFor('wild', undefined), TRAVEL_STYLES.wild);
+  // праздник и сказка от возраста пока не зависят
+  assert.deepEqual(styleFor('birthday', '5-10'), TRAVEL_STYLES.birthday);
+});

@@ -17,7 +17,7 @@
 
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
-import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, TRAVEL_STYLES } from './booktext.js';
+import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, ageGroupFor, styleFor } from './booktext.js';
 import { generateHeroImage, normalizePhoto } from './illustrate.js';
 
 const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind } = template;
@@ -459,7 +459,8 @@ export function templateBook(input) {
   const library = sceneLibraryFor(c.kind, c.occasion);
   // локальный шаблон без ИИ: у праздника жанр — сам повод; у сказки всегда «королевство»; у путешествия жанр решит normalizeBook по тексту
   const styleKey = themeKey === 'fairytale' ? 'kingdom' : designGenre(themeKey, input.design);
-  const style = styleKey === 'adventure' ? null : TRAVEL_STYLES[styleKey];
+  const ageGroup = ageGroupFor(c.age);
+  const style = styleKey === 'adventure' ? null : styleFor(styleKey, ageGroup);
   const titles = CHAPTER_TITLES[styleKey] || CHAPTER_TITLES[themeKey] || CHAPTER_TITLES.adventure;
   const story = buildTemplateStory(input);
   const half = Math.ceil(story.pages.length / 2);
@@ -473,6 +474,7 @@ export function templateBook(input) {
   return {
     title: story.title,
     theme: 'parchment',
+    ageGroup,
     genre: style ? styleKey : undefined,
     frame: style ? style.frame : undefined,
     footer: style ? style.footer : undefined,
@@ -488,10 +490,12 @@ const fileFor = (scene, library) => `assets/scenes/${Object.keys(library.scenes)
 
 function assemble(input, plan, chapters, meta, library) {
   const c = normalizeInput(input);
-  const style = plan.genre ? TRAVEL_STYLES[plan.genre] : null;
+  const ageGroup = ageGroupFor(c.age);
+  const style = plan.genre ? styleFor(plan.genre, ageGroup) : null;
   const book = {
     title: plan.title,
     theme: 'parchment',
+    ageGroup, // возрастная группа задаёт оформление (для путешествия: 5–10 — яркие рамки, 11–16 — «Пергамент»)
     // путешествие — жанр от ИИ (море/канат, поиски/карта, дикая природа/лоза), праздник — сам повод;
     // если жанр не назван (старая книга без него), оформление определяется по тексту в normalizeBook
     genre: plan.genre || undefined,

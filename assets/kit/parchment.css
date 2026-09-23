@@ -3,7 +3,7 @@
  * Страница 154×235 мм (582×888 px при 96 dpi). Все размеры в px этой сетки.
  * Меняется только содержимое (текст, иллюстрации); оформление берётся из этого файла и картинок рядом.
  */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&family=Marck+Script&family=Caveat:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&family=Marck+Script&family=Caveat:wght@600;700&family=Lobster&family=Podkova:wght@700;800&display=swap');
 
 .bk-wrap{ width:calc(582px * var(--bk-scale, 1)); height:calc(888px * var(--bk-scale, 1)); flex:none; }
 .bk-page{
@@ -301,14 +301,14 @@
 /* посвящение: тексты внутри рамки, без прежней тонкой каймы и линии */
 .bk-f-cookies.bk-ded::after, .bk-f-elves.bk-ded::after, .bk-f-cookies .bk-ded-rule, .bk-f-elves .bk-ded-rule{ display:none; }
 .bk-f-cookies .bk-ded-title, .bk-f-elves .bk-ded-title{ left:var(--l); right:auto; width:var(--w); font-size:28px; color:var(--brown); }
-.bk-f-cookies .bk-ded .bk-divider, .bk-f-elves .bk-ded .bk-divider{ left:var(--l); right:auto; width:var(--w); }
+.bk-f-cookies.bk-ded .bk-divider, .bk-f-elves.bk-ded .bk-divider{ left:var(--l); right:auto; width:var(--w); }
 .bk-f-cookies .bk-ded-lead, .bk-f-cookies .bk-ded-body, .bk-f-elves .bk-ded-lead, .bk-f-elves .bk-ded-body{
   left:calc(var(--l) + 8px); right:calc(582px - var(--l) - var(--w) + 8px); color:var(--ink);
 }
 .bk-f-cookies .bk-ded-foot, .bk-f-elves .bk-ded-foot{ left:var(--l); right:auto; width:var(--w); bottom:92px; }
-.bk-f-elves .bk-ded-title{ top:232px; } .bk-f-elves .bk-ded .bk-divider{ top:282px; }
+.bk-f-elves .bk-ded-title{ top:232px; } .bk-f-elves.bk-ded .bk-divider{ top:282px; }
 .bk-f-elves .bk-ded-lead{ top:326px; } .bk-f-elves .bk-ded-body{ top:388px; }
-.bk-f-cookies .bk-ded-title{ top:150px; } .bk-f-cookies .bk-ded .bk-divider{ top:200px; }
+.bk-f-cookies .bk-ded-title{ top:150px; } .bk-f-cookies.bk-ded .bk-divider{ top:200px; }
 .bk-f-cookies .bk-ded-lead{ top:246px; } .bk-f-cookies .bk-ded-body{ top:306px; }
 
 /* страница с иллюстрацией: мягкая табличка в цвет рамки, без деревянной розетки */
@@ -319,6 +319,73 @@
 .bk-f-cookies .bk-plate::before, .bk-f-cookies .bk-plate::after, .bk-f-elves .bk-plate::before, .bk-f-elves .bk-plate::after{ display:none; }
 .bk-f-cookies .bk-plate-div, .bk-f-elves .bk-plate-div{ display:none; }
 .bk-f-cookies .bk-plate-cap{ color:#5a3320; -webkit-text-stroke:0; } .bk-f-elves .bk-plate-cap{ color:#1f4a32; -webkit-text-stroke:0; }
+
+/* ---------- Путешествие для 5–10 лет: «Пираты и карта сокровищ» (pirates) и «Сафари в джунглях» (jungle) ----------
+   Полные иллюстрированные рамки из макетов (frame-*.jpg, без текста). Название главы стоит на баннере рамки
+   (волна-лента / деревянная вывеска), номер страницы — на монете и дорожном знаке. Для 11–16 остаётся «Пергамент». */
+.bk-f-pirates{ --l:108px; --w:395px; }
+.bk-f-jungle{ --l:124px; --w:366px; }
+.bk-f-pirates.bk-text, .bk-f-pirates.bk-ded{
+  --ink:#3d2412; --brown:#4a2b14; --muted:#7a5a3e; --line:#a98a5f;
+  background:#f6e2b8 url(frame-pirates.jpg) center/100% 100% no-repeat;
+}
+.bk-f-jungle.bk-text, .bk-f-jungle.bk-ded{
+  --ink:#3f1f14; --brown:#4a2412; --muted:#6b4a32; --line:#8a7a55;
+  background:#e8f2d8 url(frame-jungle.jpg) center/100% 100% no-repeat;
+}
+.bk-f-pirates .bk-strip, .bk-f-jungle .bk-strip{ display:none; }
+.bk-f-pirates .bk-content{ top:200px; height:517px; }
+.bk-f-jungle .bk-content{ top:226px; height:481px; }
+.bk-f-pirates .bk-content, .bk-f-jungle .bk-content{ font-size:21px; line-height:36px; color:var(--ink); }
+.bk-f-pirates .bk-content p, .bk-f-jungle .bk-content p{ margin:0 0 11px; }
+.bk-f-pirates .bk-dropcap{ color:#b5482a; font-size:70px; line-height:56px; }
+.bk-f-jungle .bk-dropcap{ color:#2f6b34; font-size:70px; line-height:56px; }
+
+/* название главы на баннере */
+.bk-f-pirates .bk-run{ left:149px; width:290px; top:92px; height:34px; font:400 26px/32px 'Lobster',cursive; letter-spacing:0; }
+.bk-f-jungle .bk-run{ left:190px; width:222px; top:68px; height:78px; font:800 27px/30px 'Podkova',serif; letter-spacing:0; }
+.bk-f-pirates .bk-run span, .bk-f-jungle .bk-run span{ flex:1; min-width:0; text-align:center; text-wrap:balance; color:var(--brown); }
+.bk-f-jungle .bk-run span{ white-space:normal; }
+.bk-f-pirates.bk-text::after, .bk-f-pirates.bk-ded::after{
+  content:""; position:absolute; inset:auto; left:278px; top:121px; width:32px; height:31px; border:0; opacity:1;
+  background:url(orn-pirates-skull.png) center/contain no-repeat; pointer-events:none;
+}
+
+/* страница открытия главы: под баннером только «Глава N» */
+.bk-f-pirates .bk-opener-head{ top:176px; }
+.bk-f-jungle .bk-opener-head{ top:190px; }
+.bk-f-pirates .bk-opener-head .bk-divider, .bk-f-pirates .bk-chapter-title,
+.bk-f-jungle .bk-opener-head .bk-divider, .bk-f-jungle .bk-chapter-title{ display:none; }
+.bk-f-pirates .bk-chapter-no, .bk-f-jungle .bk-chapter-no{ font-size:18px; color:var(--muted); }
+
+/* номер страницы — на монете / на дорожном знаке рамки */
+.bk-fo-pirates, .bk-fo-jungle{ left:0; width:582px; height:32px; background:none; }
+.bk-fo-pirates{ top:793px; --nx:50.8%; }
+.bk-fo-jungle{ top:804px; --nx:52%; }
+.bk-fo-pirates .bk-no, .bk-fo-jungle .bk-no{ top:50%; font:700 21px/1 'Tinos',serif; font-variant-numeric:lining-nums; }
+.bk-fo-pirates .bk-no{ color:#2b1a0c; } .bk-fo-jungle .bk-no{ color:#1c140c; font-size:19px; }
+
+/* посвящение: заголовок на баннере, текст ниже него */
+.bk-f-pirates.bk-ded::after{ display:block; }
+.bk-f-jungle.bk-ded::after{ display:none; }
+.bk-f-pirates .bk-ded-rule, .bk-f-jungle .bk-ded-rule, .bk-f-pirates.bk-ded .bk-divider, .bk-f-jungle.bk-ded .bk-divider{ display:none; }
+.bk-f-pirates .bk-ded-title{ left:149px; right:auto; width:290px; top:98px; font-size:20px; letter-spacing:.16em; color:var(--brown); }
+.bk-f-jungle .bk-ded-title{ left:190px; right:auto; width:222px; top:96px; font-size:18px; letter-spacing:.12em; color:var(--brown); }
+.bk-f-pirates .bk-ded-lead, .bk-f-pirates .bk-ded-body, .bk-f-jungle .bk-ded-lead, .bk-f-jungle .bk-ded-body{
+  left:calc(var(--l) + 8px); right:calc(582px - var(--l) - var(--w) + 8px); color:var(--ink);
+}
+.bk-f-pirates .bk-ded-lead{ top:216px; } .bk-f-pirates .bk-ded-body{ top:276px; }
+.bk-f-jungle .bk-ded-lead{ top:240px; } .bk-f-jungle .bk-ded-body{ top:300px; }
+.bk-f-pirates .bk-ded-foot, .bk-f-jungle .bk-ded-foot{ left:var(--l); right:auto; width:var(--w); bottom:92px; }
+
+/* страница с иллюстрацией: мягкая табличка в цвет рамки, без деревянной розетки */
+.bk-f-pirates .bk-rosette, .bk-f-jungle .bk-rosette{ display:none; }
+.bk-f-pirates .bk-plate, .bk-f-jungle .bk-plate{ padding:22px 30px 14px; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,.35); }
+.bk-f-pirates .bk-plate{ background:#fbecca; border:2px solid #c49a5c; }
+.bk-f-jungle .bk-plate{ background:#f0f7e4; border:2px solid #6e9a5a; }
+.bk-f-pirates .bk-plate::before, .bk-f-pirates .bk-plate::after, .bk-f-jungle .bk-plate::before, .bk-f-jungle .bk-plate::after{ display:none; }
+.bk-f-pirates .bk-plate-div, .bk-f-jungle .bk-plate-div{ display:none; }
+.bk-f-pirates .bk-plate-cap{ color:#4a2b14; -webkit-text-stroke:0; } .bk-f-jungle .bk-plate-cap{ color:#4a2412; -webkit-text-stroke:0; }
 
 /* ---------- «срез книги» — только при чтении на экране ---------- */
 @media screen{

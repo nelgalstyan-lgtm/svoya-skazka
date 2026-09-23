@@ -60,7 +60,13 @@
   // полноразмерные разделители под названием главы (вместо «линия–значок–линия»)
   var DIVIDERS = { cookies: 'divider-cookies.png', elves: 'divider-elves.png' };
   // границы текстового поля у оформлений с рамкой по периметру: нижний край и минимальный верх на странице открытия главы
-  var LAYOUT = { cookies: { bottom: 691, openerMin: 215, gap: 34 }, elves: { bottom: 702, openerMin: 300, gap: 30 } };
+  // banner: название главы стоит на баннере рамки (и на странице открытия главы — там под баннером только «Глава N»)
+  var LAYOUT = {
+    cookies: { bottom: 691, openerMin: 215, gap: 34 },
+    elves: { bottom: 702, openerMin: 300, gap: 30 },
+    pirates: { bottom: 717, openerMin: 222, gap: 18, banner: true },
+    jungle: { bottom: 707, openerMin: 234, gap: 18, banner: true, multiline: true }
+  };
 
   function divider(withLines) {
     if (DIVIDERS[FOOTER]) {
@@ -79,12 +85,33 @@
   var FRAME = 'rope';
   var FOOTER = 'sea'; // колонтитул: treasure | wild | sea | birds
 
-  // название главы в узкой шапке: сжимаем шрифт, пока не влезет в одну строку; совсем длинное — многоточие
-  function fitRunTitle(span) {
-    span.style.whiteSpace = 'nowrap';
+  // название главы в узкой шапке: сжимаем шрифт, пока не влезет (в одну строку или в высоту блока); совсем длинное — многоточие
+  function fitRunTitle(span, run, multiline) {
+    if (!multiline) span.style.whiteSpace = 'nowrap';
     var size = parseFloat(getComputedStyle(span).fontSize) || 20;
-    while (span.scrollWidth > span.clientWidth + 1 && size > 13) { size -= 1; span.style.fontSize = size + 'px'; }
-    if (span.scrollWidth > span.clientWidth + 1) { span.style.overflow = 'hidden'; span.style.textOverflow = 'ellipsis'; }
+    var over = function () { return multiline ? span.offsetHeight > run.clientHeight + 1 : span.scrollWidth > span.clientWidth + 1; };
+    while (over() && size > 13) {
+      size -= 1; span.style.fontSize = size + 'px';
+      if (multiline) span.style.lineHeight = Math.round(size * 1.12) + 'px';
+    }
+    if (over()) {
+      span.style.overflow = 'hidden';
+      if (multiline) { span.style.display = '-webkit-box'; span.style.webkitLineClamp = '2'; span.style.webkitBoxOrient = 'vertical'; } else span.style.textOverflow = 'ellipsis';
+    }
+  }
+
+  // верхняя строка страницы: название главы (со значками и линией — или просто на баннере рамки)
+  function addRun(page, title) {
+    var lay = LAYOUT[FOOTER] || {};
+    var icons = HEADER_ICONS[FOOTER];
+    var run = h('div', 'bk-run');
+    if (!lay.banner) run.appendChild(img(KIT + (icons ? icons[0] : 'fleuron-l.png'), '', ''));
+    var span = h('span', '', title);
+    run.appendChild(span);
+    if (!lay.banner) run.appendChild(img(KIT + (icons ? icons[1] : 'fleuron-r.png'), icons && icons[2] ? 'bk-mirror' : '', ''));
+    page.appendChild(run);
+    if (!lay.banner) page.appendChild(h('div', 'bk-run-rule'));
+    if (LAYOUT[FOOTER]) fitRunTitle(span, run, !!lay.multiline);
   }
 
   function newSheet(root, kind) {
@@ -105,16 +132,9 @@
       head.appendChild(divider());
       head.appendChild(h('div', 'bk-chapter-title', chapter.title));
       page.appendChild(head);
+      if (LAYOUT[FOOTER] && LAYOUT[FOOTER].banner) addRun(page, chapter.title);
     } else {
-      var run = h('div', 'bk-run');
-      var icons = HEADER_ICONS[FOOTER];
-      run.appendChild(img(KIT + (icons ? icons[0] : 'fleuron-l.png'), '', ''));
-      var runTitle = h('span', '', chapter.title);
-      run.appendChild(runTitle);
-      run.appendChild(img(KIT + (icons ? icons[1] : 'fleuron-r.png'), icons && icons[2] ? 'bk-mirror' : '', ''));
-      page.appendChild(run);
-      page.appendChild(h('div', 'bk-run-rule'));
-      if (LAYOUT[FOOTER]) fitRunTitle(runTitle);
+      addRun(page, chapter.title);
     }
 
     var content = h('div', 'bk-content');
@@ -243,12 +263,13 @@
       document.fonts.load('25px Tinos'), document.fonts.load('700 25px Tinos'),
       document.fonts.load('italic 15px Tinos'), document.fonts.load('italic 700 17px Tinos'),
       document.fonts.load('700 46px "Cormorant Garamond"'), document.fonts.load('600 22px "Cormorant Garamond"'),
-      document.fonts.load('26px "Marck Script"'), document.fonts.load('700 30px Caveat')
+      document.fonts.load('26px "Marck Script"'), document.fonts.load('700 30px Caveat'),
+      document.fonts.load('26px Lobster'), document.fonts.load('800 27px Podkova')
     ]).catch(function () {});
   }
 
   function preloadImages(book) {
-    var urls = [KIT + 'hdr-treasure-l.png', KIT + 'hdr-treasure-r.png', KIT + 'hdr-wild.png', KIT + 'hdr-sea.svg', KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png', KIT + 'frame-cookies.jpg', KIT + 'frame-elves.jpg', KIT + 'hdr-cookies-l.png', KIT + 'hdr-cookies-r.png', KIT + 'hdr-elves-l.png', KIT + 'hdr-elves-r.png', KIT + 'divider-cookies.png', KIT + 'divider-elves.png'];
+    var urls = [KIT + 'hdr-treasure-l.png', KIT + 'hdr-treasure-r.png', KIT + 'hdr-wild.png', KIT + 'hdr-sea.svg', KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png', KIT + 'frame-cookies.jpg', KIT + 'frame-elves.jpg', KIT + 'hdr-cookies-l.png', KIT + 'hdr-cookies-r.png', KIT + 'hdr-elves-l.png', KIT + 'hdr-elves-r.png', KIT + 'divider-cookies.png', KIT + 'divider-elves.png', KIT + 'frame-pirates.jpg', KIT + 'frame-jungle.jpg', KIT + 'orn-pirates-skull.png'];
     book.chapters.forEach(function (c) {
       if (c.initial) urls.push(KIT + 'initials/' + c.initial + '.png');
       c.blocks.forEach(function (b) { if (b.t === 'image') urls.push(imageSrc(b)); });
