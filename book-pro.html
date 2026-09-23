@@ -94,6 +94,18 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
 
   if (params.get('job')) {
     waitForJob(params.get('job'));
+  } else if (params.get('demo') === 'newyear') {
+    // образец оформлений Нового года: ?demo=newyear&design=cookies (по умолчанию) или design=elves
+    var design = params.get('design') === 'elves' ? 'elves' : 'cookies';
+    var sd = document.createElement('script');
+    sd.src = 'assets/demo-newyear.js';
+    sd.onload = function () {
+      var b = window.SKAZKA_DEMO_NEWYEAR;
+      b.genre = design === 'elves' ? 'newyear_elves' : 'newyear';
+      b.frame = design; b.footer = design;
+      start(b);
+    };
+    document.body.appendChild(sd);
   } else if (params.get('demo') === 'alex') {
     // локальный тест на образце: данные лежат только на компьютере автора
     var s = document.createElement('script');
