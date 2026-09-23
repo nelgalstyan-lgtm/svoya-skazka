@@ -301,7 +301,7 @@ app.post('/api/book/generate', (req, res) => {
 
   const body = req.body || {};
   const input = {};
-  for (const key of ['name', 'age', 'gender', 'eyes', 'occasion', 'habits', 'friends', 'cast', 'style', 'theme', 'interests', 'special']) {
+  for (const key of ['name', 'age', 'gender', 'eyes', 'occasion', 'habits', 'friends', 'cast', 'style', 'theme', 'interests', 'special', 'design']) {
     input[key] = typeof body[key] === 'string' || typeof body[key] === 'number' ? String(body[key]).slice(0, 500) : '';
   }
   const photo = parsePhoto(body.photo);

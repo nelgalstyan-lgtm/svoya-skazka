@@ -35,8 +35,20 @@ test('templateBook: день рождения — оформление и сце
 test('templateBook: Новый год — своё оформление', () => {
   const book = templateBook(NEWYEAR_INPUT);
   assert.equal(book.genre, 'newyear');
-  assert.equal(book.frame, 'frost');
-  assert.equal(book.footer, 'newyear');
+  assert.equal(book.frame, 'cookies'); // без выбора заказчика — основное («Пряничное»)
+  assert.equal(book.footer, 'cookies');
+});
+
+test('templateBook: Новый год — заказчик выбрал «Эльфийское» оформление', () => {
+  const book = templateBook({ ...NEWYEAR_INPUT, design: 'elves' });
+  assert.equal(book.genre, 'newyear_elves');
+  assert.equal(book.frame, 'elves');
+  assert.equal(book.footer, 'elves');
+  assert.ok(/Новым годом/.test(book.dedication.lead));
+  // неизвестное значение выбора не ломает книгу — берётся основное оформление
+  assert.equal(templateBook({ ...NEWYEAR_INPUT, design: 'что-то' }).frame, 'cookies');
+  // у дня рождения выбора оформления нет — поле игнорируется
+  assert.equal(templateBook({ ...BIRTHDAY_INPUT, design: 'elves' }).frame, 'ribbon');
 });
 
 function mockServer(handler) {
@@ -96,4 +108,17 @@ test('большая книга целиком: день рождения — с
   const scenes = r.book.chapters.flatMap((c) => c.blocks.filter((b) => b.t === 'image').map((b) => b.scene));
   assert.ok(scenes.length > 0);
   assert.ok(scenes.every((s) => ['party_room', 'gift_pile', 'birthday_table', 'confetti_moment'].includes(s)), `неожиданная сцена: ${scenes}`);
+});
+
+test('большая книга целиком: Новый год + «Эльфийское» — оформление задаёт выбор заказчика, а не ИИ', async () => {
+  const a = await mockServer((user) => (/Это ПЛАН/.test(user) ? JSON.stringify(birthdayPlanJson()) : birthdayChapterJson(chapterNo(user))));
+  const providers = buildProviders({ PROVIDER_ORDER: 'groq', GROQ_API_KEY: 'k', GROQ_BASE_URL: a.url, GROQ_MODELS: 'm1' });
+  const r = await generateBigBook({ ...NEWYEAR_INPUT, design: 'elves' }, { providers, health: createHealth(), log: quiet });
+  a.server.close();
+
+  assert.equal(r.book.genre, 'newyear_elves');
+  assert.equal(r.book.frame, 'elves');
+  assert.equal(r.book.footer, 'elves');
+  const scenes = r.book.chapters.flatMap((c) => c.blocks.filter((b) => b.t === 'image').map((b) => b.scene));
+  assert.ok(scenes.every((s) => ['tree_lights', 'snow_yard', 'fireplace_stockings', 'midnight_fireworks'].includes(s)), `неожиданная сцена: ${scenes}`);
 });

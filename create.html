@@ -376,6 +376,7 @@ section.tight{ padding:56px 0; }
 .photo-drop strong{ color:var(--text); display:block; margin-bottom:4px; }
 .photo-drop-preview{ width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0 auto 12px; display:none; border:2px solid var(--line); }
 .photo-drop.has-photo .photo-drop-preview{ display:block; }
+.design-thumb{ display:block; width:100%; max-width:130px; margin:0 auto 10px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.18); }
 .photo-drop-remove{ display:none; margin-top:10px; font-size:13px; color:#B87F27; text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; }
 .photo-drop.has-photo .photo-drop-remove{ display:inline-block; }
 
@@ -603,6 +604,17 @@ section.tight{ padding:56px 0; }
         </div>
       </div>
 
+      <!-- Оформление страниц: только для «Большой истории», темы «Праздник» и повода «Новый год» -->
+      <div class="form-step" id="designStep" style="display:none;">
+        <span class="form-step-label">Оформление</span>
+        <h2>Как оформить страницы?</h2>
+        <p class="help">Для Нового года есть два оформления рамки — выберите то, что вам больше нравится. Сюжет от этого не меняется.</p>
+        <div class="choice-cards" style="grid-template-columns:1fr 1fr;">
+          <div class="choice-card is-selected" data-choice-group="design" data-value="cookies"><img class="design-thumb" src="assets/kit/preview-cookies.jpg" alt=""><span class="name">Пряничное</span></div>
+          <div class="choice-card" data-choice-group="design" data-value="elves"><img class="design-thumb" src="assets/kit/preview-elves.jpg" alt=""><span class="name">Эльфийское</span></div>
+        </div>
+      </div>
+
       <!-- Шаг 4 — характер и близкие -->
       <div class="form-step">
         <span class="form-step-label">Шаг 4 — самое главное</span>
@@ -781,6 +793,14 @@ section.tight{ padding:56px 0; }
       });
     }
 
+    // Оформление выбирает заказчик; поле показывается только когда оно что-то меняет (см. updateDesignStep)
+    function readDesign() {
+      const step = document.getElementById('designStep');
+      if (!step || step.style.display === 'none') return '';
+      const active = step.querySelector('.choice-card.is-selected');
+      return active ? active.getAttribute('data-value') || '' : '';
+    }
+
     function collectAnswers() {
       return {
         name: readInput('name'),
@@ -792,7 +812,8 @@ section.tight{ padding:56px 0; }
         friends: readInput('friends'),
         cast: readInput('cast'),
         style: readChoiceText('style'),
-        theme: readChoiceText('theme')
+        theme: readChoiceText('theme'),
+        design: readDesign()
       };
     }
 
@@ -931,6 +952,15 @@ section.tight{ padding:56px 0; }
 
     // ?tariff=big — заказ книги тарифа «Большая история» (для проверки до появления выбора тарифа на сайте)
     const bigTariff = new URLSearchParams(location.search).get('tariff') === 'big';
+
+    function updateDesignStep() {
+      const isHoliday = /праздн/i.test(readChoiceText('theme'));
+      const isNewYear = isHoliday && window.SkazkaTemplate.occasionKind(readInput('occasion')) === 'newyear' && readInput('occasion') !== '';
+      document.getElementById('designStep').style.display = bigTariff && isNewYear ? 'block' : 'none';
+    }
+    document.querySelectorAll('.choice-card[data-choice-group="theme"]').forEach(function (card) { card.addEventListener('click', updateDesignStep); });
+    document.getElementById('occasion').addEventListener('input', updateDesignStep);
+    updateDesignStep();
 
     generateBtn.addEventListener('click', async function () {
       const answers = collectAnswers();

@@ -39,6 +39,9 @@ function themeKeyFor(c) {
 // Жанр внутри темы решает ИИ (а не известен заранее, как у праздника) — и для путешествия, и для сказки
 const LLM_CLASSIFIES_GENRE = new Set(['adventure', 'fairytale']);
 const FAIRYTALE_GENRES = new Set(['kingdom', 'forest', 'underwater']);
+// Несколько оформлений одной темы: выбирает заказчик на форме (input.design), а не ИИ. Без выбора — первое (основное).
+const DESIGN_GENRES = { newyear: { cookies: 'newyear', elves: 'newyear_elves' } };
+export const designGenre = (themeKey, design) => (DESIGN_GENRES[themeKey] && DESIGN_GENRES[themeKey][design]) || themeKey;
 const GENRE_PROMPT = {
   adventure: { line: '\n— genre — жанр путешествия: "sea" (море, корабли, острова, пираты); "treasure" (экспедиция, поиск сокровищ, старая карта, клад, тайник, загадка); "wild" (путешествие по суше: лес, горы, животные, следы, поход). Если не подходит ничего — "treasure".', example: 'treasure' },
   fairytale: { line: '\n— genre — сказочный мир: "kingdom" (замок, королевская семья, бал, дракон, рыцари); "forest" (заколдованный лес, говорящие звери, лесные духи, избушка); "underwater" (подводное царство, русалки, кораллы, морская магия). Если не подходит ничего — "kingdom".', example: 'kingdom' }
@@ -259,7 +262,7 @@ function cleanImage(im, i, beatsCount, library) {
   };
 }
 
-export function validatePlan(raw, name, { library = ADVENTURE_LIBRARY, themeKey = 'adventure' } = {}) {
+export function validatePlan(raw, name, { library = ADVENTURE_LIBRARY, themeKey = 'adventure', design = '' } = {}) {
   const p = parseJson(raw);
   const title = strip(p.title);
   if (!title || title.length > 120) throw new Error('plan: bad title');
@@ -295,7 +298,7 @@ export function validatePlan(raw, name, { library = ADVENTURE_LIBRARY, themeKey 
   const plan = {
     title,
     // путешествие и сказка — жанр выбирает ИИ; праздник — жанр это сам повод, известен заранее
-    genre: LLM_CLASSIFIES_GENRE.has(themeKey) ? normalizeGenre(p.genre) : themeKey,
+    genre: LLM_CLASSIFIES_GENRE.has(themeKey) ? normalizeGenre(p.genre) : designGenre(themeKey, design),
     logline: strip(p.logline),
     motifs: (Array.isArray(p.motifs) ? p.motifs : []).map(strip).filter(Boolean).slice(0, 3),
     dedication: {
@@ -444,7 +447,7 @@ const CHAPTER_TITLES = {
 /** Тёплая фраза-посвящение, если ИИ не написал свою (или для книги целиком из шаблона). */
 function dedicationFallback(c, genreKey) {
   if (genreKey === 'birthday') return `${c.name} — ${c.girl ? 'имениннице' : 'имениннику'} в день рождения, с любовью.`;
-  if (genreKey === 'newyear') return `${c.name} — с Новым годом, ${c.girl ? 'наша волшебница' : 'наш волшебник'}.`;
+  if (genreKey === 'newyear' || genreKey === 'newyear_elves') return `${c.name} — с Новым годом, ${c.girl ? 'наша волшебница' : 'наш волшебник'}.`;
   if (FAIRYTALE_GENRES.has(genreKey)) return `${c.name} — ${c.girl ? 'главной героине' : 'главному герою'} этой волшебной сказки, с любовью.`;
   return `${c.name} — ${c.girl ? 'самой смелой' : 'самому смелому'} путешественни${c.girl ? 'це' : 'ку'}.`;
 }
@@ -455,9 +458,9 @@ export function templateBook(input) {
   const themeKey = themeKeyFor(c);
   const library = sceneLibraryFor(c.kind, c.occasion);
   // локальный шаблон без ИИ: у праздника жанр — сам повод; у сказки всегда «королевство»; у путешествия жанр решит normalizeBook по тексту
-  const styleKey = themeKey === 'fairytale' ? 'kingdom' : themeKey;
+  const styleKey = themeKey === 'fairytale' ? 'kingdom' : designGenre(themeKey, input.design);
   const style = styleKey === 'adventure' ? null : TRAVEL_STYLES[styleKey];
-  const titles = CHAPTER_TITLES[styleKey] || CHAPTER_TITLES.adventure;
+  const titles = CHAPTER_TITLES[styleKey] || CHAPTER_TITLES[themeKey] || CHAPTER_TITLES.adventure;
   const story = buildTemplateStory(input);
   const half = Math.ceil(story.pages.length / 2);
   const mk = (n, title, pages) => ({
@@ -565,7 +568,7 @@ export async function generateBigBook(input, {
   progress('Придумываем сюжет и героев книги…', 0.05);
   let plan;
   try {
-    plan = await call(buildPlanPrompt(input), (raw) => validatePlan(raw, name, { library, themeKey }));
+    plan = await call(buildPlanPrompt(input), (raw) => validatePlan(raw, name, { library, themeKey, design: input.design }));
   } catch (error) {
     log(`[big] plan failed, using template book: ${error?.message}`);
     meta.source = 'template';

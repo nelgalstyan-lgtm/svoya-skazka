@@ -53,10 +53,21 @@
   var HEADER_ICONS = {
     sea: ['hdr-sea.svg', 'hdr-sea.svg', false],
     treasure: ['hdr-treasure-l.png', 'hdr-treasure-r.png', false],
-    wild: ['hdr-wild.png', 'hdr-wild.png', true]
+    wild: ['hdr-wild.png', 'hdr-wild.png', true],
+    cookies: ['hdr-cookies-l.png', 'hdr-cookies-r.png', false],
+    elves: ['hdr-elves-l.png', 'hdr-elves-r.png', false]
   };
+  // полноразмерные разделители под названием главы (вместо «линия–значок–линия»)
+  var DIVIDERS = { cookies: 'divider-cookies.png', elves: 'divider-elves.png' };
+  // границы текстового поля у оформлений с рамкой по периметру: нижний край и минимальный верх на странице открытия главы
+  var LAYOUT = { cookies: { bottom: 691, openerMin: 215, gap: 34 }, elves: { bottom: 702, openerMin: 300, gap: 30 } };
 
   function divider(withLines) {
+    if (DIVIDERS[FOOTER]) {
+      var full = h('div', 'bk-divider bk-divider-img');
+      full.appendChild(img(KIT + DIVIDERS[FOOTER], '', ''));
+      return full;
+    }
     var d = h('div', 'bk-divider');
     var icons = HEADER_ICONS[FOOTER];
     d.appendChild(h('i'));
@@ -67,6 +78,14 @@
 
   var FRAME = 'rope';
   var FOOTER = 'sea'; // колонтитул: treasure | wild | sea | birds
+
+  // название главы в узкой шапке: сжимаем шрифт, пока не влезет в одну строку; совсем длинное — многоточие
+  function fitRunTitle(span) {
+    span.style.whiteSpace = 'nowrap';
+    var size = parseFloat(getComputedStyle(span).fontSize) || 20;
+    while (span.scrollWidth > span.clientWidth + 1 && size > 13) { size -= 1; span.style.fontSize = size + 'px'; }
+    if (span.scrollWidth > span.clientWidth + 1) { span.style.overflow = 'hidden'; span.style.textOverflow = 'ellipsis'; }
+  }
 
   function newSheet(root, kind) {
     var wrap = h('div', 'bk-wrap');
@@ -90,10 +109,12 @@
       var run = h('div', 'bk-run');
       var icons = HEADER_ICONS[FOOTER];
       run.appendChild(img(KIT + (icons ? icons[0] : 'fleuron-l.png'), '', ''));
-      run.appendChild(h('span', '', chapter.title));
+      var runTitle = h('span', '', chapter.title);
+      run.appendChild(runTitle);
       run.appendChild(img(KIT + (icons ? icons[1] : 'fleuron-r.png'), icons && icons[2] ? 'bk-mirror' : '', ''));
       page.appendChild(run);
       page.appendChild(h('div', 'bk-run-rule'));
+      if (LAYOUT[FOOTER]) fitRunTitle(runTitle);
     }
 
     var content = h('div', 'bk-content');
@@ -101,10 +122,12 @@
 
     if (opener) {
       // длинное название главы может занять две строки — сдвигаем текст вниз, чтобы они не наложились
-      var headBottom = 78 + page.querySelector('.bk-opener-head').offsetHeight;
-      var top = Math.max(246, headBottom + 44);
+      var lay = LAYOUT[FOOTER] || {};
+      var headEl = page.querySelector('.bk-opener-head');
+      var headBottom = (parseFloat(getComputedStyle(headEl).top) || 78) + headEl.offsetHeight;
+      var top = Math.max(lay.openerMin || 246, headBottom + (lay.gap || 44));
       content.style.top = top + 'px';
-      content.style.height = ((FOOTER === 'birds' ? 800 : 790) - top) + 'px';
+      content.style.height = ((lay.bottom || (FOOTER === 'birds' ? 800 : 790)) - top) + 'px';
     }
 
     var folio;
@@ -225,7 +248,7 @@
   }
 
   function preloadImages(book) {
-    var urls = [KIT + 'hdr-treasure-l.png', KIT + 'hdr-treasure-r.png', KIT + 'hdr-wild.png', KIT + 'hdr-sea.svg', KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png'];
+    var urls = [KIT + 'hdr-treasure-l.png', KIT + 'hdr-treasure-r.png', KIT + 'hdr-wild.png', KIT + 'hdr-sea.svg', KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png', KIT + 'frame-cookies.jpg', KIT + 'frame-elves.jpg', KIT + 'hdr-cookies-l.png', KIT + 'hdr-cookies-r.png', KIT + 'hdr-elves-l.png', KIT + 'hdr-elves-r.png', KIT + 'divider-cookies.png', KIT + 'divider-elves.png'];
     book.chapters.forEach(function (c) {
       if (c.initial) urls.push(KIT + 'initials/' + c.initial + '.png');
       c.blocks.forEach(function (b) { if (b.t === 'image') urls.push(imageSrc(b)); });

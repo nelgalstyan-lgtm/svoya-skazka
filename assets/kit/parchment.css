@@ -168,20 +168,6 @@
     linear-gradient(90deg, rgba(0,0,0,.08), transparent 14px);
 }
 
-/* «Изморозь»: Новый год — морозная синяя полоса со снежинками-точками, тоже чистый CSS */
-.bk-f-frost{ --l:93px; --w:453px; }
-.bk-f-frost .bk-strip{
-  width:80px; background-color:#274267;
-  background-image:
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,.9) 1.6px, transparent 1.8px),
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,.55) 1.2px, transparent 1.4px),
-    radial-gradient(circle at 70% 65%, rgba(255,255,255,.55) 1.2px, transparent 1.4px),
-    linear-gradient(90deg, rgba(0,0,0,.12), transparent 14px);
-  background-size:40px 40px, 40px 40px, 40px 40px, 14px 100%;
-  background-position:0 0, 10px 18px, 26px 6px, 0 0;
-  background-repeat:repeat-y, repeat-y, repeat-y, no-repeat;
-}
-
 /* ---------- табличка-подпись для морского и поискового оформления: дерево, латунь, «стежки» ---------- */
 .bk-f-rope .bk-plate, .bk-f-chart .bk-plate{
   background:linear-gradient(#f3e6bc,#ebdaa6); border-radius:3px; box-shadow:0 8px 22px rgba(0,0,0,.5);
@@ -208,22 +194,13 @@
 .bk-fo-treasure{ background-image:url(footer-treasure.png); --nx:48%; }   /* экспедиции и поиск сокровищ */
 .bk-fo-wild{ background-image:url(footer-wild.png); --nx:47.6%; }          /* дикая природа, путешествия по суше */
 .bk-fo-sea{ background-image:url(footer-sea.png); --nx:47.5%; }            /* морская / картографическая (универсальная) */
-/* день рождения и Новый год — колонтитулы из чистого CSS (лента-бантинг / снежинки), без растровых картинок */
+/* день рождения — колонтитул из чистого CSS (лента-бантинг), без растровых картинок */
 .bk-fo-birthday{
   background-color:#f3e3b2; --nx:50%;
   background-image:
     repeating-linear-gradient(135deg, transparent 0 10px, rgba(232,115,92,.9) 10px 12px, transparent 12px 22px),
     repeating-linear-gradient(45deg, transparent 0 10px, rgba(217,164,65,.9) 10px 12px, transparent 12px 22px);
 }
-.bk-fo-newyear{
-  background-color:#274267; --nx:50%;
-  background-image:
-    radial-gradient(circle at 50% 30%, rgba(255,255,255,.85) 1.6px, transparent 1.8px),
-    radial-gradient(circle at 20% 65%, rgba(255,255,255,.55) 1.3px, transparent 1.5px),
-    radial-gradient(circle at 75% 60%, rgba(255,255,255,.55) 1.3px, transparent 1.5px);
-  background-size:30px 30px;
-}
-.bk-fo-newyear .bk-no{ color:#f4efe0; }
 /* сказка — королевство (тон в цвет золотой лозы), лес (тёмная зелень), подводное царство (глубокий бирюзовый) */
 .bk-fo-kingdom{
   background-color:#e6cf9c; --nx:50%;
@@ -247,7 +224,7 @@
 }
 /* ряд украшений выше птичек — текст заканчивается чуть раньше */
 .bk-footer-treasure .bk-content, .bk-footer-wild .bk-content, .bk-footer-sea .bk-content,
-.bk-footer-birthday .bk-content, .bk-footer-newyear .bk-content,
+.bk-footer-birthday .bk-content,
 .bk-footer-kingdom .bk-content, .bk-footer-forest .bk-content, .bk-footer-underwater .bk-content{ height:640px; }
 
 /* ---------- верхний колонтитул и разделитель главы по жанру (значки и линия) ---------- */
@@ -260,14 +237,10 @@
   left:var(--l); width:var(--w); height:1.6px; opacity:.8;
   background:repeating-linear-gradient(90deg,#4a3323 0 11px,transparent 11px 15px,#4a3323 15px 18px,transparent 18px 22px);
 }
-/* день рождения — пунктир-гирлянда; Новый год — редкий «снежный» пунктир */
+/* день рождения — пунктир-гирлянда */
 .bk-footer-birthday .bk-run-rule{
   left:var(--l); width:var(--w); height:2px; opacity:.85;
   background:repeating-linear-gradient(90deg,#E8735C 0 6px,transparent 6px 12px,#4FB0A5 12px 18px,transparent 18px 24px);
-}
-.bk-footer-newyear .bk-run-rule{
-  left:var(--l); width:var(--w); height:1.6px; opacity:.8;
-  background:repeating-linear-gradient(90deg,#274267 0 3px,transparent 3px 13px);
 }
 /* королевство — тонкая золотая линия; лес — «листовой» пунктир; подводное царство — редкие «пузырьки» */
 .bk-footer-kingdom .bk-run-rule{ left:var(--l); width:var(--w); height:1.6px; background:#7a5a28; opacity:.75; }
@@ -279,6 +252,73 @@
   left:var(--l); width:var(--w); height:1.6px; opacity:.8;
   background:repeating-linear-gradient(90deg,#5fb8c9 0 3px,transparent 3px 17px);
 }
+
+/* ---------- Новый год: два оформления с рамкой по периметру — «Пряничное» (cookies) и «Эльфийское» (elves) ----------
+   Рамка и бумага — одна картинка frame-*.jpg (без текста), поэтому боковая полоса и колонтитулы из комплекта не нужны.
+   Границы текста подобраны по макету; шапка и номер страницы собираются из отдельных вырезанных значков. */
+.bk-f-cookies, .bk-f-elves{ --l:107px; --w:396px; }
+.bk-f-cookies.bk-text, .bk-f-cookies.bk-ded{
+  --ink:#4b2a15; --brown:#5a3320; --muted:#7a5a3e; --line:#a98a5f;
+  background:#f6e4c0 url(frame-cookies.jpg) center/100% 100% no-repeat;
+}
+.bk-f-elves.bk-text, .bk-f-elves.bk-ded{
+  --ink:#17352a; --brown:#1f4a32; --muted:#4a7057; --line:#6f9a7e;
+  background:#e6f1de url(frame-elves.jpg) center/100% 100% no-repeat;
+  --l:114px; --w:393px;
+}
+.bk-f-cookies .bk-strip, .bk-f-elves .bk-strip{ display:none; }
+.bk-f-cookies .bk-content{ top:162px; height:529px; }
+.bk-f-elves .bk-content{ top:215px; height:487px; }
+.bk-f-cookies .bk-content, .bk-f-elves .bk-content{ font-size:21px; line-height:36px; color:var(--ink); }
+.bk-f-cookies .bk-content p, .bk-f-elves .bk-content p{ margin:0 0 11px; }
+.bk-f-cookies .bk-dropcap{ color:#a8552a; font-size:70px; line-height:56px; }
+.bk-f-elves .bk-dropcap{ color:#b23a2c; font-size:70px; line-height:56px; }
+
+/* шапка: значки по бокам от названия, разделитель — готовая картинка */
+.bk-f-cookies .bk-run{ left:111px; width:379px; top:60px; height:28px; gap:14px; font-size:26px; }
+.bk-f-elves .bk-run{ left:151px; width:309px; top:124px; height:36px; gap:8px; font-size:22px; justify-content:space-between; }
+.bk-f-cookies .bk-run img{ height:19px; }
+.bk-f-elves .bk-run img{ height:36px; }
+.bk-f-cookies .bk-run span, .bk-f-elves .bk-run span{ flex:1; min-width:0; text-align:center; letter-spacing:.02em; }
+.bk-f-cookies .bk-run-rule{ left:127px; width:355px; top:99px; height:24px; background:url(divider-cookies.png) no-repeat center/100% 100%; }
+.bk-f-elves .bk-run-rule{ left:184px; width:230px; top:157px; height:32px; background:url(divider-elves.png) no-repeat center/100% 100%; }
+
+/* страница открытия главы */
+.bk-f-cookies .bk-opener-head{ top:50px; }
+.bk-f-elves .bk-opener-head{ top:128px; }
+.bk-f-cookies .bk-chapter-title{ font-size:40px; line-height:46px; margin-top:16px; color:var(--brown); }
+.bk-f-elves .bk-chapter-title{ font-size:30px; line-height:34px; margin-top:30px; color:var(--brown); }
+.bk-divider-img{ height:auto; margin-top:10px; }
+.bk-f-cookies .bk-divider-img img{ height:24px; }
+.bk-f-elves .bk-divider-img img{ height:32px; }
+
+/* номер страницы — между вырезанными из рамки украшениями внизу */
+.bk-fo-cookies, .bk-fo-elves{ left:0; width:582px; height:32px; background:none; }
+.bk-fo-cookies{ top:796px; --nx:50.3%; }
+.bk-fo-elves{ top:787px; --nx:50.5%; }
+.bk-fo-cookies .bk-no, .bk-fo-elves .bk-no{ top:50%; font:700 23px/1 'Tinos',serif; font-variant-numeric:lining-nums; color:var(--ink); }
+
+/* посвящение: тексты внутри рамки, без прежней тонкой каймы и линии */
+.bk-f-cookies.bk-ded::after, .bk-f-elves.bk-ded::after, .bk-f-cookies .bk-ded-rule, .bk-f-elves .bk-ded-rule{ display:none; }
+.bk-f-cookies .bk-ded-title, .bk-f-elves .bk-ded-title{ left:var(--l); right:auto; width:var(--w); font-size:28px; color:var(--brown); }
+.bk-f-cookies .bk-ded .bk-divider, .bk-f-elves .bk-ded .bk-divider{ left:var(--l); right:auto; width:var(--w); }
+.bk-f-cookies .bk-ded-lead, .bk-f-cookies .bk-ded-body, .bk-f-elves .bk-ded-lead, .bk-f-elves .bk-ded-body{
+  left:calc(var(--l) + 8px); right:calc(582px - var(--l) - var(--w) + 8px); color:var(--ink);
+}
+.bk-f-cookies .bk-ded-foot, .bk-f-elves .bk-ded-foot{ left:var(--l); right:auto; width:var(--w); bottom:92px; }
+.bk-f-elves .bk-ded-title{ top:232px; } .bk-f-elves .bk-ded .bk-divider{ top:282px; }
+.bk-f-elves .bk-ded-lead{ top:326px; } .bk-f-elves .bk-ded-body{ top:388px; }
+.bk-f-cookies .bk-ded-title{ top:150px; } .bk-f-cookies .bk-ded .bk-divider{ top:200px; }
+.bk-f-cookies .bk-ded-lead{ top:246px; } .bk-f-cookies .bk-ded-body{ top:306px; }
+
+/* страница с иллюстрацией: мягкая табличка в цвет рамки, без деревянной розетки */
+.bk-f-cookies .bk-rosette, .bk-f-elves .bk-rosette{ display:none; }
+.bk-f-cookies .bk-plate, .bk-f-elves .bk-plate{ padding:22px 30px 14px; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,.35); }
+.bk-f-cookies .bk-plate{ background:#fbecca; border:2px solid #d0a56d; }
+.bk-f-elves .bk-plate{ background:#eef6e6; border:2px solid #6f9a7e; }
+.bk-f-cookies .bk-plate::before, .bk-f-cookies .bk-plate::after, .bk-f-elves .bk-plate::before, .bk-f-elves .bk-plate::after{ display:none; }
+.bk-f-cookies .bk-plate-div, .bk-f-elves .bk-plate-div{ display:none; }
+.bk-f-cookies .bk-plate-cap{ color:#5a3320; -webkit-text-stroke:0; } .bk-f-elves .bk-plate-cap{ color:#1f4a32; -webkit-text-stroke:0; }
 
 /* ---------- «срез книги» — только при чтении на экране ---------- */
 @media screen{

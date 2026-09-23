@@ -92,7 +92,8 @@ export const TRAVEL_STYLES = {
   wild: { frame: 'fern', footer: 'wild' },          // дикая природа, джунгли, суша: папоротник с лозой, следы
   universal: { frame: 'chart', footer: 'treasure' }, // жанр не определён (нейтральная тайна, загадка): карта и предметы исследователя
   birthday: { frame: 'ribbon', footer: 'birthday' }, // день рождения: лента с флажками, воздушные шары
-  newyear: { frame: 'frost', footer: 'newyear' },    // новый год: морозный узор, снежинки
+  newyear: { frame: 'cookies', footer: 'cookies' },  // новый год, «Пряничное»: рамка из пряников и конфет по периметру
+  newyear_elves: { frame: 'elves', footer: 'elves' }, // новый год, «Эльфийское»: эльфы и подарки — выбирает заказчик
   kingdom: { frame: 'vine', footer: 'kingdom' },     // сказка — королевство: готовая золотая лоза с виноградом (была не задействована)
   forest: { frame: 'leaf', footer: 'forest' },       // сказка — заколдованный лес: листва на тёмной зелени
   underwater: { frame: 'wave', footer: 'underwater' } // сказка — подводное царство: пузыри и волны на глубоком бирюзовом
