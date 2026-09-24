@@ -18,14 +18,15 @@
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
 import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, ageGroupFor, styleFor } from './booktext.js';
-import { generateHeroImage, normalizePhoto } from './illustrate.js';
+import { generateHeroImage, illustrateBook, photosFrom } from './illustrate.js';
+import { ORIGINALITY_RULE, brandMentions } from './story.js';
 
 const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind } = template;
 
 export const CHAPTERS = 6;
-const IMAGES_MIN = 6;
-const IMAGES_MAX = 8;
-const HERO_COUNT = 5;
+// Ребёнок нарисован на каждой иллюстрации книги (плюс обложка) — фоновые сцены остаются только запасным вариантом
+const IMAGES_MIN = 8;
+const IMAGES_MAX = 10;
 const BLOCK_TYPES = new Set(['p', 'card', 'scrap', 'search', 'image', 'note']);
 const ADVENTURE_LIBRARY = sceneLibraryFor('adventure');
 
@@ -143,6 +144,7 @@ const STYLE_FAIRYTALE = `Ты — писатель детской сказочн
 — Раньше не умел, — ответил кот.`;
 
 const STYLE_BY_THEME = { adventure: STYLE_ADVENTURE, fairytale: STYLE_FAIRYTALE, birthday: STYLE_BIRTHDAY, newyear: STYLE_NEWYEAR };
+const systemFor = (themeKey) => `${STYLE_BY_THEME[themeKey]}\n\nОригинальность: ${ORIGINALITY_RULE}`;
 
 function formBlock(c) {
   return [
@@ -157,6 +159,8 @@ function formBlock(c) {
     `Близкие и питомцы: ${c.cast || 'не указано'}`,
     `Увлечения: ${c.interests || 'не указано'}`,
     `Особое место, событие или история семьи: ${c.special || 'нет'}`,
+    ...(c.lesson ? [`Задача книги (мягко помочь ребёнку через опыт героя, без морали в лоб): ${c.lesson}`] : []),
+    ...(c.sequel ? [`Продолжение прошлой книги (те же спутники, коротко вспомнить прошлое приключение, новый законченный сюжет): ${c.sequel}`] : []),
     '</анкета>'
   ].join('\n');
 }
@@ -181,12 +185,14 @@ export function buildPlanPrompt(input) {
 — Сюжет с загадкой или целью: завязка → первый след → ошибка → поворот → кульминация → тёплый итог. Ключевые детали анкеты (привычки, друзья, близкие, увлечения, особое место) должны двигать сюжет.
 — motifs: 2–3 сквозных мотива (предмет, фраза, привычка), которые вернутся в разных главах.
 — В каждой главе: goal (что происходит и зачем, 1–2 предложения), beats (6–8 коротких пунктов-сцен по порядку: каждая сцена — отдельный эпизод со своим действием и репликами), hook (чем глава заканчивается), note (фраза «Из записей» героя — короткая, до 12 слов, как вывод главы).
-— Иллюстрации: всего ${IMAGES_MIN}–${IMAGES_MAX} на книгу, не больше 2 на главу, в последней главе не больше 1. Ровно ${HERO_COUNT} из них hero=true (на них ребёнок в главной сцене), остальные hero=false (место или предмет). Для каждой: after_beat (номер пункта-сцены, после которого встаёт картинка, с 1), scene — один из тегов [${sceneListFor(library)}], brief — описание сцены по-английски (1–2 предложения, что нарисовано, без текста на картинке), caption — подпись под картинкой по-русски, до 10 слов.${genreLine}
+— Иллюстрации: всего ${IMAGES_MIN}–${IMAGES_MAX} на книгу, 1–2 на главу, в последней главе не больше 1. На КАЖДОЙ иллюстрации ребёнок в главной сцене. Для каждой: after_beat (номер пункта-сцены, после которого встаёт картинка, с 1), scene — один из тегов [${sceneListFor(library)}] (запасной фон), brief — описание сцены по-английски (1–2 предложения: что делает ребёнок, кто рядом, место, свет; без лица и эмоций, без текста на картинке; соседние сцены заметно различаются позой, планом и местом), caption — подпись под картинкой по-русски, до 10 слов.${genreLine}
+— look — по-английски, 1–2 предложения: во что одет ребёнок во всей книге (одежда, цвета, обувь — под тему) и как выглядят спутники из анкеты (питомцы, игрушки).
+— cover_brief — по-английски, 1 предложение: сцена для обложки, ребёнок в центре на фоне главного места истории.
 — dedication: lead — одна тёплая фраза-посвящение ребёнку без выдуманных фактов; paragraphs — 2 коротких тёплых абзаца (по 1–2 предложения) от того, кто дарит книгу, без выдуманных фактов.
 
 Ответ — строго JSON без пояснений и markdown:
-{"title":"",${genreField}"logline":"","motifs":[""],"dedication":{"lead":"","paragraphs":["",""]},"chapters":[{"n":1,"title":"","goal":"","beats":[""],"hook":"","note":"","images":[{"after_beat":2,"scene":"${Object.keys(library.scenes)[0]}","hero":true,"brief":"","caption":""}]}]}`;
-  return { system: STYLE_BY_THEME[themeKey], user };
+{"title":"",${genreField}"logline":"","look":"","cover_brief":"","motifs":[""],"dedication":{"lead":"","paragraphs":["",""]},"chapters":[{"n":1,"title":"","goal":"","beats":[""],"hook":"","note":"","images":[{"after_beat":2,"scene":"${Object.keys(library.scenes)[0]}","brief":"","caption":""}]}]}`;
+  return { system: systemFor(themeKey), user };
 }
 
 export function buildChapterPrompt(input, plan, index, summaries, tail) {
@@ -224,7 +230,7 @@ ${summaries.length ? `УЖЕ НАПИСАНО (кратко):\n${summaries.map((
 {"t":"note","text":"фраза"}  — последний блок главы. Подпись «Из записей …» добавит книга сама: в тексте записки её не пиши. Записка — короткий вывод главы, а не повтор фразы из текста.
 Первый абзац главы — повествование, а не реплика.
 Реплика и слова автора — в ОДНОМ абзаце: «— Так и есть, — сказал Тигран.» Не выноси «— сказал Тигран.» в отдельный абзац.`;
-  return { system: STYLE_BY_THEME[themeKey], user };
+  return { system: systemFor(themeKey), user };
 }
 
 // ---------------------------------------------------------------- разбор и проверка
@@ -256,7 +262,7 @@ function cleanImage(im, i, beatsCount, library) {
   return {
     after_beat: Math.min(beatsCount, Math.max(1, Math.round(Number(im?.after_beat) || Math.ceil(beatsCount / 2)))),
     scene: validScene(String(im?.scene || '').trim(), i, library),
-    hero: im?.hero === true,
+    hero: true,
     brief: strip(im?.brief).slice(0, 300),
     caption: strip(im?.caption).slice(0, 90)
   };
@@ -277,22 +283,21 @@ export function validatePlan(raw, name, { library = ADVENTURE_LIBRARY, themeKey 
     return { n: i + 1, title: t, goal: strip(c.goal), beats, hook: strip(c.hook), note: strip(c.note).slice(0, 140) || t, images };
   });
 
-  // картинок должно быть достаточно и не слишком много; «геройских» — ровно HERO_COUNT
+  // картинок должно быть достаточно и не слишком много: сначала по одной в каждую главу без картинок, потом вторые
   let total = chapters.reduce((n, c) => n + c.images.length, 0);
-  for (let i = 0; i < CHAPTERS - 1 && total < IMAGES_MIN; i++) {
-    if (chapters[i].images.length < 2 && chapters[i].images.length === 0) {
-      const beat = Math.ceil(chapters[i].beats.length * 0.6);
-      chapters[i].images.push(cleanImage({ after_beat: beat, scene: library.order[i % library.order.length], hero: false, brief: chapters[i].beats[beat - 1], caption: chapters[i].title }, i, chapters[i].beats.length, library));
-      total += 1;
-    }
-  }
+  const addImage = (i, share) => {
+    const ch = chapters[i];
+    const beat = Math.max(1, Math.ceil(ch.beats.length * share));
+    ch.images.push(cleanImage({ after_beat: beat, scene: library.order[(i + ch.images.length) % library.order.length], brief: ch.beats[beat - 1], caption: ch.title }, i, ch.beats.length, library));
+    ch.images.sort((a, b) => a.after_beat - b.after_beat);
+    total += 1;
+  };
+  for (let i = 0; i < CHAPTERS && total < IMAGES_MIN; i++) if (!chapters[i].images.length) addImage(i, 0.6);
+  for (let i = 0; i < CHAPTERS - 1 && total < IMAGES_MIN; i++) if (chapters[i].images.length < 2) addImage(i, chapters[i].images[0]?.after_beat > chapters[i].beats.length / 2 ? 0.25 : 0.8);
   for (let i = CHAPTERS - 1; i >= 0 && total > IMAGES_MAX; i--) {
     while (chapters[i].images.length > 1 && total > IMAGES_MAX) { chapters[i].images.pop(); total -= 1; }
   }
-  const all = chapters.flatMap((c) => c.images);
-  all.forEach((im) => { im.hero = false; });
-  const step = all.length / HERO_COUNT;
-  for (let k = 0; k < Math.min(HERO_COUNT, all.length); k++) all[Math.floor(k * step)].hero = true;
+  chapters.forEach((c) => c.images.forEach((im) => { im.hero = true; }));
 
   const ded = p.dedication || {};
   const plan = {
@@ -300,6 +305,9 @@ export function validatePlan(raw, name, { library = ADVENTURE_LIBRARY, themeKey 
     // путешествие и сказка — жанр выбирает ИИ; праздник — жанр это сам повод, известен заранее
     genre: LLM_CLASSIFIES_GENRE.has(themeKey) ? normalizeGenre(p.genre) : designGenre(themeKey, design),
     logline: strip(p.logline),
+    // English-описания для иллюстраций; checkRussian их не проверяет
+    look: strip(p.look).slice(0, 500),
+    coverBrief: strip(p.cover_brief).slice(0, 400),
     motifs: (Array.isArray(p.motifs) ? p.motifs : []).map(strip).filter(Boolean).slice(0, 3),
     dedication: {
       lead: strip(ded.lead),
@@ -307,7 +315,10 @@ export function validatePlan(raw, name, { library = ADVENTURE_LIBRARY, themeKey 
     },
     chapters
   };
-  checkRussian([plan.title, plan.logline, ...plan.motifs, ...chapters.flatMap((c) => [c.title, c.goal, ...c.beats, c.hook, c.note]), plan.dedication.lead, ...plan.dedication.paragraphs].join(' '), name, 'plan');
+  const planText = [plan.title, plan.logline, ...plan.motifs, ...chapters.flatMap((c) => [c.title, c.goal, ...c.beats, c.hook, c.note]), plan.dedication.lead, ...plan.dedication.paragraphs].join(' ');
+  checkRussian(planText, name, 'plan');
+  const brands = brandMentions(planText);
+  if (brands.length) throw new Error(`plan: brand names (${brands.slice(0, 3).join(', ')})`);
   if (!plan.motifs.length) plan.motifs = [chapters[0].title];
   return plan;
 }
@@ -383,6 +394,8 @@ export function validateChapter(raw, planCh, name, names, girl, library = ADVENT
   if (wc < 400) issues.push(`короткая (${wc} слов)`);
   const rep = repeatedPhrases(blocks, names);
   if (rep.length) issues.push(`повторы: ${rep.slice(0, 3).join(', ')}`);
+  const brands = brandMentions(all);
+  if (brands.length) issues.push(`чужие бренды: ${brands.slice(0, 3).join(', ')}`);
 
   return { summary: strip(data.summary).slice(0, 400), blocks: normalizeChapterBlocks(fixImages(blocks, planCh, name, library), { name, girl, planNote: planCh.note }), issues, wordCount: wc };
 }
@@ -494,6 +507,8 @@ function assemble(input, plan, chapters, meta, library) {
   const style = plan.genre ? styleFor(plan.genre, ageGroup) : null;
   const book = {
     title: plan.title,
+    logline: plan.logline, // для продолжения книги: о чём была первая
+    look: plan.look, // одежда и спутники — для бесплатной перерисовки иллюстраций
     theme: 'parchment',
     ageGroup, // возрастная группа задаёт оформление (для путешествия: 5–10 — яркие рамки, 11–16 — «Пергамент»)
     // путешествие — жанр от ИИ (море/канат, поиски/карта, дикая природа/лоза), праздник — сам повод;
@@ -517,20 +532,27 @@ function assemble(input, plan, chapters, meta, library) {
   return book;
 }
 
-/** Рисует лицо ребёнка на всех hero-иллюстрациях книги. Сбой одной картинки не портит остальные и не рвёт книгу. */
-async function attachHeroImages(input, chapters, illustrate, progress, log) {
-  const photo = normalizePhoto(input.photo);
-  if (!photo) return;
+/**
+ * Рисует ребёнка на обложке и на всех иллюстрациях книги — по одному листу персонажа, чтобы одежда и спутники
+ * совпадали на всех страницах. Сбой одной картинки не портит остальные и не рвёт книгу.
+ */
+async function attachHeroImages(input, plan, chapters, { illustrate, progress, deadlineAt, log }) {
+  if (!photosFrom(input).length) return {};
+  const heroBlocks = chapters.flatMap((ch) => ch.blocks.filter((b) => b.t === 'image'));
+  heroBlocks.forEach((b) => { b.hero = true; });
 
-  const heroBlocks = chapters.flatMap((ch) => ch.blocks.filter((b) => b.t === 'image' && b.hero));
-  if (!heroBlocks.length) return;
-
-  const c = normalizeInput(input);
-  for (let i = 0; i < heroBlocks.length; i++) {
-    progress(`Рисуем иллюстрацию с лицом ребёнка (${i + 1} из ${heroBlocks.length})…`, 0.97);
-    const image = await illustrate({ photo, styleLabel: input.style, eyes: c.eyes, brief: heroBlocks[i].brief, log });
-    if (image) heroBlocks[i].src = `data:${image.mime};base64,${image.data}`;
-  }
+  const art = await illustrateBook({ ...input, eyes: normalizeInput(input).eyes }, {
+    scenes: heroBlocks.map((b) => ({ brief: b.brief })),
+    coverBrief: plan.coverBrief || `The child at the heart of the story "${plan.logline || plan.title}", looking ahead with excitement.`,
+    look: plan.look,
+    illustrate,
+    deadlineAt,
+    coloring: input.coloring === true,
+    onProgress: (done, total) => progress(`Рисуем иллюстрации с вашим ребёнком (${done} из ${total})…`, 0.9 + (0.09 * done) / total),
+    log
+  });
+  art.scenes.forEach((src, i) => { if (src) heroBlocks[i].src = src; });
+  return { cover: art.cover, sheet: art.sheet, coloring: art.coloring };
 }
 
 let defaultProviders = null;
@@ -546,7 +568,8 @@ export async function generateBigBook(input, {
   log = console.warn,
   stepDeadlineMs = 75_000,
   attemptTimeoutMs = 45_000,
-  illustrate = generateHeroImage
+  illustrate = generateHeroImage,
+  imageBudgetMs = Number(process.env.BIG_IMAGE_BUDGET_MS || 5 * 60_000)
 } = {}) {
   const started = Date.now();
   const c = normalizeInput(input);
@@ -616,12 +639,15 @@ export async function generateBigBook(input, {
     tail = chapter.blocks.filter((b) => b.t === 'p').slice(-6).map((b) => b.text);
   }
 
-  await attachHeroImages(input, chapters, illustrate, progress, log);
+  const art = await attachHeroImages(input, plan, chapters, { illustrate, progress, deadlineAt: Date.now() + imageBudgetMs, log });
 
   progress('Собираем книгу…', 0.99);
   meta.tookMs = Date.now() - started;
   if (meta.fallbackChapters.length === plan.chapters.length) meta.source = 'template';
   const book = assemble(input, plan, chapters, meta, library);
+  if (art.cover) book.cover = art.cover;
+  if (art.sheet) book.sheet = art.sheet; // для бесплатной перерисовки: фото ребёнка к тому времени уже удалено
+  if (art.coloring?.length) book.coloring = art.coloring;
   const provider = Object.entries(meta.providers).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
   return { book, source: meta.source, provider, model: null };
 }

@@ -134,6 +134,10 @@
       cast: stripEnd(clean(input.cast, 300)),
       interests: stripEnd(clean(input.interests, 300)),
       special: stripEnd(clean(input.special, 400)),
+      // чему книга мягко помогает: страх темноты, первый класс, появление брата или сестры…
+      lesson: stripEnd(clean(input.lesson, 300)),
+      // продолжение прошлой книги: её название и краткое содержание
+      sequel: clean(input.sequel, 1200),
       kind: themeKind(input.theme)
     };
   }

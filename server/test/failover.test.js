@@ -46,7 +46,7 @@ test('падает первый провайдер (503) — книгу пише
   assert.equal(story.provider, 'openrouter');
   assert.equal(story.pages.length, 6);
   assert.equal(story.pages[2].scene, 'mountain_bridge'); // неверный тег заменён на рабочий
-  assert.equal(story.pages.filter((p) => p.hero).length, 1);
+  assert.ok(story.pages.every((p) => p.hero && p.heroBrief), 'ребёнок на каждой странице, у каждой есть описание сцены');
 });
 
 test('первый провайдер вернул мусор — идём ко второму', async () => {

@@ -49,8 +49,39 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   display:flex; flex-direction:column;
 }
 .sheet::after{
-  content:""; position:absolute; inset:16px; border:1.5px solid rgba(122,90,50,.28); border-radius:4px; pointer-events:none;
+  content:""; position:absolute; inset:16px; border:1.5px solid var(--frame, rgba(122,90,50,.28)); border-radius:4px; pointer-events:none;
 }
+
+/* ---------- Оформление под тему книги: цвет бумаги, рамка, уголки и значок у номера страницы ---------- */
+.sheet .corner{ position:absolute; width:34px; height:34px; background:var(--motif) center/contain no-repeat; opacity:.85; pointer-events:none; z-index:3; }
+.sheet .corner.tl{ top:22px; left:22px; } .sheet .corner.tr{ top:22px; right:22px; transform:scaleX(-1); }
+.sheet .corner.bl{ bottom:22px; left:22px; transform:scaleY(-1); } .sheet .corner.br{ bottom:22px; right:22px; transform:scale(-1,-1); }
+.cover.art .corner{ display:none; }
+.pageno::before, .pageno::after{ content:""; display:inline-block; width:18px; height:18px; margin:0 10px; vertical-align:-2px; background:var(--motif) center/contain no-repeat; }
+
+body.t-adventure{ --gold-dark:#9a6a22; --frame:rgba(60,92,120,.35);
+  --motif:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='none' stroke='%239a6a22' stroke-width='1.6'%3E%3Ccircle cx='20' cy='20' r='9'/%3E%3C/g%3E%3Cpath d='M20 3l3 14-3 3-3-3zM20 37l-3-14 3-3 3 3zM3 20l14-3 3 3-3 3zM37 20l-14 3-3-3 3-3z' fill='%233c5c78'/%3E%3C/svg%3E"); }
+body.t-adventure .sheet{ background:
+    radial-gradient(ellipse 320px 240px at 6% 4%, rgba(60,110,150,.16), transparent 62%),
+    radial-gradient(ellipse 380px 300px at 98% 100%, rgba(178,132,58,.18), transparent 62%), #FBF5E6; }
+
+body.t-fairytale{ --gold-dark:#8a5cb0; --frame:rgba(120,80,170,.32);
+  --motif:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4l4 11 11 1-9 7 3 11-9-6-9 6 3-11-9-7 11-1z' fill='%23c79a3a'/%3E%3Ccircle cx='33' cy='7' r='2' fill='%238a5cb0'/%3E%3Ccircle cx='7' cy='33' r='1.5' fill='%238a5cb0'/%3E%3C/svg%3E"); }
+body.t-fairytale .sheet{ background:
+    radial-gradient(ellipse 320px 240px at 6% 4%, rgba(140,100,200,.16), transparent 62%),
+    radial-gradient(ellipse 380px 300px at 98% 100%, rgba(215,154,58,.16), transparent 62%), #FAF6F1; }
+
+body.t-birthday{ --gold-dark:#c2466b; --frame:rgba(194,70,107,.3);
+  --motif:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cellipse cx='15' cy='14' rx='8' ry='10' fill='%23e56b8f'/%3E%3Cellipse cx='27' cy='17' rx='7' ry='9' fill='%23f2b33d'/%3E%3Cpath d='M15 24c0 6 3 8 5 12M27 26c0 5-3 7-7 10' stroke='%23a07a55' stroke-width='1.2' fill='none'/%3E%3C/svg%3E"); }
+body.t-birthday .sheet{ background:
+    radial-gradient(circle at 12% 8%, rgba(229,107,143,.14), transparent 30%),
+    radial-gradient(circle at 90% 94%, rgba(242,179,61,.18), transparent 32%), #FFF8F2; }
+
+body.t-newyear{ --gold-dark:#b3342f; --frame:rgba(40,100,80,.34);
+  --motif:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg stroke='%232f6e5a' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M20 3v34M5 11l30 18M5 29l30-18'/%3E%3Cpath d='M16 6l4 4 4-4M16 34l4-4 4 4M5 16l5-1-1-5M35 24l-5 1 1 5M9 30l1-5-5-1M31 10l-1 5 5 1'/%3E%3C/g%3E%3C/svg%3E"); }
+body.t-newyear .sheet{ background:
+    radial-gradient(ellipse 320px 240px at 6% 4%, rgba(47,110,90,.16), transparent 62%),
+    radial-gradient(ellipse 380px 300px at 98% 100%, rgba(179,52,47,.12), transparent 62%), #F9F7F1; }
 
 /* Иллюстрация-сцена сверху */
 .scene{
@@ -75,6 +106,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   box-shadow:0 14px 30px -14px rgba(60,40,10,.6); shape-outside:margin-box;
 }
 .hero img{ width:100%; height:100%; object-fit:cover; display:block; }
+.hero, .scene{ position:relative; }
 .pageno{
   position:absolute; bottom:34px; left:0; right:0; text-align:center;
   font-family:var(--font-script); font-size:22px; color:var(--gold-dark);
@@ -92,7 +124,42 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 .for small{ display:block; font-family:var(--font-body); font-weight:400; font-size:14px; letter-spacing:.2em; text-transform:uppercase; color:var(--text-soft); margin-bottom:4px; }
 .brand{ position:absolute; bottom:44px; left:0; right:0; font-family:var(--font-display); font-size:17px; color:var(--text-soft); }
 .brand em{ font-family:var(--font-script); font-style:normal; font-size:1.3em; color:var(--gold-dark); }
-.finale .scene{ margin:150px 70px 0; align-self:stretch; height:327px; }
+/* Обложка с иллюстрацией ребёнка: картинка на весь лист, название набрано поверх */
+.cover.art{ padding:0; justify-content:flex-start; background:#1c1a24; }
+.cover.art::after{ border-color:rgba(255,240,210,.35); z-index:2; }
+.cover-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.cover.art::before{ content:""; position:absolute; left:0; right:0; top:0; height:46%; z-index:1; background:linear-gradient(rgba(18,16,30,.74), rgba(18,16,30,.35) 60%, transparent); }
+.cover-shade{ position:absolute; left:0; right:0; bottom:0; height:32%; z-index:1; background:linear-gradient(transparent, rgba(18,16,30,.78)); }
+.cover.art .kicker, .cover.art h1, .cover.art .orn, .cover.art .for, .cover.art .brand{ position:relative; z-index:2; }
+.cover.art .kicker{ color:rgba(255,244,222,.85); }
+.cover.art h1{ color:#fff3d6; text-shadow:0 3px 18px rgba(0,0,0,.55); }
+.cover.art .orn{ color:var(--gold); }
+.cover.art .for{ position:absolute; bottom:96px; left:0; right:0; margin:0; color:#ffd98f; text-shadow:0 2px 10px rgba(0,0,0,.6); }
+.cover.art .for small{ color:rgba(255,244,222,.85); }
+.cover.art .brand{ position:absolute; color:rgba(255,244,222,.8); }
+.cover.art .brand em{ color:var(--gold); }
+.finale .scene{ margin:110px 70px 0; align-self:stretch; height:327px; }
+.qr-block{ display:flex; align-items:center; gap:18px; margin:26px 110px 0; text-align:left; }
+.qr-code{ width:104px; height:104px; flex:none; padding:8px; background:#fff; border-radius:8px; box-shadow:0 4px 12px rgba(60,40,10,.18); }
+.qr-code svg{ width:100%; height:100%; display:block; }
+.qr-text{ font-family:var(--font-body); font-size:15px; line-height:1.5; color:var(--text-soft); }
+
+/* Сертификат «Герой книги» */
+.cert{ align-items:center; text-align:center; justify-content:center; }
+.cert::before{ content:""; position:absolute; inset:40px; border:3px double var(--gold-dark); border-radius:10px; pointer-events:none; }
+.cert-kicker{ font-size:15px; letter-spacing:.4em; padding-left:.4em; text-transform:uppercase; color:var(--text-soft); }
+.cert-title{ margin-top:14px; font-family:var(--font-display); font-weight:700; font-size:46px; color:var(--ink); }
+.cert-medal{ margin:34px 0 10px; font-size:84px; line-height:1; }
+.cert-name{ font-family:var(--font-script); font-weight:700; font-size:76px; color:var(--gold-dark); line-height:1.1; }
+.cert-text{ margin:26px 110px 0; font-family:var(--font-display); font-size:19px; line-height:1.8; color:var(--text); }
+.cert-foot{ display:flex; justify-content:space-between; width:calc(100% - 220px); margin-top:70px; font-size:15px; color:var(--text-soft); }
+.cert-foot b{ display:block; margin-top:6px; padding-top:6px; border-top:1px solid var(--line); font-weight:400; }
+
+/* Раскраска: контурная картинка на белом листе */
+.coloring{ background:#fff !important; align-items:center; }
+.coloring .corner{ display:none; }
+.coloring-title{ margin-top:58px; font-family:var(--font-script); font-weight:700; font-size:40px; color:var(--gold-dark); }
+.coloring img{ margin-top:18px; width:640px; height:930px; object-fit:contain; }
 .finale h2{ margin:64px 70px 0; font-family:var(--font-script); font-weight:700; font-size:78px; color:var(--gold-dark); line-height:1; }
 .finale p{ margin:20px 110px 0; font-family:var(--font-display); font-size:19px; line-height:1.8; color:var(--text); }
 
@@ -118,15 +185,20 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   <a class="logo" href="index.html">Своя <em>Сказка</em></a>
   <div class="toolbar-actions">
     <a class="btn ghost" href="create.html">← К анкете</a>
+    <button class="btn ghost" id="listenBtn" type="button">🔊 Слушать книгу</button>
+    <button class="btn ghost" id="editBtn" type="button" hidden>✏️ Править книгу</button>
+    <button class="btn ghost" id="sequelBtn" type="button" hidden>✨ Заказать продолжение</button>
     <button class="btn" id="pdfBtn" type="button">Скачать PDF</button>
   </div>
 </div>
-<p class="hint no-print" id="pdfHint">Нажмите «Скачать PDF» и в окне печати выберите принтер «Сохранить как PDF».</p>
+<p class="hint no-print" id="pdfHint">Нажмите «Скачать PDF» и в окне печати выберите принтер «Сохранить как PDF». <a href="how-it-works.html#print" target="_blank" style="color:inherit;">Как напечатать книгу →</a></p>
 
 <main class="book" id="book"></main>
 
 <script src="js/story-template.js"></script>
 <script src="assets/demo-book.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="js/book-extras.js"></script>
 <script>
 (function () {
   const SHEET_W = 794;
@@ -147,10 +219,24 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     return node;
   }
 
+  // Адрес бэкенда — как на странице анкеты
+  const isLocal = location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
+  const API_BASE = window.SKAZKA_API_BASE || (isLocal ? 'http://localhost:3000' : '');
+
+  // Книга с иллюстрациями не помещается в хранилище браузера — по ссылке ?job= берём её с сервера
+  async function loadFromServer(jobId) {
+    const r = await fetch(API_BASE + '/api/book/' + encodeURIComponent(jobId) + '/result');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (!d.ready || !d.result || !Array.isArray(d.result.pages)) throw new Error('not ready');
+    return { answers: d.result.answers || {}, book: d.result, jobId: jobId, canRedraw: d.canRedraw, redrawsLeft: d.redrawsLeft };
+  }
+
   function loadBook() {
     if (params.get('demo') === '1') return window.SKAZKA_DEMO_BOOK || null;
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      // сохранённая книга без картинок: если сервер её ещё помнит, берём полную версию по jobId (см. ниже)
       if (saved && saved.book && Array.isArray(saved.book.pages)) return saved;
     } catch (e) { /* хранилище недоступно */ }
     return null;
@@ -176,6 +262,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   function sheet(className) {
     const wrap = el('div', 'sheet-wrap');
     const node = el('div', 'sheet' + (className ? ' ' + className : ''));
+    ['tl', 'tr', 'bl', 'br'].forEach(function (pos) { node.appendChild(el('div', 'corner ' + pos)); });
     wrap.appendChild(node);
     root.appendChild(wrap);
     return node;
@@ -213,9 +300,13 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   const COVER_SCENE = { adventure: 'castle_gate', fairytale: 'castle_ballroom', birthday: 'party_room', newyear: 'tree_lights' };
   const FINALE_SCENE = { adventure: 'treasure_room', fairytale: 'garden_maze', birthday: 'confetti_moment', newyear: 'midnight_fireworks' };
 
-  function coverAndFinaleScenes(answers) {
+  function themeOf(answers) {
     const c = window.SkazkaTemplate.normalizeInput(answers || {});
-    const kind = c.kind === 'holiday' ? window.SkazkaTemplate.occasionKind(c.occasion) : c.kind;
+    return c.kind === 'holiday' ? window.SkazkaTemplate.occasionKind(c.occasion) : c.kind;
+  }
+
+  function coverAndFinaleScenes(answers) {
+    const kind = themeOf(answers);
     return { cover: COVER_SCENE[kind] || 'castle_gate', finale: FINALE_SCENE[kind] || 'treasure_room' };
   }
 
@@ -224,14 +315,23 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     const name = (data.answers && data.answers.name) || '';
     const demoHeroSrc = HERO_IMAGES[name.trim().toLowerCase()];
     const scenes = coverAndFinaleScenes(data.answers);
+    document.body.classList.add('t-' + themeOf(data.answers));
     document.title = book.title + ' — Своя Сказка';
 
-    // Обложка
-    const cover = sheet('cover');
+    // Обложка: с иллюстрацией ребёнка — картинка на весь лист; без неё — фон темы в рамке
+    const cover = sheet(book.cover ? 'cover art' : 'cover');
+    if (book.cover) {
+      const art = document.createElement('img');
+      art.className = 'cover-img';
+      art.src = book.cover;
+      art.alt = book.title;
+      cover.appendChild(art);
+      cover.appendChild(el('div', 'cover-shade'));
+    }
     cover.appendChild(el('div', 'kicker', 'Персональная книга'));
     cover.appendChild(el('h1', '', book.title));
     cover.appendChild(el('div', 'orn', '✦ ✦ ✦'));
-    cover.appendChild(sceneBlock(scenes.cover, 'Обложка'));
+    if (!book.cover) cover.appendChild(sceneBlock(scenes.cover, 'Обложка'));
     if (name) {
       const who = el('div', 'for');
       who.appendChild(el('small', '', 'Главный герой'));
@@ -248,6 +348,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       const heroSrc = page.heroImage || demoHeroSrc;
       const useHero = page.hero && heroSrc;
       const s = sheet(useHero ? 'hero-page' : '');
+      s.setAttribute('data-page', String(index));
       const scene = page.scene || 'forest_path';
 
       if (useHero) {
@@ -279,10 +380,79 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     end.appendChild(sceneBlock(scenes.finale));
     end.appendChild(el('h2', '', 'Конец'));
     end.appendChild(el('p', '', 'Эта книга написана по вашей анкете — со всеми привычками, друзьями и близкими героя. Пусть она возвращается к вам снова и снова.'));
-    end.appendChild(el('div', 'orn', '✦ ✦ ✦'));
+    const qr = window.SkazkaExtras.qrBlock('book.html', data.jobId);
+    if (qr) end.appendChild(qr); else end.appendChild(el('div', 'orn', '✦ ✦ ✦'));
     const brand2 = el('div', 'brand');
     brand2.append('Своя ', el('em', '', 'Сказка'));
     end.appendChild(brand2);
+
+    // Сертификат героя — для имени из анкеты
+    if (name) {
+      const girl = window.SkazkaTemplate.normalizeInput(data.answers || {}).girl;
+      const c = window.SkazkaExtras.certificate(name, book.title, girl);
+      const cert = sheet('cert');
+      cert.appendChild(el('div', 'cert-kicker', c.kicker));
+      cert.appendChild(el('div', 'cert-title', c.title));
+      cert.appendChild(el('div', 'cert-medal', '🏅'));
+      cert.appendChild(el('div', 'cert-name', c.name));
+      cert.appendChild(el('p', 'cert-text', c.text));
+      const foot = el('div', 'cert-foot');
+      const d = el('div', '', c.date); d.appendChild(el('b', '', 'дата'));
+      const sgn = el('div', '', 'Своя Сказка'); sgn.appendChild(el('b', '', 'подпись'));
+      foot.append(d, sgn);
+      cert.appendChild(foot);
+    }
+
+    // Раскраска из иллюстраций книги
+    (book.coloring || []).forEach(function (src, i) {
+      const page = sheet('coloring');
+      page.appendChild(el('div', 'coloring-title', i === 0 ? 'Раскрась свою сказку' : 'Раскраска'));
+      const pic = document.createElement('img');
+      pic.src = src;
+      pic.alt = 'Раскраска ' + (i + 1);
+      page.appendChild(pic);
+    });
+  }
+
+  function attachActions(data) {
+    const book = data.book;
+    window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () {
+      return [book.title].concat(book.pages.map(pageText));
+    });
+    window.SkazkaExtras.attachEditor({
+      button: document.getElementById('editBtn'),
+      apiBase: API_BASE,
+      jobId: data.jobId,
+      canRedraw: data.canRedraw,
+      redrawsLeft: data.redrawsLeft,
+      editable: function () { return Array.prototype.slice.call(document.querySelectorAll('.sheet[data-page] .story p')); },
+      collectEdits: function () {
+        return Array.prototype.map.call(document.querySelectorAll('.sheet[data-page]'), function (s) {
+          const i = Number(s.getAttribute('data-page'));
+          const text = Array.prototype.map.call(s.querySelectorAll('.story p'), window.SkazkaExtras.paragraphText).filter(Boolean).join('\n');
+          return { page: i, text: text };
+        }).filter(function (e) { return e.text && e.text.replace(/\s+/g, ' ') !== pageText(book.pages[e.page]).replace(/\s+/g, ' '); });
+      },
+      images: function () {
+        return Array.prototype.map.call(document.querySelectorAll('.sheet[data-page]'), function (s) {
+          const host = s.querySelector('.hero') || s.querySelector('.scene');
+          return { img: host.querySelector('img'), host: host, index: Number(s.getAttribute('data-page')) };
+        });
+      }
+    });
+
+    if (data.answers && data.answers.name && !params.get('demo')) {
+      const btn = document.getElementById('sequelBtn');
+      btn.hidden = false;
+      btn.addEventListener('click', function () {
+        const last = pageText(book.pages[book.pages.length - 1]);
+        window.SkazkaExtras.orderSequel(data.answers, book.title, 'Чем закончилась: ' + last.slice(0, 600));
+      });
+    }
+  }
+
+  function pageText(page) {
+    return typeof page === 'string' ? page : page.text;
   }
 
   // Подгоняем размер шрифта, чтобы текст целиком помещался на листе (и на экране, и в PDF)
@@ -322,26 +492,36 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     }));
   }
 
-  const data = loadBook();
   updateScale();
   window.addEventListener('resize', updateScale);
 
-  if (!data) {
-    showEmpty();
-    return;
+  function show(data) {
+    if (!data) {
+      showEmpty();
+      return;
+    }
+
+    render(data);
+    attachActions(data);
+    fitText();
+    // шрифты подгружаются с задержкой — после этого раскладка меняется, поэтому подгоняем ещё раз
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitText);
+
+    document.getElementById('pdfBtn').addEventListener('click', function () { window.print(); });
+    if (params.get('print') === '1') {
+      Promise.all([waitForImages(), document.fonts ? document.fonts.ready : null]).then(function () {
+        fitText();
+        setTimeout(function () { window.print(); }, 300);
+      });
+    }
   }
 
-  render(data);
-  fitText();
-  // шрифты подгружаются с задержкой — после этого раскладка меняется, поэтому подгоняем ещё раз
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitText);
-
-  document.getElementById('pdfBtn').addEventListener('click', function () { window.print(); });
-  if (params.get('print') === '1') {
-    Promise.all([waitForImages(), document.fonts ? document.fonts.ready : null]).then(function () {
-      fitText();
-      setTimeout(function () { window.print(); }, 300);
-    });
+  const saved = params.get('demo') ? null : loadBook();
+  const jobId = params.get('job') || (saved && saved.jobId);
+  if (jobId) {
+    loadFromServer(jobId).then(show, function () { show(params.get('demo') ? loadBook() : saved); });
+  } else {
+    show(loadBook());
   }
 })();
 </script>

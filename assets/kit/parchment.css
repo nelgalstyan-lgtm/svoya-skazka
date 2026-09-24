@@ -54,6 +54,43 @@
   text-shadow:1px 1px 0 rgba(255,255,255,.35), 2px 3px 5px rgba(60,35,10,.35);
 }
 
+/* ---------- обложка ---------- */
+.bk-cover{ background:#1c1410; }
+.bk-cover-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+.bk-cover::before{ content:""; position:absolute; left:0; right:0; top:0; height:48%; z-index:1;
+  background:linear-gradient(rgba(20,14,8,.72), rgba(20,14,8,.38) 55%, transparent); }
+.bk-cover::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:30%; z-index:1;
+  background:linear-gradient(transparent, rgba(20,14,8,.7)); }
+.bk-cover-head{ position:absolute; z-index:2; left:48px; right:48px; top:62px; text-align:center; color:#f7ead0; }
+.bk-cover-kicker{ font:600 15px/1 'Cormorant Garamond',serif; letter-spacing:.32em; padding-left:.32em; text-transform:uppercase; opacity:.85; }
+.bk-cover-title{ margin-top:18px; font:700 50px/1.08 'Cormorant Garamond',serif; color:#fbe6b0;
+  text-shadow:0 2px 0 rgba(90,55,20,.55), 0 6px 22px rgba(0,0,0,.55); text-wrap:balance; }
+.bk-cover-hero{ position:absolute; z-index:2; left:0; right:0; bottom:74px; text-align:center; font:30px/1.1 'Marck Script',cursive; color:#fbe6b0; text-shadow:0 2px 10px rgba(0,0,0,.6); }
+.bk-cover-hero small{ display:block; margin-bottom:6px; font:600 13px/1 'Cormorant Garamond',serif; letter-spacing:.28em; text-transform:uppercase; color:#f7ead0; opacity:.85; }
+.bk-cover-brand{ position:absolute; z-index:2; left:0; right:0; bottom:34px; text-align:center; font:600 16px/1 'Cormorant Garamond',serif; letter-spacing:.2em; text-transform:uppercase; color:#f7ead0; opacity:.75; }
+
+/* ---------- последние страницы: «Конец», сертификат, раскраска ---------- */
+.bk-finale, .bk-cert{ text-align:center; }
+.bk-finale-title{ position:absolute; left:var(--l); width:var(--w); top:230px; font:700 64px/1 'Cormorant Garamond',serif; color:#4a3220; }
+.bk-finale .bk-divider{ position:absolute; left:var(--l); width:var(--w); top:318px; }
+.bk-finale-text{ position:absolute; left:var(--l); width:var(--w); top:360px; font:italic 21px/34px 'Tinos',serif; color:var(--brown); }
+.bk-qr{ position:absolute; left:var(--l); width:var(--w); top:560px; display:flex; align-items:center; gap:18px; text-align:left; }
+.bk-qr .qr-code{ width:112px; height:112px; flex:none; padding:8px; background:#fffaf0; border-radius:6px; box-shadow:0 4px 12px rgba(60,40,10,.2); }
+.bk-qr .qr-code svg{ width:100%; height:100%; display:block; }
+.bk-qr .qr-text{ font:17px/26px 'Tinos',serif; color:var(--brown); }
+.bk-finale-brand{ position:absolute; left:0; right:0; bottom:60px; font:600 18px/1 'Cormorant Garamond',serif; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+.bk-cert::before{ content:""; position:absolute; inset:34px; border:3px double #8a5a2b; border-radius:8px; pointer-events:none; }
+.bk-cert-kicker{ position:absolute; left:0; right:0; top:120px; font:600 16px/1 'Cormorant Garamond',serif; letter-spacing:.4em; padding-left:.4em; text-transform:uppercase; color:var(--muted); }
+.bk-cert-title{ position:absolute; left:0; right:0; top:150px; font:700 46px/1 'Cormorant Garamond',serif; color:#4a3220; }
+.bk-cert .bk-divider{ position:absolute; left:0; right:0; top:222px; }
+.bk-cert-name{ position:absolute; left:0; right:0; top:280px; font:64px/1.1 'Marck Script',cursive; color:#8a5a2b; }
+.bk-cert-text{ position:absolute; left:70px; right:70px; top:400px; font:italic 20px/33px 'Tinos',serif; color:var(--ink); }
+.bk-cert-foot{ position:absolute; left:80px; right:80px; bottom:110px; display:flex; justify-content:space-between; font:16px/1.3 'Tinos',serif; color:var(--brown); }
+.bk-cert-foot b{ display:block; margin-top:6px; padding-top:6px; border-top:1px solid var(--line); font-weight:400; font-size:13px; color:var(--muted); }
+.bk-coloring{ background:#fff !important; }
+.bk-coloring-title{ position:absolute; left:0; right:0; top:40px; text-align:center; font:34px/1 'Marck Script',cursive; color:#8a5a2b; }
+.bk-coloring-img{ position:absolute; left:34px; top:96px; width:calc(100% - 68px); height:calc(100% - 130px); object-fit:contain; }
+
 /* ---------- иллюстрация на всю страницу ---------- */
 .bk-ill{ background:#1c1410; }
 .bk-ill-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }

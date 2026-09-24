@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildHeroPrompt, normalizePhoto, generateHeroImage } from '../lib/illustrate.js';
+import { buildHeroPrompt, normalizePhoto, generateHeroImage, photosFrom, illustrateBook, pickStyleKey } from '../lib/illustrate.js';
+import { parsePhotos } from '../index.js';
 import { generateStory } from '../lib/story.js';
 import { generateBigBook, validatePlan } from '../lib/bigstory.js';
 import { buildProviders, createHealth } from '../lib/providers.js';
@@ -22,14 +23,66 @@ test('промпт: сохраняет личность, без отрицани
   assert.ok(/watercolor/.test(prompt));
 });
 
-test('промпт: подставляет технику рендера по стилю, а не форму черт лица', () => {
-  const cartoon = buildHeroPrompt({ styleLabel: 'Мультяшный', brief: 'x' });
-  assert.ok(/cel-style|cel-shaded|cartoon/i.test(cartoon));
-  const clay = buildHeroPrompt({ styleLabel: 'Пластилиновый / 3D', brief: 'x' });
-  assert.ok(/3D animated/i.test(clay));
-  for (const p of [cartoon, clay]) {
-    assert.ok(!/large expressive eyes/i.test(p));
-  }
+test('промпт: два стиля — акварель и 3D-мультфильм; технику рендера, а не форму черт лица', () => {
+  assert.equal(pickStyleKey('Акварель'), 'watercolor');
+  assert.equal(pickStyleKey('3D-мультфильм'), 'animated3d');
+  assert.equal(pickStyleKey('Пластилиновый / 3D'), 'animated3d', 'старые заказы с прежним названием стиля');
+  assert.equal(pickStyleKey('Аниме'), 'watercolor', 'убранные стили падают на акварель');
+  const anim = buildHeroPrompt({ styleLabel: '3D-мультфильм', brief: 'x' });
+  assert.ok(/3D animated/i.test(anim));
+  assert.ok(!/large expressive eyes/i.test(anim));
+  assert.ok(/characters from existing cartoons/i.test(anim), 'запрет чужих персонажей и брендов');
+});
+
+test('промпт: лист персонажа, обложка и одежда из look', () => {
+  const scene = buildHeroPrompt({ styleLabel: 'Акварель', brief: 'x', look: 'a yellow raincoat', withSheet: true, photoCount: 2 });
+  assert.ok(/character reference sheet/.test(scene));
+  assert.ok(/yellow raincoat/.test(scene));
+  assert.ok(/reference photos/.test(scene), 'несколько фото — так и сказано модели');
+  const cover = buildHeroPrompt({ styleLabel: 'Акварель', brief: 'x', kind: 'cover' });
+  assert.ok(/front cover/.test(cover) && /title will be typeset/.test(cover));
+  const sheet = buildHeroPrompt({ styleLabel: 'Акварель', kind: 'sheet' });
+  assert.ok(/character reference sheet on a plain/.test(sheet));
+});
+
+test('фото: не больше трёх, старое одиночное photo тоже принимается', () => {
+  const p = { mime: 'image/png', data: 'abc' };
+  assert.equal(photosFrom({ photos: [p, p, p, p] }).length, 3);
+  assert.equal(photosFrom({ photo: p }).length, 1);
+  assert.equal(photosFrom({}).length, 0);
+  const url = 'data:image/png;base64,YWJj';
+  assert.equal(parsePhotos({ photos: [url, url, url, url] }).length, 3);
+  assert.equal(parsePhotos({ photo: url }).length, 1);
+  assert.equal(parsePhotos({ photos: ['data:text/html;base64,YWJj'] }).length, 0);
+});
+
+test('illustrateBook: сначала лист персонажа, он уходит образцом в обложку и каждую страницу', async () => {
+  const calls = [];
+  const illustrate = async (o) => { calls.push(o); return { data: o.kind === 'sheet' ? 'c2hlZXQ=' : 'aW1n', mime: 'image/png' }; };
+  const art = await illustrateBook({ photos: [PHOTO], style: 'Акварель' }, { scenes: [{ brief: 'a' }, { brief: 'b' }], coverBrief: 'c', look: 'red scarf', illustrate });
+  assert.equal(calls[0].kind, 'sheet');
+  assert.ok(calls.slice(1).every((c) => c.sheet && c.sheet.data === 'c2hlZXQ=' && c.look === 'red scarf'));
+  assert.equal(art.cover, 'data:image/png;base64,aW1n');
+  assert.deepEqual(art.scenes, ['data:image/png;base64,aW1n', 'data:image/png;base64,aW1n']);
+  assert.equal(art.sheet, 'data:image/png;base64,c2hlZXQ=');
+});
+
+test('illustrateBook: лист не получился — страницы всё равно рисуются; время вышло — остальные пропускаются', async () => {
+  const illustrate = async (o) => (o.kind === 'sheet' ? null : { data: 'aW1n', mime: 'image/png' });
+  const art = await illustrateBook({ photos: [PHOTO] }, { scenes: [{ brief: 'a' }], illustrate });
+  assert.equal(art.sheet, null);
+  assert.equal(art.scenes[0], 'data:image/png;base64,aW1n');
+
+  const late = await illustrateBook({ photos: [PHOTO] }, { scenes: [{ brief: 'a' }, { brief: 'b' }], illustrate, deadlineAt: Date.now() - 1 });
+  assert.deepEqual(late.scenes, [null, null]);
+});
+
+test('illustrateBook: раскраска делается из готовых иллюстраций', async () => {
+  const kinds = [];
+  const illustrate = async (o) => { kinds.push(o.kind); return { data: 'aW1n', mime: 'image/png' }; };
+  const art = await illustrateBook({ photos: [PHOTO] }, { scenes: [{ brief: 'a' }, { brief: 'b' }], illustrate, coloring: true });
+  assert.equal(kinds.filter((k) => k === 'coloring').length, 2);
+  assert.equal(art.coloring.length, 2);
 });
 
 test('промпт: без brief всё равно собирается (запасное описание сцены)', () => {
@@ -77,17 +130,28 @@ async function providersFor(handler) {
   return { providers, close: () => a.server.close() };
 }
 
-test('короткая книга: есть фото — геройская страница получает картинку через инжектированный illustrate', async () => {
+test('короткая книга: есть фото — ребёнок на обложке и на каждой странице', async () => {
   const { providers, close } = await providersFor(okReply(goodStory));
   const seen = [];
   const illustrate = async (opts) => { seen.push(opts); return { data: 'aW1n', mime: 'image/png' }; };
-  const story = await generateStory({ ...INPUT, photo: PHOTO }, { providers, health: createHealth(), log: quiet, illustrate });
+  const story = await generateStory({ ...INPUT, photos: [PHOTO, PHOTO] }, { providers, health: createHealth(), log: quiet, illustrate });
   close();
 
-  assert.equal(seen.length, 1);
-  assert.equal(seen[0].brief, 'The girl kneels by a glowing stone, reaching out with one hand.');
-  const heroPage = story.pages.find((p) => p.hero);
-  assert.equal(heroPage.heroImage, 'data:image/png;base64,aW1n');
+  // лист персонажа + обложка + 6 страниц
+  assert.equal(seen.length, 8);
+  assert.ok(seen.every((o) => o.photos.length === 2), 'все фото уходят в каждую картинку');
+  assert.ok(seen.some((o) => o.brief === 'The girl kneels by a glowing stone, reaching out with one hand.'));
+  assert.ok(story.pages.every((p) => p.hero && p.heroImage === 'data:image/png;base64,aW1n'));
+  assert.equal(story.cover, 'data:image/png;base64,aW1n');
+});
+
+test('короткая книга: ИИ недоступен, но фото есть — книга из шаблона тоже получает иллюстрации', async () => {
+  const seen = [];
+  const illustrate = async (opts) => { seen.push(opts); return { data: 'aW1n', mime: 'image/png' }; };
+  const story = await generateStory({ ...INPUT, photo: PHOTO }, { providers: [], log: quiet, illustrate });
+  assert.equal(story.source, 'template');
+  assert.ok(story.pages.every((p) => p.heroImage));
+  assert.ok(seen.filter((o) => o.kind === 'scene').every((o) => /The child explores the scene/.test(o.brief)));
 });
 
 test('короткая книга: без фото illustrate не вызывается вообще', async () => {
@@ -151,20 +215,19 @@ function mockServer(handler) {
 
 const chapterNo = (user) => Number((user.match(/ПИШИ ГЛАВУ (\d+)/) || [])[1]);
 
-test('большая книга: несколько hero-картинок по плану — каждая получает своё фото по очереди', async () => {
+test('большая книга: 8–10 иллюстраций, ребёнок на каждой, плюс обложка', async () => {
   const a = await mockServer((user) => (/Это ПЛАН/.test(user) ? JSON.stringify(planJson) : chapterJson(chapterNo(user))));
   const providers = buildProviders({ PROVIDER_ORDER: 'groq', GROQ_API_KEY: 'k', GROQ_BASE_URL: a.url, GROQ_MODELS: 'm1' });
 
   const seen = [];
-  const illustrate = async (opts) => { seen.push(opts.brief); return { data: 'aW1n', mime: 'image/png' }; };
+  const illustrate = async (opts) => { seen.push(opts); return { data: 'aW1n', mime: 'image/png' }; };
   const r = await generateBigBook({ ...INPUT, photo: PHOTO }, { providers, health: createHealth(), log: quiet, illustrate });
   a.server.close();
 
-  const heroImgs = r.book.chapters.flatMap((c) => c.blocks.filter((b) => b.t === 'image' && b.hero));
-  const plainImgs = r.book.chapters.flatMap((c) => c.blocks.filter((b) => b.t === 'image' && !b.hero));
-
-  assert.ok(heroImgs.length >= 1);
-  assert.ok(heroImgs.every((im) => im.src === 'data:image/png;base64,aW1n'));
-  assert.ok(plainImgs.every((im) => /^assets\/scenes\//.test(im.src)), 'нехеройские картинки остаются фоновыми сценами');
-  assert.equal(seen.length, heroImgs.length);
+  const imgs = r.book.chapters.flatMap((c) => c.blocks.filter((b) => b.t === 'image'));
+  assert.ok(imgs.length >= 8 && imgs.length <= 10, `8–10 иллюстраций, получилось ${imgs.length}`);
+  assert.ok(imgs.every((im) => im.hero && im.src === 'data:image/png;base64,aW1n'), 'ребёнок на каждой иллюстрации');
+  assert.equal(r.book.cover, 'data:image/png;base64,aW1n');
+  // лист персонажа + обложка + все иллюстрации (раскраска здесь не заказана)
+  assert.equal(seen.filter((o) => o.kind !== 'coloring').length, imgs.length + 2);
 });

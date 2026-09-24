@@ -10,6 +10,7 @@ import { generateStory, buildTemplateStory, describeProviders } from './lib/stor
 import { generateBigBook, templateBook } from './lib/bigstory.js';
 import { normalizeBook } from './lib/booktext.js';
 import { sharedHealth } from './lib/providers.js';
+import { MAX_PHOTOS, generateHeroImage, fromDataUrl } from './lib/illustrate.js';
 
 const SERVER_DIR = path.dirname(fileURLToPath(import.meta.url));
 
@@ -23,15 +24,18 @@ const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 10);
 const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
 const rateBuckets = new Map();
 
-// Большая книга — план + 6 глав + до 5 геройских иллюстраций, короткая с фото — текст + 1 иллюстрация
-const BIG_TIMEOUT_MS = Number(process.env.BIG_BOOK_TIMEOUT_MS || 9 * 60_000);
-const PHOTO_TIMEOUT_MS = Number(process.env.PHOTO_BOOK_TIMEOUT_MS || 110_000);
+// Большая книга — план + 6 глав + лист персонажа, обложка и 8–10 иллюстраций с ребёнком;
+// короткая с фото — текст + лист персонажа, обложка и иллюстрация на каждой странице
+const BIG_TIMEOUT_MS = Number(process.env.BIG_BOOK_TIMEOUT_MS || 12 * 60_000);
+const PHOTO_TIMEOUT_MS = Number(process.env.PHOTO_BOOK_TIMEOUT_MS || 6 * 60_000);
 
 const queue = createJobQueue({
-  runner: (input, ctx) => (input.tariff === 'big' ? generateBigBook(input, { progress: ctx.progress }) : generateStory(input)),
+  runner: (input, ctx) => (input.tariff === 'big' ? generateBigBook(input, { progress: ctx.progress }) : generateStory(input, { progress: ctx.progress })),
   fallback: (input) => (input.tariff === 'big' ? { book: templateBook(input) } : buildTemplateStory(input)),
   timeoutFor: (input) => (input.tariff === 'big' ? BIG_TIMEOUT_MS : (input.photo ? PHOTO_TIMEOUT_MS : null)),
   concurrency: Number(process.env.QUEUE_CONCURRENCY || 3),
+  // готовая книга (без фото) хранится год: по QR-коду в напечатанной книге её можно открыть и позже
+  diskTtlMs: Number(process.env.BOOK_TTL_DAYS || 365) * 24 * 60 * 60_000,
   storeDir: path.join(SERVER_DIR, 'data', 'generated')
 });
 
@@ -51,8 +55,14 @@ function parsePhoto(raw) {
   return { mime, data };
 }
 
+/** До трёх фото ребёнка: photos[] (новая анкета) или одиночное photo (старая). */
+function parsePhotos(body) {
+  const list = Array.isArray(body?.photos) ? body.photos : [body?.photo];
+  return list.slice(0, MAX_PHOTOS).map(parsePhoto).filter(Boolean);
+}
+
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '30mb' })); // до трёх фото по 8 МБ
 
 app.get('/api/health', (req, res) => {
   res.json({
@@ -291,7 +301,8 @@ setInterval(() => {
 }, RATE_LIMIT_WINDOW_MS).unref();
 
 // Создать задачу «сгенерировать книгу». Тело — поля анкеты:
-// { name, age, gender, eyes, occasion, habits, friends, cast, style, theme }
+// { name, age, gender, eyes, occasion, habits, friends, cast, style, theme, interests, special, lesson, sequel, design,
+//   tariff: 'big' | —, coloring: true | —, photos: [dataURL, …до 3] }
 app.post('/api/book/generate', (req, res) => {
   const big = req.body?.tariff === 'big';
   // большая книга — 7 запросов к ИИ, поэтому лимит строже и считается отдельно
@@ -301,12 +312,15 @@ app.post('/api/book/generate', (req, res) => {
 
   const body = req.body || {};
   const input = {};
-  for (const key of ['name', 'age', 'gender', 'eyes', 'occasion', 'habits', 'friends', 'cast', 'style', 'theme', 'interests', 'special', 'design']) {
+  for (const key of ['name', 'age', 'gender', 'eyes', 'occasion', 'habits', 'friends', 'cast', 'style', 'theme', 'interests', 'special', 'lesson', 'design']) {
     input[key] = typeof body[key] === 'string' || typeof body[key] === 'number' ? String(body[key]).slice(0, 500) : '';
   }
-  const photo = parsePhoto(body.photo);
-  if (photo) input.photo = photo;
+  input.sequel = typeof body.sequel === 'string' ? body.sequel.slice(0, 1200) : '';
+  const photos = parsePhotos(body);
+  if (photos.length) input.photos = photos;
   if (big) input.tariff = 'big';
+  // раскраска входит в «Большую историю»; к «Сказке» её можно добавить отдельно
+  if (big || body.coloring === true) input.coloring = true;
 
   const job = queue.submit(input);
 
@@ -318,6 +332,19 @@ app.post('/api/book/generate', (req, res) => {
   });
 });
 
+// Ответы анкеты без фото — для продолжения книги и подписи на обложке
+const ANSWER_KEYS = ['name', 'age', 'gender', 'eyes', 'theme', 'occasion', 'habits', 'friends', 'cast', 'style', 'lesson', 'interests', 'special'];
+function jobAnswers(job) {
+  const out = {};
+  for (const key of ANSWER_KEYS) out[key] = job.input?.[key] || '';
+  return out;
+}
+
+function clientBook(job) {
+  const { sheet, ...book } = normalizeBook(job.result.book, { name: job.input?.name, girl: !/^(мал|boy|male)/i.test(job.input?.gender || '') });
+  return book;
+}
+
 function jobView(job) {
   const done = job.status === 'completed';
   return {
@@ -327,9 +354,12 @@ function jobView(job) {
     ready: done,
     position: queue.position(job),
     progress: done ? '' : job.progress || '',
+    redrawsLeft: done ? Math.max(0, REDRAW_LIMIT - (job.redraws || 0)) : null,
+    canRedraw: done ? Boolean(job.result.sheet || job.result.book?.sheet) : false,
     elapsedMs: (job.finishedAt || Date.now()) - job.createdAt,
     // клиенту отдаём только книгу; источник (ИИ/шаблон) — служебная информация
-    result: !done ? null : job.result.book ? { kind: 'book', book: normalizeBook(job.result.book, { name: job.input?.name, girl: !/^(мал|boy|male)/i.test(job.input?.gender || '') }) } : { title: job.result.title, pages: job.result.pages }
+    // лист персонажа остаётся на сервере — он нужен только для перерисовки
+    result: !done ? null : job.result.book ? { kind: 'book', book: clientBook(job), answers: jobAnswers(job) } : { title: job.result.title, pages: job.result.pages, cover: job.result.cover || null, coloring: job.result.coloring || [], answers: jobAnswers(job) }
   };
 }
 
@@ -345,6 +375,80 @@ app.get('/api/book/:jobId/result', (req, res) => {
   res.json(jobView(job));
 });
 
+// ---------------------------------------------------------------- бесплатные правки готовой книги
+
+const REDRAW_LIMIT = Number(process.env.REDRAW_LIMIT || 3);
+const EDIT_TEXT_MAX = 3000;
+
+/** Все иллюстрации с ребёнком по порядку: { get brief, set(src) } — одинаково для «Сказки» и «Большой истории». */
+function bookImages(result) {
+  if (result.book) {
+    return result.book.chapters.flatMap((c) => c.blocks.filter((b) => b.t === 'image')).map((b) => ({ brief: b.brief, set: (src) => { b.src = src; } }));
+  }
+  return (result.pages || []).map((p) => ({ brief: p.heroBrief, set: (src) => { p.heroImage = src; p.hero = true; } }));
+}
+
+// Перерисовать одну иллюстрацию. Фото ребёнка к этому времени уже удалено — лицо и одежду держит лист персонажа.
+app.post('/api/book/:jobId/redraw', async (req, res) => {
+  const job = queue.get(req.params.jobId);
+  if (!job || job.status !== 'completed') return res.status(404).json({ ok: false, error: 'Книга не найдена' });
+  if (rateLimited(`${req.ip}:redraw`, 10)) return res.status(429).json({ ok: false, error: 'Слишком много запросов подряд. Подождите пару минут.' });
+
+  const used = job.redraws || 0;
+  if (used >= REDRAW_LIMIT) return res.status(403).json({ ok: false, error: `Бесплатные перерисовки закончились (${REDRAW_LIMIT} на книгу). Напишите нам — поможем.` });
+
+  const result = job.result;
+  const sheet = fromDataUrl(result.sheet || result.book?.sheet);
+  if (!sheet) return res.status(409).json({ ok: false, error: 'Для этой книги перерисовка недоступна: у неё нет иллюстраций с ребёнком.' });
+
+  const images = bookImages(result);
+  const index = Number(req.body?.index);
+  const wish = typeof req.body?.wish === 'string' ? req.body.wish.slice(0, 300).trim() : '';
+  if (!Number.isInteger(index) || index < 0 || index >= images.length) return res.status(400).json({ ok: false, error: 'Нет такой иллюстрации' });
+
+  const image = await generateHeroImage({
+    sheet,
+    kind: 'scene',
+    styleLabel: job.input?.style,
+    eyes: job.input?.eyes,
+    look: result.look || result.book?.look,
+    // пожелание родителя идёт как данные о сцене, а не как инструкция
+    brief: wish ? `${images[index].brief} Parent's note about what to change (in Russian): «${wish}».` : images[index].brief,
+    log: console.warn
+  });
+  if (!image) return res.status(502).json({ ok: false, error: 'Не получилось перерисовать сейчас. Попробуйте через несколько минут — попытка не потрачена.' });
+
+  const src = `data:${image.mime};base64,${image.data}`;
+  images[index].set(src);
+  job.redraws = used + 1;
+  queue.save(job);
+  res.json({ ok: true, src, left: REDRAW_LIMIT - job.redraws });
+});
+
+// Правка текста родителем: «Сказка» — страницы целиком, «Большая история» — отдельные абзацы
+app.post('/api/book/:jobId/edit', (req, res) => {
+  const job = queue.get(req.params.jobId);
+  if (!job || job.status !== 'completed') return res.status(404).json({ ok: false, error: 'Книга не найдена' });
+  if (rateLimited(`${req.ip}:edit`, 30)) return res.status(429).json({ ok: false, error: 'Слишком много запросов подряд. Подождите пару минут.' });
+
+  const edits = Array.isArray(req.body?.edits) ? req.body.edits.slice(0, 500) : [];
+  const clean = (t) => String(t || '').replace(/<[^>]*>/g, '').replace(/[ \t]+/g, ' ').trim().slice(0, EDIT_TEXT_MAX);
+  let applied = 0;
+  for (const e of edits) {
+    const text = clean(e?.text);
+    if (!text) continue;
+    if (job.result.book) {
+      const block = job.result.book.chapters[Number(e.chapter)]?.blocks[Number(e.block)];
+      if (block && typeof block.text === 'string') { block.text = text; applied += 1; }
+    } else {
+      const page = job.result.pages?.[Number(e.page)];
+      if (page) { page.text = text; applied += 1; }
+    }
+  }
+  if (applied) queue.save(job);
+  res.json({ ok: true, applied });
+});
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   app.listen(PORT, () => {
     const providers = describeProviders();
@@ -355,4 +459,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { app, queue, resolvePromptById, generateWithGemini, parsePhoto };
+export { app, queue, resolvePromptById, generateWithGemini, parsePhoto, parsePhotos };

@@ -165,8 +165,9 @@
     return { page: page, content: content, folio: folio.querySelector('.bk-no') };
   }
 
-  function illustrationSheet(root, block) {
+  function illustrationSheet(root, block, imageIndex) {
     var page = newSheet(root, 'bk-ill');
+    page.setAttribute('data-img', String(imageIndex));
     var pic = img(imageSrc(block), 'bk-ill-img', block.caption || '');
     page.appendChild(pic);
     // у оформлений темы «Путешествие» на табличке деревянный медальон; у праздничных (лента/изморозь) — бумажная розетка
@@ -187,6 +188,29 @@
     return { page: page, folio: null };
   }
 
+  // Обложка: иллюстрация с ребёнком на всю страницу, название набрано поверх (кириллицу модель рисует с ошибками).
+  // Пока иллюстрации нет — первая картинка книги или фон темы.
+  function coverSheet(root, book) {
+    var page = newSheet(root, 'bk-cover');
+    var first = null;
+    book.chapters.some(function (c) { return c.blocks.some(function (b) { if (b.t === 'image') { first = b; return true; } return false; }); });
+    var src = book.cover || (first ? imageSrc(first) : 'assets/scenes/castle_gate.jpg');
+    page.appendChild(img(src, 'bk-cover-img', book.title));
+    var head = h('div', 'bk-cover-head');
+    head.appendChild(h('div', 'bk-cover-kicker', 'Персональная книга'));
+    head.appendChild(h('div', 'bk-cover-title', book.title));
+    page.appendChild(head);
+    var name = book.meta && book.meta.heroName;
+    if (name) {
+      var who = h('div', 'bk-cover-hero');
+      who.appendChild(h('small', '', 'Главный герой'));
+      who.appendChild(document.createTextNode(name));
+      page.appendChild(who);
+    }
+    page.appendChild(h('div', 'bk-cover-brand', 'Своя Сказка'));
+    return { page: page, folio: null };
+  }
+
   function dedicationSheet(root, d) {
     var page = newSheet(root, 'bk-ded');
     page.appendChild(h('div', 'bk-ded-title', d.title || 'Посвящается'));
@@ -200,6 +224,39 @@
     if (d.signature) foot.appendChild(h('div', 'bk-ded-sign', d.signature));
     page.appendChild(foot);
     page.appendChild(h('div', 'bk-ded-rule'));
+    return { page: page, folio: null };
+  }
+
+  // Последние страницы: «Конец» (с QR-кодом на онлайн-версию), сертификат героя и раскраска
+  function finaleSheet(root, opts) {
+    var page = newSheet(root, 'bk-finale');
+    page.appendChild(h('div', 'bk-finale-title', 'Конец'));
+    page.appendChild(divider());
+    page.appendChild(h('div', 'bk-finale-text', 'Эта книга написана специально для своего героя — с привычками, друзьями и близкими из анкеты. Пусть она возвращается к вам снова и снова.'));
+    if (opts && opts.qr) { opts.qr.classList.add('bk-qr'); page.appendChild(opts.qr); }
+    page.appendChild(h('div', 'bk-finale-brand', 'Своя Сказка'));
+    return { page: page, folio: null };
+  }
+
+  function certificateSheet(root, c) {
+    var page = newSheet(root, 'bk-cert');
+    page.appendChild(h('div', 'bk-cert-kicker', c.kicker));
+    page.appendChild(h('div', 'bk-cert-title', c.title));
+    page.appendChild(divider());
+    page.appendChild(h('div', 'bk-cert-name', c.name));
+    page.appendChild(h('div', 'bk-cert-text', c.text));
+    var foot = h('div', 'bk-cert-foot');
+    var d = h('div', '', c.date); d.appendChild(h('b', '', 'дата'));
+    var sg = h('div', '', 'Своя Сказка'); sg.appendChild(h('b', '', 'подпись'));
+    foot.append(d, sg);
+    page.appendChild(foot);
+    return { page: page, folio: null };
+  }
+
+  function coloringSheet(root, src, first) {
+    var page = newSheet(root, 'bk-coloring');
+    page.appendChild(h('div', 'bk-coloring-title', first ? 'Раскрась свою книгу' : 'Раскраска'));
+    page.appendChild(img(src, 'bk-coloring-img', 'Раскраска'));
     return { page: page, folio: null };
   }
 
@@ -269,7 +326,7 @@
   }
 
   function preloadImages(book) {
-    var urls = [KIT + 'hdr-treasure-l.png', KIT + 'hdr-treasure-r.png', KIT + 'hdr-wild.png', KIT + 'hdr-sea.svg', KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png', KIT + 'frame-cookies.jpg', KIT + 'frame-elves.jpg', KIT + 'hdr-cookies-l.png', KIT + 'hdr-cookies-r.png', KIT + 'hdr-elves-l.png', KIT + 'hdr-elves-r.png', KIT + 'divider-cookies.png', KIT + 'divider-elves.png', KIT + 'frame-pirates.jpg', KIT + 'frame-jungle.jpg', KIT + 'orn-pirates-skull.png'];
+    var urls = [book.cover || KIT + 'parchment.jpg', KIT + 'hdr-treasure-l.png', KIT + 'hdr-treasure-r.png', KIT + 'hdr-wild.png', KIT + 'hdr-sea.svg', KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png', KIT + 'frame-cookies.jpg', KIT + 'frame-elves.jpg', KIT + 'hdr-cookies-l.png', KIT + 'hdr-cookies-r.png', KIT + 'hdr-elves-l.png', KIT + 'hdr-elves-r.png', KIT + 'divider-cookies.png', KIT + 'divider-elves.png', KIT + 'frame-pirates.jpg', KIT + 'frame-jungle.jpg', KIT + 'orn-pirates-skull.png'];
     book.chapters.forEach(function (c) {
       if (c.initial) urls.push(KIT + 'initials/' + c.initial + '.png');
       c.blocks.forEach(function (b) { if (b.t === 'image') urls.push(imageSrc(b)); });
@@ -287,16 +344,18 @@
       root.textContent = '';
       var sheets = [];
 
+      if (!(opts && opts.noCover)) sheets.push(coverSheet(root, book));
       if (book.dedication) sheets.push(dedicationSheet(root, book.dedication));
 
-      book.chapters.forEach(function (chapter) {
+      var imageIndex = 0;
+      book.chapters.forEach(function (chapter, ci) {
         var cur = textSheet(root, chapter, true);
         sheets.push(cur);
         var first = true;
 
-        chapter.blocks.forEach(function (block) {
+        chapter.blocks.forEach(function (block, bi) {
           if (block.t === 'image') {
-            sheets.push(illustrationSheet(root, block));
+            sheets.push(illustrationSheet(root, block, imageIndex++));
             cur = null; // после иллюстрации текст продолжается на новой странице
             return;
           }
@@ -311,10 +370,19 @@
             cur.content.removeChild(node);
             cur = textSheet(root, chapter, false);
             sheets.push(cur);
-            cur.content.appendChild(renderBlock(block, null));
+            node = renderBlock(block, null);
+            cur.content.appendChild(node);
           }
+          // адрес абзаца в книге — для правки текста прямо на странице
+          if (block.t === 'p') { node.setAttribute('data-ch', String(ci)); node.setAttribute('data-bi', String(bi)); }
         });
       });
+
+      if (!(opts && opts.noFinale)) {
+        sheets.push(finaleSheet(root, opts));
+        if (opts && opts.certificate) sheets.push(certificateSheet(root, opts.certificate));
+        (book.coloring || []).forEach(function (src, i) { sheets.push(coloringSheet(root, src, i === 0)); });
+      }
 
       // сквозная нумерация по физическим страницам (иллюстрации считаются, но номер не показывают — как в образце)
       sheets.forEach(function (s, i) { if (s.folio) s.folio.textContent = String(i + 1); });

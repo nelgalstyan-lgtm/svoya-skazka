@@ -37,7 +37,7 @@ export function createJobQueue({
   function finish(job, story) {
     if (job.status === 'completed') return;
     // Фото ребёнка нужно только на время генерации — дальше не храним даже в памяти, а тем более на диске
-    if (job.input && job.input.photo) job.input = { ...job.input, photo: undefined };
+    if (job.input && (job.input.photo || job.input.photos)) job.input = { ...job.input, photo: undefined, photos: undefined };
     job.status = 'completed';
     job.result = story;
     job.finishedAt = Date.now();
@@ -120,7 +120,7 @@ export function createJobQueue({
     for (const [id, job] of jobs) {
       if (job.status === 'completed' && now - job.finishedAt > memoryTtlMs) jobs.delete(id);
     }
-    // данные детей не храним дольше недели
+    // готовые книги не храним дольше diskTtlMs (фото ребёнка не хранятся вовсе — см. finish)
     if (!storeDir) return;
     fs.readdir(storeDir, (error, files) => {
       if (error) return;
@@ -136,5 +136,11 @@ export function createJobQueue({
   const timer = setInterval(cleanup, 10 * 60_000);
   timer.unref?.();
 
-  return { submit, get, position, stats: () => ({ running, waiting: waiting.length, inMemory: jobs.size }) };
+  /** Сохраняет изменения готовой книги (правка текста, перерисовка). */
+  function save(job) {
+    if (jobs.has(job.id)) jobs.set(job.id, job);
+    persist(job);
+  }
+
+  return { submit, get, save, position, stats: () => ({ running, waiting: waiting.length, inMemory: jobs.size }) };
 }

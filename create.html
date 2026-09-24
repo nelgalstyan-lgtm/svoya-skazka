@@ -374,11 +374,29 @@ section.tight{ padding:56px 0; }
   cursor:pointer;
 }
 .photo-drop strong{ color:var(--text); display:block; margin-bottom:4px; }
-.photo-drop-preview{ width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0 auto 12px; display:none; border:2px solid var(--line); }
-.photo-drop.has-photo .photo-drop-preview{ display:block; }
+.photo-thumbs{ display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.photo-thumbs:empty{ display:none; }
+.photo-thumb{ position:relative; width:76px; height:76px; }
+.photo-thumb img{ width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid var(--line); display:block; }
+.photo-thumb button{ position:absolute; top:-4px; right:-4px; width:24px; height:24px; border-radius:50%; border:none; background:#B87F27; color:#fff; font-size:13px; line-height:24px; cursor:pointer; padding:0; }
 .design-thumb{ display:block; width:100%; max-width:130px; margin:0 auto 10px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.18); }
-.photo-drop-remove{ display:none; margin-top:10px; font-size:13px; color:#B87F27; text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; }
-.photo-drop.has-photo .photo-drop-remove{ display:inline-block; }
+.privacy-note{ margin:10px 0 0; font-size:13.5px; color:var(--text-soft); }
+
+/* стиль иллюстраций: две большие карточки с образцом */
+.style-cards{ grid-template-columns:1fr 1fr; }
+.style-card{ padding:12px 12px 16px; }
+.style-sample{ display:block; width:100%; height:240px; object-fit:cover; object-position:center 30%; border-radius:10px; margin-bottom:12px; background:linear-gradient(160deg,#f3c98b,#8fb3d9 55%,#5a4b8f); }
+.style-sample.is-3d{ display:flex; align-items:center; justify-content:center; font-size:64px; }
+.choice-card .desc{ display:block; margin-top:6px; font-size:13px; color:var(--text-soft); font-weight:400; line-height:1.45; }
+
+/* тариф */
+.tariff-cards{ grid-template-columns:1fr 1fr; }
+@media (max-width:640px){ .tariff-cards, .style-cards{ grid-template-columns:1fr; } }
+.tariff-card{ text-align:left; padding:20px 20px 22px; }
+.tariff-card .name{ font-family:var(--font-display); font-size:21px; }
+.tariff-card .t-price{ display:block; margin:6px 0 10px; font-family:var(--font-display); font-size:26px; color:var(--gold-dark); }
+.tariff-card ul{ margin:0; padding-left:18px; color:var(--text-soft); font-size:14px; line-height:1.55; }
+.tariff-card .t-for{ display:inline-block; margin-top:4px; font-size:12.5px; font-weight:700; letter-spacing:.04em; color:var(--sage); text-transform:uppercase; }
 
 .upsell-row{
   display:flex; align-items:flex-start; gap:16px;
@@ -400,6 +418,12 @@ section.tight{ padding:56px 0; }
 }
 .form-actions .price{ font-family:var(--font-display); font-size:20px; }
 .form-actions .price small{ display:block; font-family:var(--font-body); font-size:13px; color:var(--text-soft); font-weight:400; }
+
+.sequel-banner{ margin:24px 48px 0; padding:18px 20px; border-radius:14px; background:#FBF2DF; border:1px solid var(--gold); display:grid; gap:6px; font-size:14.5px; color:var(--text-soft); }
+.sequel-banner[hidden]{ display:none; }
+.sequel-banner strong{ color:var(--text); font-size:16px; }
+.sequel-banner button{ justify-self:start; background:none; border:none; padding:0; color:#B87F27; text-decoration:underline; cursor:pointer; font:inherit; font-size:13.5px; }
+@media (max-width:640px){ .sequel-banner{ margin:20px 20px 0; } }
 
 /* прогресс анкеты */
 .progress-track{ display:flex; gap:8px; padding:22px 48px 0; }
@@ -520,6 +544,11 @@ section.tight{ padding:56px 0; }
   <div class="container">
 
     <form class="form-shell">
+      <div class="sequel-banner" id="sequelBanner" hidden>
+        <strong>✨ Продолжение книги <span id="sequelTitle"></span></strong>
+        <span>Анкета уже заполнена по первой книге — те же герой, друзья и близкие. Можно что-то поправить: например, рассказать, что нового у ребёнка с тех пор. Сюжет будет новым и законченным.</span>
+        <button type="button" id="sequelCancel">Нет, начать новую книгу</button>
+      </div>
       <div class="progress-track">
         <span class="done"></span><span class="done"></span><span></span><span></span><span></span>
       </div>
@@ -562,14 +591,14 @@ section.tight{ padding:56px 0; }
         </div>
 
         <div class="field">
-          <label>Фото ребёнка <span class="hint" style="display:inline; font-weight:400;">— необязательно, но иллюстрации станут заметно точнее</span></label>
+          <label>Фото ребёнка <span class="hint" style="display:inline; font-weight:400;">— до 3 фото: с ними ребёнок узнаёт себя на каждой иллюстрации</span></label>
           <div class="photo-drop" id="photoDrop" tabindex="0" role="button" aria-label="Загрузить фото ребёнка">
-            <img class="photo-drop-preview" id="photoDropPreview" alt="">
+            <div class="photo-thumbs" id="photoThumbs"></div>
             <strong id="photoDropTitle">Перетащите фото сюда или нажмите, чтобы выбрать</strong>
-            <span id="photoDropHint">Лучше всего работает чёткое фото лица анфас, без солнечных очков и головных уборов</span>
-            <button type="button" class="photo-drop-remove" id="photoDropRemove">✕ убрать фото</button>
-            <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" hidden>
+            <span id="photoDropHint">Лучше всего: лицо анфас, лицо вполоборота и фото в полный рост — чётко, без солнечных очков и головных уборов</span>
+            <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" multiple hidden>
           </div>
+          <p class="privacy-note">🔒 Фото нужны только чтобы нарисовать иллюстрации. Мы не храним их: они удаляются с сервера сразу, как только книга готова, и никому не передаются.</p>
         </div>
       </div>
 
@@ -577,14 +606,18 @@ section.tight{ padding:56px 0; }
       <div class="form-step">
         <span class="form-step-label">Шаг 2</span>
         <h2>Стиль иллюстраций</h2>
-        <p class="help">Выберите, в какой манере будет нарисована книга — от этого зависит вся атмосфера.</p>
-        <div class="choice-cards">
-          <div class="choice-card is-selected" data-choice-group="style"><span class="emoji">🎨</span><span class="name">Акварель</span></div>
-          <div class="choice-card" data-choice-group="style"><span class="emoji">✏️</span><span class="name">Мультяшный</span></div>
-          <div class="choice-card" data-choice-group="style"><span class="emoji">📖</span><span class="name">Классическая книжная графика</span></div>
-          <div class="choice-card" data-choice-group="style"><span class="emoji">🧸</span><span class="name">Пластилиновый / 3D</span></div>
-          <div class="choice-card" data-choice-group="style"><span class="emoji">✨</span><span class="name">Аниме</span></div>
-          <div class="choice-card" data-choice-group="style"><span class="emoji">🖍️</span><span class="name">Как будто нарисовал ребёнок</span></div>
+        <p class="help">Выберите, в какой манере будет нарисована книга — от этого зависит вся атмосфера. В обоих стилях ребёнок нарисован на каждой иллюстрации и на обложке.</p>
+        <div class="choice-cards style-cards">
+          <div class="choice-card style-card is-selected" data-choice-group="style" data-value="watercolor">
+            <img class="style-sample" src="assets/hero/milena-watercolor.jpg" alt="Пример иллюстрации в акварели">
+            <span class="name">Акварель</span>
+            <span class="desc">Фирменный стиль «Своей Сказки»: живая бумага, мягкие краски, как в настоящей книжке с полки</span>
+          </div>
+          <div class="choice-card style-card" data-choice-group="style" data-value="animated3d">
+            <span class="style-sample is-3d" aria-hidden="true">🎬</span>
+            <span class="name">3D-мультфильм</span>
+            <span class="desc">Объёмные герои и кинематографичный свет — как кадр из полнометражного мультфильма</span>
+          </div>
         </div>
       </div>
 
@@ -636,25 +669,67 @@ section.tight{ padding:56px 0; }
           <textarea id="cast" placeholder="Мама, папа, бабушка, домашний питомец — с именами, если хотите, и парой слов о каждом"></textarea>
           <span class="hint">Например: «мама Лена — она обычно всех успокаивает», «кот Барсик, важный, как король»</span>
         </div>
+
+        <div class="field">
+          <label for="lesson">С чем книга может мягко помочь <span class="hint" style="display:inline; font-weight:400;">— необязательно</span></label>
+          <input type="text" id="lesson" list="lessonIdeas" placeholder="Например: боится темноты, скоро в первый класс, появился братик">
+          <datalist id="lessonIdeas">
+            <option value="Боится темноты">
+            <option value="Скоро в первый класс">
+            <option value="Скоро в детский сад">
+            <option value="Появился братик или сестрёнка">
+            <option value="Переезд в новый город">
+            <option value="Не любит проигрывать">
+            <option value="Стесняется новых людей">
+            <option value="Не хочет чистить зубы">
+          </datalist>
+          <span class="hint">Герой проживает похожую ситуацию в сюжете и находит опору — без нравоучений. Ребёнок узнаёт себя и видит, что справиться можно.</span>
+        </div>
       </div>
 
       <!-- Шаг 5 — формат -->
       <div class="form-step">
         <span class="form-step-label">Шаг 5</span>
-        <h2>Формат книги</h2>
-        <p class="help">Книга — электронная: читайте её онлайн прямо в личном кабинете или скачайте PDF-файл себе на устройство — доступны оба варианта, без ожидания доставки.</p>
+        <h2>Какую книгу создаём?</h2>
+        <p class="help">Книга электронная: читайте онлайн, слушайте вслух или скачайте PDF, готовый к печати. Первые страницы — бесплатно, платите только если книга понравилась.</p>
 
-        <div class="upsell-row">
-          <input type="checkbox" id="audio" checked>
+        <div class="choice-cards tariff-cards">
+          <div class="choice-card tariff-card is-selected" data-choice-group="tariff" data-value="short" data-price="690">
+            <span class="name">Сказка</span>
+            <span class="t-for">для 2–7 лет</span>
+            <span class="t-price">690 ₽</span>
+            <ul>
+              <li>8 страниц истории, 5–10 минут чтения</li>
+              <li>Ребёнок на каждой иллюстрации и на обложке</li>
+              <li>Сюжет по анкете: характер, друзья, близкие</li>
+              <li>Чтение онлайн, вслух и PDF для печати</li>
+            </ul>
+          </div>
+          <div class="choice-card tariff-card" data-choice-group="tariff" data-value="big" data-price="1490">
+            <span class="name">Большая история</span>
+            <span class="t-for">для 6–16 лет</span>
+            <span class="t-price">1 490 ₽</span>
+            <ul>
+              <li>6 глав, 3 000–5 000 слов — на несколько вечеров</li>
+              <li>8–10 иллюстраций с ребёнком и обложка</li>
+              <li>Живые диалоги, юмор, «записи героя»</li>
+              <li>Оформление страниц под сюжет книги</li>
+              <li>Раскраска из иллюстраций и сертификат героя</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="upsell-row" id="coloringRow" style="margin-top:18px;">
+          <input type="checkbox" id="coloring">
           <div>
-            <strong>Добавить озвучку книги <span class="tag">рекомендуем</span></strong>
-            <span style="color:var(--text-soft); font-size:14.5px;">Голос рассказчика читает историю вслух — удобно перед сном, когда читать самим уже нет сил.</span>
+            <strong>Добавить раскраску <span class="tag">+190 ₽</span></strong>
+            <span style="color:var(--text-soft); font-size:14.5px;">Иллюстрации книги в виде контурных картинок для печати — ребёнок раскрашивает самого себя.</span>
           </div>
         </div>
       </div>
 
       <div class="form-actions">
-        <div class="price">от 1 900 ₽ <small>точная цена — на следующем шаге, после выбора объёма книги</small></div>
+        <div class="price" id="orderPrice">690 ₽ <small>превью — бесплатно, оплата только если книга понравилась</small></div>
         <button type="button" class="btn btn-primary" id="generatePreviewBtn">Показать бесплатное превью</button>
       </div>
 
@@ -680,6 +755,7 @@ section.tight{ padding:56px 0; }
 </footer>
 
 <script src="js/story-template.js"></script>
+<script src="js/book-extras.js"></script>
 <script>
   (function () {
     // Адрес бэкенда: локально — localhost:3000; на боевом сайте можно задать window.SKAZKA_API_BASE до этого скрипта.
@@ -688,6 +764,7 @@ section.tight{ padding:56px 0; }
 
     const POLL_EVERY_MS = 2000;
     const MAX_WAIT_MS = 90000;      // дольше не ждём — показываем локальную книгу
+    const MAX_WAIT_PHOTO_MS = 7 * 60000; // с фото рисуются 10 иллюстраций — это несколько минут
     const MAX_POLL_ERRORS = 5;
 
     const generateBtn = document.getElementById('generatePreviewBtn');
@@ -708,6 +785,11 @@ section.tight{ padding:56px 0; }
       return el ? el.value.trim() : '';
     }
 
+    function readChoiceValue(groupName) {
+      const active = document.querySelector('.choice-card[data-choice-group="' + groupName + '"].is-selected');
+      return active ? active.getAttribute('data-value') || '' : '';
+    }
+
     function readChoiceText(groupName) {
       const active = document.querySelector('.choice-card[data-choice-group="' + groupName + '"].is-selected');
       if (!active) return '';
@@ -716,67 +798,86 @@ section.tight{ padding:56px 0; }
     }
 
     // Фото держим только в памяти вкладки: не кладём в localStorage вместе с answers (незачем разрастать хранилище)
-    // и не показываем его повторно при чтении сохранённой книги — на сервер оно уходит один раз, при заказе.
+    // и не показываем повторно при чтении сохранённой книги — на сервер они уходят один раз, при заказе.
     const PHOTO_MAX_BYTES = 8 * 1024 * 1024;
-    let selectedPhoto = null;
+    const MAX_PHOTOS = 3;
+    let selectedPhotos = [];
 
     function attachPhotoUpload() {
       const drop = document.getElementById('photoDrop');
       const input = document.getElementById('photoInput');
-      const preview = document.getElementById('photoDropPreview');
+      const thumbs = document.getElementById('photoThumbs');
       const title = document.getElementById('photoDropTitle');
       const hint = document.getElementById('photoDropHint');
-      const removeBtn = document.getElementById('photoDropRemove');
       if (!drop || !input) return;
 
       const defaultTitle = title.textContent;
       const defaultHint = hint.textContent;
 
-      function setPhoto(file) {
-        if (!file) return;
-        if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
-          setStatus('Нужен файл в формате JPEG, PNG или WEBP.', 'error');
-          return;
-        }
-        if (file.size > PHOTO_MAX_BYTES) {
-          setStatus('Фото слишком большое (максимум 8 МБ) — выберите файл поменьше.', 'error');
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = function () {
-          selectedPhoto = String(reader.result);
-          preview.src = selectedPhoto;
-          drop.classList.add('has-photo');
-          title.textContent = 'Фото загружено: ' + file.name;
-          hint.textContent = 'Нажмите, чтобы выбрать другое фото';
-        };
-        reader.onerror = function () {
-          setStatus('Не получилось прочитать файл. Попробуйте другое фото.', 'error');
-        };
-        reader.readAsDataURL(file);
+      function redraw() {
+        thumbs.textContent = '';
+        selectedPhotos.forEach(function (src, i) {
+          const box = document.createElement('div');
+          box.className = 'photo-thumb';
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = 'Фото ' + (i + 1);
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.textContent = '✕';
+          remove.setAttribute('aria-label', 'Убрать фото ' + (i + 1));
+          remove.addEventListener('click', function (e) {
+            e.stopPropagation();
+            selectedPhotos.splice(i, 1);
+            redraw();
+          });
+          box.append(img, remove);
+          thumbs.appendChild(box);
+        });
+        const n = selectedPhotos.length;
+        title.textContent = n ? 'Загружено фото: ' + n + ' из ' + MAX_PHOTOS : defaultTitle;
+        hint.textContent = n >= MAX_PHOTOS ? 'Уберите фото, чтобы заменить его другим' : n ? 'Нажмите, чтобы добавить ещё — вполоборота или в полный рост' : defaultHint;
       }
 
-      drop.addEventListener('click', function () { input.click(); });
+      function addPhotos(files) {
+        Array.prototype.slice.call(files || []).forEach(function (file) {
+          if (selectedPhotos.length >= MAX_PHOTOS) {
+            setStatus('Можно загрузить не больше ' + MAX_PHOTOS + ' фото.', 'error');
+            return;
+          }
+          if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+            setStatus('Нужен файл в формате JPEG, PNG или WEBP.', 'error');
+            return;
+          }
+          if (file.size > PHOTO_MAX_BYTES) {
+            setStatus('Фото слишком большое (максимум 8 МБ) — выберите файл поменьше.', 'error');
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = function () {
+            if (selectedPhotos.length >= MAX_PHOTOS) return;
+            selectedPhotos.push(String(reader.result));
+            redraw();
+          };
+          reader.onerror = function () {
+            setStatus('Не получилось прочитать файл. Попробуйте другое фото.', 'error');
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      drop.addEventListener('click', function () { if (selectedPhotos.length < MAX_PHOTOS) input.click(); });
       drop.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
       });
-      input.addEventListener('change', function () { setPhoto(input.files && input.files[0]); });
+      input.addEventListener('change', function () { addPhotos(input.files); input.value = ''; });
 
       drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.style.background = '#fbf6ea'; });
       drop.addEventListener('dragleave', function () { drop.style.background = ''; });
       drop.addEventListener('drop', function (e) {
         e.preventDefault();
         drop.style.background = '';
-        setPhoto(e.dataTransfer.files && e.dataTransfer.files[0]);
-      });
-
-      removeBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        selectedPhoto = null;
-        input.value = '';
-        drop.classList.remove('has-photo');
-        title.textContent = defaultTitle;
-        hint.textContent = defaultHint;
+        addPhotos(e.dataTransfer.files);
       });
     }
 
@@ -811,17 +912,30 @@ section.tight{ padding:56px 0; }
         habits: readInput('habits'),
         friends: readInput('friends'),
         cast: readInput('cast'),
+        lesson: readInput('lesson'),
         style: readChoiceText('style'),
         theme: readChoiceText('theme'),
-        design: readDesign()
+        design: readDesign(),
+        sequel: sequel ? sequel.sequel : '',
+        tariff: readChoiceValue('tariff') === 'big' ? 'big' : '',
+        coloring: readChoiceValue('tariff') !== 'big' && document.getElementById('coloring').checked
       };
     }
 
     const STORAGE_KEY = 'skazka:lastBook';
 
-    function saveBook(answers, book) {
+    // Иллюстрации (data:URL по мегабайту) в хранилище браузера не помещаются — сохраняем текст, картинки берутся с сервера по jobId
+    function withoutImages(book) {
+      return Object.assign({}, book, {
+        cover: null,
+        coloring: [],
+        pages: book.pages.map(function (p) { return typeof p === 'string' ? p : Object.assign({}, p, { heroImage: undefined }); })
+      });
+    }
+
+    function saveBook(answers, book, jobId) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers: answers, book: book, savedAt: Date.now() }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers: answers, book: withoutImages(book), jobId: jobId || null, savedAt: Date.now() }));
         return true;
       } catch (e) {
         return false; // приватный режим или заблокированное хранилище
@@ -833,7 +947,7 @@ section.tight{ padding:56px 0; }
     }
 
     // Всё выводим через textContent — текст приходит от ИИ и не должен исполняться как HTML.
-    function renderReady(book, saved) {
+    function renderReady(book, saved, jobId) {
       previewBox.style.display = 'block';
       previewBox.textContent = '';
 
@@ -846,23 +960,25 @@ section.tight{ padding:56px 0; }
       title.style.cssText = 'margin:6px 0 8px; font-size:26px;';
 
       const meta = document.createElement('p');
-      meta.textContent = book.pages.length + ' разворотов с иллюстрациями · чтение онлайн и PDF';
+      const drawn = book.pages.filter(function (p) { return p && p.heroImage; }).length;
+      meta.textContent = book.pages.length + ' страниц истории' + (drawn ? ' · ребёнок на ' + drawn + ' иллюстрациях' : '') + ' · чтение онлайн и PDF';
       meta.style.cssText = 'margin:0 0 20px; color:#5f6378;';
 
       previewBox.append(label, title, meta);
 
-      if (saved) {
+      if (saved || jobId) {
+        const link = 'book.html' + (jobId ? '?job=' + encodeURIComponent(jobId) : '');
         const actions = document.createElement('div');
         actions.style.cssText = 'display:flex; gap:12px; flex-wrap:wrap;';
 
         const read = document.createElement('a');
-        read.href = 'book.html';
+        read.href = link;
         read.target = '_blank';
         read.className = 'btn btn-primary';
         read.textContent = 'Читать книгу';
 
         const pdf = document.createElement('a');
-        pdf.href = 'book.html?print=1';
+        pdf.href = link + (jobId ? '&' : '?') + 'print=1';
         pdf.target = '_blank';
         pdf.className = 'btn';
         pdf.textContent = 'Скачать PDF';
@@ -883,9 +999,9 @@ section.tight{ padding:56px 0; }
       previewBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function finish(book, answers) {
+    function finish(book, answers, jobId) {
       statusBox.style.display = 'none';
-      renderReady(book, saveBook(answers, book));
+      renderReady(book, saveBook(answers, book, jobId), jobId);
       generateBtn.disabled = false;
       generateBtn.textContent = 'Создать ещё раз';
     }
@@ -921,7 +1037,7 @@ section.tight{ padding:56px 0; }
       }
     }
 
-    async function waitForBook(jobId, answers, myRun, startedAt) {
+    async function waitForBook(jobId, answers, myRun, startedAt, maxWait) {
       let errors = 0;
 
       while (myRun === runId) {
@@ -929,16 +1045,16 @@ section.tight{ padding:56px 0; }
         if (myRun !== runId) return;
 
         const elapsed = Date.now() - startedAt;
-        if (elapsed > MAX_WAIT_MS) return finishLocally(answers, 'таймаут ожидания');
+        if (elapsed > maxWait) return finishLocally(answers, 'таймаут ожидания');
 
         try {
           const data = await fetchJson(API_BASE + '/api/book/' + jobId + '/status', {}, 8000);
           errors = 0;
 
           if (data.ready && data.result && Array.isArray(data.result.pages) && data.result.pages.length) {
-            return finish(data.result, answers);
+            return finish(data.result, answers, jobId);
           }
-          setStatus(progressMessage(elapsed, data.position));
+          setStatus(data.progress || progressMessage(elapsed, data.position));
         } catch (error) {
           if (error.status === 404) return finishLocally(answers, 'задача потеряна на сервере');
           errors += 1;
@@ -950,21 +1066,66 @@ section.tight{ padding:56px 0; }
     attachChoiceSelection();
     attachPhotoUpload();
 
-    // ?tariff=big — заказ книги тарифа «Большая история» (для проверки до появления выбора тарифа на сайте)
-    const bigTariff = new URLSearchParams(location.search).get('tariff') === 'big';
+    // ?sequel=1 — продолжение прошлой книги: анкета заполняется по ней, в запрос уходит краткое содержание первой книги
+    let sequel = new URLSearchParams(location.search).get('sequel') === '1' && window.SkazkaExtras ? window.SkazkaExtras.readSequel() : null;
+    function selectCard(group, text) {
+      if (!text) return;
+      document.querySelectorAll('.choice-card[data-choice-group="' + group + '"]').forEach(function (card) {
+        const name = (card.querySelector('.name') || card).textContent.trim();
+        card.classList.toggle('is-selected', name === text);
+      });
+    }
+    if (sequel && sequel.answers) {
+      const a = sequel.answers;
+      ['name', 'age', 'eyes', 'occasion', 'habits', 'friends', 'cast', 'lesson'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el && a[id]) el.value = a[id];
+      });
+      selectCard('gender', a.gender);
+      selectCard('style', a.style);
+      selectCard('theme', a.theme);
+      document.getElementById('sequelTitle').textContent = '«' + (sequel.title || '') + '»';
+      document.getElementById('sequelBanner').hidden = false;
+      document.getElementById('sequelCancel').addEventListener('click', function () {
+        sequel = null;
+        document.getElementById('sequelBanner').hidden = true;
+      });
+    }
+
+    // ?tariff=big (ссылка со страницы цен) — сразу выбираем «Большую историю»
+    if (new URLSearchParams(location.search).get('tariff') === 'big') {
+      document.querySelectorAll('.choice-card[data-choice-group="tariff"]').forEach(function (card) {
+        card.classList.toggle('is-selected', card.getAttribute('data-value') === 'big');
+      });
+    }
+    const isBig = function () { return readChoiceValue('tariff') === 'big'; };
+
+    function formatRub(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽'; }
+
+    function updateTariff() {
+      const card = document.querySelector('.choice-card[data-choice-group="tariff"].is-selected');
+      const coloringRow = document.getElementById('coloringRow');
+      coloringRow.style.display = isBig() ? 'none' : 'flex';
+      const total = Number(card.getAttribute('data-price')) + (!isBig() && document.getElementById('coloring').checked ? 190 : 0);
+      const price = document.getElementById('orderPrice');
+      price.textContent = formatRub(total) + ' ';
+      price.appendChild(document.createElement('small')).textContent = 'превью — бесплатно, оплата только если книга понравилась';
+      updateDesignStep();
+    }
 
     function updateDesignStep() {
       const isHoliday = /праздн/i.test(readChoiceText('theme'));
       const isNewYear = isHoliday && window.SkazkaTemplate.occasionKind(readInput('occasion')) === 'newyear' && readInput('occasion') !== '';
-      document.getElementById('designStep').style.display = bigTariff && isNewYear ? 'block' : 'none';
+      document.getElementById('designStep').style.display = isBig() && isNewYear ? 'block' : 'none';
     }
+    document.querySelectorAll('.choice-card[data-choice-group="tariff"]').forEach(function (card) { card.addEventListener('click', updateTariff); });
+    document.getElementById('coloring').addEventListener('change', updateTariff);
     document.querySelectorAll('.choice-card[data-choice-group="theme"]').forEach(function (card) { card.addEventListener('click', updateDesignStep); });
     document.getElementById('occasion').addEventListener('input', updateDesignStep);
-    updateDesignStep();
+    updateTariff();
 
     generateBtn.addEventListener('click', async function () {
       const answers = collectAnswers();
-      if (bigTariff) answers.tariff = 'big';
 
       if (!answers.name) {
         setStatus('Впишите имя ребёнка — без него история не получится.', 'error');
@@ -973,7 +1134,7 @@ section.tight{ padding:56px 0; }
       }
 
       // Фото уходит на сервер вместе с анкетой, но не попадает в то, что сохраняется в localStorage (answers)
-      const payload = selectedPhoto ? Object.assign({ photo: selectedPhoto }, answers) : answers;
+      const payload = selectedPhotos.length ? Object.assign({ photos: selectedPhotos.slice() }, answers) : answers;
 
       const myRun = ++runId;
       const startedAt = Date.now();
@@ -991,8 +1152,8 @@ section.tight{ padding:56px 0; }
         }, 12000);
 
         if (!data.jobId) throw new Error('нет jobId');
-        if (bigTariff) { location.href = 'book-pro.html?job=' + encodeURIComponent(data.jobId); return; }
-        await waitForBook(data.jobId, answers, myRun, startedAt);
+        if (answers.tariff === 'big') { location.href = 'book-pro.html?job=' + encodeURIComponent(data.jobId); return; }
+        await waitForBook(data.jobId, answers, myRun, startedAt, selectedPhotos.length ? MAX_WAIT_PHOTO_MS : MAX_WAIT_MS);
       } catch (error) {
         if (error.status === 429) {
           // лимит запросов — единственный случай, когда просим подождать

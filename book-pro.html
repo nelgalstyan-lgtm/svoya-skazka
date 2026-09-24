@@ -32,14 +32,19 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   <a class="logo" href="index.html">Своя Сказка</a>
   <div>
     <span id="count" style="color:rgba(244,239,224,.7); margin-right:12px; font-size:14px;"></span>
+    <button class="btn ghost" id="listenBtn" type="button">🔊 Слушать книгу</button>
+    <button class="btn ghost" id="editBtn" type="button" hidden>✏️ Править книгу</button>
+    <button class="btn ghost" id="sequelBtn" type="button" hidden>✨ Заказать продолжение</button>
     <button class="btn" id="pdfBtn" type="button">Скачать PDF</button>
   </div>
 </div>
-<p class="hint no-print">В окне печати выберите «Сохранить как PDF» и поля «Нет».</p>
+<p class="hint no-print">В окне печати выберите «Сохранить как PDF» и поля «Нет». <a href="how-it-works.html#print" target="_blank" style="color:inherit;">Как напечатать книгу →</a></p>
 
 <main id="book" class="bk-book-view"></main>
 
 <script src="js/book-engine.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="js/book-extras.js"></script>
 <script>
 (function () {
   var params = new URLSearchParams(location.search);
@@ -52,16 +57,67 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   scale();
   window.addEventListener('resize', scale);
 
-  function start(book) {
-    window.SkazkaBook.render(book, root, { frame: params.get('frame'), footer: params.get('footer') }).then(function (res) {
+  function start(book, answers, jobId, status) {
+    var meta = book.meta || {};
+    var name = meta.heroName || (answers && answers.name) || '';
+    var girl = meta.heroGirl != null ? meta.heroGirl : !/^(мал|boy|male)/i.test((answers && answers.gender) || '');
+    window.SkazkaBook.render(book, root, {
+      frame: params.get('frame'), footer: params.get('footer'),
+      qr: window.SkazkaExtras.qrBlock('book-pro.html', jobId),
+      certificate: name ? window.SkazkaExtras.certificate(name, book.title, girl) : null
+    }).then(function (res) {
       document.title = book.title + ' — Своя Сказка';
       document.getElementById('count').textContent = res.pages + ' стр.';
       window.__bookReady = res;
+      attachActions(book, answers, jobId, status || {});
       if (params.get('print') === '1') setTimeout(function () { window.print(); }, 400);
     });
   }
 
   document.getElementById('pdfBtn').addEventListener('click', function () { window.print(); });
+
+  function attachActions(book, answers, jobId, status) {
+    window.SkazkaExtras.attachEditor({
+      button: document.getElementById('editBtn'),
+      apiBase: API_BASE,
+      jobId: jobId,
+      canRedraw: status.canRedraw,
+      redrawsLeft: status.redrawsLeft,
+      editable: function () { return Array.prototype.slice.call(document.querySelectorAll('.bk-content p[data-bi]')); },
+      collectEdits: function () {
+        return Array.prototype.map.call(document.querySelectorAll('.bk-content p[data-bi]'), function (p) {
+          var ch = Number(p.getAttribute('data-ch'));
+          var bi = Number(p.getAttribute('data-bi'));
+          return { chapter: ch, block: bi, text: window.SkazkaExtras.paragraphText(p) };
+        }).filter(function (e) {
+          var orig = book.chapters[e.chapter].blocks[e.block].text || '';
+          return e.text && e.text.replace(/\s+/g, ' ') !== orig.replace(/\s+/g, ' ');
+        });
+      },
+      images: function () {
+        return Array.prototype.map.call(document.querySelectorAll('.bk-page[data-img]'), function (page) {
+          return { img: page.querySelector('.bk-ill-img'), host: page, index: Number(page.getAttribute('data-img')) };
+        });
+      }
+    });
+
+    window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () {
+      var out = [book.title];
+      book.chapters.forEach(function (c) {
+        out.push('Глава ' + c.n + '. ' + c.title);
+        c.blocks.forEach(function (b) { if (b.t === 'p' || b.t === 'card' || b.t === 'scrap') out.push(b.text); });
+      });
+      return out;
+    });
+    if (answers && answers.name) {
+      var btn = document.getElementById('sequelBtn');
+      btn.hidden = false;
+      btn.addEventListener('click', function () {
+        var chapters = book.chapters.map(function (c) { return c.title; }).join(', ');
+        window.SkazkaExtras.orderSequel(answers, book.title, (book.logline ? book.logline + ' ' : '') + 'Главы: ' + chapters + '.');
+      });
+    }
+  }
 
   var isLocal = location.protocol === 'file:' || ['localhost', '127.0.0.1'].indexOf(location.hostname) !== -1;
   var API_BASE = window.SKAZKA_API_BASE || (isLocal ? 'http://localhost:3000' : '');
@@ -81,7 +137,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
         return r.json();
       }).then(function (d) {
         errors = 0;
-        if (d.ready && d.result && d.result.book) { root.textContent = ''; start(d.result.book); return; }
+        if (d.ready && d.result && d.result.book) { root.textContent = ''; start(d.result.book, d.result.answers, jobId, d); return; }
         text.textContent = d.progress || (d.position > 1 ? 'Ваша книга в очереди…' : 'Пишем книгу…');
         setTimeout(poll, 2500);
       }).catch(function () {

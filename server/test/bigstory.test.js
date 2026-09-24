@@ -73,12 +73,15 @@ test('большая книга: план → 6 глав → картинки с
     const last = ch.blocks[ch.blocks.length - 1];
     assert.equal(last.t, 'note', 'записка — последний блок главы');
     const imgs = ch.blocks.filter((b) => b.t === 'image');
-    assert.equal(imgs.length, ch.n === 6 ? 1 : 1, `картинок в главе ${ch.n}`);
+    // в плане по одной картинке на главу — до минимума в 8 добавляются вторые картинки в первые главы
+    assert.ok(imgs.length >= 1 && imgs.length <= (ch.n === 6 ? 1 : 2), `картинок в главе ${ch.n}`);
     assert.ok(imgs.every((im) => /^assets\/scenes\/[a-z_]+\.jpg$/.test(im.src) && im.caption));
     // картинка не первой и не последней в тексте — то есть «внутри» сцены
     const idx = ch.blocks.findIndex((b) => b.t === 'image');
     assert.ok(idx > 1 && idx < ch.blocks.length - 2);
   }
+  const total = r.book.chapters.reduce((n, ch) => n + ch.blocks.filter((b) => b.t === 'image').length, 0);
+  assert.ok(total >= 8 && total <= 10, `всего иллюстраций: ${total}`);
   assert.ok(r.book.dedication.lead && r.book.dedication.paragraphs.length);
 });
 
