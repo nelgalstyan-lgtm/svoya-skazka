@@ -463,7 +463,11 @@ section.tight{ padding:56px 0; }
 .page-intro h1{ font-size:38px; }
 .page-intro p{ color:var(--text-soft); font-size:18px; max-width:640px; }
 
+.spread-illustration.has-img{ padding:0; background:#1c1a24; }
+.spread-illustration img{ width:100%; height:100%; min-height:420px; object-fit:cover; display:block; }
+.hero-art{ background:none; border:none; min-height:0; }
 </style>
+<link rel="stylesheet" href="assets/site-extra.css">
 </head>
 <body>
 
@@ -485,16 +489,24 @@ section.tight{ padding:56px 0; }
   <div class="container">
     <div>
       <h1>Книга, в которой ваш ребёнок — не персонаж, а действительно он сам</h1>
-      <p class="lead">Не просто имя на обложке. Мы вплетаем в историю его настоящие привычки, смешные словечки, лучших друзей и семью — так, что он узнаёт себя на каждой странице.</p>
+      <p class="lead">Не открытка на десять страниц, а настоящая книга с главами. Ребёнок нарисован на каждой иллюстрации по вашему фото, а в сюжете — его привычки, смешные словечки, друзья и семья.</p>
       <div class="hero-cta-row">
         <a href="create.html" class="btn btn-primary">Создать книгу</a>
         <a href="how-it-works.html" class="btn btn-ghost-light">Как это устроено</a>
       </div>
     </div>
     <div class="hero-art">
-      <div class="frame">
-        <p>«…а ещё Сона никогда не ложилась спать без своего плюшевого динозавра Гоши и всегда говорила "секундочку!", даже когда секундочек проходило штук десять…»</p>
-        <p class="name">— страница из книги про Сону, 6 лет</p>
+      <div class="book3d-stage">
+        <div class="book3d" aria-label="Пример обложки книги">
+          <div class="book3d-back"></div>
+          <div class="book3d-pages"></div>
+          <div class="book3d-spine"></div>
+          <div class="book3d-cover">
+            <img src="assets/hero/milena-watercolor.jpg" alt="Обложка: девочка в акварельном лесу">
+            <div class="book3d-title"><small>Персональная книга</small>Милена и тайна светящегося камня</div>
+            <div class="book3d-hero">Милена</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -505,14 +517,14 @@ section.tight{ padding:56px 0; }
     <div class="section-head">
       <span class="kicker">Разворот настоящей книги</span>
       <h2>Так выглядит история внутри</h2>
-      <p>Текст и иллюстрация — на каждом развороте, как в обычной детской книге. Только эта — про конкретного ребёнка.</p>
+      <p>Текст и иллюстрация — на каждом развороте, как в обычной детской книге. Только эта — про конкретного ребёнка, и нарисован на картинках тоже он.</p>
     </div>
     <div class="spread">
       <div class="spread-page">
-        <p class="spread-text">Артём сидел на подоконнике и смотрел, как во дворе загорались первые фонари. Он всегда говорил, что фонари — это «уличные ночники», и был совершенно уверен, что каждый вечер их зажигает лично дядя Сергей из соседнего подъезда.</p>
-        <p class="spread-text">Рядом, как обычно, устроился Рыжик — кот, которого Артём выбрал сам, в приюте, полтора года назад, и который с тех пор считал себя не котом, а телохранителем.</p>
+        <p class="spread-text">Милена опустилась на колени у старого дуба и копнула ещё раз. Лопатка звякнула обо что-то твёрдое. — Ну вот, — прошептала она светлячку, который весь вечер кружил рядом. — Я же говорила, что камни просто так не светятся.</p>
+        <p class="spread-text">Из земли показался край гладкого серого камня. Внутри него мерцал крошечный огонёк — точь-в-точь как тот, что Милена видела вчера из окна. Тигран бы сказал, что это совпадение. Но Тигран ещё не знал, что камень умеет отвечать.</p>
       </div>
-      <div class="spread-illustration">иллюстрация разворота<br>(стиль: тёплая акварель)</div>
+      <div class="spread-illustration has-img"><img src="assets/hero/milena-watercolor.jpg" alt="Иллюстрация с героиней книги в акварели"></div>
     </div>
   </div>
 </section>
@@ -530,12 +542,74 @@ section.tight{ padding:56px 0; }
       </div>
       <div>
         <h3>2. Мы пишем историю и рисуем</h3>
-        <p>Сюжет строится вокруг темы, которую вы выбрали, а иллюстрации — с учётом внешности ребёнка, если добавите фото.</p>
+        <p>Сюжет строится вокруг темы, которую вы выбрали. По 1–3 фото мы рисуем ребёнка на обложке и на каждой иллюстрации — в акварели или в стиле 3D-мультфильма.</p>
       </div>
       <div>
         <h3>3. Читайте и слушайте</h3>
-        <p>Книга открывается прямо в браузере или приложении, а по вечерам её можно слушать как аудиокнигу — голосом рассказчика.</p>
+        <p>Книга открывается прямо в браузере, её можно слушать вслух, скачать PDF для печати и бесплатно поправить, если что-то хочется изменить.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-cream">
+  <div class="container">
+    <div class="section-head">
+      <span class="kicker">Не открытка, а книга</span>
+      <h2>Настоящая история на несколько вечеров</h2>
+      <p>Большинство персональных книг — это десяток страниц с парой фраз и подставленным именем. Мы пишем иначе.</p>
+    </div>
+    <div class="compare-wrap">
+      <table class="compare">
+        <thead><tr><th></th><th>Обычная именная книга</th><th class="ours">«Большая история» от Своей Сказки</th></tr></thead>
+        <tbody>
+          <tr><td>Объём текста</td><td>5–10 страниц, около 700 слов</td><td class="ours">6 глав, 3 000–5 000 слов</td></tr>
+          <tr><td>Время чтения</td><td>5 минут</td><td class="ours">Несколько вечеров, 30–40 минут</td></tr>
+          <tr><td>Сюжет</td><td>Шаблон, в который подставлено имя</td><td class="ours">Новая история с загадкой, диалогами и юмором по вашей анкете</td></tr>
+          <tr><td>Ребёнок на иллюстрациях</td><td>Часто только на обложке</td><td class="ours">На обложке и на каждой иллюстрации, по вашим фото</td></tr>
+          <tr><td>Возраст</td><td>Малыши</td><td class="ours">От 2 до 16 лет — у подростков своя подача</td></tr>
+          <tr><td>Оформление</td><td>Одна рамка на все книги</td><td class="ours">Оформление страниц под сюжет: пираты, джунгли, волшебный лес, Новый год</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section-ink stars">
+  <div class="container">
+    <div class="grid grid-2" style="align-items:center;">
+      <div>
+        <span class="kicker">Для 8–16 лет</span>
+        <h2 style="color:var(--text-light)">Книга, которую не стыдно читать и в двенадцать</h2>
+        <p style="color:var(--text-light-soft); font-size:18px;">Подростки не читают сказки про принцесс. Для них мы пишем приключенческую прозу: тайна, которую нужно разгадать, живые диалоги с друзьями, юмор из их собственных словечек и «записи героя» в конце каждой главы. Оформление — взрослее: пергамент, старые карты, морские узлы.</p>
+        <a href="create.html?tariff=big" class="btn btn-primary" style="margin-top:12px;">Создать «Большую историю»</a>
+      </div>
+      <div class="feature-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="feature"><span class="ico">🗝️</span><h3>Загадка</h3><p>Сюжет держит до последней главы, а разгадку находит сам герой.</p></div>
+        <div class="feature"><span class="ico">💬</span><h3>Диалоги</h3><p>Друзья из анкеты спорят, шутят и спасают положение.</p></div>
+        <div class="feature"><span class="ico">📓</span><h3>Записи героя</h3><p>Каждая глава заканчивается выводом «из записей» ребёнка.</p></div>
+        <div class="feature"><span class="ico">🗺️</span><h3>Своё оформление</h3><p>Рамки, буквицы и колонтитулы под жанр книги.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-paper2">
+  <div class="container">
+    <div class="section-head">
+      <span class="kicker">В каждой книге</span>
+      <h2>Больше, чем просто текст с картинками</h2>
+    </div>
+    <div class="feature-grid">
+      <div class="feature"><span class="ico">🎨</span><h3>Ребёнок на каждой иллюстрации</h3><p>По 1–3 фото рисуем ребёнка на обложке и на всех страницах — с той же одеждой и тем же питомцем во всей книге.</p></div>
+      <div class="feature"><span class="ico">🌱</span><h3>Помогает в важный момент</h3><p>Страх темноты, первый класс, появление братика — герой проживает похожую историю и находит опору. Без нравоучений.</p></div>
+      <div class="feature"><span class="ico">🔊</span><h3>Слушать вслух</h3><p>Книгу можно включить вслух прямо на телефоне — удобно перед сном. QR-код на последней странице открывает её онлайн.</p></div>
+      <div class="feature"><span class="ico">🖍️</span><h3>Раскраска</h3><p>Иллюстрации книги в виде контуров для печати: ребёнок раскрашивает самого себя.</p></div>
+      <div class="feature"><span class="ico">🏅</span><h3>Сертификат героя</h3><p>Именной сертификат на последней странице: «главный герой книги прошёл все испытания».</p></div>
+      <div class="feature"><span class="ico">✏️</span><h3>Бесплатные правки</h3><p>Исправьте любой абзац прямо в книге и перерисуйте до трёх иллюстраций — бесплатно.</p></div>
+      <div class="feature"><span class="ico">✨</span><h3>Продолжение</h3><p>Понравилось? Закажите вторую книгу с теми же героями и новым приключением — анкета заполнится сама.</p></div>
+      <div class="feature"><span class="ico">🖨️</span><h3>PDF для печати</h3><p>Скачайте книгу в PDF и напечатайте дома или в любом копицентре — как это сделать, рассказываем по шагам.</p></div>
+      <div class="feature"><span class="ico">🎁</span><h3>Подарочный сертификат</h3><p>Не знаете всех деталей о ребёнке? <a href="gift.html" style="color:var(--gold-dark); font-weight:700;">Подарите сертификат</a> — родители заполнят анкету сами.</p></div>
     </div>
   </div>
 </section>
@@ -558,7 +632,7 @@ section.tight{ padding:56px 0; }
       </div>
       <div>
         <h3 style="color:var(--text-light)">Это только начало истории</h3>
-        <p style="color:var(--text-light-soft)">Электронная книга — живая: тот же сюжет позже можно превратить в мультфильм с этим же героем. Бумага на это не способна.</p>
+        <p style="color:var(--text-light-soft)">Электронная книга — живая: её можно поправить, а потом заказать продолжение с теми же героями. А если захочется бумагу — PDF готов к печати.</p>
       </div>
     </div>
   </div>
@@ -587,6 +661,23 @@ section.tight{ padding:56px 0; }
   </div>
 </section>
 
+<section class="section-cream tight">
+  <div class="container">
+    <div class="grid grid-2" style="align-items:center;">
+      <div>
+        <span class="kicker">Фото ребёнка в безопасности</span>
+        <h2>Мы не храним фотографии</h2>
+        <p style="color:var(--text-soft); font-size:18px;">Фото нужны только на несколько минут — чтобы нарисовать иллюстрации. Как только книга готова, они удаляются с сервера и никуда не передаются. Сама книга (без фото) хранится год — чтобы её можно было открыть по QR-коду, а по вашей просьбе удалим её раньше.</p>
+        <a href="privacy.html" style="color:var(--gold-dark); font-weight:700;">Подробнее — в политике конфиденциальности →</a>
+      </div>
+      <div class="feature-grid" style="grid-template-columns:1fr;">
+        <div class="feature"><span class="ico">🔒</span><h3>Удаляются сразу</h3><p>Фото не сохраняются на нашем сервере — ни на диске, ни вместе с книгой.</p></div>
+        <div class="feature"><span class="ico">🚫</span><h3>Никому не передаются</h3><p>Не публикуются и не используются для рекламы.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section-paper2 tight">
   <div class="container" style="text-align:center;">
     <p class="script" style="font-size:26px; color:var(--gold-dark); max-width:680px; margin:0 auto 28px;">«Он попросил перечитать книгу три раза за вечер — говорит, там всё "прямо как у нас"»</p>
@@ -608,6 +699,7 @@ section.tight{ padding:56px 0; }
           <li><a href="how-it-works.html">Как это работает</a></li>
           <li><a href="audiobook.html">Аудиокниги</a></li>
           <li><a href="pricing.html">Цены</a></li>
+          <li><a href="gift.html">Подарочный сертификат</a></li>
         </ul>
       </div>
       <div>

@@ -464,6 +464,7 @@ section.tight{ padding:56px 0; }
 .page-intro p{ color:var(--text-soft); font-size:18px; max-width:640px; }
 
 </style>
+<link rel="stylesheet" href="assets/site-extra.css">
 </head>
 <body>
 
@@ -483,73 +484,70 @@ section.tight{ padding:56px 0; }
 
 <section class="page-intro section-cream tight">
   <div class="container">
-    <span class="kicker">Готовые истории</span>
-    <h1>Примеры книг, которые мы уже написали</h1>
-    <p>Имена и детали изменены, но характеры и ситуации — настоящие, из анкет родителей.</p>
+    <span class="kicker">Листайте прямо здесь</span>
+    <h1>Как выглядит книга изнутри</h1>
+    <p>Это настоящие образцы книг — те же страницы, что получите вы. В вашей книге на обложке и на каждой иллюстрации будет нарисован ваш ребёнок по фото.</p>
   </div>
 </section>
 
 <section class="tight">
   <div class="container">
-    <div class="grid grid-3">
+    <div class="grid grid-3" style="margin-bottom:42px;">
+      <div class="book3d-stage"><div class="book3d"><div class="book3d-back"></div><div class="book3d-pages"></div><div class="book3d-spine"></div>
+        <div class="book3d-cover"><img src="assets/hero/milena-watercolor.jpg" alt=""><div class="book3d-title"><small>Сказка · 2–7 лет</small>Милена и тайна светящегося камня</div><div class="book3d-hero">Милена</div></div></div></div>
+      <div class="book3d-stage"><div class="book3d"><div class="book3d-back"></div><div class="book3d-pages"></div><div class="book3d-spine"></div>
+        <div class="book3d-cover"><img src="assets/scenes/ship_deck.jpg" alt=""><div class="book3d-title"><small>Большая история · 6–16 лет</small>Милена и тайна старой карты</div><div class="book3d-hero">Милена</div></div></div></div>
+      <div class="book3d-stage"><div class="book3d"><div class="book3d-back"></div><div class="book3d-pages"></div><div class="book3d-spine"></div>
+        <div class="book3d-cover"><img src="assets/scenes/map_table.jpg" alt=""><div class="book3d-title"><small>Большая история · 11–16 лет</small>Тигран и шифр старого чердака</div><div class="book3d-hero">Тигран</div></div></div></div>
+    </div>
 
-      <div class="example-card">
-        <div class="example-cover">«Сона и уличные ночники»<br>акварель</div>
-        <div class="example-body">
-          <h3>Сона и карта дяди Сергея</h3>
-          <p class="example-meta">Девочка, 6 лет · Приключения</p>
-          <p style="color:var(--text-soft);">История про девочку, уверенную, что фонари во дворе зажигает лично сосед — и про её первое настоящее приключение вокруг этой идеи.</p>
-        </div>
+    <div class="flip">
+      <div class="flip-tabs" role="tablist">
+        <button type="button" class="is-active" data-src="book.html?demo=1">«Сказка»</button>
+        <button type="button" data-src="book-pro.html?demo=travel&amp;design=pirates">Большая история · пираты</button>
+        <button type="button" data-src="book-pro.html?demo=travel&amp;design=jungle">Большая история · джунгли</button>
+        <button type="button" data-src="book-pro.html?demo=travel&amp;design=rope">Для 11–16 лет · пергамент</button>
+        <button type="button" data-src="book-pro.html?demo=newyear&amp;design=cookies">Новый год · пряничное</button>
+        <button type="button" data-src="book-pro.html?demo=newyear&amp;design=elves">Новый год · эльфийское</button>
       </div>
+      <iframe class="flip-frame" id="flipFrame" src="book.html?demo=1" title="Образец книги" loading="lazy"></iframe>
+    </div>
+    <p class="hint" style="text-align:center; margin-top:14px;">Прокручивайте страницы внутри окна. В образцах вместо иллюстраций с ребёнком стоят фоновые сцены — в вашей книге на них будет ваш ребёнок.</p>
+  </div>
+</section>
 
-      <div class="example-card">
-        <div class="example-cover">«Демид и карман куртки»<br>мультяшный стиль</div>
-        <div class="example-body">
-          <h3>Демид и пропавшая карта</h3>
-          <p class="example-meta">Мальчик, 9 лет · Приключения</p>
-          <p style="color:var(--text-soft);">Про мальчика, который вечно всё теряет — и однажды это спасает всю компанию друзей.</p>
-        </div>
+<section class="section-paper2 tight">
+  <div class="container">
+    <div class="grid grid-2" style="align-items:center;">
+      <div>
+        <span class="kicker">Фото → иллюстрация</span>
+        <h2>Ребёнок узнаёт себя с первой страницы</h2>
+        <p style="color:var(--text-soft); font-size:18px;">По 1–3 фото мы сначала рисуем «лист персонажа» — внешность, одежду и питомца. По нему рисуется обложка и каждая иллюстрация, поэтому ребёнок выглядит одинаково во всей книге: та же причёска, та же куртка, тот же кот рядом.</p>
+        <p style="color:var(--text-soft);">Два стиля на выбор: <strong>акварель</strong> — как в настоящей книжке с полки, и <strong>3D-мультфильм</strong> — объёмные герои и кинематографичный свет.</p>
       </div>
-
-      <div class="example-card">
-        <div class="example-cover">«Артём и Рыжик-телохранитель»<br>классическая графика</div>
-        <div class="example-body">
-          <h3>Артём, Рыжик и волшебный двор</h3>
-          <p class="example-meta">Мальчик, 5 лет · Сказка</p>
-          <p style="color:var(--text-soft);">Сказка про мальчика и кота из приюта, который считает себя телохранителем — с уроком о дружбе и ответственности.</p>
-        </div>
+      <div class="before-after">
+        <!-- Пара «фото ребёнка → иллюстрация»: вставить реальное фото, когда будет согласие родителей на публикацию -->
+        <figure hidden><img src="" alt="Фото ребёнка"><figcaption>Фото из анкеты</figcaption></figure>
+        <figure><div class="ph">Ваше фото: лицо анфас, вполоборота и в полный рост</div><figcaption>1–3 фото из анкеты</figcaption></figure>
+        <span class="arrow" aria-hidden="true">→</span>
+        <figure><img src="assets/hero/milena-watercolor.jpg" alt="Иллюстрация в акварели"><figcaption>Иллюстрация в книге</figcaption></figure>
       </div>
-
-      <div class="example-card">
-        <div class="example-cover">«Милена и секундочки»<br>аниме-стиль</div>
-        <div class="example-body">
-          <h3>Милена, которая опаздывает на «секундочку»</h3>
-          <p class="example-meta">Девочка, 13 лет · Праздник (день рождения)</p>
-          <p style="color:var(--text-soft);">История для подростка — с её настоящими друзьями, характером и фирменной фразой, ставшей центральной шуткой сюжета.</p>
-        </div>
-      </div>
-
-      <div class="example-card">
-        <div class="example-cover">«Тимур и первый день»<br>акварель</div>
-        <div class="example-body">
-          <h3>Тимур и большая дверь садика</h3>
-          <p class="example-meta">Мальчик, 3 года · Праздник (первый день в садике)</p>
-          <p style="color:var(--text-soft);">Тёплая история-поддержка перед важным первым днём — с мамой, папой и любимой игрушкой в сюжете.</p>
-        </div>
-      </div>
-
-      <div class="example-card">
-        <div class="example-cover">«Лея и волшебный лес»<br>пластилиновый стиль</div>
-        <div class="example-body">
-          <h3>Лея и три говорящих гриба</h3>
-          <p class="example-meta">Девочка, 4 года · Сказка</p>
-          <p style="color:var(--text-soft);">Классическая добрая сказка с узнаваемыми привычками и любимой присказкой героини.</p>
-        </div>
-      </div>
-
     </div>
   </div>
 </section>
+
+<script>
+(function () {
+  var frame = document.getElementById('flipFrame');
+  document.querySelectorAll('.flip-tabs button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.flip-tabs button').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      frame.src = btn.getAttribute('data-src');
+    });
+  });
+})();
+</script>
 
 <section class="section-ink stars tight" style="text-align:center;">
   <div class="container">
