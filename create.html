@@ -801,6 +801,7 @@ section.tight{ padding:56px 0; }
     // и не показываем повторно при чтении сохранённой книги — на сервер они уходят один раз, при заказе.
     const PHOTO_MAX_BYTES = 8 * 1024 * 1024;
     const MAX_PHOTOS = 3;
+    const MIN_PHOTO_SIDE = 600; // меньше — черты лица на иллюстрациях получаются «примерными»
     let selectedPhotos = [];
 
     function attachPhotoUpload() {
@@ -856,8 +857,17 @@ section.tight{ padding:56px 0; }
           const reader = new FileReader();
           reader.onload = function () {
             if (selectedPhotos.length >= MAX_PHOTOS) return;
-            selectedPhotos.push(String(reader.result));
+            const src = String(reader.result);
+            selectedPhotos.push(src);
             redraw();
+            // миниатюра из мессенджера или скриншот: лицо в пару десятков пикселей модель не разглядит
+            const probe = new Image();
+            probe.onload = function () {
+              if (Math.min(probe.naturalWidth, probe.naturalHeight) < MIN_PHOTO_SIDE) {
+                setStatus('Это фото маленькое (' + probe.naturalWidth + '×' + probe.naturalHeight + ' пикселей) — по нему сложно передать черты лица. Лучше загрузить оригинал из галереи телефона, а не картинку из переписки.', 'error');
+              }
+            };
+            probe.src = src;
           };
           reader.onerror = function () {
             setStatus('Не получилось прочитать файл. Попробуйте другое фото.', 'error');
