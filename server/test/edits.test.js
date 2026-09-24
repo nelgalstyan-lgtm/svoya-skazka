@@ -71,3 +71,14 @@ test('перерисовка: без листа персонажа недост�
     server.close(); rm.forEach((f) => f());
   }
 });
+
+test('заказ без фото не принимается: фото обязательно', async () => {
+  const { server, url } = await listen();
+  try {
+    const r = await post(`${url}/api/book/generate`, { name: 'Милена', theme: 'Приключения' });
+    assert.equal(r.status, 400);
+    assert.match((await r.json()).error, /фото/);
+  } finally {
+    server.close();
+  }
+});

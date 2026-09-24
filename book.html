@@ -139,6 +139,9 @@ body.t-newyear .sheet{ background:
 .cover.art .brand{ position:absolute; color:rgba(255,244,222,.8); }
 .cover.art .brand em{ color:var(--gold); }
 .finale .scene{ margin:110px 70px 0; align-self:stretch; height:327px; }
+.finale h2:first-child{ margin-top:260px; }
+.cover:not(.art) h1{ margin-top:120px; }
+.text-page .story{ padding-top:90px; }
 .qr-block{ display:flex; align-items:center; gap:18px; margin:26px 110px 0; text-align:left; }
 .qr-code{ width:104px; height:104px; flex:none; padding:8px; background:#fff; border-radius:8px; box-shadow:0 4px 12px rgba(60,40,10,.18); }
 .qr-code svg{ width:100%; height:100%; display:block; }
@@ -224,11 +227,31 @@ body.t-newyear .sheet{ background:
   const API_BASE = window.SKAZKA_API_BASE || (isLocal ? 'http://localhost:3000' : '');
 
   // Книга с иллюстрациями не помещается в хранилище браузера — по ссылке ?job= берём её с сервера
+  // Книга ещё рисуется (открыли по ссылке раньше времени) — показываем ход работы и ждём
+  function waitNote(text) {
+    let box = document.getElementById('waitNote');
+    if (!box) {
+      box = el('div', 'empty');
+      box.id = 'waitNote';
+      box.appendChild(el('h2', '', 'Книга ещё рисуется'));
+      box.appendChild(el('p', ''));
+      root.appendChild(box);
+    }
+    box.querySelector('p').textContent = text || 'Это займёт несколько минут. Страницу можно не закрывать — книга появится сама.';
+  }
+
   async function loadFromServer(jobId) {
     const r = await fetch(API_BASE + '/api/book/' + encodeURIComponent(jobId) + '/result');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
-    if (!d.ready || !d.result || !Array.isArray(d.result.pages)) throw new Error('not ready');
+    if (!d.ready) {
+      waitNote(d.progress);
+      await new Promise(function (resolve) { setTimeout(resolve, 3000); });
+      return loadFromServer(jobId);
+    }
+    const note = document.getElementById('waitNote');
+    if (note) note.remove();
+    if (!d.result || !Array.isArray(d.result.pages)) throw new Error('not ready');
     return { answers: d.result.answers || {}, book: d.result, jobId: jobId, canRedraw: d.canRedraw, redrawsLeft: d.redrawsLeft };
   }
 
@@ -331,7 +354,7 @@ body.t-newyear .sheet{ background:
     cover.appendChild(el('div', 'kicker', 'Персональная книга'));
     cover.appendChild(el('h1', '', book.title));
     cover.appendChild(el('div', 'orn', '✦ ✦ ✦'));
-    if (!book.cover) cover.appendChild(sceneBlock(scenes.cover, 'Обложка'));
+    if (!book.cover && params.get('demo')) cover.appendChild(sceneBlock(scenes.cover, 'Обложка'));
     if (name) {
       const who = el('div', 'for');
       who.appendChild(el('small', '', 'Главный герой'));
@@ -368,8 +391,12 @@ body.t-newyear .sheet{ background:
           story.appendChild(p);
         });
         s.appendChild(story);
-      } else {
+      } else if (params.get('demo')) {
+        // образец на сайте — с фоновыми сценами; в книге клиента фонов нет
         s.appendChild(sceneBlock(scene));
+        addStory(s, page.text);
+      } else {
+        s.classList.add('text-page');
         addStory(s, page.text);
       }
       s.appendChild(el('div', 'pageno', String(index + 1)));
@@ -377,7 +404,7 @@ body.t-newyear .sheet{ background:
 
     // Финал
     const end = sheet('finale');
-    end.appendChild(sceneBlock(scenes.finale));
+    if (params.get('demo')) end.appendChild(sceneBlock(scenes.finale));
     end.appendChild(el('h2', '', 'Конец'));
     end.appendChild(el('p', '', 'Эта книга написана по вашей анкете — со всеми привычками, друзьями и близкими героя. Пусть она возвращается к вам снова и снова.'));
     const qr = window.SkazkaExtras.qrBlock('book.html', data.jobId);

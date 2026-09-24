@@ -194,8 +194,8 @@
     var page = newSheet(root, 'bk-cover');
     var first = null;
     book.chapters.some(function (c) { return c.blocks.some(function (b) { if (b.t === 'image') { first = b; return true; } return false; }); });
-    var src = book.cover || (first ? imageSrc(first) : 'assets/scenes/castle_gate.jpg');
-    page.appendChild(img(src, 'bk-cover-img', book.title));
+    var src = book.cover || (first ? imageSrc(first) : null);
+    if (src) page.appendChild(img(src, 'bk-cover-img', book.title));
     var head = h('div', 'bk-cover-head');
     head.appendChild(h('div', 'bk-cover-kicker', 'Персональная книга'));
     head.appendChild(h('div', 'bk-cover-title', book.title));
@@ -355,6 +355,8 @@
 
         chapter.blocks.forEach(function (block, bi) {
           if (block.t === 'image') {
+            // номер считаем и у пропущенной — он совпадает с номером иллюстрации на сервере (перерисовка)
+            if (opts && opts.onlyGenerated && !/^data:/.test(block.src || '')) { imageIndex++; return; }
             sheets.push(illustrationSheet(root, block, imageIndex++));
             cur = null; // после иллюстрации текст продолжается на новой странице
             return;

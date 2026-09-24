@@ -303,6 +303,17 @@ export async function illustrateBook(input, {
     return image ? dataUrl(image) : null;
   });
 
+  // вторая попытка для того, что не нарисовалось (сбой сервиса, таймаут) — пока есть время
+  const failed = results.map((r, i) => (r ? -1 : i)).filter((i) => i >= 0);
+  if (failed.length && Date.now() < deadlineAt) {
+    log(`[illustrate] retrying ${failed.length} failed image(s)`);
+    await pool(failed, concurrency, async (i) => {
+      if (Date.now() > deadlineAt) return;
+      const image = await illustrate({ ...base, kind: jobs[i].kind, brief: jobs[i].brief, sheet });
+      if (image) results[i] = dataUrl(image);
+    });
+  }
+
   const cover = coverBrief ? results.shift() : null;
   let coloringPages = [];
   if (coloring) {

@@ -231,3 +231,29 @@ test('большая книга: 8–10 иллюстраций, ребёнок �
   // лист персонажа + обложка + все иллюстрации (раскраска здесь не заказана)
   assert.equal(seen.filter((o) => o.kind !== 'coloring').length, imgs.length + 2);
 });
+
+test('illustrateBook: не нарисовалось — вторая попытка', async () => {
+  const tries = new Map();
+  const illustrate = async (o) => {
+    if (o.kind === 'sheet') return { data: 'c2hlZXQ=', mime: 'image/png' };
+    const n = (tries.get(o.brief) || 0) + 1;
+    tries.set(o.brief, n);
+    return o.brief === 'flaky' && n === 1 ? null : { data: 'aW1n', mime: 'image/png' };
+  };
+  const art = await illustrateBook({ photos: [PHOTO] }, { scenes: [{ brief: 'ok' }, { brief: 'flaky' }], illustrate });
+  assert.deepEqual(art.scenes, ['data:image/png;base64,aW1n', 'data:image/png;base64,aW1n']);
+  assert.equal(tries.get('flaky'), 2);
+});
+
+test('большая книга: иллюстрация не получилась и со второй попытки — её нет в книге, фоновой сцены вместо неё тоже', async () => {
+  const a = await mockServer((user) => (/Это ПЛАН/.test(user) ? JSON.stringify(planJson) : chapterJson(chapterNo(user))));
+  const providers = buildProviders({ PROVIDER_ORDER: 'groq', GROQ_API_KEY: 'k', GROQ_BASE_URL: a.url, GROQ_MODELS: 'm1' });
+  let scenes = 0;
+  // каждая третья страница не рисуется никогда
+  const illustrate = async (o) => (o.kind === 'scene' && ++scenes % 3 === 0 ? null : { data: 'aW1n', mime: 'image/png' });
+  const r = await generateBigBook({ ...INPUT, photo: PHOTO }, { providers, health: createHealth(), log: quiet, illustrate });
+  a.server.close();
+  const imgs = r.book.chapters.flatMap((c) => c.blocks.filter((b) => b.t === 'image'));
+  assert.ok(imgs.length > 0);
+  assert.ok(imgs.every((im) => im.src === 'data:image/png;base64,aW1n'), 'в книге только нарисованные иллюстрации');
+});

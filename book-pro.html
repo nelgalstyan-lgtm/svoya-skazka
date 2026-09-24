@@ -63,6 +63,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     var girl = meta.heroGirl != null ? meta.heroGirl : !/^(мал|boy|male)/i.test((answers && answers.gender) || '');
     window.SkazkaBook.render(book, root, {
       frame: params.get('frame'), footer: params.get('footer'),
+      onlyGenerated: Boolean(jobId), // заказ клиента: фоновые сцены без героя не показываем
       qr: window.SkazkaExtras.qrBlock('book-pro.html', jobId),
       certificate: name ? window.SkazkaExtras.certificate(name, book.title, girl) : null
     }).then(function (res) {

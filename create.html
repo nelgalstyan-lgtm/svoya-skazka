@@ -591,7 +591,7 @@ section.tight{ padding:56px 0; }
         </div>
 
         <div class="field">
-          <label>Фото ребёнка <span class="hint" style="display:inline; font-weight:400;">— до 3 фото: с ними ребёнок узнаёт себя на каждой иллюстрации</span></label>
+          <label>Фото ребёнка <span class="hint" style="display:inline; font-weight:400;">— обязательно, до 3 фото: по ним ребёнок нарисован на каждой иллюстрации</span></label>
           <div class="photo-drop" id="photoDrop" tabindex="0" role="button" aria-label="Загрузить фото ребёнка">
             <div class="photo-thumbs" id="photoThumbs"></div>
             <strong id="photoDropTitle">Перетащите фото сюда или нажмите, чтобы выбрать</strong>
@@ -1016,10 +1016,23 @@ section.tight{ padding:56px 0; }
       generateBtn.textContent = 'Создать ещё раз';
     }
 
-    // Последний рубеж: сервер недоступен — книгу собираем прямо в браузере.
-    function finishLocally(answers, reason) {
-      if (reason) console.warn('[book] используем локальную книгу:', reason);
-      finish(window.SkazkaTemplate.buildTemplateStory(answers), answers);
+    // Книга без иллюстраций с ребёнком — не наш продукт, поэтому шаблонную книгу в браузере больше не собираем.
+    // Заказ уже принят — даём ссылку, по которой книга откроется, когда дорисуется; не принят — просим повторить.
+    function finishLocally(answers, reason, jobId) {
+      if (reason) console.warn('[book] книга не получена:', reason);
+      generateBtn.disabled = false;
+      generateBtn.textContent = 'Показать бесплатное превью';
+      if (jobId) {
+        setStatus('Книга ещё рисуется — это может занять несколько минут. Она откроется по ссылке, как только будет готова: ');
+        const link = document.createElement('a');
+        link.href = 'book.html?job=' + encodeURIComponent(jobId);
+        link.target = '_blank';
+        link.textContent = 'открыть книгу';
+        link.style.cssText = 'color:#B87F27; font-weight:700;';
+        statusBox.appendChild(link);
+        return;
+      }
+      setStatus('Не получилось связаться с сервером. Анкета и фото сохранены на этой странице — попробуйте ещё раз через минуту.', 'error');
     }
 
     function progressMessage(elapsedMs, position) {
@@ -1055,7 +1068,7 @@ section.tight{ padding:56px 0; }
         if (myRun !== runId) return;
 
         const elapsed = Date.now() - startedAt;
-        if (elapsed > maxWait) return finishLocally(answers, 'таймаут ожидания');
+        if (elapsed > maxWait) return finishLocally(answers, 'таймаут ожидания', jobId);
 
         try {
           const data = await fetchJson(API_BASE + '/api/book/' + jobId + '/status', {}, 8000);
@@ -1068,7 +1081,7 @@ section.tight{ padding:56px 0; }
         } catch (error) {
           if (error.status === 404) return finishLocally(answers, 'задача потеряна на сервере');
           errors += 1;
-          if (errors >= MAX_POLL_ERRORS) return finishLocally(answers, 'сервер не отвечает');
+          if (errors >= MAX_POLL_ERRORS) return finishLocally(answers, 'сервер не отвечает', jobId);
         }
       }
     }
@@ -1142,6 +1155,11 @@ section.tight{ padding:56px 0; }
         document.getElementById('name').focus();
         return;
       }
+      if (!selectedPhotos.length) {
+        setStatus('Загрузите хотя бы одно фото ребёнка — по нему мы рисуем его на обложке и на каждой иллюстрации.', 'error');
+        document.getElementById('photoDrop').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
 
       // Фото уходит на сервер вместе с анкетой, но не попадает в то, что сохраняется в localStorage (answers)
       const payload = selectedPhotos.length ? Object.assign({ photos: selectedPhotos.slice() }, answers) : answers;
@@ -1165,6 +1183,12 @@ section.tight{ padding:56px 0; }
         if (answers.tariff === 'big') { location.href = 'book-pro.html?job=' + encodeURIComponent(data.jobId); return; }
         await waitForBook(data.jobId, answers, myRun, startedAt, selectedPhotos.length ? MAX_WAIT_PHOTO_MS : MAX_WAIT_MS);
       } catch (error) {
+        if (error.status === 400 && error.payload && error.payload.error) {
+          setStatus(error.payload.error, 'error');
+          generateBtn.disabled = false;
+          generateBtn.textContent = 'Показать бесплатное превью';
+          return;
+        }
         if (error.status === 429) {
           // лимит запросов — единственный случай, когда просим подождать
           setStatus((error.payload && error.payload.error) || 'Слишком много запросов. Попробуйте чуть позже.', 'error');

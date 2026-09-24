@@ -58,7 +58,7 @@ npm test               # проверка отказоустойчивости
 
 ## Геройские иллюстрации (лицо ребёнка)
 
-`photos` в `POST /api/book/generate` — необязательное поле, до трёх data URL (`data:image/jpeg;base64,...`, до 8 МБ
+`photos` в `POST /api/book/generate` — **обязательное** поле (без фото — `400`: книга без иллюстраций с ребёнком не продаётся), до трёх data URL (`data:image/jpeg;base64,...`, до 8 МБ
 каждое, jpeg/png/webp; старое одиночное `photo` тоже принимается). Если фото есть и настроен `GEMINI_API_KEY`,
 `illustrateBook` из `server/lib/illustrate.js` после готового текста:
 

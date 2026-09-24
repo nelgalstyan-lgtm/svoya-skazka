@@ -311,13 +311,18 @@ app.post('/api/book/generate', (req, res) => {
   }
 
   const body = req.body || {};
+  // Главная ценность книги — ребёнок, похожий на себя, на каждой иллюстрации: без фото заказ не принимаем
+  const photos = parsePhotos(body);
+  if (!photos.length) {
+    return res.status(400).json({ ok: false, error: 'Загрузите хотя бы одно фото ребёнка — по нему рисуются все иллюстрации книги.' });
+  }
+
   const input = {};
   for (const key of ['name', 'age', 'gender', 'eyes', 'occasion', 'habits', 'friends', 'cast', 'style', 'theme', 'interests', 'special', 'lesson', 'design']) {
     input[key] = typeof body[key] === 'string' || typeof body[key] === 'number' ? String(body[key]).slice(0, 500) : '';
   }
   input.sequel = typeof body.sequel === 'string' ? body.sequel.slice(0, 1200) : '';
-  const photos = parsePhotos(body);
-  if (photos.length) input.photos = photos;
+  input.photos = photos;
   if (big) input.tariff = 'big';
   // раскраска входит в «Большую историю»; к «Сказке» её можно добавить отдельно
   if (big || body.coloring === true) input.coloring = true;

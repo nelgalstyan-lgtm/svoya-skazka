@@ -480,7 +480,7 @@ export function templateBook(input) {
   const mk = (n, title, pages) => ({
     n, title, initial: null,
     blocks: [
-      ...pages.flatMap((p) => [{ t: 'p', text: p.text }, { t: 'image', scene: p.scene, hero: false, brief: '', caption: defaultCaption(p.scene, library), src: fileFor(p.scene, library) }]).slice(0, -1),
+      ...pages.flatMap((p) => [{ t: 'p', text: p.text }, { t: 'image', scene: p.scene, hero: true, brief: `The child explores the scene: ${library.scenes[p.scene] || 'a place from the story'}, in an active natural pose, with warm story-book lighting.`, caption: defaultCaption(p.scene, library), src: fileFor(p.scene, library) }]).slice(0, -1),
       { t: 'note', label: `Из записей ${genitiveName(c.name, c.girl)}`, text: n === 1 ? 'Всё большое начинается с маленького шага.' : 'Хорошо, когда рядом те, кто верит в тебя.' }
     ]
   });
@@ -552,6 +552,8 @@ async function attachHeroImages(input, plan, chapters, { illustrate, progress, d
     log
   });
   art.scenes.forEach((src, i) => { if (src) heroBlocks[i].src = src; });
+  // не нарисовалась даже со второй попытки — убираем иллюстрацию: фоновых сцен без героя в книге больше нет
+  for (const ch of chapters) ch.blocks = ch.blocks.filter((b) => b.t !== 'image' || /^data:/.test(b.src || ''));
   return { cover: art.cover, sheet: art.sheet, coloring: art.coloring };
 }
 
@@ -585,10 +587,22 @@ export async function generateBigBook(input, {
     return r.value;
   };
 
+  // книга из шаблона тоже получает иллюстрации с ребёнком — фоновых сцен в книге клиента нет
+  const illustratedTemplate = async () => {
+    const book = templateBook(input);
+    const plan = { title: book.title, logline: book.title, look: '', coverBrief: '' };
+    const art = await attachHeroImages(input, plan, book.chapters, { illustrate, progress, deadlineAt: Date.now() + imageBudgetMs, log });
+    if (art.cover) book.cover = art.cover;
+    if (art.sheet) book.sheet = art.sheet;
+    if (art.coloring?.length) book.coloring = art.coloring;
+    meta.source = 'template';
+    meta.tookMs = Date.now() - started;
+    return { book: { ...book, meta: { ...meta, heroName: c.name, heroGirl: c.girl } }, source: 'template', provider: null, model: null };
+  };
+
   if (!providers.length) {
     log('[big] no AI providers configured, using template book');
-    meta.source = 'template';
-    return { book: { ...templateBook(input), meta }, source: 'template', provider: null, model: null };
+    return illustratedTemplate();
   }
 
   // шаг 1: план
@@ -598,9 +612,7 @@ export async function generateBigBook(input, {
     plan = await call(buildPlanPrompt(input), (raw) => validatePlan(raw, name, { library, themeKey, design: input.design }));
   } catch (error) {
     log(`[big] plan failed, using template book: ${error?.message}`);
-    meta.source = 'template';
-    meta.tookMs = Date.now() - started;
-    return { book: { ...templateBook(input), meta }, source: 'template', provider: null, model: null };
+    return illustratedTemplate();
   }
 
   // шаг 2: главы по порядку
