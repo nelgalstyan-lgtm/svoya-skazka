@@ -53,7 +53,9 @@ test('перерисовка: без листа персонажа недост�
     writeJob(spent, { title: 'Т', sheet: 'data:image/png;base64,c2hlZXQ=', pages: [{ text: 'a', heroBrief: 'b' }] }, { redraws: 3 })
   ];
   const key = process.env.GEMINI_API_KEY;
-  delete process.env.GEMINI_API_KEY; // без ключа генерация честно не получается — проверяем, что попытка не списывается
+  const openaiKey = process.env.OPENAI_API_KEY;
+  delete process.env.GEMINI_API_KEY; // без ключей генерация честно не получается — проверяем, что попытка не списывается
+  delete process.env.OPENAI_API_KEY;
   const { server, url } = await listen();
   try {
     assert.equal((await post(`${url}/api/book/${noSheet}/redraw`, { index: 0 })).status, 409);
@@ -65,6 +67,7 @@ test('перерисовка: без листа персонажа недост�
     assert.equal(s.canRedraw, true);
   } finally {
     if (key) process.env.GEMINI_API_KEY = key;
+    if (openaiKey) process.env.OPENAI_API_KEY = openaiKey;
     server.close(); rm.forEach((f) => f());
   }
 });

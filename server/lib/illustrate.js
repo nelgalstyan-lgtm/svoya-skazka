@@ -1,4 +1,5 @@
-// Генерация «геройской» иллюстрации (с настоящим лицом ребёнка) через Gemini image-модель («Nano Banana»).
+// Генерация «геройской» иллюстрации (с настоящим лицом ребёнка): OpenAI gpt-image (основной, если есть ключ)
+// или Gemini image-модель («Nano Banana») — второй служит запасным.
 //
 // Работает поверх уже готового текста книги: story.js и bigstory.js сами решают, какая страница
 // геройская, и присылают сюда только фото ребёнка + короткое английское описание сцены (brief/heroBrief).
@@ -17,7 +18,7 @@ const IDENTITY_BLOCK = (eyes, count = 1) => `Preserve the child's exact identity
 const SHEET_BLOCK = 'The last attached image is the character reference sheet for this book: draw the child with exactly the same outfit, colors, hairstyle and proportions as on that sheet, and draw any companion (pet, toy, friend) shown there exactly the same way. The face must still match the reference photo first of all.';
 
 // Эмоция следует за сценой: на восьми-десяти страницах одно и то же «сосредоточенное» лицо выглядит мёртво
-const EMOTION_BLOCK = 'Facial expression: a natural, warm expression that fits this exact moment of the story — curiosity, joy, focus, surprise or wonder — with bright engaged eyes.';
+const EMOTION_BLOCK = 'Facial expression: take it from this exact moment of the story, not from the reference photo — the photo only defines who the child is. Depending on the scene it can be quiet curiosity, calm focus, surprise, wonder, a small smile or open joy; bright engaged eyes.';
 
 const COMPOSITION_BLOCK = 'Composition: a single vertical book page illustration, portrait aspect ratio approximately 2:3 like a standard book page, not a wide landscape spread. Frame the child from the waist up or in full figure, whichever suits the action, at a natural eye-level or slightly low heroic angle. The illustration must be completely free of any text, letters, words, or empty space reserved for text overlay — text always lives on a separate neighboring page.';
 
@@ -30,8 +31,8 @@ const AVOID_BLOCK = 'Avoid: photorealistic rendering, extra or malformed fingers
 
 // Два стиля на запуск: фирменная акварель и объёмная 3D-анимация (самый востребованный на рынке)
 const STYLE_TECHNIQUE = {
-  watercolor: 'traditional watercolor illustration technique, soft visible paper texture, gentle color bleeds and granulation, loose expressive brushstrokes with soft edges, translucent glazes of color, delicate ink linework accents',
-  animated3d: 'modern 3D animated feature film style, smooth stylized character rendering with soft rounded proportions, subtle subsurface scattering on the skin, soft global illumination, gentle specular highlights on hair and fabric, rich cinematic lighting'
+  watercolor: 'traditional hand-painted watercolor children’s book illustration, smooth transparent washes that blend softly into each other, soft wet-on-wet edges, visible cold-press paper texture only in the lightest areas, delicate fine ink linework accents, warm natural light; clean painterly surfaces with no pixelation, mosaic, dotted or blocky texture',
+  animated3d: 'stylized 3D computer animation like a still frame from a modern animated feature film — clearly a CG cartoon render, never a photograph: simplified smooth forms, soft matte skin without pores, hair sculpted into soft clumps, clean saturated colors, soft global illumination and gentle rim light, a slightly miniature, toy-like world'
 };
 
 export const STYLE_LABELS = { watercolor: 'Акварель', animated3d: '3D-мультфильм' };
@@ -130,6 +131,67 @@ async function callGemini({ apiKey, model, images, prompt, timeoutMs, retries })
   }
 }
 
+// Размер картинки OpenAI под задачу: страницы и обложка — книжный портрет, лист персонажа — горизонтальный
+const OPENAI_SIZE = { scene: '1024x1536', cover: '1024x1536', coloring: '1024x1536', sheet: '1536x1024' };
+
+async function callOpenAI({ apiKey, model, images, prompt, kind, quality, timeoutMs, retries }) {
+  let attempt = 0;
+  // input_fidelity=high лучше держит лицо; если модель параметр не знает — повторяем без него.
+  // OPENAI_INPUT_FIDELITY=low — если фото клиентов часто маленькие: high переносит в рисунок и их пиксели
+  let fidelity = (process.env.OPENAI_INPUT_FIDELITY || 'high') === 'high';
+
+  while (true) {
+    const form = new FormData();
+    form.append('model', model);
+    form.append('prompt', prompt);
+    images.forEach((im, i) => form.append('image[]', new Blob([Buffer.from(im.data, 'base64')], { type: im.mime }), `ref-${i + 1}.${im.mime.split('/')[1]}`));
+    form.append('size', OPENAI_SIZE[kind] || OPENAI_SIZE.scene);
+    form.append('quality', quality);
+    if (fidelity) form.append('input_fidelity', 'high');
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/images/edits', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}` },
+        body: form,
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const msg = data?.error?.message || `HTTP ${response.status}`;
+        if (response.status === 400 && fidelity && /input_fidelity/i.test(msg)) { fidelity = false; continue; }
+        // «no credits» — не временная ошибка, повторять бессмысленно
+        const error = new Error(`OpenAI ${response.status}: ${msg}`);
+        error.temporary = response.status >= 500 || (response.status === 429 && !/credit|quota|billing/i.test(msg));
+        throw error;
+      }
+      const b64 = data?.data?.[0]?.b64_json;
+      if (!b64) throw new Error('no image in OpenAI response');
+      return { data: b64, mime: 'image/png' };
+    } catch (error) {
+      const temporary = error.temporary || /timed? ?out|aborted|fetch failed/i.test(error?.message || '');
+      if (temporary && attempt < retries) {
+        attempt += 1;
+        await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
+/**
+ * Сервисы картинок по порядку: IMAGE_PROVIDER=openai|gemini задаёт первый, второй — запасной.
+ * По умолчанию сначала OpenAI (если есть ключ), потом Gemini.
+ */
+function imageProviders({ apiKey, model, openaiKey, openaiModel, openaiQuality }) {
+  const list = [];
+  if (openaiKey) list.push({ name: 'openai', call: (o) => callOpenAI({ ...o, apiKey: openaiKey, model: openaiModel, quality: openaiQuality }) });
+  if (apiKey) list.push({ name: 'gemini', call: (o) => callGemini({ ...o, apiKey, model }) });
+  if (process.env.IMAGE_PROVIDER === 'gemini') list.reverse();
+  return list;
+}
+
 /**
  * Генерирует одну иллюстрацию. НИКОГДА не бросает — при любой ошибке отдаёт null,
  * а книга остаётся с декоративным фоном на этой странице вместо лица ребёнка.
@@ -140,6 +202,9 @@ async function callGemini({ apiKey, model, images, prompt, timeoutMs, retries })
 export async function generateHeroImage({
   apiKey = process.env.GEMINI_API_KEY,
   model = process.env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image',
+  openaiKey = process.env.OPENAI_API_KEY,
+  openaiModel = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1.5', // сравнили с gpt-image-2: чистая акварель без «мозаики», эмоция по сцене, вдвое быстрее
+  openaiQuality = process.env.OPENAI_IMAGE_QUALITY || 'medium',
   photo,
   photos,
   sheet = null,
@@ -149,11 +214,12 @@ export async function generateHeroImage({
   eyes,
   brief,
   look,
-  timeoutMs = 45_000,
+  timeoutMs = Number(process.env.IMAGE_TIMEOUT_MS || 180_000), // высокое качество OpenAI рисует дольше полутора минут
   retries = 1,
   log = () => {}
 } = {}) {
-  if (!apiKey) return null;
+  const providers = imageProviders({ apiKey, model, openaiKey, openaiModel, openaiQuality });
+  if (!providers.length) return null;
   let images;
   let prompt;
   if (kind === 'coloring') {
@@ -172,12 +238,14 @@ export async function generateHeroImage({
       : buildHeroPrompt({ styleLabel, eyes, brief, look, withSheet: true, kind }).replace(/reference photo/g, 'character reference sheet');
   }
 
-  try {
-    return await callGemini({ apiKey, model, images, prompt, timeoutMs, retries });
-  } catch (error) {
-    log(`[illustrate] ${kind} image failed: ${error?.message || error}`);
-    return null;
+  for (const provider of providers) {
+    try {
+      return await provider.call({ images, prompt, kind, timeoutMs, retries });
+    } catch (error) {
+      log(`[illustrate] ${kind} image failed via ${provider.name}: ${error?.message || error}`);
+    }
   }
+  return null;
 }
 
 /** Выполняет задачи по несколько штук одновременно, сохраняя порядок результатов. */

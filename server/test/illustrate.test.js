@@ -29,7 +29,7 @@ test('промпт: два стиля — акварель и 3D-мультфи�
   assert.equal(pickStyleKey('Пластилиновый / 3D'), 'animated3d', 'старые заказы с прежним названием стиля');
   assert.equal(pickStyleKey('Аниме'), 'watercolor', 'убранные стили падают на акварель');
   const anim = buildHeroPrompt({ styleLabel: '3D-мультфильм', brief: 'x' });
-  assert.ok(/3D animated/i.test(anim));
+  assert.ok(/3D computer animation/i.test(anim) && /never a photograph/.test(anim), '3D — явно мультфильм, не фото');
   assert.ok(!/large expressive eyes/i.test(anim));
   assert.ok(/characters from existing cartoons/i.test(anim), 'запрет чужих персонажей и брендов');
 });
@@ -98,8 +98,8 @@ test('normalizePhoto: принимает только jpeg/png/webp с данн�
 });
 
 test('generateHeroImage: без ключа или без фото — не пытается звать сеть, просто null', async () => {
-  assert.equal(await generateHeroImage({ apiKey: '', photo: PHOTO }), null);
-  assert.equal(await generateHeroImage({ apiKey: 'k', photo: null }), null);
+  assert.equal(await generateHeroImage({ apiKey: '', openaiKey: '', photo: PHOTO }), null);
+  assert.equal(await generateHeroImage({ apiKey: 'k', openaiKey: 'k', photo: null }), null);
 });
 
 const INPUT = { name: 'Милена', age: '7', gender: 'Девочка', eyes: 'Карие', theme: 'Приключения', habits: 'Обожает собирать камни', friends: 'Тигран', cast: 'мама Лена, кот Барсик', style: 'Акварель' };
