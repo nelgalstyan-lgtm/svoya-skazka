@@ -142,11 +142,14 @@ function fallbackBrief(scene, library) {
   return `The child explores the scene: ${library.scenes[scene] || 'a place from the story'}, in an active natural pose, with warm story-book lighting.`;
 }
 
+/** Сколько иллюстраций рисуем в бесплатном превью (плюс лист персонажа и обложка); остальные — после оплаты. */
+export const PREVIEW_IMAGES = 1;
+
 /**
- * Если есть фото и ключ Gemini — рисует ребёнка на обложке и на каждой странице (по одному листу персонажа).
- * Сбой любой картинки не мешает выдаче книги: на её месте остаётся фоновая сцена.
+ * Рисует ребёнка на обложке и на страницах (по одному листу персонажа). preview — только первые PREVIEW_IMAGES
+ * страниц: остальные дорисуются после оплаты (см. complete.js). Сбой любой картинки не мешает выдаче книги.
  */
-async function attachHeroImages(rawInput, story, { illustrate, library, deadlineAt, progress, log }) {
+async function attachHeroImages(rawInput, story, { illustrate, library, deadlineAt, progress, log, preview = false }) {
   if (!photosFrom(rawInput).length) return;
   const pages = story.pages;
   pages.forEach((p) => { p.hero = true; if (!p.heroBrief) p.heroBrief = fallbackBrief(p.scene, library); });
@@ -157,11 +160,13 @@ async function attachHeroImages(rawInput, story, { illustrate, library, deadline
     look: story.look,
     illustrate,
     deadlineAt,
-    coloring: rawInput.coloring === true,
+    coloring: !preview && rawInput.coloring === true,
+    only: preview ? pages.map((_, i) => i).slice(0, PREVIEW_IMAGES) : null,
     onProgress: (done, total) => progress(`Рисуем иллюстрации с вашим ребёнком (${done} из ${total})…`),
     log
   });
   art.scenes.forEach((src, i) => { if (src) pages[i].heroImage = src; });
+  if (preview) story.preview = true;
   if (art.cover) story.cover = art.cover;
   if (art.sheet) story.sheet = art.sheet; // нужен для бесплатной перерисовки: фото ребёнка к тому времени уже удалено
   if (art.coloring.length) story.coloring = art.coloring;
@@ -179,10 +184,11 @@ export async function generateStory(rawInput, {
   log = console.warn,
   illustrate = generateHeroImage,
   progress = () => {},
+  preview = false,
   imageBudgetMs = Number(process.env.SHORT_IMAGE_BUDGET_MS || 4 * 60_000)
 } = {}) {
   const started = Date.now();
-  const art = (story) => attachHeroImages(rawInput, story, { illustrate, library, deadlineAt: Date.now() + imageBudgetMs, progress, log });
+  const art = (story) => attachHeroImages(rawInput, story, { illustrate, library, deadlineAt: Date.now() + imageBudgetMs, progress, log, preview });
   const c = normalizeInput(rawInput);
   const name = c.name;
   const library = sceneLibraryFor(c.kind, rawInput.occasion);

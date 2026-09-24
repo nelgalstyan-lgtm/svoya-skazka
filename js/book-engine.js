@@ -380,7 +380,17 @@
         });
       });
 
-      if (!(opts && opts.noFinale)) {
+      if (opts && opts.locked) {
+        var lock = newSheet(root, 'bk-finale bk-locked');
+        lock.appendChild(h('div', 'bk-finale-title', 'Продолжение'));
+        lock.appendChild(divider());
+        lock.appendChild(h('div', 'bk-finale-text', opts.locked.text));
+        var pay = h('div', 'bk-locked-pay');
+        pay.appendChild(opts.locked.button);
+        pay.appendChild(h('div', 'bk-locked-note', 'Все иллюстрации дорисуются сразу после оплаты — за несколько минут.'));
+        lock.appendChild(pay);
+        sheets.push({ page: lock, folio: null });
+      } else if (!(opts && opts.noFinale)) {
         sheets.push(finaleSheet(root, opts));
         if (opts && opts.certificate) sheets.push(certificateSheet(root, opts.certificate));
         (book.coloring || []).forEach(function (src, i) { sheets.push(coloringSheet(root, src, i === 0)); });

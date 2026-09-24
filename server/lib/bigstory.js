@@ -536,7 +536,7 @@ function assemble(input, plan, chapters, meta, library) {
  * Рисует ребёнка на обложке и на всех иллюстрациях книги — по одному листу персонажа, чтобы одежда и спутники
  * совпадали на всех страницах. Сбой одной картинки не портит остальные и не рвёт книгу.
  */
-async function attachHeroImages(input, plan, chapters, { illustrate, progress, deadlineAt, log }) {
+async function attachHeroImages(input, plan, chapters, { illustrate, progress, deadlineAt, log, preview = false }) {
   if (!photosFrom(input).length) return {};
   const heroBlocks = chapters.flatMap((ch) => ch.blocks.filter((b) => b.t === 'image'));
   heroBlocks.forEach((b) => { b.hero = true; });
@@ -547,13 +547,16 @@ async function attachHeroImages(input, plan, chapters, { illustrate, progress, d
     look: plan.look,
     illustrate,
     deadlineAt,
-    coloring: input.coloring === true,
+    coloring: !preview && input.coloring === true,
+    // превью: только первая иллюстрация; остальные дорисуются после оплаты (complete.js)
+    only: preview ? [0] : null,
     onProgress: (done, total) => progress(`Рисуем иллюстрации с вашим ребёнком (${done} из ${total})…`, 0.9 + (0.09 * done) / total),
     log
   });
   art.scenes.forEach((src, i) => { if (src) heroBlocks[i].src = src; });
   // не нарисовалась даже со второй попытки — убираем иллюстрацию: фоновых сцен без героя в книге больше нет
-  for (const ch of chapters) ch.blocks = ch.blocks.filter((b) => b.t !== 'image' || /^data:/.test(b.src || ''));
+  // (в превью недорисованные остаются — их очередь после оплаты)
+  if (!preview) for (const ch of chapters) ch.blocks = ch.blocks.filter((b) => b.t !== 'image' || /^data:/.test(b.src || ''));
   return { cover: art.cover, sheet: art.sheet, coloring: art.coloring };
 }
 
@@ -571,6 +574,7 @@ export async function generateBigBook(input, {
   stepDeadlineMs = 75_000,
   attemptTimeoutMs = 45_000,
   illustrate = generateHeroImage,
+  preview = false,
   imageBudgetMs = Number(process.env.BIG_IMAGE_BUDGET_MS || 5 * 60_000)
 } = {}) {
   const started = Date.now();
@@ -591,7 +595,8 @@ export async function generateBigBook(input, {
   const illustratedTemplate = async () => {
     const book = templateBook(input);
     const plan = { title: book.title, logline: book.title, look: '', coverBrief: '' };
-    const art = await attachHeroImages(input, plan, book.chapters, { illustrate, progress, deadlineAt: Date.now() + imageBudgetMs, log });
+    const art = await attachHeroImages(input, plan, book.chapters, { illustrate, progress, deadlineAt: Date.now() + imageBudgetMs, log, preview });
+    if (preview) book.preview = true;
     if (art.cover) book.cover = art.cover;
     if (art.sheet) book.sheet = art.sheet;
     if (art.coloring?.length) book.coloring = art.coloring;
@@ -651,14 +656,15 @@ export async function generateBigBook(input, {
     tail = chapter.blocks.filter((b) => b.t === 'p').slice(-6).map((b) => b.text);
   }
 
-  const art = await attachHeroImages(input, plan, chapters, { illustrate, progress, deadlineAt: Date.now() + imageBudgetMs, log });
+  const art = await attachHeroImages(input, plan, chapters, { illustrate, progress, deadlineAt: Date.now() + imageBudgetMs, log, preview });
 
   progress('Собираем книгу…', 0.99);
   meta.tookMs = Date.now() - started;
   if (meta.fallbackChapters.length === plan.chapters.length) meta.source = 'template';
   const book = assemble(input, plan, chapters, meta, library);
+  if (preview) book.preview = true;
   if (art.cover) book.cover = art.cover;
-  if (art.sheet) book.sheet = art.sheet; // для бесплатной перерисовки: фото ребёнка к тому времени уже удалено
+  if (art.sheet) book.sheet = art.sheet; // для дорисовки после оплаты и бесплатной перерисовки
   if (art.coloring?.length) book.coloring = art.coloring;
   const provider = Object.entries(meta.providers).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
   return { book, source: meta.source, provider, model: null };

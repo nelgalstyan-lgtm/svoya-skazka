@@ -61,7 +61,13 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     var meta = book.meta || {};
     var name = meta.heroName || (answers && answers.name) || '';
     var girl = meta.heroGirl != null ? meta.heroGirl : !/^(мал|boy|male)/i.test((answers && answers.gender) || '');
+    var result = (status && status.result) || {};
+    var locked = result.locked ? {
+      text: window.SkazkaExtras.lockedText({ chapters: result.lockedChapters, images: result.lockedImages, coloring: true, name: name, girl: girl }),
+      button: window.SkazkaExtras.payButton({ jobId: jobId, price: result.price, apiBase: API_BASE })
+    } : null;
     window.SkazkaBook.render(book, root, {
+      locked: locked,
       frame: params.get('frame'), footer: params.get('footer'),
       onlyGenerated: Boolean(jobId), // заказ клиента: фоновые сцены без героя не показываем
       qr: window.SkazkaExtras.qrBlock('book-pro.html', jobId),
@@ -70,12 +76,26 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       document.title = book.title + ' — Своя Сказка';
       document.getElementById('count').textContent = res.pages + ' стр.';
       window.__bookReady = res;
-      attachActions(book, answers, jobId, status || {});
+      if (locked) {
+        document.getElementById('pdfBtn').style.display = 'none';
+        window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); });
+      } else {
+        attachActions(book, answers, jobId, status || {});
+      }
       if (params.get('print') === '1') setTimeout(function () { window.print(); }, 400);
     });
   }
 
   document.getElementById('pdfBtn').addEventListener('click', function () { window.print(); });
+
+  function listenTexts(book) {
+    var out = [book.title];
+    book.chapters.forEach(function (c) {
+      out.push('Глава ' + c.n + '. ' + c.title);
+      c.blocks.forEach(function (b) { if (b.t === 'p' || b.t === 'card' || b.t === 'scrap') out.push(b.text); });
+    });
+    return out;
+  }
 
   function attachActions(book, answers, jobId, status) {
     window.SkazkaExtras.attachEditor({
@@ -138,8 +158,8 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
         return r.json();
       }).then(function (d) {
         errors = 0;
-        if (d.ready && d.result && d.result.book) { root.textContent = ''; start(d.result.book, d.result.answers, jobId, d); return; }
-        text.textContent = d.progress || (d.position > 1 ? 'Ваша книга в очереди…' : 'Пишем книгу…');
+        if (d.ready && !d.finishing && d.result && d.result.book) { root.textContent = ''; start(d.result.book, d.result.answers, jobId, d); return; }
+        text.textContent = d.progress || (d.finishing ? 'Оплата прошла — дорисовываем иллюстрации…' : d.position > 1 ? 'Ваша книга в очереди…' : 'Пишем книгу…');
         setTimeout(poll, 2500);
       }).catch(function () {
         errors += 1;

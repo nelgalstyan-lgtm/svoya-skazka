@@ -30,3 +30,6 @@ assets/hero/
 preview/alex-*
 preview/*TEST*
 preview/*.pdf
+
+# Фото детей (временно, до оплаты) — никогда в git
+**/data/photos/

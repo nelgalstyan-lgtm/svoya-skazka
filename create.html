@@ -381,6 +381,16 @@ section.tight{ padding:56px 0; }
 .photo-thumb button{ position:absolute; top:-4px; right:-4px; width:24px; height:24px; border-radius:50%; border:none; background:#B87F27; color:#fff; font-size:13px; line-height:24px; cursor:pointer; padding:0; }
 .design-thumb{ display:block; width:100%; max-width:130px; margin:0 auto 10px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.18); }
 .privacy-note{ margin:10px 0 0; font-size:13.5px; color:var(--text-soft); }
+.photo-why{ margin-top:12px; border:1px solid var(--line); border-radius:var(--radius-m); background:#fff; }
+.photo-why summary{ cursor:pointer; list-style:none; padding:14px 18px; font-weight:700; font-size:15px; display:flex; justify-content:space-between; gap:12px; }
+.photo-why summary::-webkit-details-marker{ display:none; }
+.photo-why summary::after{ content:"+"; color:var(--gold-dark); font-size:20px; line-height:1; }
+.photo-why[open] summary::after{ content:"−"; }
+.photo-why-body{ padding:0 18px 16px; display:grid; grid-template-columns:1fr 1fr; gap:14px 22px; }
+@media (max-width:640px){ .photo-why-body{ grid-template-columns:1fr; } }
+.photo-why h4{ margin:0 0 6px; font-size:14.5px; }
+.photo-why ul{ margin:0; padding-left:18px; color:var(--text-soft); font-size:14px; line-height:1.55; }
+.photo-why p{ margin:0; color:var(--text-soft); font-size:14px; line-height:1.55; }
 
 /* стиль иллюстраций: две большие карточки с образцом */
 .style-cards{ grid-template-columns:1fr 1fr; }
@@ -598,7 +608,39 @@ section.tight{ padding:56px 0; }
             <span id="photoDropHint">Лучше всего: лицо анфас, лицо вполоборота и фото в полный рост — чётко, без солнечных очков и головных уборов</span>
             <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" multiple hidden>
           </div>
-          <p class="privacy-note">🔒 Фото нужны только чтобы нарисовать иллюстрации. Мы не храним их: они удаляются с сервера сразу, как только книга готова, и никому не передаются.</p>
+          <p class="privacy-note">🔒 Фото нужны только чтобы нарисовать иллюстрации. Они удаляются с сервера, как только книга дорисована, и никогда не хранятся дольше 48 часов.</p>
+          <details class="photo-why">
+            <summary>Зачем нужно фото и что с ним будет</summary>
+            <div class="photo-why-body">
+              <div>
+                <h4>Зачем</h4>
+                <p>Главное в нашей книге — ребёнок узнаёт себя на каждой картинке. По фото мы рисуем «лист персонажа»: черты лица, причёску, одежду, питомца. По нему нарисованы обложка и все иллюстрации — поэтому ребёнок одинаковый во всей книге. Без фото так не получится, поэтому оно обязательно.</p>
+              </div>
+              <div>
+                <h4>Какие фото подойдут</h4>
+                <ul>
+                  <li>Оригинал из галереи телефона, а не картинка из переписки</li>
+                  <li>Лицо хорошо видно, дневной свет, без солнечных очков и шапки</li>
+                  <li>В кадре только ваш ребёнок</li>
+                  <li>Лучше всего три: анфас, вполоборота и в полный рост</li>
+                  <li>Хорошо, если на одном из фото лицо спокойное, а не только смех</li>
+                </ul>
+              </div>
+              <div>
+                <h4>Что с ним будет</h4>
+                <ul>
+                  <li>Передаётся только сервису, который рисует иллюстрации (OpenAI), — мы никому его не показываем</li>
+                  <li>Не публикуется и не используется для рекламы</li>
+                  <li>Удаляется с нашего сервера, как только книга дорисована</li>
+                  <li>Если вы не оформили книгу — удаляется через 48 часов само</li>
+                </ul>
+              </div>
+              <div>
+                <h4>А что хранится</h4>
+                <p>Сама книга: текст и нарисованные иллюстрации — чтобы вы могли открыть её по ссылке и QR-коду, поправить и заказать продолжение. Хранится год, по вашей просьбе удалим раньше. <a href="privacy.html" target="_blank" style="color:var(--gold-dark);">Политика конфиденциальности</a></p>
+              </div>
+            </div>
+          </details>
         </div>
       </div>
 
@@ -962,7 +1004,7 @@ section.tight{ padding:56px 0; }
       previewBox.textContent = '';
 
       const label = document.createElement('div');
-      label.textContent = 'Ваша книга готова';
+      label.textContent = book.locked ? 'Бесплатное превью готово' : 'Ваша книга готова';
       label.style.cssText = 'font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#7a6a49; font-weight:700;';
 
       const title = document.createElement('h3');
@@ -971,7 +1013,9 @@ section.tight{ padding:56px 0; }
 
       const meta = document.createElement('p');
       const drawn = book.pages.filter(function (p) { return p && p.heroImage; }).length;
-      meta.textContent = book.pages.length + ' страниц истории' + (drawn ? ' · ребёнок на ' + drawn + ' иллюстрациях' : '') + ' · чтение онлайн и PDF';
+      meta.textContent = book.locked
+        ? 'Обложка и первые страницы с иллюстрацией. Ещё ' + book.lockedPages + ' страниц — и на каждой ваш ребёнок — дорисуются сразу после оплаты.'
+        : book.pages.length + ' страниц истории' + (drawn ? ' · ребёнок на ' + drawn + ' иллюстрациях' : '') + ' · чтение онлайн и PDF';
       meta.style.cssText = 'margin:0 0 20px; color:#5f6378;';
 
       previewBox.append(label, title, meta);
@@ -985,7 +1029,7 @@ section.tight{ padding:56px 0; }
         read.href = link;
         read.target = '_blank';
         read.className = 'btn btn-primary';
-        read.textContent = 'Читать книгу';
+        read.textContent = book.locked ? 'Открыть превью' : 'Читать книгу';
 
         const pdf = document.createElement('a');
         pdf.href = link + (jobId ? '&' : '?') + 'print=1';
@@ -994,7 +1038,7 @@ section.tight{ padding:56px 0; }
         pdf.textContent = 'Скачать PDF';
         pdf.style.cssText = 'border:1.5px solid #B87F27; color:#B87F27; background:transparent;';
 
-        actions.append(read, pdf);
+        if (book.locked) actions.append(read); else actions.append(read, pdf);
         previewBox.appendChild(actions);
       } else {
         // хранилище браузера недоступно — показываем книгу текстом прямо здесь

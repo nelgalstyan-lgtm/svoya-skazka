@@ -159,6 +159,12 @@ body.t-newyear .sheet{ background:
 .cert-foot b{ display:block; margin-top:6px; padding-top:6px; border-top:1px solid var(--line); font-weight:400; }
 
 /* Раскраска: контурная картинка на белом листе */
+/* Закрытая страница превью: остальная книга — после оплаты */
+.locked{ align-items:center; justify-content:center; text-align:center; padding:0 90px; }
+.locked-icon{ font-size:64px; line-height:1; }
+.locked h2{ margin:22px 0 0; font-family:var(--font-display); font-size:36px; color:var(--ink); }
+.locked p{ margin:18px 0 30px; font-family:var(--font-display); font-size:19px; line-height:1.75; color:var(--text-soft); }
+.locked small{ display:block; margin-top:16px; font-size:14px; color:var(--text-soft); }
 .coloring{ background:#fff !important; align-items:center; }
 .coloring .corner{ display:none; }
 .coloring-title{ margin-top:58px; font-family:var(--font-script); font-weight:700; font-size:40px; color:var(--gold-dark); }
@@ -244,15 +250,15 @@ body.t-newyear .sheet{ background:
     const r = await fetch(API_BASE + '/api/book/' + encodeURIComponent(jobId) + '/result');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
-    if (!d.ready) {
-      waitNote(d.progress);
+    if (!d.ready || d.finishing) {
+      waitNote(d.finishing ? (d.progress || 'Оплата прошла — дорисовываем остальные иллюстрации. Это займёт несколько минут.') : d.progress);
       await new Promise(function (resolve) { setTimeout(resolve, 3000); });
       return loadFromServer(jobId);
     }
     const note = document.getElementById('waitNote');
     if (note) note.remove();
     if (!d.result || !Array.isArray(d.result.pages)) throw new Error('not ready');
-    return { answers: d.result.answers || {}, book: d.result, jobId: jobId, canRedraw: d.canRedraw, redrawsLeft: d.redrawsLeft };
+    return { answers: d.result.answers || {}, book: d.result, jobId: jobId, canRedraw: d.canRedraw, redrawsLeft: d.redrawsLeft, locked: Boolean(d.result.locked) };
   }
 
   function loadBook() {
@@ -413,6 +419,21 @@ body.t-newyear .sheet{ background:
     brand2.append('Своя ', el('em', '', 'Сказка'));
     end.appendChild(brand2);
 
+    // Превью: вместо финала — закрытая страница с тем, что ещё будет в книге, и кнопкой оплаты
+    if (data.locked) {
+      end.parentNode.remove();
+      const lock = sheet('locked');
+      lock.appendChild(el('div', 'locked-icon', '🔒'));
+      lock.appendChild(el('h2', '', 'Продолжение — в полной книге'));
+      lock.appendChild(el('p', '', window.SkazkaExtras.lockedText({
+        pages: book.lockedPages, name: name || 'ваш ребёнок',
+        girl: window.SkazkaTemplate.normalizeInput(data.answers || {}).girl, coloring: book.coloringOrdered
+      })));
+      lock.appendChild(window.SkazkaExtras.payButton({ jobId: data.jobId, price: book.price, apiBase: API_BASE }));
+      lock.appendChild(el('small', '', 'Все иллюстрации дорисуются сразу после оплаты — за несколько минут.'));
+      return;
+    }
+
     // Сертификат героя — для имени из анкеты
     if (name) {
       const girl = window.SkazkaTemplate.normalizeInput(data.answers || {}).girl;
@@ -443,6 +464,13 @@ body.t-newyear .sheet{ background:
 
   function attachActions(data) {
     const book = data.book;
+    if (data.locked) {
+      // в превью — только чтение и прослушивание; правки, продолжение и PDF — после оплаты
+      document.getElementById('pdfBtn').style.display = 'none';
+      document.getElementById('pdfHint').style.display = 'none';
+      window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return [book.title].concat(book.pages.map(pageText)); });
+      return;
+    }
     window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () {
       return [book.title].concat(book.pages.map(pageText));
     });

@@ -262,11 +262,23 @@ async function pool(items, limit, worker) {
   return out;
 }
 
+/** Раскраска: контурные версии готовых иллюстраций (не больше 6). */
+export async function coloringPages(sources, { illustrate = generateHeroImage, concurrency = Number(process.env.IMAGE_CONCURRENCY || 3), deadlineAt = Infinity, log = () => {} } = {}) {
+  const list = sources.filter(Boolean).slice(0, 6);
+  return (await pool(list, concurrency, async (src) => {
+    if (Date.now() > deadlineAt) return null;
+    const image = await illustrate({ kind: 'coloring', source: fromDataUrl(src), log });
+    return image ? dataUrl(image) : null;
+  })).filter(Boolean);
+}
+
 /**
- * Все иллюстрации книги с ребёнком: сначала лист персонажа (по нему одежда и спутники одинаковые на всех страницах),
+ * Иллюстрации книги с ребёнком: сначала лист персонажа (по нему одежда и спутники одинаковые на всех страницах),
  * потом обложка и страницы — параллельно. Не укладываемся в срок — оставшиеся страницы пропускаем, книга не ждёт.
  *
- * scenes: [{ brief }]. Возвращает { sheet, cover, scenes: [dataURL|null], coloring: [dataURL|null] } — всё data:URL.
+ * scenes: [{ brief }]. only — номера страниц, которые рисуем сейчас (превью до оплаты); остальные — null, дорисуются потом.
+ * sheet — уже готовый лист персонажа (data:URL): при дорисовке после оплаты новый не рисуем.
+ * Возвращает { sheet, cover, scenes: [dataURL|null], coloring: [dataURL] } — всё data:URL.
  */
 export async function illustrateBook(input, {
   scenes = [],
@@ -276,35 +288,41 @@ export async function illustrateBook(input, {
   concurrency = Number(process.env.IMAGE_CONCURRENCY || 3),
   deadlineAt = Infinity,
   coloring = false,
+  only = null,
+  sheet: readySheet = null,
   onProgress = () => {},
   log = () => {}
 } = {}) {
   const photos = photosFrom(input);
-  const empty = { sheet: null, cover: null, scenes: scenes.map(() => null), coloring: [] };
-  if (!photos.length) return empty;
+  const empty = { sheet: readySheet, cover: null, scenes: scenes.map(() => null), coloring: [] };
+  // после оплаты фото может уже не быть (истёк срок хранения) — тогда рисуем по листу персонажа
+  if (!photos.length && !readySheet) return empty;
 
   const base = { photos, styleLabel: input.style, eyes: input.eyes, look, log };
-  const total = scenes.length + (coverBrief ? 1 : 0) + 1;
+  const wanted = scenes.map((_, i) => !only || only.includes(i));
+  const total = wanted.filter(Boolean).length + (coverBrief ? 1 : 0) + (readySheet ? 0 : 1);
   let done = 0;
   const tick = () => { done += 1; onProgress(done, total); };
 
-  const sheetImg = await illustrate({ ...base, kind: 'sheet', brief: 'character reference sheet' });
-  tick();
-  const sheet = sheetImg || null;
+  let sheet = fromDataUrl(readySheet);
+  if (!sheet) {
+    sheet = await illustrate({ ...base, kind: 'sheet', brief: 'character reference sheet' });
+    tick();
+  }
 
   const jobs = [
-    ...(coverBrief ? [{ kind: 'cover', brief: coverBrief }] : []),
-    ...scenes.map((s) => ({ kind: 'scene', brief: s.brief }))
+    ...(coverBrief ? [{ kind: 'cover', brief: coverBrief, draw: true }] : []),
+    ...scenes.map((s, i) => ({ kind: 'scene', brief: s.brief, draw: wanted[i] }))
   ];
   const results = await pool(jobs, concurrency, async (job) => {
-    if (Date.now() > deadlineAt) return null; // время вышло — страница останется с фоновой сценой
+    if (!job.draw || Date.now() > deadlineAt) return null; // не сейчас (дорисуем после оплаты) или время вышло
     const image = await illustrate({ ...base, kind: job.kind, brief: job.brief, sheet });
     tick();
     return image ? dataUrl(image) : null;
   });
 
   // вторая попытка для того, что не нарисовалось (сбой сервиса, таймаут) — пока есть время
-  const failed = results.map((r, i) => (r ? -1 : i)).filter((i) => i >= 0);
+  const failed = results.map((r, i) => (r || !jobs[i].draw ? -1 : i)).filter((i) => i >= 0);
   if (failed.length && Date.now() < deadlineAt) {
     log(`[illustrate] retrying ${failed.length} failed image(s)`);
     await pool(failed, concurrency, async (i) => {
@@ -315,15 +333,7 @@ export async function illustrateBook(input, {
   }
 
   const cover = coverBrief ? results.shift() : null;
-  let coloringPages = [];
-  if (coloring) {
-    const sources = results.filter(Boolean).slice(0, 6);
-    coloringPages = (await pool(sources, concurrency, async (src) => {
-      if (Date.now() > deadlineAt) return null;
-      const image = await illustrate({ kind: 'coloring', source: fromDataUrl(src), log });
-      return image ? dataUrl(image) : null;
-    })).filter(Boolean);
-  }
+  const coloringResult = coloring ? await coloringPages(results, { illustrate, concurrency, deadlineAt, log }) : [];
 
-  return { sheet: sheet ? dataUrl(sheet) : null, cover, scenes: results, coloring: coloringPages };
+  return { sheet: sheet ? (readySheet || dataUrl(sheet)) : null, cover, scenes: results, coloring: coloringResult };
 }

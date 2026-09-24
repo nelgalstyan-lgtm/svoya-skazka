@@ -11,6 +11,8 @@ import { generateBigBook, templateBook } from './lib/bigstory.js';
 import { normalizeBook } from './lib/booktext.js';
 import { sharedHealth } from './lib/providers.js';
 import { MAX_PHOTOS, generateHeroImage, fromDataUrl } from './lib/illustrate.js';
+import { createPhotoStore } from './lib/photostore.js';
+import { completeBook } from './lib/complete.js';
 
 const SERVER_DIR = path.dirname(fileURLToPath(import.meta.url));
 
@@ -29,8 +31,12 @@ const rateBuckets = new Map();
 const BIG_TIMEOUT_MS = Number(process.env.BIG_BOOK_TIMEOUT_MS || 12 * 60_000);
 const PHOTO_TIMEOUT_MS = Number(process.env.PHOTO_BOOK_TIMEOUT_MS || 6 * 60_000);
 
+// Фото ждут оплаты здесь (не дольше PHOTO_TTL_HOURS), а не в сохранённой книге
+const photoStore = createPhotoStore({ dir: path.join(SERVER_DIR, 'data', 'photos') });
+
 const queue = createJobQueue({
-  runner: (input, ctx) => (input.tariff === 'big' ? generateBigBook(input, { progress: ctx.progress }) : generateStory(input, { progress: ctx.progress })),
+  // бесплатное превью: весь текст + лист персонажа, обложка и одна иллюстрация; остальное — после оплаты (/unlock)
+  runner: (input, ctx) => (input.tariff === 'big' ? generateBigBook(input, { progress: ctx.progress, preview: true }) : generateStory(input, { progress: ctx.progress, preview: true })),
   fallback: (input) => (input.tariff === 'big' ? { book: templateBook(input) } : buildTemplateStory(input)),
   timeoutFor: (input) => (input.tariff === 'big' ? BIG_TIMEOUT_MS : (input.photo ? PHOTO_TIMEOUT_MS : null)),
   concurrency: Number(process.env.QUEUE_CONCURRENCY || 3),
@@ -328,6 +334,7 @@ app.post('/api/book/generate', (req, res) => {
   if (big || body.coloring === true) input.coloring = true;
 
   const job = queue.submit(input);
+  photoStore.save(job.id, photos); // понадобятся, чтобы дорисовать книгу после оплаты
 
   res.json({
     ok: true,
@@ -350,6 +357,30 @@ function clientBook(job) {
   return book;
 }
 
+// В бесплатном превью «Сказки» открыты первые страницы, «Большой истории» — первая глава; остальное сервер не отдаёт вовсе
+const PREVIEW_PAGES = 2;
+const PREVIEW_CHAPTERS = 1;
+// Цены (₽) — показываются на закрытой странице превью; меняются здесь и на pricing.html / create.html
+const PRICES = { short: 690, big: 1490, coloring: 190 };
+const priceOf = (job) => (job.input?.tariff === 'big' ? PRICES.big : PRICES.short + (job.input?.coloring ? PRICES.coloring : 0));
+
+function previewResult(job) {
+  const answers = jobAnswers(job);
+  if (job.result.book) {
+    const book = clientBook(job);
+    const rest = book.chapters.slice(PREVIEW_CHAPTERS);
+    return { kind: 'book', locked: true, price: priceOf(job), book: { ...book, coloring: [], chapters: book.chapters.slice(0, PREVIEW_CHAPTERS) }, lockedChapters: rest.map((c) => c.title), lockedImages: rest.reduce((n, c) => n + c.blocks.filter((b) => b.t === 'image').length, 0), answers };
+  }
+  const pages = job.result.pages;
+  return { locked: true, price: priceOf(job), coloringOrdered: Boolean(job.input?.coloring), title: job.result.title, pages: pages.slice(0, PREVIEW_PAGES), lockedPages: Math.max(0, pages.length - PREVIEW_PAGES), cover: job.result.cover || null, coloring: [], answers };
+}
+
+function fullResult(job) {
+  return job.result.book
+    ? { kind: 'book', book: clientBook(job), answers: jobAnswers(job) }
+    : { title: job.result.title, pages: job.result.pages, cover: job.result.cover || null, coloring: job.result.coloring || [], answers: jobAnswers(job) };
+}
+
 function jobView(job) {
   const done = job.status === 'completed';
   return {
@@ -358,13 +389,15 @@ function jobView(job) {
     status: job.status,
     ready: done,
     position: queue.position(job),
-    progress: done ? '' : job.progress || '',
+    progress: done && !job.finishing ? '' : job.progress || '',
+    paid: Boolean(job.paid),
+    finishing: Boolean(job.finishing), // оплачено, дорисовываем иллюстрации
     redrawsLeft: done ? Math.max(0, REDRAW_LIMIT - (job.redraws || 0)) : null,
     canRedraw: done ? Boolean(job.result.sheet || job.result.book?.sheet) : false,
     elapsedMs: (job.finishedAt || Date.now()) - job.createdAt,
     // клиенту отдаём только книгу; источник (ИИ/шаблон) — служебная информация
     // лист персонажа остаётся на сервере — он нужен только для перерисовки
-    result: !done ? null : job.result.book ? { kind: 'book', book: clientBook(job), answers: jobAnswers(job) } : { title: job.result.title, pages: job.result.pages, cover: job.result.cover || null, coloring: job.result.coloring || [], answers: jobAnswers(job) }
+    result: !done ? null : job.paid && !job.finishing ? fullResult(job) : previewResult(job)
   };
 }
 
@@ -397,6 +430,7 @@ function bookImages(result) {
 app.post('/api/book/:jobId/redraw', async (req, res) => {
   const job = queue.get(req.params.jobId);
   if (!job || job.status !== 'completed') return res.status(404).json({ ok: false, error: 'Книга не найдена' });
+  if (!job.paid || job.finishing) return res.status(402).json({ ok: false, error: 'Перерисовка доступна после оплаты книги.' });
   if (rateLimited(`${req.ip}:redraw`, 10)) return res.status(429).json({ ok: false, error: 'Слишком много запросов подряд. Подождите пару минут.' });
 
   const used = job.redraws || 0;
@@ -434,6 +468,7 @@ app.post('/api/book/:jobId/redraw', async (req, res) => {
 app.post('/api/book/:jobId/edit', (req, res) => {
   const job = queue.get(req.params.jobId);
   if (!job || job.status !== 'completed') return res.status(404).json({ ok: false, error: 'Книга не найдена' });
+  if (!job.paid || job.finishing) return res.status(402).json({ ok: false, error: 'Правка текста доступна после оплаты книги.' });
   if (rateLimited(`${req.ip}:edit`, 30)) return res.status(429).json({ ok: false, error: 'Слишком много запросов подряд. Подождите пару минут.' });
 
   const edits = Array.isArray(req.body?.edits) ? req.body.edits.slice(0, 500) : [];
@@ -454,6 +489,40 @@ app.post('/api/book/:jobId/edit', (req, res) => {
   res.json({ ok: true, applied });
 });
 
+// ---------------------------------------------------------------- после оплаты: дорисовать книгу
+
+/** Отмечает книгу оплаченной и дорисовывает её в фоне. Повторный вызов для той же книги ничего не делает. */
+async function unlockBook(job, { illustrate } = {}) {
+  if (job.paid) return;
+  job.paid = true;
+  job.paidAt = Date.now();
+  job.finishing = true;
+  job.progress = 'Дорисовываем иллюстрации…';
+  queue.save(job);
+  try {
+    await completeBook(job, { photos: photoStore.load(job.id), illustrate, progress: (text) => { job.progress = text; } });
+  } catch (error) {
+    console.warn(`[unlock] ${job.id}: ${error?.message}`);
+  } finally {
+    job.finishing = false;
+    job.progress = '';
+    queue.save(job);
+    photoStore.remove(job.id); // книга дорисована — фото больше не нужны
+  }
+}
+
+// Оплата подтверждена. Сейчас вызывается вручную (заголовок x-admin-key = ADMIN_KEY из .env) — для проверки;
+// после подключения платёжной системы то же самое будет делать её уведомление об оплате.
+app.post('/api/book/:jobId/unlock', (req, res) => {
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey) return res.status(503).json({ ok: false, error: 'Оплата пока не подключена.' });
+  if (req.get('x-admin-key') !== adminKey) return res.status(403).json({ ok: false, error: 'Нет доступа' });
+  const job = queue.get(req.params.jobId);
+  if (!job || job.status !== 'completed') return res.status(404).json({ ok: false, error: 'Книга не найдена' });
+  unlockBook(job); // дорисовка идёт в фоне: клиент следит за ходом через /status
+  res.json({ ok: true, paid: true });
+});
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   app.listen(PORT, () => {
     const providers = describeProviders();
@@ -464,4 +533,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { app, queue, resolvePromptById, generateWithGemini, parsePhoto, parsePhotos };
+export { app, queue, photoStore, unlockBook, resolvePromptById, generateWithGemini, parsePhoto, parsePhotos };

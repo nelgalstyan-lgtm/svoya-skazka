@@ -138,7 +138,8 @@ export function createJobQueue({
 
   /** Сохраняет изменения готовой книги (правка текста, перерисовка). */
   function save(job) {
-    if (jobs.has(job.id)) jobs.set(job.id, job);
+    // книга, поднятая с диска, остаётся в памяти: так ход дорисовки виден в /status сразу, а не после записи на диск
+    jobs.set(job.id, job);
     persist(job);
   }
 

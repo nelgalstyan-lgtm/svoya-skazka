@@ -142,7 +142,9 @@
       '.sk-editing [contenteditable=true]{outline:2px dashed rgba(215,154,58,.7);outline-offset:3px;border-radius:2px;cursor:text}' +
       '.sk-redraw{position:absolute;z-index:6;right:12px;top:12px;border:none;border-radius:999px;padding:8px 14px;background:rgba(35,44,77,.9);color:#F4EFE0;font:700 13px Arial,sans-serif;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.35)}' +
       '.sk-redraw[disabled]{opacity:.6;cursor:wait}' +
-      '@media print{.sk-redraw,.sk-toast{display:none!important}}';
+      '.sk-pay{border:none;border-radius:999px;padding:16px 30px;background:#D79A3A;color:#232C4D;font:700 18px Arial,sans-serif;cursor:pointer;box-shadow:0 10px 24px -10px rgba(120,70,10,.6)}' +
+      '.sk-pay[disabled]{opacity:.7;cursor:wait}' +
+      '@media print{.sk-redraw,.sk-toast,.sk-pay{display:none!important}}';
     document.head.appendChild(css);
   }
 
@@ -225,7 +227,60 @@
     button.addEventListener('click', function () { if (editing) leave(); else enter(); });
   }
 
+  // ---------------------------------------------------------------- превью и оплата
+
+  function rub(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽'; }
+
+  /**
+   * Кнопка «Получить всю книгу». Оплата подключается последним этапом: когда она появится, страница задаёт
+   * window.SkazkaPay(jobId). До этого — понятное сообщение. ?admin=КЛЮЧ в адресе — тестовая разблокировка
+   * (тот же ADMIN_KEY, что в server/.env).
+   */
+  function payButton(opts) {
+    injectEditorStyles();
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'sk-pay';
+    btn.textContent = 'Получить всю книгу — ' + rub(opts.price);
+    btn.addEventListener('click', function () {
+      if (typeof global.SkazkaPay === 'function') { global.SkazkaPay(opts.jobId, opts.price); return; }
+      var admin = new URLSearchParams(location.search).get('admin');
+      if (admin) { unlock(opts, admin, btn); return; }
+      toast('Онлайн-оплата появится совсем скоро. Сохраните ссылку на эту страницу — книга будет ждать вас.');
+    });
+    return btn;
+  }
+
+  function unlock(opts, key, btn) {
+    btn.disabled = true;
+    btn.textContent = 'Дорисовываем книгу…';
+    fetch(opts.apiBase + '/api/book/' + encodeURIComponent(opts.jobId) + '/unlock', { method: 'POST', headers: { 'x-admin-key': key } })
+      .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || 'Не получилось'); }); })
+      .then(function () { location.reload(); })
+      .catch(function (e) { btn.disabled = false; btn.textContent = 'Получить всю книгу — ' + rub(opts.price); toast(e.message, 'error'); });
+  }
+
+  /** Текст закрытой страницы превью: что ещё будет в книге после оплаты. */
+  function lockedText(opts) {
+    var parts = [];
+    if (opts.pages) parts.push('ещё ' + opts.pages + ' ' + plural(opts.pages, 'страница', 'страницы', 'страниц') + ' истории — и на каждой ' + opts.name + ' нарисован' + (opts.girl ? 'а' : '') + ' по вашему фото');
+    if (opts.chapters && opts.chapters.length) parts.push('ещё ' + opts.chapters.length + ' ' + plural(opts.chapters.length, 'глава', 'главы', 'глав') + ': ' + opts.chapters.map(function (t) { return '«' + t + '»'; }).join(', '));
+    if (opts.images) parts.push(opts.images + ' ' + plural(opts.images, 'иллюстрация', 'иллюстрации', 'иллюстраций') + ' с героем');
+    if (opts.coloring) parts.push('раскраска из иллюстраций книги');
+    parts.push('сертификат героя, чтение вслух, PDF для печати и бесплатные правки');
+    return 'В полной книге: ' + parts.join('; ') + '.';
+  }
+
+  function plural(n, one, few, many) {
+    var m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+    return many;
+  }
+
   global.SkazkaExtras = {
+    payButton: payButton,
+    lockedText: lockedText,
     attachEditor: attachEditor,
     paragraphText: paragraphText,
     attachListen: attachListen,

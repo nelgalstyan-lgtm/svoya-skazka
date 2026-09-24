@@ -14,7 +14,7 @@ function listen() {
 }
 
 function writeJob(id, result, extra = {}) {
-  const job = { id, status: 'completed', createdAt: Date.now(), finishedAt: Date.now(), input: { name: 'Милена', style: 'Акварель' }, result, ...extra };
+  const job = { id, status: 'completed', createdAt: Date.now(), finishedAt: Date.now(), paid: true, input: { name: 'Милена', style: 'Акварель' }, result, ...extra };
   fs.mkdirSync(STORE, { recursive: true });
   fs.writeFileSync(path.join(STORE, `${id}.json`), JSON.stringify(job));
   return () => fs.rmSync(path.join(STORE, `${id}.json`), { force: true });
