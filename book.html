@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ваша книга — Своя Сказка</title>
+<title>Ваша книга — Героёнок</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Caveat:wght@600;700&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap');
 
@@ -191,7 +191,7 @@ body.t-newyear .sheet{ background:
 <body>
 
 <div class="toolbar no-print">
-  <a class="logo" href="index.html">Своя <em>Сказка</em></a>
+  <a class="logo" href="index.html">Героёнок</a>
   <div class="toolbar-actions">
     <a class="btn ghost" href="create.html">← К анкете</a>
     <button class="btn ghost" id="listenBtn" type="button">🔊 Слушать книгу</button>
@@ -345,7 +345,7 @@ body.t-newyear .sheet{ background:
     const demoHeroSrc = HERO_IMAGES[name.trim().toLowerCase()];
     const scenes = coverAndFinaleScenes(data.answers);
     document.body.classList.add('t-' + themeOf(data.answers));
-    document.title = book.title + ' — Своя Сказка';
+    document.title = book.title + ' — Героёнок';
 
     // Обложка: с иллюстрацией ребёнка — картинка на весь лист; без неё — фон темы в рамке
     const cover = sheet(book.cover ? 'cover art' : 'cover');
@@ -446,7 +446,7 @@ body.t-newyear .sheet{ background:
       cert.appendChild(el('p', 'cert-text', c.text));
       const foot = el('div', 'cert-foot');
       const d = el('div', '', c.date); d.appendChild(el('b', '', 'дата'));
-      const sgn = el('div', '', 'Своя Сказка'); sgn.appendChild(el('b', '', 'подпись'));
+      const sgn = el('div', '', 'Героёнок'); sgn.appendChild(el('b', '', 'подпись'));
       foot.append(d, sgn);
       cert.appendChild(foot);
     }

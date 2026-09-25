@@ -207,7 +207,7 @@
       who.appendChild(document.createTextNode(name));
       page.appendChild(who);
     }
-    page.appendChild(h('div', 'bk-cover-brand', 'Своя Сказка'));
+    page.appendChild(h('div', 'bk-cover-brand', 'Героёнок'));
     return { page: page, folio: null };
   }
 
@@ -234,7 +234,7 @@
     page.appendChild(divider());
     page.appendChild(h('div', 'bk-finale-text', 'Эта книга написана специально для своего героя — с привычками, друзьями и близкими из анкеты. Пусть она возвращается к вам снова и снова.'));
     if (opts && opts.qr) { opts.qr.classList.add('bk-qr'); page.appendChild(opts.qr); }
-    page.appendChild(h('div', 'bk-finale-brand', 'Своя Сказка'));
+    page.appendChild(h('div', 'bk-finale-brand', 'Героёнок'));
     return { page: page, folio: null };
   }
 
@@ -247,7 +247,7 @@
     page.appendChild(h('div', 'bk-cert-text', c.text));
     var foot = h('div', 'bk-cert-foot');
     var d = h('div', '', c.date); d.appendChild(h('b', '', 'дата'));
-    var sg = h('div', '', 'Своя Сказка'); sg.appendChild(h('b', '', 'подпись'));
+    var sg = h('div', '', 'Героёнок'); sg.appendChild(h('b', '', 'подпись'));
     foot.append(d, sg);
     page.appendChild(foot);
     return { page: page, folio: null };

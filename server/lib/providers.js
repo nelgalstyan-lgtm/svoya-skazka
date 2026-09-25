@@ -115,7 +115,7 @@ function openAiCaller({ name, apiKey, baseUrl }) {
     const data = await post(
       `${baseUrl}/chat/completions`,
       {
-        headers: { authorization: `Bearer ${apiKey}`, 'x-title': 'Svoya Skazka' },
+        headers: { authorization: `Bearer ${apiKey}`, 'x-title': 'Geroenok' },
         signal,
         body: {
           model,

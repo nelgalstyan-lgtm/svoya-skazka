@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ваша книга — Своя Сказка</title>
+<title>Ваша книга — Героёнок</title>
 <link rel="stylesheet" href="assets/kit/parchment.css">
 <style>
 :root{ --ink:#232C4D; --gold:#D79A3A; --text-light:#F4EFE0; --bk-scale:1; }
@@ -29,7 +29,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
 <body>
 
 <div class="toolbar no-print">
-  <a class="logo" href="index.html">Своя Сказка</a>
+  <a class="logo" href="index.html">Героёнок</a>
   <div>
     <span id="count" style="color:rgba(244,239,224,.7); margin-right:12px; font-size:14px;"></span>
     <button class="btn ghost" id="listenBtn" type="button">🔊 Слушать книгу</button>
@@ -73,7 +73,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       qr: window.SkazkaExtras.qrBlock('book-pro.html', jobId),
       certificate: name ? window.SkazkaExtras.certificate(name, book.title, girl) : null
     }).then(function (res) {
-      document.title = book.title + ' — Своя Сказка';
+      document.title = book.title + ' — Героёнок';
       document.getElementById('count').textContent = res.pages + ' стр.';
       window.__bookReady = res;
       if (locked) {
