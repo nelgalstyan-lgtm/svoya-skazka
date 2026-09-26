@@ -179,6 +179,7 @@ body.t-newyear .sheet{ background:
 .cert-kicker{ font-size:15px; letter-spacing:.4em; padding-left:.4em; text-transform:uppercase; color:var(--text-soft); }
 .cert-title{ margin-top:14px; font-family:var(--font-display); font-weight:700; font-size:46px; color:var(--ink); }
 .cert-medal{ margin:30px 0 8px; width:84px; height:auto; }
+.cert-portrait{ margin:30px 0 10px; width:210px; height:210px; border-radius:50%; background-repeat:no-repeat; background-size:160% auto; background-position:50% 30%; border:5px solid #c99a4b; box-shadow:0 0 0 8px rgba(201,154,75,.2), 0 10px 22px rgba(60,35,10,.35); }
 .cert-name{ font-family:var(--font-script); font-weight:700; font-size:76px; color:var(--gold-dark); line-height:1.1; }
 .cert-text{ margin:26px 110px 0; font-family:var(--font-display); font-size:19px; line-height:1.8; color:var(--text); }
 .cert-foot{ display:flex; justify-content:space-between; width:calc(100% - 220px); margin-top:70px; font-size:15px; color:var(--text-soft); }
@@ -523,7 +524,14 @@ body.t-newyear .sheet{ background:
       const cert = sheet('cert');
       cert.appendChild(el('div', 'cert-kicker', c.kicker));
       cert.appendChild(el('div', 'cert-title', c.title));
-      const medal = el('img', 'cert-medal'); medal.src = 'assets/brand/item-star-alpha.png'; medal.alt = '';
+      // портрет героя из обложки (не фото: фото храним не дольше 48 часов); без обложки — звезда
+      let medal;
+      if (book.cover) {
+        medal = el('div', 'cert-portrait');
+        medal.style.backgroundImage = 'url("' + String(book.cover).replace(/"/g, '%22') + '")';
+      } else {
+        medal = el('img', 'cert-medal'); medal.src = 'assets/brand/item-star-alpha.png'; medal.alt = '';
+      }
       cert.appendChild(medal);
       cert.appendChild(el('div', 'cert-name', c.name));
       cert.appendChild(el('p', 'cert-text', c.text));

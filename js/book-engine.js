@@ -238,10 +238,19 @@
     return { page: page, folio: null };
   }
 
-  function certificateSheet(root, c) {
-    var page = newSheet(root, 'bk-cert');
+  // Портрет героя для сертификата — из обложки: там ребёнок всегда в центре нижних двух третей,
+  // поэтому берём голову и плечи из этой области (не фото ребёнка: фото храним не дольше 48 часов)
+  function portrait(src, cls) {
+    var p = h('div', cls);
+    p.style.backgroundImage = 'url("' + String(src).replace(/"/g, '%22') + '")';
+    return p;
+  }
+
+  function certificateSheet(root, c, cover) {
+    var page = newSheet(root, 'bk-cert' + (cover ? ' bk-cert-has-portrait' : ''));
     page.appendChild(h('div', 'bk-cert-kicker', c.kicker));
     page.appendChild(h('div', 'bk-cert-title', c.title));
+    if (cover) page.appendChild(portrait(cover, 'bk-cert-portrait'));
     page.appendChild(divider());
     page.appendChild(h('div', 'bk-cert-name', c.name));
     page.appendChild(h('div', 'bk-cert-text', c.text));
@@ -447,7 +456,7 @@
         sheets.push({ page: lock, folio: null });
       } else if (!(opts && opts.noFinale)) {
         sheets.push(finaleSheet(root, opts));
-        if (opts && opts.certificate) sheets.push(certificateSheet(root, opts.certificate));
+        if (opts && opts.certificate) sheets.push(certificateSheet(root, opts.certificate, book.cover));
         (book.coloring || []).forEach(function (src, i) { sheets.push(coloringSheet(root, src, i === 0)); });
       }
       if (!(opts && (opts.noCover || opts.noBackCover))) sheets.push(backCoverSheet(root, book, opts));
