@@ -11,13 +11,15 @@
 - Вместо Pages создан **Worker** `svoya-skazka` с подключённым GitHub (Workers Builds: `npx wrangler deploy` при каждом пуше в `main`). Так даже лучше: API потом добавляется в этот же Worker.
 - Настройки в `wrangler.jsonc`: сборка `scripts/build-pages.sh`, статика из `dist/`.
 - Домен и `www` привязаны к Worker'у, сайт работает. check-host 26.09: Москва и СПб 200 OK за 0,2–0,3 с. `server/`, `docs/` отдают 404.
-- API-токен в `.env` в корне (wrangler: `set -a; . <(tr -d '' < .env); set +a`). Права: Workers, D1, Queues, маршруты geroenok.online. **R2 владелица ещё не включила** (Storage & databases → R2, может попросить карту).
+- API-токен в `.env` в корне (wrangler: `set -a; . <(tr -d '
+' < .env); set +a`). Права: Workers, D1, Queues, маршруты geroenok.online. R2 включён (бесплатный план, $0), бакет **`geroenok`** (location eeur) создан.
 - **Проба сделана 26.09** (`cloudflare/probe`, Worker `geroenok-probe`, секреты OPENAI_API_KEY и PROBE_KEY). `images/edits`, 1024×1536, medium, образец 860 КБ:
   - PNG (ответ 4,2 МБ): **18 мс CPU**, больше лимита 10 мс;
-  - **WebP** (`output_format=webp`, `output_compression=85`, ответ 0,4 МБ): **4–5 мс CPU**. Решение: в Worker'е рисуем в WebP. Качество акварели в WebP ещё показать владелице.
+  - **WebP** (`output_format=webp`, `output_compression=85`, ответ 0,4 МБ): **4–5 мс CPU**. Решение: в Worker'е рисуем в WebP. Проверено и с записью в R2: 5 мс CPU. Образец WebP на рабочем столе: `svoya-skazka-primery/proba-webp-cloudflare.webp`, качество хорошее.
   - Замер CPU: `wrangler tail geroenok-probe --format json` → `cpuTime`.
 - **Риск:** из дата-центра Cloudflare в Софии OpenAI отвечает 200. Из московского не проверено (check-host с секретным ключом в URL запрещён). При переписывании поставить рисование (Queue-консьюмер) в Европу через `placement` и проверить.
-- Пробу удалить после проверки R2: `npx wrangler delete --name geroenok-probe`.
+- Пробный Worker удалён (код в `cloudflare/probe`, при нужде `npx wrangler deploy` + секреты заново).
+- **Следующий шаг: переписать сервер на Worker** (см. «Хостинг» ниже), в корневом `wrangler.jsonc` добавить `main` и привязки R2/D1/Queues, API на `/api/*`.
 
 **Когда домен привязан:**
 1. Проверить домен из России через API check-host.net (узлы ru1–ru3: Москва, СПб), как делали с findena.ru:
