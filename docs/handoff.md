@@ -6,16 +6,13 @@
 Подробности по коду: `docs/project-brief.md`, `server/README.md`, `server/.env.example`.
 
 ## ▶ Начать отсюда
-Остановились на переезде на Cloudflare. Код к этому готов (коммиты `e7552f4` и следующий, отправлены в `main`). Ждём владелицу.
+Переезд на Cloudflare идёт (26.09):
+- Домен `geroenok.online` уже на Cloudflare (NS nucum/nico), регистратор REG.RU. Старые A-записи на заглушку REG.RU (95.163.244.138, давали ошибку 525) владелица удаляет.
+- Вместо Pages создан **Worker** `svoya-skazka` с подключённым GitHub (Workers Builds: `npx wrangler deploy` при каждом пуше в `main`). Так даже лучше: API потом добавляется в этот же Worker.
+- Настройки в `wrangler.jsonc`: сборка `scripts/build-pages.sh`, статика из `dist/`.
+- Осталось: привязать домен к Worker'у (Settings → Domains & Routes → Add → Custom domain, `geroenok.online` и `www`), затем проверка из РФ.
 
-**Шаги владелицы в Cloudflare** (аккаунт тот же, где findena.ru):
-1. Add a domain → `geroenok.online`, тариф Free. Прописать выданные NS у регистратора.
-   Регистратора ещё не назвала, при необходимости спросить.
-2. Workers & Pages → Create → **Pages** → Connect to Git → репозиторий `svoya-skazka`.
-   Build command: `bash scripts/build-pages.sh`, Build output directory: `dist`.
-3. После первой сборки: Custom domains → `geroenok.online`.
-
-**Когда напишет, что сделала:**
+**Когда домен привязан:**
 1. Проверить домен из России через API check-host.net (узлы ru1–ru3: Москва, СПб), как делали с findena.ru:
    `curl -H "Accept: application/json" "https://check-host.net/check-http?host=https://geroenok.online&node=ru1.node.check-host.net&node=ru2.node.check-host.net&node=ru3.node.check-host.net"`, потом `/check-result/<request_id>`.
    Попросить открыть сайт с мобильного интернета МТС или МегаФона: проверочные узлы стоят в дата-центрах.

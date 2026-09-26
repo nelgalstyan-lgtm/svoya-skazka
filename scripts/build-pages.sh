@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Собирает публичную часть сайта в dist/ для Cloudflare Pages.
-# В Pages: Build command = bash scripts/build-pages.sh, Build output directory = dist.
+# Собирает публичную часть сайта в dist/ для Cloudflare (Worker со статикой, см. wrangler.jsonc).
+# Запускается автоматически из wrangler.jsonc (build.command) при `wrangler deploy`.
 # server/, docs/ и preview/ наружу не публикуются.
 set -euo pipefail
 cd "$(dirname "$0")/.."

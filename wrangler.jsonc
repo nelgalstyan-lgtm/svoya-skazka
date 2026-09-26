@@ -1,0 +1,8 @@
+// Cloudflare Worker: сайт (статика из dist/), позже здесь же будет API на /api/*.
+// Workers Builds запускает `npx wrangler deploy`, сборка идёт через build.command.
+{
+  "name": "svoya-skazka",
+  "compatibility_date": "2026-09-01",
+  "build": { "command": "bash scripts/build-pages.sh" },
+  "assets": { "directory": "./dist" }
+}
