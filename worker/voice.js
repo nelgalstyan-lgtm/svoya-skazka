@@ -15,6 +15,9 @@ const CHUNK = 1500;
 const CONCURRENCY = 3;
 const QUICK_STEP = { retries: { limit: 3, delay: '5 seconds', backoff: 'exponential' }, timeout: '1 minute' };
 const VOICE_STEP = { retries: { limit: 2, delay: '15 seconds', backoff: 'exponential' }, timeout: '5 minutes' };
+const ATTEMPTS = 3;
+const RETRY_MS = 5000;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const TTS_URL = 'https://tts.api.cloud.yandex.net/tts/v3/utteranceSynthesis';
 
 // ---------------------------------------------------------------- текст
@@ -111,14 +114,23 @@ export async function synthesize(env, text) {
   const hints = [{ voice: env.YANDEX_TTS_VOICE || 'ermil' }];
   if (env.YANDEX_TTS_ROLE) hints.push({ role: env.YANDEX_TTS_ROLE });
   if (env.YANDEX_TTS_SPEED) hints.push({ speed: String(env.YANDEX_TTS_SPEED) });
-  const res = await fetch(TTS_URL, {
-    method: 'POST',
-    headers: { Authorization: `Api-Key ${env.YANDEX_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ text, hints, outputAudioSpec: { containerAudio: { containerAudioType: 'MP3' } }, unsafeMode: true }),
-    signal: AbortSignal.timeout(120_000)
-  });
+  let res;
+  try {
+    res = await fetch(TTS_URL, {
+      method: 'POST',
+      headers: { Authorization: `Api-Key ${env.YANDEX_API_KEY}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ text, hints, outputAudioSpec: { containerAudio: { containerAudioType: 'MP3' } }, unsafeMode: true }),
+      signal: AbortSignal.timeout(120_000)
+    });
+  } catch (error) {
+    throw Object.assign(new Error(`SpeechKit: ${error?.cause?.code || error?.message || error}`), { temporary: true });
+  }
   const bytes = new Uint8Array(await res.arrayBuffer());
-  if (!res.ok) throw new Error(`SpeechKit ${res.status}: ${new TextDecoder().decode(bytes.subarray(0, 300))}`);
+  if (!res.ok) {
+    const error = new Error(`SpeechKit ${res.status}: ${new TextDecoder().decode(bytes.subarray(0, 300))}`);
+    error.temporary = res.status >= 500 || res.status === 429;
+    throw error;
+  }
   const audio = concat(audioChunks(bytes));
   if (!audio.length) throw new Error(`SpeechKit: no audio (${new TextDecoder().decode(bytes.subarray(0, 300))})`);
   return audio;
@@ -148,12 +160,16 @@ export async function voiceFlow(ctx) {
   for (let n = 0; n < jobs.length; n += CONCURRENCY) {
     const batch = jobs.slice(n, n + CONCURRENCY);
     const ok = await Promise.all(batch.map((j) => step.do(`voice-${j.ti}-${j.k}`, VOICE_STEP, async () => {
-      try {
-        await store.putMedia(tmp(j.ti, j.k), await synthesize(env, j.text));
-        return true;
-      } catch (error) {
-        log(`[voice] ${id}: track ${j.ti} part ${j.k}: ${error?.message || error}`);
-        return false;
+      // сбой связи или перегрузка сервиса — повторяем внутри шага (ошибка шага остановила бы весь Workflow)
+      for (let attempt = 1; ; attempt += 1) {
+        try {
+          await store.putMedia(tmp(j.ti, j.k), await synthesize(env, j.text));
+          return true;
+        } catch (error) {
+          log(`[voice] ${id}: track ${j.ti} part ${j.k}, attempt ${attempt}: ${error?.message || error}`);
+          if (attempt >= ATTEMPTS || !error.temporary) return false;
+          await sleep(Number(env.VOICE_RETRY_MS ?? RETRY_MS) * attempt); // в тестах VOICE_RETRY_MS=0
+        }
       }
     })));
     batch.forEach((j, i) => { if (ok[i]) done.add(`${j.ti}-${j.k}`); });

@@ -95,20 +95,23 @@ function stubOpenAI({ failKinds = [], failOnce = [] } = {}) {
 }
 
 // Yandex SpeechKit v3: построчный JSON с кусками mp3 в base64 (ставится поверх stubOpenAI)
-function stubYandex({ fail = false } = {}) {
+function stubYandex({ fail = false, dropOnce = 0 } = {}) {
   const calls = [];
+  const sent = []; // что реально вернули (без оборванных запросов)
   const inner = globalThis.fetch;
   globalThis.fetch = async (url, init) => {
     if (!String(url).startsWith('https://tts.api.cloud.yandex.net/')) return inner(url, init);
     const body = JSON.parse(init.body);
     calls.push({ auth: init.headers.Authorization, text: body.text, voice: body.hints[0].voice });
+    if (dropOnce > 0) { dropOnce -= 1; throw new TypeError('fetch failed'); } // обрыв связи
     if (fail) return new Response('{"error":"quota"}', { status: 429 });
     const line = (s) => `{"result":{"audioChunk":{"data":"${Buffer.from(s).toString('base64')}"},"textChunk":{"text":"\\"data\\""}}}`;
+    sent.push(`A${calls.length}B${calls.length}`);
     return new Response(`${line(`A${calls.length}`)}
 ${line(`B${calls.length}`)}
 `, { status: 200 });
   };
-  return { calls, restore: () => { globalThis.fetch = inner; } };
+  return { calls, sent, restore: () => { globalThis.fetch = inner; } };
 }
 
 const PHOTO = `data:image/jpeg;base64,${Buffer.from('photo-bytes').toString('base64')}`;
@@ -410,9 +413,9 @@ test('озвучка: текст режется на куски по абзац�
 });
 
 test('озвучка после оплаты: главы голосом Ермиля в R2, книга отдаёт их; без ключа — голос устройства', async () => {
-  const env = fakeEnv({ YANDEX_API_KEY: 'ya-key' });
+  const env = fakeEnv({ YANDEX_API_KEY: 'ya-key', VOICE_RETRY_MS: 0 });
   const ai = stubOpenAI();
-  const ya = stubYandex();
+  const ya = stubYandex({ dropOnce: 1 }); // первый запрос обрывается — кусок повторяется
   try {
     const id = await order(env, { coloring: true });
     assert.equal(ya.calls.length, 0, 'превью не озвучиваем');
@@ -424,7 +427,8 @@ test('озвучка после оплаты: главы голосом Ерми
     const src = s.result.audio[0].src;
     assert.match(src, /^\/api\/media\/[a-f0-9-]{36}\/track-1-[a-f0-9]{8}\.mp3$/);
     const mp3 = await (await api(env, src)).text();
-    assert.equal(mp3, ya.calls.map((_, i) => `A${i + 1}B${i + 1}`).join(''), 'куски склеены по порядку');
+    assert.equal(mp3, ya.sent.join(''), 'куски склеены по порядку, оборванный кусок повторён');
+    assert.equal(ya.calls.length, ya.sent.length + 1);
     assert.equal(env.BUCKET.keys('voice-tmp/').length, 0, 'временные куски удалены');
 
     // правка текста — переозвучивается только изменившееся, старый файл удаляется
@@ -446,7 +450,7 @@ test('озвучка после оплаты: главы голосом Ерми
 });
 
 test('озвучка не удалась — книга готова, «Слушать» остаётся голосом устройства', async () => {
-  const env = fakeEnv({ YANDEX_API_KEY: 'ya-key' });
+  const env = fakeEnv({ YANDEX_API_KEY: 'ya-key', VOICE_RETRY_MS: 0 });
   const ai = stubOpenAI();
   const ya = stubYandex({ fail: true });
   try {
