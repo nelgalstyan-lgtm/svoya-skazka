@@ -244,7 +244,13 @@ export async function handleApi(request, env) {
   const parts = url.pathname.split('/').filter(Boolean); // ['api', ...]
 
   if (parts[1] === 'health' && method === 'GET') {
-    return json({ ok: true, providers: describeProviders(), heroIllustrations: Boolean(env.OPENAI_API_KEY || env.GEMINI_API_KEY), guaranteedFallback: true });
+    const out = { ok: true, colo: request.cf?.colo || null, providers: describeProviders(), heroIllustrations: Boolean(env.OPENAI_API_KEY || env.GEMINI_API_KEY), guaranteedFallback: true };
+    // ?openai=1 — отвечает ли OpenAI из этого дата-центра Cloudflare (из РФ OpenAI запросы не принимает); бесплатный запрос
+    if (url.searchParams.get('openai') === '1' && env.OPENAI_API_KEY && !(await limited(env.EDIT_LIMITER, `${clientIp(request)}:health`))) {
+      const r = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } }).catch(() => null);
+      out.openai = r ? r.status : 'network error';
+    }
+    return json(out);
   }
   if (parts[1] === 'img' && parts.length === 4 && method === 'GET') return image(store, parts[2], parts[3]);
   if (parts[1] === 'book') {
