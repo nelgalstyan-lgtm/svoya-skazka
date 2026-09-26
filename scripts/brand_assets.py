@@ -61,6 +61,22 @@ CROPS = {
 # Светлые версии с прозрачностью — для тёмного фона (подвал, панель книги), где «умножение» не работает
 LIGHT = {'logo-wordmark-light': (LOGO, (250, 776, 1025, 950), (220, 440), (0xFB, 0xF3, 0xE3))}
 
+# С настоящей прозрачностью (PNG) — где «умножение» не годится: печать на сертификате (html2canvas для PDF его не умеет)
+ALPHA = {'logo-mark-alpha': (LOGO, (470, 158, 830, 530), 160), 'item-star-alpha': (CANON, (746, 1079, 805, 1156), 96)}
+
+
+def color_to_alpha(img, paper):
+    """Бумага → прозрачность, полупрозрачность акварели сохраняется."""
+    p = np.asarray(img).astype(np.float64) / 255
+    c = np.asarray(paper, dtype=np.float64) / 255
+    below = np.where(p < c, (c - p) / np.maximum(c, 1e-6), 0)
+    above = np.where(p > c, (p - c) / np.maximum(1 - c, 1e-6), 0)
+    alpha = np.clip(np.maximum(below, above).max(axis=2), 0, 1)
+    alpha = np.clip((alpha - 0.07) / 0.93, 0, 1)
+    rgb = np.clip((p - c) / np.maximum(alpha, 1e-6)[..., None] + c, 0, 1)
+    return Image.fromarray((np.dstack([rgb, alpha]) * 255).round().astype(np.uint8), 'RGBA')
+
+
 # Над надписью заканчиваются цветы под фигурой: закрашиваем бумагой всё правее «Г» выше строки 792
 ERASE = {'logo-wordmark': [(420, 776, 1025, 792)], 'logo-wordmark-light': [(420, 776, 1025, 792)]}
 
@@ -124,6 +140,12 @@ def main():
             h = round(cut.height * w / cut.width)
             cut.resize((w, h), Image.LANCZOS).save(OUT / f'{name}-{w}.webp', 'WEBP', quality=90, method=6)
         print(f'{name}: {cut.size} -> {widths}')
+    for name, (src, box, width) in ALPHA.items():
+        img = Image.open(SRC / src).convert('RGB').crop(box)
+        cut = color_to_alpha(img, paper_color(img))
+        cut = cut.crop(cut.getbbox())
+        cut.resize((width, round(cut.height * width / cut.width)), Image.LANCZOS).save(OUT / f'{name}.png', optimize=True)
+        print(f'{name}: {cut.size} -> {width}')
 
 if __name__ == '__main__':
     main()

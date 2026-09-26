@@ -247,7 +247,14 @@
     page.appendChild(h('div', 'bk-cert-text', c.text));
     var foot = h('div', 'bk-cert-foot');
     var d = h('div', '', c.date); d.appendChild(h('b', '', 'дата'));
-    var sg = h('div', '', 'Героёнок'); sg.appendChild(h('b', '', 'подпись'));
+    // подпись: печать с Героёнком (PNG с прозрачностью — переживает сборку PDF) и росчерк «Героёнок»
+    var sg = h('div', 'bk-cert-sign');
+    var seal = document.createElement('img');
+    seal.className = 'bk-cert-seal'; seal.src = 'assets/brand/logo-mark-alpha.png'; seal.alt = 'Печать Героёнка';
+    var hand = h('div', 'bk-cert-hand');
+    hand.appendChild(h('span', 'bk-cert-signature', 'Героёнок'));
+    hand.appendChild(h('b', '', 'хранитель историй'));
+    sg.append(seal, hand);
     foot.append(d, sg);
     page.appendChild(foot);
     return { page: page, folio: null };

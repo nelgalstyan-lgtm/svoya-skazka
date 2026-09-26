@@ -519,28 +519,21 @@ section.tight{ padding:56px 0; }
 
 <section class="tight">
   <div class="container">
-    <div class="grid grid-3" style="margin-bottom:42px;">
-      <div class="book3d-stage"><div class="book3d"><div class="book3d-back"></div><div class="book3d-pages"></div><div class="book3d-spine"></div>
-        <div class="book3d-cover"><img src="assets/brand/scene-castle-gate-640.webp" alt="" loading="lazy"><div class="book3d-title"><small>Сказка · 2–7 лет</small>Милена и тайна светящегося камня</div><div class="book3d-hero">Милена</div></div></div></div>
-      <div class="book3d-stage"><div class="book3d"><div class="book3d-back"></div><div class="book3d-pages"></div><div class="book3d-spine"></div>
-        <div class="book3d-cover"><img src="assets/brand/scene-ship-deck-640.webp" alt=""><div class="book3d-title"><small>Большая история · 6–16 лет</small>Милена и тайна старой карты</div><div class="book3d-hero">Милена</div></div></div></div>
-      <div class="book3d-stage"><div class="book3d"><div class="book3d-back"></div><div class="book3d-pages"></div><div class="book3d-spine"></div>
-        <div class="book3d-cover"><img src="assets/examples/alex-3d/cover-480.webp" alt="Обложка книги «Алекс и тайна Ани»: Алекс у Львиных ворот Ани" loading="lazy"><div class="book3d-title"><small>Большая история · 3D-мультфильм</small>Алекс и тайна Ани</div><div class="book3d-hero">Алекс</div></div></div></div></div>
+    <div class="book-shelf">
+      <a class="book3d-link" href="book-pro.html?demo=alex3d" data-src="book-pro.html?demo=alex3d" aria-label="Открыть книгу «Алекс и тайна Ани»">
+        <div class="book3d-stage"><div class="book3d"><div class="book3d-back"></div><div class="book3d-pages"></div><div class="book3d-spine"></div>
+          <div class="book3d-cover"><img src="assets/examples/alex-3d/cover-480.webp" alt="" loading="lazy"><div class="book3d-title"><small>Большая история · 3D-мультфильм</small>Алекс и тайна Ани</div><div class="book3d-hero">Алекс</div></div></div></div>
+        <span class="book3d-open">Открыть книгу ↓</span>
+      </a>
     </div>
 
     <div class="flip">
       <div class="flip-tabs" aria-label="Образцы книг">
-        <button type="button" class="is-active" data-src="book.html?demo=1">«Сказка»</button>
-        <button type="button" data-src="book-pro.html?demo=alex3d">3D-мультфильм · Алекс, 13 лет</button>
-        <button type="button" data-src="book-pro.html?demo=travel&amp;design=pirates">Большая история · пираты</button>
-        <button type="button" data-src="book-pro.html?demo=travel&amp;design=jungle">Большая история · джунгли</button>
-        <button type="button" data-src="book-pro.html?demo=travel&amp;design=rope">Для 11–16 лет · пергамент</button>
-        <button type="button" data-src="book-pro.html?demo=newyear&amp;design=cookies">Новый год · пряничное</button>
-        <button type="button" data-src="book-pro.html?demo=newyear&amp;design=elves">Новый год · эльфийское</button>
+        <button type="button" class="is-active" data-src="book-pro.html?demo=alex3d">«Алекс и тайна Ани» · 3D-мультфильм, 13 лет</button>
       </div>
-      <iframe class="flip-frame" id="flipFrame" src="book.html?demo=1" title="Образец книги" loading="lazy"></iframe>
+      <iframe class="flip-frame" id="flipFrame" src="book-pro.html?demo=alex3d" title="Образец книги" loading="lazy"></iframe>
     </div>
-    <p class="hint" style="text-align:center; margin-top:14px;">Прокручивайте страницы внутри окна. «3D-мультфильм · Алекс» — настоящая книга, ребёнок на обложке и на каждой иллюстрации (публикуем с согласия родителей); страниц раскраски в этом образце нет, в вашей «Большой истории» они будут. В остальных образцах вместо иллюстраций с ребёнком стоят фоновые сцены — в вашей книге на них будет ваш ребёнок.</p>
+    <p class="hint" style="text-align:center; margin-top:14px;">Прокручивайте страницы внутри окна. Это настоящая книга: ребёнок на обложке и на каждой иллюстрации (публикуем с согласия родителей); страниц раскраски в этом образце нет, в вашей «Большой истории» они будут.</p>
   </div>
 </section>
 
@@ -654,6 +647,21 @@ section.tight{ padding:56px 0; }
       document.querySelectorAll('.audio-track').forEach(function (li) { li.classList.toggle('is-playing', li.contains(a)); });
     });
     a.addEventListener('ended', function () { if (tracks[i + 1]) tracks[i + 1].play(); });
+  });
+})();
+</script>
+<script>
+(function () {
+  document.querySelectorAll('.book3d-link').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      var frame = document.getElementById('flipFrame');
+      if (!frame) return; // без листалки — обычный переход по ссылке
+      e.preventDefault();
+      var src = link.getAttribute('data-src');
+      if (frame.getAttribute('src') !== src) frame.setAttribute('src', src);
+      document.querySelectorAll('.flip-tabs button').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-src') === src); });
+      frame.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   });
 })();
 </script>

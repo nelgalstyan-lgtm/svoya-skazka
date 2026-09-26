@@ -90,6 +90,11 @@
 .bk-cert-text{ position:absolute; left:70px; right:70px; top:400px; font:italic 20px/33px 'Tinos',serif; color:var(--ink); }
 .bk-cert-foot{ position:absolute; left:80px; right:80px; bottom:110px; display:flex; justify-content:space-between; font:16px/1.3 'Tinos',serif; color:var(--brown); }
 .bk-cert-foot b{ display:block; margin-top:6px; padding-top:6px; border-top:1px solid var(--line); font-weight:400; font-size:13px; color:var(--muted); }
+.bk-cert-foot{ align-items:flex-end; }
+.bk-cert-sign{ display:flex; align-items:center; gap:12px; text-align:center; }
+.bk-cert-seal{ width:74px; height:74px; object-fit:contain; padding:6px; border-radius:50%; border:2px solid rgba(138,90,43,.55); box-shadow:0 0 0 4px rgba(201,154,75,.18); transform:rotate(-6deg); }
+.bk-cert-signature{ display:block; font:44px/1 'Marck Script',cursive; color:#6b3f1c; transform:rotate(-4deg); margin-bottom:2px; }
+.bk-cert-hand b{ margin-top:4px; }
 .bk-coloring{ background:#fff !important; }
 .bk-coloring-title{ position:absolute; left:0; right:0; top:40px; text-align:center; font:34px/1 'Marck Script',cursive; color:#8a5a2b; }
 .bk-coloring-img{ position:absolute; left:34px; top:96px; width:calc(100% - 68px); height:calc(100% - 130px); object-fit:contain; }

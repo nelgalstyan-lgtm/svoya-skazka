@@ -492,3 +492,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* пара «фото → иллюстрация»: обе картинки одной пропорции 3:4 (атрибут height иначе перебивает aspect-ratio) */
 .before-after img{ height:auto; }
+
+/* «Примеры»: полка с настоящими книгами — обложка открывает книгу в листалке */
+.book-shelf{ display:flex; justify-content:center; gap:40px; flex-wrap:wrap; margin-bottom:42px; }
+.book3d-link{ display:flex; flex-direction:column; align-items:center; text-decoration:none; color:var(--btn); border-radius:16px; }
+.book3d-link:hover .book3d{ transform:rotateY(-12deg) rotateX(2deg); }
+.book3d-open{ margin-top:4px; font-weight:700; text-decoration:underline; text-underline-offset:4px; text-decoration-color:rgba(138,90,54,.35); }
+.spread-source{ margin:18px 0 0; font-size:14px; color:var(--text-soft); }
+.spread-source a{ color:var(--btn); font-weight:700; }

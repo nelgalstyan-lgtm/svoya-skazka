@@ -152,11 +152,15 @@ body.t-newyear .sheet{ background:
 .cert::before{ content:""; position:absolute; inset:40px; border:3px double var(--gold-dark); border-radius:10px; pointer-events:none; }
 .cert-kicker{ font-size:15px; letter-spacing:.4em; padding-left:.4em; text-transform:uppercase; color:var(--text-soft); }
 .cert-title{ margin-top:14px; font-family:var(--font-display); font-weight:700; font-size:46px; color:var(--ink); }
-.cert-medal{ margin:34px 0 10px; font-size:84px; line-height:1; }
+.cert-medal{ margin:30px 0 8px; width:84px; height:auto; }
 .cert-name{ font-family:var(--font-script); font-weight:700; font-size:76px; color:var(--gold-dark); line-height:1.1; }
 .cert-text{ margin:26px 110px 0; font-family:var(--font-display); font-size:19px; line-height:1.8; color:var(--text); }
 .cert-foot{ display:flex; justify-content:space-between; width:calc(100% - 220px); margin-top:70px; font-size:15px; color:var(--text-soft); }
 .cert-foot b{ display:block; margin-top:6px; padding-top:6px; border-top:1px solid var(--line); font-weight:400; }
+.cert-foot{ align-items:flex-end; }
+.cert-sign{ display:flex; align-items:center; gap:14px; }
+.cert-seal{ width:84px; height:84px; object-fit:contain; padding:6px; border-radius:50%; border:2px solid var(--gold-dark); box-shadow:0 0 0 4px rgba(201,154,75,.18); transform:rotate(-6deg); }
+.cert-signature{ display:block; font-family:var(--font-script); font-weight:700; font-size:46px; line-height:1; color:var(--gold-dark); transform:rotate(-4deg); }
 
 /* Раскраска: контурная картинка на белом листе */
 /* Закрытая страница превью: остальная книга — после оплаты */
@@ -449,12 +453,18 @@ body.t-newyear .sheet{ background:
       const cert = sheet('cert');
       cert.appendChild(el('div', 'cert-kicker', c.kicker));
       cert.appendChild(el('div', 'cert-title', c.title));
-      cert.appendChild(el('div', 'cert-medal', '🏅'));
+      const medal = el('img', 'cert-medal'); medal.src = 'assets/brand/item-star-alpha.png'; medal.alt = '';
+      cert.appendChild(medal);
       cert.appendChild(el('div', 'cert-name', c.name));
       cert.appendChild(el('p', 'cert-text', c.text));
       const foot = el('div', 'cert-foot');
       const d = el('div', '', c.date); d.appendChild(el('b', '', 'дата'));
-      const sgn = el('div', '', 'Героёнок'); sgn.appendChild(el('b', '', 'подпись'));
+      // подпись: печать с Героёнком и росчерк «Героёнок» (PNG с прозрачностью — переживает сборку PDF)
+      const sgn = el('div', 'cert-sign');
+      const seal = el('img', 'cert-seal'); seal.src = 'assets/brand/logo-mark-alpha.png'; seal.alt = 'Печать Героёнка';
+      const hand = el('div', 'cert-hand');
+      hand.append(el('span', 'cert-signature', 'Героёнок'), el('b', '', 'хранитель историй'));
+      sgn.append(seal, hand);
       foot.append(d, sgn);
       cert.appendChild(foot);
     }
@@ -546,7 +556,7 @@ body.t-newyear .sheet{ background:
     box.append(art, el('h2', '', 'Здесь пока нет книги'), el('p', '', 'Героёнок отправится искать историю, как только вы расскажете о ребёнке. Заполните анкету — бесплатное превью появится здесь через пару минут.'));
     const actions = el('div', 'gw-actions');
     const a1 = el('a', 'gw-btn', 'К анкете'); a1.href = 'create.html';
-    const a2 = el('a', 'gw-btn gw-ghost', 'Посмотреть пример'); a2.href = 'book.html?demo=1';
+    const a2 = el('a', 'gw-btn gw-ghost', 'Посмотреть пример'); a2.href = 'book-pro.html?demo=alex3d';
     actions.append(a1, a2);
     box.appendChild(actions);
     root.appendChild(box);
