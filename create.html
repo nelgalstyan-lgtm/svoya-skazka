@@ -1106,6 +1106,23 @@ section.tight{ padding:56px 0; }
       return 'Добавляем последние штрихи…';
     }
 
+    // Анкета + фото файлами (multipart): сервер разбирает их встроенными средствами, почти не тратя процессор
+    function dataUrlToBlob(src) {
+      const comma = src.indexOf(',');
+      const mime = (/^data:([^;,]+)/.exec(src) || [])[1] || 'image/jpeg';
+      const bin = atob(src.slice(comma + 1));
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new Blob([bytes], { type: mime });
+    }
+
+    function orderForm(answers, photos) {
+      const form = new FormData();
+      form.append('answers', JSON.stringify(answers));
+      photos.forEach(function (src, i) { form.append('photo', dataUrlToBlob(src), 'photo-' + (i + 1)); });
+      return form;
+    }
+
     async function fetchJson(url, options, timeoutMs) {
       const controller = new AbortController();
       const timer = setTimeout(function () { controller.abort(); }, timeoutMs);
@@ -1224,8 +1241,8 @@ section.tight{ padding:56px 0; }
         return;
       }
 
-      // Фото уходит на сервер вместе с анкетой, но не попадает в то, что сохраняется в localStorage (answers)
-      const payload = selectedPhotos.length ? Object.assign({ photos: selectedPhotos.slice() }, answers) : answers;
+      // Фото уходят на сервер файлами вместе с анкетой, но не попадают в то, что сохраняется в localStorage (answers)
+      const payload = orderForm(answers, selectedPhotos);
 
       const myRun = ++runId;
       const startedAt = Date.now();
@@ -1236,11 +1253,8 @@ section.tight{ padding:56px 0; }
       setStatus('Начинаем писать вашу сказку…');
 
       try {
-        const data = await fetchJson(API_BASE + '/api/book/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }, 12000);
+        // до минуты: на мобильном интернете фото загружаются не сразу
+        const data = await fetchJson(API_BASE + '/api/book/generate', { method: 'POST', body: payload }, 60000);
 
         if (!data.jobId) throw new Error('нет jobId');
         if (answers.tariff === 'big') { location.href = 'book-pro.html?job=' + encodeURIComponent(data.jobId); return; }

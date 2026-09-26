@@ -40,6 +40,26 @@ function parsePhotos(body) {
   return list.slice(0, MAX_PHOTOS).map(parsePhoto).filter(Boolean);
 }
 
+/**
+ * Анкета заказа → { body, photos }. Новая анкета шлёт multipart (answers — JSON, photo — файлы): его Cloudflare
+ * разбирает встроенными средствами. Старая (закэшированная в браузере) — JSON с фото в data:URL: разбор такого
+ * JSON на мегабайт с лишним съедает весь лимит процессора (10 мс), поэтому он оставлен только для совместимости.
+ */
+async function readOrder(request) {
+  if (Number(request.headers.get('content-length') || 0) > BODY_MAX_BYTES) return null;
+  if (/multipart\/form-data/i.test(request.headers.get('content-type') || '')) {
+    const form = await request.formData().catch(() => null);
+    if (!form) return null;
+    let body;
+    try { body = JSON.parse(String(form.get('answers') || '{}')); } catch { return null; }
+    const files = form.getAll('photo').filter((f) => typeof f === 'object' && f && /^image\/(jpeg|png|webp)$/.test(f.type) && f.size > 0 && f.size <= PHOTO_MAX_BYTES);
+    const photos = await Promise.all(files.slice(0, MAX_PHOTOS).map(async (f) => ({ mime: f.type, bytes: new Uint8Array(await f.arrayBuffer()) })));
+    return { body, photos };
+  }
+  const body = await readJson(request);
+  return body && { body, photos: parsePhotos(body) };
+}
+
 async function readJson(request) {
   if (Number(request.headers.get('content-length') || 0) > BODY_MAX_BYTES) return null;
   return request.json().catch(() => null);
@@ -56,8 +76,9 @@ const clientIp = (request) => request.headers.get('cf-connecting-ip') || 'local'
 // ---------------------------------------------------------------- маршруты
 
 async function generate(request, env, store) {
-  const body = await readJson(request);
-  if (!body) return fail(400, 'Не получилось прочитать анкету. Попробуйте ещё раз.');
+  const order = await readOrder(request);
+  if (!order) return fail(400, 'Не получилось прочитать анкету. Попробуйте ещё раз.');
+  const { body, photos } = order;
   const big = body.tariff === 'big';
   const ip = clientIp(request);
   // большая книга — 7 запросов к ИИ и 10 иллюстраций, поэтому лимит строже и считается отдельно
@@ -66,7 +87,6 @@ async function generate(request, env, store) {
   }
 
   // Главная ценность книги — ребёнок, похожий на себя, на каждой иллюстрации: без фото заказ не принимаем
-  const photos = parsePhotos(body);
   if (!photos.length) return fail(400, 'Загрузите хотя бы одно фото ребёнка — по нему рисуются все иллюстрации книги.');
 
   const input = {};

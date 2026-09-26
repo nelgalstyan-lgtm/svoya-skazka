@@ -95,6 +95,27 @@ async function order(env, extra = {}) {
 
 const status = async (env, id) => (await api(env, `/api/book/${id}/status`)).json();
 
+test('новая анкета: фото файлами (multipart)', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  try {
+    const form = new FormData();
+    form.append('answers', JSON.stringify({ ...FORM, tariff: '' }));
+    form.append('photo', new Blob([Buffer.from('photo-bytes')], { type: 'image/jpeg' }), 'photo-1');
+    form.append('photo', new Blob(['not an image'], { type: 'text/plain' }), 'x.txt');
+    const res = await handleApi(new Request('https://geroenok.online/api/book/generate', { method: 'POST', body: form }), env);
+    const data = await res.json();
+    assert.equal(res.status, 200, JSON.stringify(data));
+    assert.deepEqual(env.BUCKET.keys('photos/'), [`photos/${data.jobId}/0`]);
+    assert.equal(new TextDecoder().decode(env.BUCKET.items.get(`photos/${data.jobId}/0`).bytes), 'photo-bytes');
+    assert.equal((await status(env, data.jobId)).status, 'completed');
+
+    const empty = new FormData();
+    empty.append('answers', JSON.stringify(FORM));
+    assert.equal((await handleApi(new Request('https://geroenok.online/api/book/generate', { method: 'POST', body: empty }), env)).status, 400);
+  } finally { ai.restore(); }
+});
+
 // без ключей ИИ текст берётся из шаблона — так тесты не ходят в сеть за текстом
 for (const key of ['GEMINI_API_KEY', 'GROQ_API_KEY', 'OPENROUTER_API_KEY', 'CEREBRAS_API_KEY', 'OPENAI_API_KEY']) delete process.env[key];
 
