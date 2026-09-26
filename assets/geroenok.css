@@ -3,10 +3,9 @@
  * Канон: docs/brand/character-sheet.png (палитра, персонаж, предметы). Подключается ПОСЛЕ встроенных стилей
  * страницы и переопределяет их переменные и общие блоки (шапка, кнопки, карточки, подвал) — на всех страницах сразу.
  *
+ * Шрифты (Lora, PT Sans, Caveat) подключает сама страница <link> перед этим файлом.
  * Палитра снята с листа персонажа. Контраст текста (WCAG): основной 12:1, приглушённый 6:1, на кнопке 5,5:1.
  */
-
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Caveat:wght@500;600;700&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap');
 
 :root{
   /* --- бумага --- */
@@ -25,7 +24,8 @@
   --blue-deep:  #4F6E75;   /* книга со звездой — для текста и значков */
   --peach:      #EEC8B4;   /* ушки */
   --brass:      #C99A4B;   /* ключ, звезда — только декор и крупные значки */
-  --brass-text: #8C6428;   /* латунь для текста */
+  --brass-light:#D4A95F;   /* подложка значков под тёмный текст (5,3:1) */
+  --brass-text: #7E5A26;   /* латунь для текста (контраст ≥5:1 на бумаге и креме) */
 
   /* --- переменные, которые уже используют страницы: теперь в палитре листа --- */
   --ink:        var(--walnut);
@@ -218,7 +218,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 .price-card{ background:var(--card); }
 .price-card.is-popular{ border-color:var(--brass); box-shadow:0 0 0 1px var(--brass), var(--shadow-soft); }
-.price-card .badge{ background:var(--brass); color:var(--walnut); border-radius:10px; }
+.price-card .badge{ background:var(--brass-light); color:var(--walnut); border-radius:10px; }
+.flip-tabs button.is-active{ background:var(--brass-light); border-color:var(--brass-light); color:var(--walnut); }
 .price-card li::before{ content:"★"; color:var(--brass); font-size:13px; top:3px; }
 
 .theme-card{ border:1px solid var(--line); box-shadow:var(--shadow-paper); transition:transform .25s ease, box-shadow .25s ease; }
