@@ -34,3 +34,7 @@ preview/*.pdf
 # Фото детей (временно, до оплаты) — никогда в git
 **/data/photos/
 dist/
+
+# Секреты для локального wrangler dev
+.dev.vars
+.wrangler/

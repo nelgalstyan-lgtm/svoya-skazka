@@ -149,11 +149,17 @@ export const PREVIEW_IMAGES = 1;
  * Рисует ребёнка на обложке и на страницах (по одному листу персонажа). preview — только первые PREVIEW_IMAGES
  * страниц: остальные дорисуются после оплаты (см. complete.js). Сбой любой картинки не мешает выдаче книги.
  */
-async function attachHeroImages(rawInput, story, { illustrate, library, deadlineAt, progress, log, preview = false }) {
+/** Ребёнок на каждой странице: у каждой страницы есть описание иллюстрации, у книги — описание обложки. */
+export function prepareHeroPages(rawInput, story) {
+  const library = sceneLibraryFor(normalizeInput(rawInput).kind, rawInput.occasion);
+  story.pages.forEach((p) => { p.hero = true; if (!p.heroBrief) p.heroBrief = fallbackBrief(p.scene, library); });
+  story.coverBrief = story.coverBrief || `The child stands at the heart of the story: ${library.scenes[story.pages[0].scene] || 'a magical place'}, looking ahead with excitement.`;
+  return story;
+}
+
+async function attachHeroImages(rawInput, story, { illustrate, deadlineAt, progress, log, preview = false }) {
   if (!photosFrom(rawInput).length) return;
-  const pages = story.pages;
-  pages.forEach((p) => { p.hero = true; if (!p.heroBrief) p.heroBrief = fallbackBrief(p.scene, library); });
-  const coverBrief = story.coverBrief || `The child stands at the heart of the story: ${library.scenes[pages[0].scene] || 'a magical place'}, looking ahead with excitement.`;
+  const { pages, coverBrief } = prepareHeroPages(rawInput, story);
   const art = await illustrateBook({ ...rawInput, eyes: normalizeInput(rawInput).eyes }, {
     scenes: pages.map((p) => ({ brief: p.heroBrief })),
     coverBrief,
@@ -188,7 +194,7 @@ export async function generateStory(rawInput, {
   imageBudgetMs = Number(process.env.SHORT_IMAGE_BUDGET_MS || 4 * 60_000)
 } = {}) {
   const started = Date.now();
-  const art = (story) => attachHeroImages(rawInput, story, { illustrate, library, deadlineAt: Date.now() + imageBudgetMs, progress, log, preview });
+  const art = (story) => attachHeroImages(rawInput, story, { illustrate, deadlineAt: Date.now() + imageBudgetMs, progress, log, preview });
   const c = normalizeInput(rawInput);
   const name = c.name;
   const library = sceneLibraryFor(c.kind, rawInput.occasion);

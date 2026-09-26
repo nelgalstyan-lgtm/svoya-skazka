@@ -356,7 +356,7 @@
         chapter.blocks.forEach(function (block, bi) {
           if (block.t === 'image') {
             // номер считаем и у пропущенной — он совпадает с номером иллюстрации на сервере (перерисовка)
-            if (opts && opts.onlyGenerated && !/^data:/.test(block.src || '')) { imageIndex++; return; }
+            if (opts && opts.onlyGenerated && !/^(data:|\/api\/img\/)/.test(block.src || '')) { imageIndex++; return; }
             sheets.push(illustrationSheet(root, block, imageIndex++));
             cur = null; // после иллюстрации текст продолжается на новой странице
             return;

@@ -229,8 +229,8 @@ body.t-newyear .sheet{ background:
   }
 
   // Адрес бэкенда — как на странице анкеты
-  const isLocal = location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
-  const API_BASE = window.SKAZKA_API_BASE || (isLocal ? 'http://localhost:3000' : '');
+  // API на том же адресе, что и сайт (локально — `npx wrangler dev`)
+  const API_BASE = window.SKAZKA_API_BASE || '';
 
   // Книга с иллюстрациями не помещается в хранилище браузера — по ссылке ?job= берём её с сервера
   // Книга ещё рисуется (открыли по ссылке раньше времени) — показываем ход работы и ждём

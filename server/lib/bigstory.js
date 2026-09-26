@@ -562,34 +562,108 @@ async function attachHeroImages(input, plan, chapters, { illustrate, progress, d
 
 let defaultProviders = null;
 
+function stepOptions({
+  providers = (defaultProviders ??= buildProviders(process.env)),
+  health = sharedHealth,
+  log = console.warn,
+  stepDeadlineMs = 75_000,
+  attemptTimeoutMs = 45_000
+} = {}) {
+  return { providers, health, log, stepDeadlineMs, attemptTimeoutMs };
+}
+
+/**
+ * Шаг 1: план книги → { plan, provider } или null (ИИ не справился или не настроен — тогда книга из шаблона).
+ * Шаги вынесены отдельно, чтобы на Cloudflare каждый шёл своим запуском (лимит процессора — на запуск).
+ */
+export async function writePlan(input, options = {}) {
+  const { providers, health, log, stepDeadlineMs, attemptTimeoutMs } = stepOptions(options);
+  if (!providers.length) {
+    log('[big] no AI providers configured, using template book');
+    return null;
+  }
+  const c = normalizeInput(input);
+  const library = sceneLibraryFor(c.kind, c.occasion);
+  const themeKey = themeKeyFor(c);
+  try {
+    const r = await generateWithFailover(providers, buildPlanPrompt(input), {
+      validate: (raw) => validatePlan(raw, c.name, { library, themeKey, design: input.design }),
+      deadlineAt: Date.now() + stepDeadlineMs, attemptTimeoutMs, health, log
+    });
+    return { plan: r.value, provider: r.provider };
+  } catch (error) {
+    log(`[big] plan failed, using template book: ${error?.message}`);
+    return null;
+  }
+}
+
+/**
+ * Шаг 2: глава i → { chapter, provider, kind }. Всегда возвращает главу:
+ * kind 'ok' — прошла все проверки, 'soft' — лучшая из «почти годных», 'fallback' — собрана из плана.
+ */
+export async function writeChapter(input, plan, i, summaries, tail, options = {}) {
+  const { providers, health, log, stepDeadlineMs, attemptTimeoutMs } = stepOptions(options);
+  const c = normalizeInput(input);
+  const name = c.name;
+  const library = sceneLibraryFor(c.kind, c.occasion);
+  const names = nameTokens(c);
+  let best = null;
+  let softFails = 0;
+  const validate = (raw) => {
+    const ch = validateChapter(raw, plan.chapters[i], name, names, c.girl, library);
+    if (!ch.issues.length) return ch;
+    // замечание не критично: запоминаем лучший вариант; после двух таких попыток берём его, не тратя время
+    if (!best || ch.issues.length < best.issues.length || (ch.issues.length === best.issues.length && ch.wordCount > best.wordCount)) best = ch;
+    softFails += 1;
+    if (softFails >= 2) return best;
+    throw new Error(`chapter ${i + 1}: ${ch.issues.join('; ')}`);
+  };
+  try {
+    const r = await generateWithFailover(providers, buildChapterPrompt(input, plan, i, summaries, tail), {
+      validate, deadlineAt: Date.now() + stepDeadlineMs, attemptTimeoutMs, health, log
+    });
+    return { chapter: r.value, provider: r.provider, kind: 'ok' };
+  } catch (error) {
+    if (best) {
+      log(`[big] chapter ${i + 1}: using best available (${best.issues.join('; ')})`);
+      return { chapter: best, provider: null, kind: 'soft' };
+    }
+    log(`[big] chapter ${i + 1} failed, using plan fallback: ${error?.message}`);
+    return { chapter: { summary: plan.chapters[i].goal, blocks: chapterFromPlan(plan.chapters[i], name, c.girl, library) }, provider: null, kind: 'fallback' };
+  }
+}
+
+/** Что передать следующей главе: краткое содержание и хвост последних абзацев. */
+export function chapterContext(plan, chapters) {
+  const summaries = chapters.map((ch, i) => ch.summary || plan.chapters[i].goal);
+  const last = chapters[chapters.length - 1];
+  const tail = last ? last.blocks.filter((b) => b.t === 'p').slice(-6).map((b) => b.text) : [];
+  return { summaries, tail };
+}
+
+/** Шаг 3: книга из плана и глав (без иллюстраций с ребёнком — их src пока запасные фоны). */
+export function assembleBigBook(input, plan, chapters, meta) {
+  const c = normalizeInput(input);
+  return assemble(input, plan, chapters, meta, sceneLibraryFor(c.kind, c.occasion));
+}
+
 /**
  * Генерирует книгу «Большая история». Всегда возвращает книгу.
  * progress(text, fraction) вызывается после каждого шага.
  */
 export async function generateBigBook(input, {
-  providers = (defaultProviders ??= buildProviders(process.env)),
-  health = sharedHealth,
   progress = () => {},
-  log = console.warn,
-  stepDeadlineMs = 75_000,
-  attemptTimeoutMs = 45_000,
   illustrate = generateHeroImage,
   preview = false,
-  imageBudgetMs = Number(process.env.BIG_IMAGE_BUDGET_MS || 5 * 60_000)
+  imageBudgetMs = Number(process.env.BIG_IMAGE_BUDGET_MS || 5 * 60_000),
+  ...options
 } = {}) {
   const started = Date.now();
+  const opts = stepOptions(options);
+  const { log } = opts;
   const c = normalizeInput(input);
-  const name = c.name;
-  const themeKey = themeKeyFor(c);
-  const library = sceneLibraryFor(c.kind, c.occasion);
   const meta = { source: 'ai', providers: {}, fallbackChapters: [], softChapters: [], tookMs: 0 };
-  const names = nameTokens(c);
-
-  const call = async (prompt, validate) => {
-    const r = await generateWithFailover(providers, prompt, { validate, deadlineAt: Date.now() + stepDeadlineMs, attemptTimeoutMs, health, log });
-    meta.providers[r.provider] = (meta.providers[r.provider] || 0) + 1;
-    return r.value;
-  };
+  const count = (provider) => { if (provider) meta.providers[provider] = (meta.providers[provider] || 0) + 1; };
 
   // книга из шаблона тоже получает иллюстрации с ребёнком — фоновых сцен в книге клиента нет
   const illustratedTemplate = async () => {
@@ -605,55 +679,23 @@ export async function generateBigBook(input, {
     return { book: { ...book, meta: { ...meta, heroName: c.name, heroGirl: c.girl } }, source: 'template', provider: null, model: null };
   };
 
-  if (!providers.length) {
-    log('[big] no AI providers configured, using template book');
-    return illustratedTemplate();
-  }
-
   // шаг 1: план
-  progress('Придумываем сюжет и героев книги…', 0.05);
-  let plan;
-  try {
-    plan = await call(buildPlanPrompt(input), (raw) => validatePlan(raw, name, { library, themeKey, design: input.design }));
-  } catch (error) {
-    log(`[big] plan failed, using template book: ${error?.message}`);
-    return illustratedTemplate();
-  }
+  if (opts.providers.length) progress('Придумываем сюжет и героев книги…', 0.05);
+  const planned = await writePlan(input, opts);
+  if (!planned) return illustratedTemplate();
+  const { plan } = planned;
+  count(planned.provider);
 
   // шаг 2: главы по порядку
   const chapters = [];
-  const summaries = [];
-  let tail = [];
   for (let i = 0; i < plan.chapters.length; i++) {
     progress(`Пишем главу ${i + 1} из ${plan.chapters.length}: «${plan.chapters[i].title}»`, 0.1 + (0.85 * i) / plan.chapters.length);
-    let chapter;
-    let best = null;
-    let softFails = 0;
-    const validate = (raw) => {
-      const ch = validateChapter(raw, plan.chapters[i], name, names, c.girl, library);
-      if (!ch.issues.length) return ch;
-      // замечание не критично: запоминаем лучший вариант; после двух таких попыток берём его, не тратя время
-      if (!best || ch.issues.length < best.issues.length || (ch.issues.length === best.issues.length && ch.wordCount > best.wordCount)) best = ch;
-      softFails += 1;
-      if (softFails >= 2) return best;
-      throw new Error(`chapter ${i + 1}: ${ch.issues.join('; ')}`);
-    };
-    try {
-      chapter = await call(buildChapterPrompt(input, plan, i, summaries, tail), validate);
-    } catch (error) {
-      if (best) {
-        log(`[big] chapter ${i + 1}: using best available (${best.issues.join('; ')})`);
-        chapter = best;
-        meta.softChapters.push(i + 1);
-      } else {
-        log(`[big] chapter ${i + 1} failed, using plan fallback: ${error?.message}`);
-        meta.fallbackChapters.push(i + 1);
-        chapter = { summary: plan.chapters[i].goal, blocks: chapterFromPlan(plan.chapters[i], name, c.girl, library) };
-      }
-    }
-    chapters.push(chapter);
-    summaries.push(chapter.summary || plan.chapters[i].goal);
-    tail = chapter.blocks.filter((b) => b.t === 'p').slice(-6).map((b) => b.text);
+    const { summaries, tail } = chapterContext(plan, chapters);
+    const r = await writeChapter(input, plan, i, summaries, tail, opts);
+    count(r.provider);
+    if (r.kind === 'soft') meta.softChapters.push(i + 1);
+    if (r.kind === 'fallback') meta.fallbackChapters.push(i + 1);
+    chapters.push(r.chapter);
   }
 
   const art = await attachHeroImages(input, plan, chapters, { illustrate, progress, deadlineAt: Date.now() + imageBudgetMs, log, preview });
@@ -661,7 +703,7 @@ export async function generateBigBook(input, {
   progress('Собираем книгу…', 0.99);
   meta.tookMs = Date.now() - started;
   if (meta.fallbackChapters.length === plan.chapters.length) meta.source = 'template';
-  const book = assemble(input, plan, chapters, meta, library);
+  const book = assembleBigBook(input, plan, chapters, meta);
   if (preview) book.preview = true;
   if (art.cover) book.cover = art.cover;
   if (art.sheet) book.sheet = art.sheet; // для дорисовки после оплаты и бесплатной перерисовки

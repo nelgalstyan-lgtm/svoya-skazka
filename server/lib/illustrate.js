@@ -10,8 +10,6 @@
 // Если фото нет, ключа нет или Gemini недоступен — просто возвращаем null: книга всё равно уходит
 // клиенту с текстом и декоративным фоном на месте геройского разворота (тот же принцип, что и у текста).
 
-import { GoogleGenAI } from '@google/genai';
-
 const IDENTITY_BLOCK = (eyes, count = 1) => `Preserve the child's exact identity from the reference photo${count > 1 ? 's (all of them show the same child from different angles)' : ''}: keep the facial structure and proportions, the eye shape and eye color${eyes ? ` (${eyes})` : ''}, the nose shape, the lips and mouth shape, the hairstyle and hair color, the age, and any distinctive features exactly as in the reference photo such as freckles, a gap between the teeth, dimples, moles or birthmarks if present. The child must remain instantly recognizable as the exact same person from the reference photo — do not beautify, idealize, or stylize the face into a generic look, and do not age the character up or down.`;
 
 // Лист персонажа идёт последним изображением в запросе: по нему держим одинаковыми одежду, причёску и спутников во всей книге
@@ -94,15 +92,16 @@ export function fromDataUrl(src) {
   return m ? { mime: m[1], data: m[2] } : null;
 }
 
+// Прямой REST-вызов без SDK: тот же код работает и в Node, и в Cloudflare Worker
 async function callGemini({ apiKey, model, images, prompt, timeoutMs, retries }) {
-  const ai = new GoogleGenAI({ apiKey });
   let attempt = 0;
 
   while (true) {
     try {
-      const response = await Promise.race([
-        ai.models.generateContent({
-          model,
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({
           contents: [{
             role: 'user',
             parts: [
@@ -111,16 +110,17 @@ async function callGemini({ apiKey, model, images, prompt, timeoutMs, retries })
             ]
           }]
         }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('image generation timed out')), timeoutMs))
-      ]);
-
-      const parts = response?.candidates?.[0]?.content?.parts || [];
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(`Gemini ${response.status}: ${data?.error?.message || 'error'}`);
+      const parts = data?.candidates?.[0]?.content?.parts || [];
       const imagePart = parts.find((p) => p?.inlineData?.data);
       if (!imagePart) throw new Error('no image in Gemini response');
       return { data: imagePart.inlineData.data, mime: imagePart.inlineData.mimeType || 'image/png' };
     } catch (error) {
       const msg = error?.message || 'unknown error';
-      const temporary = /503|429|UNAVAILABLE|timed out|timeout/i.test(msg);
+      const temporary = /503|429|UNAVAILABLE|timed? ?out|timeout|aborted/i.test(msg);
       if (temporary && attempt < retries) {
         attempt += 1;
         await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
@@ -181,6 +181,21 @@ async function callOpenAI({ apiKey, model, images, prompt, kind, quality, timeou
 }
 
 /**
+ * Что передать модели: образцы и промпт. null — рисовать не по чему.
+ * refs — фото ребёнка, sheet — лист персонажа, source — картинка для раскраски; формат картинок любой ({ mime, data } или { mime, bytes }).
+ */
+export function imageRequest({ refs = [], sheet = null, source = null, kind = 'scene', styleLabel, eyes, brief, look } = {}) {
+  if (kind === 'coloring') return source ? { images: [source], prompt: buildColoringPrompt() } : null;
+  // перерисовка после генерации: фото ребёнка уже удалено, лицо и одежду держит лист персонажа
+  if (!refs.length && !sheet) return null;
+  const images = sheet && kind !== 'sheet' ? [...refs, sheet] : refs;
+  const prompt = refs.length
+    ? buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount: refs.length, withSheet: Boolean(sheet) && kind !== 'sheet', kind })
+    : buildHeroPrompt({ styleLabel, eyes, brief, look, withSheet: true, kind }).replace(/reference photo/g, 'character reference sheet');
+  return { images, prompt };
+}
+
+/**
  * Сервисы картинок по порядку: IMAGE_PROVIDER=openai|gemini задаёт первый, второй — запасной.
  * По умолчанию сначала OpenAI (если есть ключ), потом Gemini.
  */
@@ -220,23 +235,9 @@ export async function generateHeroImage({
 } = {}) {
   const providers = imageProviders({ apiKey, model, openaiKey, openaiModel, openaiQuality });
   if (!providers.length) return null;
-  let images;
-  let prompt;
-  if (kind === 'coloring') {
-    const src = normalizePhoto(source);
-    if (!src) return null;
-    images = [src];
-    prompt = buildColoringPrompt();
-  } else {
-    const refs = photosFrom({ photos, photo });
-    // перерисовка после генерации: фото ребёнка уже удалено, лицо и одежду держит лист персонажа
-    const safeSheet = normalizePhoto(sheet);
-    if (!refs.length && !safeSheet) return null;
-    images = safeSheet && kind !== 'sheet' ? [...refs, safeSheet] : refs;
-    prompt = refs.length
-      ? buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount: refs.length, withSheet: Boolean(safeSheet) && kind !== 'sheet', kind })
-      : buildHeroPrompt({ styleLabel, eyes, brief, look, withSheet: true, kind }).replace(/reference photo/g, 'character reference sheet');
-  }
+  const request = imageRequest({ refs: photosFrom({ photos, photo }), sheet: normalizePhoto(sheet), source: normalizePhoto(source), kind, styleLabel, eyes, brief, look });
+  if (!request) return null;
+  const { images, prompt } = request;
 
   for (const provider of providers) {
     try {

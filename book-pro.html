@@ -140,8 +140,8 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     }
   }
 
-  var isLocal = location.protocol === 'file:' || ['localhost', '127.0.0.1'].indexOf(location.hostname) !== -1;
-  var API_BASE = window.SKAZKA_API_BASE || (isLocal ? 'http://localhost:3000' : '');
+  // API на том же адресе, что и сайт (локально — `npx wrangler dev`)
+  var API_BASE = window.SKAZKA_API_BASE || '';
 
   // Книга заказана: ждём готовности на сервере и показываем ход работы (пишется глава за главой, это несколько минут)
   function waitForJob(jobId) {

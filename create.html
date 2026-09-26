@@ -800,9 +800,8 @@ section.tight{ padding:56px 0; }
 <script src="js/book-extras.js"></script>
 <script>
   (function () {
-    // Адрес бэкенда: локально — localhost:3000; на боевом сайте можно задать window.SKAZKA_API_BASE до этого скрипта.
-    const isLocal = location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
-    const API_BASE = window.SKAZKA_API_BASE || (isLocal ? 'http://localhost:3000' : '');
+    // API на том же адресе, что и сайт (локально — `npx wrangler dev`); другой адрес можно задать window.SKAZKA_API_BASE.
+    const API_BASE = window.SKAZKA_API_BASE || '';
 
     const POLL_EVERY_MS = 2000;
     const MAX_WAIT_MS = 90000;      // дольше не ждём — показываем локальную книгу
@@ -841,10 +840,28 @@ section.tight{ padding:56px 0; }
 
     // Фото держим только в памяти вкладки: не кладём в localStorage вместе с answers (незачем разрастать хранилище)
     // и не показываем повторно при чтении сохранённой книги — на сервер они уходят один раз, при заказе.
-    const PHOTO_MAX_BYTES = 8 * 1024 * 1024;
+    const PHOTO_MAX_BYTES = 25 * 1024 * 1024; // перед отправкой фото всё равно уменьшается (см. shrinkPhoto)
+    const PHOTO_SEND_SIDE = 1536; // больше для рисования не нужно, а сервер тратит меньше времени на приём
     const MAX_PHOTOS = 3;
     const MIN_PHOTO_SIDE = 600; // меньше — черты лица на иллюстрациях получаются «примерными»
     let selectedPhotos = [];
+
+    // Фото с телефона весит 3–10 МБ: уменьшаем до PHOTO_SEND_SIDE по длинной стороне (JPEG). Маленькое отправляем как есть.
+    function shrinkPhoto(img, original) {
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      const scale = Math.min(1, PHOTO_SEND_SIDE / Math.max(w, h));
+      if (scale === 1 && original.length < 2 * 1024 * 1024) return original;
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(w * scale);
+        canvas.height = Math.round(h * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.9);
+      } catch (e) {
+        return original;
+      }
+    }
 
     function attachPhotoUpload() {
       const drop = document.getElementById('photoDrop');
@@ -893,23 +910,25 @@ section.tight{ padding:56px 0; }
             return;
           }
           if (file.size > PHOTO_MAX_BYTES) {
-            setStatus('Фото слишком большое (максимум 8 МБ) — выберите файл поменьше.', 'error');
+            setStatus('Фото слишком большое (максимум 25 МБ) — выберите файл поменьше.', 'error');
             return;
           }
           const reader = new FileReader();
           reader.onload = function () {
-            if (selectedPhotos.length >= MAX_PHOTOS) return;
-            const src = String(reader.result);
-            selectedPhotos.push(src);
-            redraw();
-            // миниатюра из мессенджера или скриншот: лицо в пару десятков пикселей модель не разглядит
             const probe = new Image();
             probe.onload = function () {
+              if (selectedPhotos.length >= MAX_PHOTOS) return;
+              selectedPhotos.push(shrinkPhoto(probe, String(reader.result)));
+              redraw();
+              // миниатюра из мессенджера или скриншот: лицо в пару десятков пикселей модель не разглядит
               if (Math.min(probe.naturalWidth, probe.naturalHeight) < MIN_PHOTO_SIDE) {
                 setStatus('Это фото маленькое (' + probe.naturalWidth + '×' + probe.naturalHeight + ' пикселей) — по нему сложно передать черты лица. Лучше загрузить оригинал из галереи телефона, а не картинку из переписки.', 'error');
               }
             };
-            probe.src = src;
+            probe.onerror = function () {
+              setStatus('Не получилось открыть это фото. Попробуйте другое (JPEG или PNG).', 'error');
+            };
+            probe.src = String(reader.result);
           };
           reader.onerror = function () {
             setStatus('Не получилось прочитать файл. Попробуйте другое фото.', 'error');

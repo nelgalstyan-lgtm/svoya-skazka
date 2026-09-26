@@ -1,33 +1,38 @@
-# Бриф для продолжения работы (состояние на 2026-09-25, вечер)
+# Бриф для продолжения работы (состояние на 2026-09-26)
 
 Проект: **Героёнок** (бывшая «Своя Сказка»): персональные детские книги, где ребёнок нарисован по фото на каждой иллюстрации. Дальше планируются персональные песни и мультики.
 Репозиторий: `C:\Users\Asus\svoya-skazka` → github.com/nelgalstyan-lgtm/svoya-skazka (ветка `main`, коммитим прямо в неё). Репозиторий и папка пока называются svoya-skazka, переименовывать не обязательно.
-Сайт сейчас (только статика, без сервера): https://nelgalstyan-lgtm.github.io/svoya-skazka/. Будет: **https://geroenok.online** (домен куплен).
-Подробности по коду: `docs/project-brief.md`, `server/README.md`, `server/.env.example`.
+Сайт: **https://geroenok.online** (Cloudflare Worker `svoya-skazka`). Старая копия: https://nelgalstyan-lgtm.github.io/svoya-skazka/.
+Подробности по коду: `docs/project-brief.md`, `server/README.md`, `server/.env.example`, `wrangler.jsonc`.
 
 ## ▶ Начать отсюда
-Переезд на Cloudflare идёт (26.09):
-- Домен `geroenok.online` уже на Cloudflare (NS nucum/nico), регистратор REG.RU. Старые A-записи на заглушку REG.RU (95.163.244.138, давали ошибку 525) владелица удаляет.
-- Вместо Pages создан **Worker** `svoya-skazka` с подключённым GitHub (Workers Builds: `npx wrangler deploy` при каждом пуше в `main`). Так даже лучше: API потом добавляется в этот же Worker.
-- Настройки в `wrangler.jsonc`: сборка `scripts/build-pages.sh`, статика из `dist/`.
-- Домен и `www` привязаны к Worker'у, сайт работает. check-host 26.09: Москва и СПб 200 OK за 0,2–0,3 с. `server/`, `docs/` отдают 404.
-- API-токен в `.env` в корне (wrangler: `set -a; . <(tr -d '
-' < .env); set +a`). Права: Workers, D1, Queues, маршруты geroenok.online. R2 включён (бесплатный план, $0), бакет **`geroenok`** (location eeur) создан.
-- **Проба сделана 26.09** (`cloudflare/probe`, Worker `geroenok-probe`, секреты OPENAI_API_KEY и PROBE_KEY). `images/edits`, 1024×1536, medium, образец 860 КБ:
-  - PNG (ответ 4,2 МБ): **18 мс CPU**, больше лимита 10 мс;
-  - **WebP** (`output_format=webp`, `output_compression=85`, ответ 0,4 МБ): **4–5 мс CPU**. Решение: в Worker'е рисуем в WebP. Проверено и с записью в R2: 5 мс CPU. Образец WebP на рабочем столе: `svoya-skazka-primery/proba-webp-cloudflare.webp`, качество хорошее.
-  - Замер CPU: `wrangler tail geroenok-probe --format json` → `cpuTime`.
-- **Риск:** из дата-центра Cloudflare в Софии OpenAI отвечает 200. Из московского не проверено (check-host с секретным ключом в URL запрещён). При переписывании поставить рисование (Queue-консьюмер) в Европу через `placement` и проверить.
-- Пробный Worker удалён (код в `cloudflare/probe`, при нужде `npx wrangler deploy` + секреты заново).
-- **Следующий шаг: переписать сервер на Worker** (см. «Хостинг» ниже), в корневом `wrangler.jsonc` добавить `main` и привязки R2/D1/Queues, API на `/api/*`.
+**Сервер переписан на Cloudflare Worker (папка `worker/`), но ещё НЕ выложен:** коммит только локальный, в GitHub не отправлен. Любой пуш в `main` сразу выкладывается на geroenok.online (Workers Builds, `npx wrangler deploy`), поэтому сначала секреты.
 
-**Когда домен привязан:**
-1. Проверить домен из России через API check-host.net (узлы ru1–ru3: Москва, СПб), как делали с findena.ru:
-   `curl -H "Accept: application/json" "https://check-host.net/check-http?host=https://geroenok.online&node=ru1.node.check-host.net&node=ru2.node.check-host.net&node=ru3.node.check-host.net"`, потом `/check-result/<request_id>`.
-   Попросить открыть сайт с мобильного интернета МТС или МегаФона: проверочные узлы стоят в дата-центрах.
-2. Объяснить, как создать API-токен Cloudflare с минимальными правами (Workers, R2, D1, Queues на этот аккаунт) и передать его безопасно: вписать в локальный файл, не присылать в чат.
-3. **Проба:** маленький Worker, который рисует одну картинку через OpenAI (`gpt-image-1.5`, ответ в `b64_json` ≈2 МБ) и кладёт её в R2. Цель — понять, укладываемся ли в **10 мс CPU** бесплатного тарифа. Ожидание ответа OpenAI в CPU не входит, дорогие места — разбор большого JSON и декодирование base64. Не делать `JSON.parse` всего ответа: вырезать строку `b64_json` и декодировать нативно (`Uint8Array.fromBase64`). Стоит ≈1 ₽.
-4. Если проба прошла, переписываем сервер (см. «Хостинг» ниже). Если нет, запасные варианты там же.
+Что осталось (нужно разрешение владелицы: без него система безопасности не даёт записывать секреты):
+1. Секреты Worker'а `svoya-skazka`: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY` (из `server/.env`), `ADMIN_KEY` (новый случайный). Команда: `npx wrangler secret put ИМЯ`.
+2. Правило R2: удалять `photos/` старше 2 суток: `npx wrangler r2 bucket lifecycle add geroenok photos-2d photos/ --expire-days 2`.
+3. Пуш → выкладка. Проверить: заказ превью (≈15 ₽), `wrangler tail svoya-skazka --format json` → `cpuTime` каждого шага < 10 мс; разблокировка `POST /api/book/<id>/unlock` с заголовком `x-admin-key`.
+4. Проверить, что ИИ отвечает, когда запрос идёт через московский дата-центр Cloudflare (риск: OpenAI не принимает запросы из РФ). Если нет — `placement` для Workflow.
+5. После проверки удалить старый Express-сервер (`server/index.js`, `lib/jobs.js`, `lib/photostore.js`, `lib/complete.js`, тесты `preview` и `edits`), из зависимостей — `@google/genai`, `express`, `cors`.
+
+### Как устроено (26.09)
+- `wrangler.jsonc`: `main: worker/index.js`, статика `dist/` (сборка `scripts/build-pages.sh`), `/api/*` → Worker, `nodejs_compat` (process.env из секретов).
+- Привязки: R2 `BUCKET` = `geroenok`, Workflow `BOOK_WORKFLOW` (`geroenok-book`, класс `BookWorkflow`), лимиты с одного IP: `GEN_LIMITER` 3/мин, `BIG_LIMITER` 1/мин, `EDIT_LIMITER` 20/мин.
+- `worker/api.js` — те же маршруты и ответы, что у старого сервера (сайт почти не менялся).
+- `worker/book.js` — книга по шагам Workflow: текст (или план, 6 глав и сборка), лист персонажа, обложка и сцены по 3 параллельно, повтор неудавшихся, раскраска. У каждого шага свои 10 мс CPU.
+- `worker/art.js` — OpenAI в **WebP**; base64 вырезается без `JSON.parse` всего ответа (`worker/bytes.js`). Gemini запасной (REST, без SDK).
+- `worker/store.js` — R2: `jobs/<id>.json` (книга без картинок внутри), `img/<id>/*.webp` (отдаются через `/api/img/…`, кэш навсегда, имя уникально), `photos/<id>/<n>`.
+- Страховка: если книга не готова за 15 мин (большая — за 30), `/status` отдаёт книгу из шаблона.
+- Сайт: `create.html` уменьшает фото до 1536 px JPEG перед отправкой (разбор JSON на 24 МБ не влез бы в 10 мс); `API_BASE` пустой (тот же адрес); `book-engine.js` понимает картинки `/api/img/`.
+- Логика текста общая, в `server/lib/*`. Из `bigstory.js` вынесены `writePlan`, `writeChapter`, `chapterContext`, `assembleBigBook`; из `story.js` — `prepareHeroPages`; из `illustrate.js` — `imageRequest`.
+- Тесты: `cd server && npm test` — 81 (70 старых + 11 для Worker'а с поддельными R2, Workflow и OpenAI).
+- Локально: `npx wrangler dev` (сайт и API на :8787; ключи в `.dev.vars`, не в git). Без ключей текст берётся из шаблона, картинок нет. В журнале после завершения Workflow бывает «code had hung»: это особенность локального имитатора, книги при этом готовы (статус Completed). Проверено 26.09: «Сказка», «Большая история», разблокировка.
+
+### Сделано 26.09 раньше
+- Домен `geroenok.online` на Cloudflare (NS nucum/nico, регистратор REG.RU), привязан к Worker'у вместе с `www`. check-host: Москва и СПб 200 OK за 0,2–0,3 с.
+- API-токен Cloudflare — в `.env` в корне (для wrangler: `set -a; . <(tr -d '\r' < .env); set +a`). Права: Workers, D1, Queues, маршруты geroenok.online, R2.
+- R2 включён (бесплатный план), бакет `geroenok` (eeur).
+- Проба CPU (`cloudflare/probe`, сам Worker удалён): PNG 18 мс — не влезает, **WebP 4–5 мс** — влезает. Образец: рабочий стол, `svoya-skazka-primery/proba-webp-cloudflare.webp`.
 
 ## Решения, которые уже приняты
 **Не обсуждать заново**, владелица их уже приняла.
@@ -37,12 +42,12 @@
   - Логотип пишется одним словом, без `<em>`: с `<em>` разваливался на «Геро ёнок».
   - Трафик даёт не бренд, а страницы под запросы («именная книга для ребёнка», «песня с именем ребёнка», «мультфильм с ребёнком по фото»). Данных Wordstat нет: без входа в аккаунт Яндекса они недоступны, владелица может проверить сама.
 - **Хостинг: Cloudflare, бесплатно.**
-  - Сайт на Pages. Сервер переписывается:
+  - Сайт и сервер — один Worker (вместо Pages). Сервер переписывается:
     - Express → Workers;
     - `server/data/photos` и картинки → R2;
-    - книги и задачи → D1;
-    - фоновое рисование → Queues (или Workflows);
-    - удаление фото через 48 ч (`setInterval`) → Cron Triggers.
+    - книги и задачи → R2 (`jobs/<id>.json`); D1 — позже, для оплат;
+    - фоновое рисование → Workflows;
+    - удаление фото через 48 ч → проверка срока в коде + правило жизненного цикла R2.
   - API на **том же домене**: `geroenok.online/api/*` (маршрут Worker'а).
   - Поддомен `api.` владелица отвергла, нужен «нормальный сайт» для SEO.
   - Фронтенд уже готов к этому: `API_BASE` в проде пустой, запросы идут на относительный `/api/...`.
