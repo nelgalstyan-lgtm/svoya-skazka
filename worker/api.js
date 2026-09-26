@@ -253,6 +253,7 @@ export async function handleApi(request, env) {
       console.log(`[health] colo ${out.colo} country ${request.cf?.country} openai ${out.openai} ${detail}`);
       // ВРЕМЕННО (проверка 26.09): пускает ли OpenAI фоновый Workflow, запущенный посетителем из этой страны
       if (url.searchParams.get('workflow') === '1') await env.BOOK_WORKFLOW.create({ params: { mode: 'diag', country: request.cf?.country || null } });
+      if (url.searchParams.get('workflow') === '1' && env.START_QUEUE) await env.START_QUEUE.send({ country: request.cf?.country || null });
     }
     return json(out);
   }

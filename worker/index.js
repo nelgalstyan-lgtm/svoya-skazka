@@ -22,5 +22,22 @@ export default {
       }
     }
     return env.ASSETS.fetch(request);
+  },
+
+  // ВРЕМЕННО (проверка 26.09): отвечает ли OpenAI, если рисование запущено не из запроса покупателя
+  async scheduled(event, env) {
+    if (new Date(event.scheduledTime).getUTCMinutes() % 2) return;
+    const r = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } }).catch(() => null);
+    console.log(`[diag] cron: openai ${r ? r.status : 'network error'}`);
+    await env.BOOK_WORKFLOW.create({ params: { mode: 'diag', country: 'cron' } });
+  },
+
+  async queue(batch, env) {
+    for (const msg of batch.messages) {
+      const r = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } }).catch(() => null);
+      console.log(`[diag] queue from ${msg.body.country}: openai ${r ? r.status : 'network error'}`);
+      await env.BOOK_WORKFLOW.create({ params: { mode: 'diag', country: `queue-from-${msg.body.country}` } });
+      msg.ack();
+    }
   }
 };

@@ -17,5 +17,11 @@
     { "name": "BIG_LIMITER", "namespace_id": "1002", "simple": { "limit": 1, "period": 60 } },
     { "name": "EDIT_LIMITER", "namespace_id": "1003", "simple": { "limit": 20, "period": 60 } }
   ],
+  // ВРЕМЕННО (проверка 26.09): рисование, запущенное не из запроса покупателя
+  "triggers": { "crons": ["* * * * *"] },
+  "queues": {
+    "producers": [{ "binding": "START_QUEUE", "queue": "geroenok-start" }],
+    "consumers": [{ "queue": "geroenok-start", "max_batch_size": 10, "max_batch_timeout": 1 }]
+  },
   "observability": { "enabled": true }
 }
