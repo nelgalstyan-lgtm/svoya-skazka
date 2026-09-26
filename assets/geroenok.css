@@ -489,3 +489,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   .audio-book{ grid-template-columns:1fr; gap:20px; }
   .audio-book-cover img{ width:170px; }
 }
+
+/* пара «фото → иллюстрация»: обе картинки одной пропорции 3:4 (атрибут height иначе перебивает aspect-ratio) */
+.before-after img{ height:auto; }
