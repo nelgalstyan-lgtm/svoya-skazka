@@ -81,7 +81,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* ---------- шапка: светлая, как верх страницы книги ---------- */
 .site-header{
-  background:rgba(246,243,231,.94);
+  background-color:var(--paper); /* непрозрачная: под прилипшей шапкой текст не просвечивает */
   background-image:var(--paper-grain);
   color:var(--text);
   border-bottom:1px solid var(--line);
@@ -458,3 +458,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   .nav-mobile-label{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
   .site-header .container{ gap:8px; }
 }
+
+/* полоса прогресса анкеты видна всё время заполнения — прилипает под шапкой */
+.progress-track{
+  position:sticky; top:70px; z-index:5;
+  background:var(--card); padding-bottom:14px; margin-bottom:-14px;
+  border-radius:var(--radius-l) var(--radius-l) 0 0;
+}
+.progress-track span{ transition:background .4s ease; }
+@media (max-width:880px){ .progress-track{ top:64px; } }
+.form-shell{ overflow:clip; } /* обрезает углы как hidden, но не ломает прилипающую полосу прогресса */
+.style-sample.is-3d{ background:linear-gradient(160deg,#DCE4DA,#AAB8A2 55%,#7C9CA3); }

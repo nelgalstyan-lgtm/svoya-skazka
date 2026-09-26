@@ -586,8 +586,8 @@ section.tight{ padding:56px 0; }
         <span>Анкета уже заполнена по первой книге — те же герой, друзья и близкие. Можно что-то поправить: например, рассказать, что нового у ребёнка с тех пор. Сюжет будет новым и законченным.</span>
         <button type="button" id="sequelCancel">Нет, начать новую книгу</button>
       </div>
-      <div class="progress-track">
-        <span class="done"></span><span class="done"></span><span></span><span></span><span></span>
+      <div class="progress-track" id="progressTrack" role="img" aria-label="Страница 1 из 5">
+        <span class="done"></span><span></span><span></span><span></span><span></span>
       </div>
 
       <!-- Шаг 1 — герой -->
@@ -995,6 +995,32 @@ section.tight{ padding:56px 0; }
       });
     }
 
+    // Полоса прогресса: закрашено столько страниц анкеты, сколько уже пройдено (по прокрутке).
+    // «Оформление» (только для Нового года) считается частью третьей страницы.
+    function attachProgress() {
+      const track = document.getElementById('progressTrack');
+      if (!track) return;
+      const bars = track.querySelectorAll('span');
+      const pages = Array.prototype.filter.call(document.querySelectorAll('.form-shell .form-step'), function (step) { return step.id !== 'designStep'; });
+      let shown = -1;
+      function update() {
+        const line = window.innerHeight * 0.45; // страница «открыта», когда её начало поднялось выше середины экрана
+        let current = 0;
+        pages.forEach(function (step, i) { if (step.getBoundingClientRect().top < line) current = i; });
+        if (current === shown) return;
+        shown = current;
+        bars.forEach(function (bar, i) { bar.classList.toggle('done', i <= current); });
+        track.setAttribute('aria-label', 'Страница ' + (current + 1) + ' из ' + pages.length);
+      }
+      // полоса прилипает ровно под шапкой (её высота разная на компьютере и телефоне)
+      const header = document.querySelector('.site-header');
+      function stick() { if (header) track.style.top = (header.offsetHeight - 1) + 'px'; }
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', function () { stick(); update(); });
+      stick();
+      update();
+    }
+
     // Карточки выбора — переключатели и для клавиатуры (Tab, Enter/пробел), и для программ чтения экрана
     function attachChoiceSelection() {
       const sync = function () {
@@ -1244,6 +1270,7 @@ section.tight{ padding:56px 0; }
     }
 
     attachChoiceSelection();
+    attachProgress();
     attachPhotoUpload();
 
     // ?sequel=1 — продолжение прошлой книги: анкета заполняется по ней, в запрос уходит краткое содержание первой книги

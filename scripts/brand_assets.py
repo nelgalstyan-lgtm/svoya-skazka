@@ -24,7 +24,7 @@ CROPS = {
     'geroenok-main': ('geroenok-main.png', (60, 40, 990, 1490), (360, 560, 820)),
     # эмоции (головы)
     'emotion-joyful': (SHEET, (84, 71, 229, 272), ()),
-    'emotion-curious': (SHEET, (299, 88, 451, 272), ()),
+    'emotion-curious': (SHEET, (299, 91, 451, 272), ()),
     'emotion-thoughtful': (SHEET, (526, 71, 708, 272), ()),
     'emotion-surprised': (SHEET, (768, 71, 894, 272), ()),
     'emotion-smile': (SHEET, (83, 303, 240, 495), ()),
