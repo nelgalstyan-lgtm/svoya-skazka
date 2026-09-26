@@ -28,19 +28,19 @@
 .book3d-title small{ display:block; margin-bottom:8px; font-family:var(--font-body, Arial, sans-serif); font-weight:400; font-size:10.5px; letter-spacing:.3em; text-transform:uppercase; opacity:.85; }
 .book3d-hero{ position:absolute; left:0; right:0; bottom:18px; z-index:1; text-align:center; font-family:var(--font-script, cursive); font-size:24px; color:#ffd98f; text-shadow:0 2px 8px rgba(0,0,0,.7); }
 .book3d-spine{
-  width:var(--d); left:calc(var(--d) / -2); background:linear-gradient(90deg,#3a2c52,#58427a 45%,#2e2342);
+  width:var(--d); left:calc(var(--d) / -2); background:linear-gradient(90deg,#3f2d20,#6a4b35 45%,#3a291d);
   transform:rotateY(-90deg); border-radius:4px 0 0 4px;
 }
 .book3d-pages{
   width:var(--d); left:auto; right:calc(var(--d) / -2 + 3px); top:5px; bottom:5px;
   background:repeating-linear-gradient(90deg,#f6f0e2 0 2px,#e3d9c2 2px 3px); transform:rotateY(90deg);
 }
-.book3d-back{ transform:translateZ(calc(var(--d) / -2)); background:#2e2342; border-radius:3px 10px 10px 3px; }
+.book3d-back{ transform:translateZ(calc(var(--d) / -2)); background:#3a291d; border-radius:3px 10px 10px 3px; }
 @media (max-width:520px){ .book3d{ --w:230px; --h:306px; --d:26px; } .book3d-title{ font-size:20px; } }
 @media (prefers-reduced-motion: reduce){ .book3d{ transition:none; } }
 
 /* ---------- сравнение «обычная книга vs наша» ---------- */
-.compare{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border-radius:18px; overflow:hidden; box-shadow:0 18px 40px -26px rgba(35,44,77,.45); }
+.compare{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border-radius:18px; overflow:hidden; box-shadow:0 18px 40px -26px rgba(74,53,39,.45); }
 .compare th, .compare td{ padding:16px 20px; text-align:left; border-bottom:1px solid var(--line, #E6DCC3); font-size:16px; vertical-align:top; }
 .compare thead th{ background:var(--ink, #232C4D); color:var(--text-light, #F4EFE0); font-weight:700; }
 .compare thead th.ours{ background:var(--gold-dark, #B87F27); }
@@ -81,13 +81,13 @@
 /* ---------- подарочный сертификат ---------- */
 .gift-card{
   position:relative; max-width:560px; aspect-ratio:1.6; margin:0 auto; border-radius:22px; padding:34px 36px; overflow:hidden;
-  background:radial-gradient(circle at 85% 15%, rgba(215,154,58,.4), transparent 45%), linear-gradient(145deg,#232C4D,#3a2c52);
+  background:radial-gradient(circle at 85% 15%, rgba(201,154,75,.42), transparent 45%), linear-gradient(145deg,#4A3527,#6a4b35);
   color:#F4EFE0; box-shadow:0 30px 60px -28px rgba(0,0,0,.6);
   display:flex; flex-direction:column; justify-content:space-between;
 }
 .gift-card .g-brand{ font-family:var(--font-display, Georgia, serif); font-size:18px; }
 .gift-card .g-brand em{ font-family:var(--font-script, cursive); font-style:normal; color:var(--gold, #D79A3A); }
-.gift-card .g-amount{ font-family:var(--font-display, Georgia, serif); font-size:40px; color:#ffd98f; }
+.gift-card .g-amount{ font-family:var(--font-display, Georgia, serif); font-size:40px; color:#F3D59A; }
 .gift-card .g-to{ font-family:var(--font-script, cursive); font-size:28px; }
 .gift-card .g-note{ font-size:14px; opacity:.85; }
 @media (max-width:520px){ .gift-card{ padding:22px; } .gift-card .g-amount{ font-size:30px; } }
