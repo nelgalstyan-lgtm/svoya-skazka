@@ -11,7 +11,13 @@
 - Вместо Pages создан **Worker** `svoya-skazka` с подключённым GitHub (Workers Builds: `npx wrangler deploy` при каждом пуше в `main`). Так даже лучше: API потом добавляется в этот же Worker.
 - Настройки в `wrangler.jsonc`: сборка `scripts/build-pages.sh`, статика из `dist/`.
 - Домен и `www` привязаны к Worker'у, сайт работает. check-host 26.09: Москва и СПб 200 OK за 0,2–0,3 с. `server/`, `docs/` отдают 404.
-- Сейчас: владелица создаёт API-токен и вписывает в `.env` в корне репозитория (заготовка с `CLOUDFLARE_ACCOUNT_ID` уже есть, файл в .gitignore; wrangler читает его сам). Затем проба (п. 3 ниже).
+- API-токен в `.env` в корне (wrangler: `set -a; . <(tr -d '' < .env); set +a`). Права: Workers, D1, Queues, маршруты geroenok.online. **R2 владелица ещё не включила** (Storage & databases → R2, может попросить карту).
+- **Проба сделана 26.09** (`cloudflare/probe`, Worker `geroenok-probe`, секреты OPENAI_API_KEY и PROBE_KEY). `images/edits`, 1024×1536, medium, образец 860 КБ:
+  - PNG (ответ 4,2 МБ): **18 мс CPU**, больше лимита 10 мс;
+  - **WebP** (`output_format=webp`, `output_compression=85`, ответ 0,4 МБ): **4–5 мс CPU**. Решение: в Worker'е рисуем в WebP. Качество акварели в WebP ещё показать владелице.
+  - Замер CPU: `wrangler tail geroenok-probe --format json` → `cpuTime`.
+- **Риск:** из дата-центра Cloudflare в Софии OpenAI отвечает 200. Из московского не проверено (check-host с секретным ключом в URL запрещён). При переписывании поставить рисование (Queue-консьюмер) в Европу через `placement` и проверить.
+- Пробу удалить после проверки R2: `npx wrangler delete --name geroenok-probe`.
 
 **Когда домен привязан:**
 1. Проверить домен из России через API check-host.net (узлы ru1–ru3: Москва, СПб), как делали с findena.ru:

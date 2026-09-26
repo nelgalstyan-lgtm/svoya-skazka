@@ -43,13 +43,16 @@ export default {
       form.append('image[]', new Blob([ref], { type: 'image/jpeg' }), 'ref-1.jpeg');
       form.append('size', '1024x1536');
       form.append('quality', 'medium');
+      const fmt = url.searchParams.get('fmt') || 'png'; // png | webp | jpeg
+      form.append('output_format', fmt);
+      if (fmt !== 'png') form.append('output_compression', '85');
       const r = await fetch('https://api.openai.com/v1/images/edits', { method: 'POST', headers: auth, body: form });
       const bytes = new Uint8Array(await r.arrayBuffer());
       const tOpenAI = Date.now() - t0;
       if (!r.ok) return Response.json({ colo, status: r.status, error: new TextDecoder().decode(bytes.subarray(0, 300)) });
-      const png = Uint8Array.fromBase64(extractB64(bytes));
-      if (env.BUCKET) await env.BUCKET.put(`probe/${Date.now()}.png`, png, { httpMetadata: { contentType: 'image/png' } });
-      return Response.json({ colo, responseBytes: bytes.length, pngBytes: png.length, savedToR2: !!env.BUCKET, wallMs: Date.now() - t0, openaiMs: tOpenAI });
+      const img = Uint8Array.fromBase64(extractB64(bytes));
+      if (env.BUCKET) await env.BUCKET.put(`probe/${Date.now()}.${fmt}`, img, { httpMetadata: { contentType: `image/${fmt}` } });
+      return Response.json({ colo, responseBytes: bytes.length, fmt, imageBytes: img.length, savedToR2: !!env.BUCKET, wallMs: Date.now() - t0, openaiMs: tOpenAI });
     }
     return new Response('not found', { status: 404 });
   }
