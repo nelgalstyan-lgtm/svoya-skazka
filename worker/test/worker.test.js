@@ -352,6 +352,27 @@ test('медиа из R2: целиком и кусками (Range → 206), чу
   assert.equal((await api(env, '/api/media/alex-audio/ch1.json')).status, 404);
 });
 
+test('посвящение: подпись «С любовью, …» и дата от родителей; своё посвящение заменяет текст; без полей у «Сказки» его нет', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  try {
+    const plain = await order(env);
+    assert.equal((await status(env, plain)).result.dedication, null);
+
+    const short = await order(env, { from: 'мама и папа', dedication: 'С днём рождения!\n\nМы тебя любим.' });
+    const d = (await status(env, short)).result.dedication;
+    assert.equal(d.signature, 'С любовью,\nмама и папа');
+    assert.match(d.date, /^\d{2}\.\d{2}\.\d{4}$/);
+    assert.equal(d.lead, 'С днём рождения!');
+    assert.deepEqual(d.paragraphs, ['Мы тебя любим.']);
+
+    const big = await order(env, { tariff: 'big', from: 'твоя Неля' });
+    const bd = (await status(env, big)).result.book.dedication;
+    assert.equal(bd.signature, 'С любовью,\nтвоя Неля');
+    assert.ok(bd.lead.length > 5, 'текст посвящения — от ИИ или шаблона');
+  } finally { ai.restore(); }
+});
+
 test('неизвестная книга и мусорный адрес — 404', async () => {
   const env = fakeEnv();
   assert.equal((await api(env, '/api/book/00000000-0000-0000-0000-000000000000/status')).status, 404);

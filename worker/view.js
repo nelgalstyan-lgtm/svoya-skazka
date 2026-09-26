@@ -35,13 +35,13 @@ function previewResult(job) {
     return { kind: 'book', locked: true, price: priceOf(job), book: { ...book, coloring: [], chapters: book.chapters.slice(0, PREVIEW_CHAPTERS) }, lockedChapters: rest.map((c) => c.title), lockedImages: rest.reduce((n, c) => n + c.blocks.filter((b) => b.t === 'image').length, 0), answers };
   }
   const pages = job.result.pages;
-  return { locked: true, price: priceOf(job), coloringOrdered: Boolean(job.input?.coloring), title: job.result.title, pages: pages.slice(0, PREVIEW_PAGES), lockedPages: Math.max(0, pages.length - PREVIEW_PAGES), cover: job.result.cover || null, coloring: [], answers };
+  return { locked: true, price: priceOf(job), coloringOrdered: Boolean(job.input?.coloring), title: job.result.title, dedication: job.result.dedication || null, pages: pages.slice(0, PREVIEW_PAGES), lockedPages: Math.max(0, pages.length - PREVIEW_PAGES), cover: job.result.cover || null, coloring: [], answers };
 }
 
 function fullResult(job) {
   return job.result.book
     ? { kind: 'book', book: clientBook(job), answers: jobAnswers(job) }
-    : { title: job.result.title, pages: job.result.pages, cover: job.result.cover || null, coloring: job.result.coloring || [], answers: jobAnswers(job) };
+    : { title: job.result.title, dedication: job.result.dedication || null, pages: job.result.pages, cover: job.result.cover || null, coloring: job.result.coloring || [], answers: jobAnswers(job) };
 }
 
 export function jobView(job, now = Date.now()) {

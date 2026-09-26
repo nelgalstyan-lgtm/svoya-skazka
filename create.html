@@ -801,6 +801,20 @@ section.tight{ padding:56px 0; }
             <span style="color:var(--text-soft); font-size:14.5px;">Иллюстрации книги в виде контурных картинок для печати — ребёнок раскрашивает самого себя.</span>
           </div>
         </div>
+
+        <div class="dedication-block">
+          <h3>Посвящение <span class="hint" style="display:inline; font-weight:400;">— необязательно</span></h3>
+          <p class="help">В начале книги будет страница «Посвящается» — с вашей подписью и датой, как в настоящей подарочной книге.</p>
+          <div class="field">
+            <label for="from">От кого книга</label>
+            <input type="text" id="from" maxlength="80" placeholder="Например: мама и папа, твоя бабушка Неля">
+            <span class="hint">Станет подписью: «С любовью, мама и папа»</span>
+          </div>
+          <div class="field">
+            <label for="dedication">Своё посвящение</label>
+            <textarea id="dedication" maxlength="1200" style="min-height:100px;" placeholder="Если оставить пустым, тёплые слова напишем мы — от вашего имени"></textarea>
+          </div>
+        </div>
       </div>
 
       <div class="form-actions">
@@ -1073,6 +1087,8 @@ section.tight{ padding:56px 0; }
         theme: readChoiceText('theme'),
         design: readDesign(),
         sequel: sequel ? sequel.sequel : '',
+        from: readInput('from'),
+        dedication: readInput('dedication'),
         tariff: readChoiceValue('tariff') === 'big' ? 'big' : '',
         coloring: readChoiceValue('tariff') !== 'big' && document.getElementById('coloring').checked
       };

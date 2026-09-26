@@ -148,6 +148,13 @@ body.t-newyear .sheet{ background:
 .qr-text{ font-family:var(--font-body); font-size:15px; line-height:1.5; color:var(--text-soft); }
 
 /* Сертификат «Герой книги» */
+.dedication{ align-items:center; text-align:center; justify-content:center; padding:0 120px; }
+.ded-title{ font-family:var(--font-display); font-weight:700; font-size:40px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink); margin-bottom:34px; }
+.ded-lead{ font-family:var(--font-display); font-style:italic; font-weight:700; font-size:22px; line-height:1.6; color:var(--text); margin:0 0 22px; }
+.ded-text{ font-family:var(--font-display); font-style:italic; font-size:19px; line-height:1.75; color:var(--text-soft); margin:0 0 14px; }
+.ded-sign{ margin-top:40px; }
+.ded-date{ font-size:15px; letter-spacing:.08em; color:var(--text-soft); margin-bottom:8px; }
+.ded-hand{ font-family:var(--font-script); font-weight:700; font-size:40px; line-height:1.15; color:var(--gold-dark); }
 .cert{ align-items:center; text-align:center; justify-content:center; }
 .cert::before{ content:""; position:absolute; inset:40px; border:3px double var(--gold-dark); border-radius:10px; pointer-events:none; }
 .cert-kicker{ font-size:15px; letter-spacing:.4em; padding-left:.4em; text-transform:uppercase; color:var(--text-soft); }
@@ -381,6 +388,21 @@ body.t-newyear .sheet{ background:
     const brand = el('div', 'brand');
     brand.append('Героёнок');
     cover.appendChild(brand);
+
+    // посвящение от того, кто дарит (есть, только если родители подписали книгу или написали своё)
+    if (book.dedication) {
+      const d = book.dedication;
+      const ded = sheet('dedication');
+      ded.appendChild(el('div', 'ded-title', d.title || 'Посвящается'));
+      if (d.lead) ded.appendChild(el('p', 'ded-lead', d.lead));
+      (d.paragraphs || []).forEach(function (t) { ded.appendChild(el('p', 'ded-text', t)); });
+      if (d.signature) {
+        const sign = el('div', 'ded-sign');
+        if (d.date) sign.appendChild(el('div', 'ded-date', d.date));
+        String(d.signature).split('\n').forEach(function (line) { sign.appendChild(el('div', 'ded-hand', line)); });
+        ded.appendChild(sign);
+      }
+    }
 
     // Развороты
     book.pages.forEach(function (page, index) {

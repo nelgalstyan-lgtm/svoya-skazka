@@ -500,3 +500,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .book3d-open{ margin-top:4px; font-weight:700; text-decoration:underline; text-underline-offset:4px; text-decoration-color:rgba(138,90,54,.35); }
 .spread-source{ margin:18px 0 0; font-size:14px; color:var(--text-soft); }
 .spread-source a{ color:var(--btn); font-weight:700; }
+
+/* анкета: блок «Посвящение» на последней странице */
+.dedication-block{ margin-top:30px; padding-top:26px; border-top:1px dashed var(--line); }
+.dedication-block h3{ font-size:21px; margin-bottom:6px; }
+.dedication-block .help{ color:var(--text-soft); margin-bottom:18px; }

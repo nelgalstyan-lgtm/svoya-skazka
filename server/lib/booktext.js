@@ -99,6 +99,30 @@ export const TRAVEL_STYLES = {
   underwater: { frame: 'wave', footer: 'underwater' } // сказка — подводное царство: пузыри и волны на глубоком бирюзовом
 };
 
+const clip = (s, n) => String(s ?? '').replace(/<[^>]*>/g, '').trim().slice(0, n);
+
+/** Дата подписи посвящения: «26.09.2026». */
+export function dedicationDate(date = new Date()) {
+  const p = (n) => String(n).padStart(2, '0');
+  return `${p(date.getDate())}.${p(date.getMonth() + 1)}.${date.getFullYear()}`;
+}
+
+/**
+ * Посвящение книги с учётом анкеты: input.from — от кого книга («мама и папа», «твоя Неля») — становится подписью
+ * «С любовью, …»; input.dedication — своё посвящение родителей (абзацы через пустую строку) заменяет текст ИИ.
+ * base — посвящение, которое написал ИИ или шаблон ({ lead, paragraphs }); null — если его нет («Сказка»).
+ * Возвращает null, если посвящения нет и родители ничего не написали.
+ */
+export function dedicationFor(input = {}, base = null, date = new Date()) {
+  const from = clip(input.from, 80);
+  const own = clip(input.dedication, 1200).split(/\n\s*\n|\r?\n/).map((s) => s.trim()).filter(Boolean).slice(0, 6);
+  if (!base && !from && !own.length) return null;
+  const d = { title: 'Посвящается', lead: base?.lead || '', paragraphs: base?.paragraphs || [] };
+  if (own.length) { d.lead = own[0]; d.paragraphs = own.slice(1); }
+  if (from) { d.signature = `С любовью,\n${from}`; d.date = dedicationDate(date); }
+  return d;
+}
+
 /** Возрастная группа по возрасту ребёнка: 0–4, 5–10, 11–16. Возраст не указан — самая массовая, 5–10. */
 export function ageGroupFor(age) {
   const a = Number(age);

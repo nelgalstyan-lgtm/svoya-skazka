@@ -129,6 +129,9 @@ async function generate(request, env, store) {
     input[key] = typeof body[key] === 'string' || typeof body[key] === 'number' ? String(body[key]).slice(0, 500) : '';
   }
   input.sequel = typeof body.sequel === 'string' ? body.sequel.slice(0, 1200) : '';
+  // посвящение: от кого книга (подпись «С любовью, …») и своё посвящение родителей — необязательно
+  input.from = typeof body.from === 'string' ? body.from.slice(0, 80) : '';
+  input.dedication = typeof body.dedication === 'string' ? body.dedication.slice(0, 1200) : '';
   if (big) input.tariff = 'big';
   // раскраска входит в «Большую историю»; к «Сказке» её можно добавить отдельно
   if (big || body.coloring === true) input.coloring = true;

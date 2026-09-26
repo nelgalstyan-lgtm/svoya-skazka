@@ -17,7 +17,7 @@
 
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
-import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, ageGroupFor, styleFor } from './booktext.js';
+import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, ageGroupFor, styleFor, dedicationFor } from './booktext.js';
 import { ORIGINALITY_RULE, brandMentions } from './story.js';
 
 const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind } = template;
@@ -145,7 +145,8 @@ const STYLE_FAIRYTALE = `Ты — писатель детской сказочн
 const STYLE_BY_THEME = { adventure: STYLE_ADVENTURE, fairytale: STYLE_FAIRYTALE, birthday: STYLE_BIRTHDAY, newyear: STYLE_NEWYEAR };
 const systemFor = (themeKey) => `${STYLE_BY_THEME[themeKey]}\n\nОригинальность: ${ORIGINALITY_RULE}`;
 
-function formBlock(c) {
+function formBlock(c, input = {}) {
+  const from = String(input.from || '').trim().slice(0, 80);
   return [
     '<анкета>',
     `Имя: ${c.name}`,
@@ -160,6 +161,7 @@ function formBlock(c) {
     `Особое место, событие или история семьи: ${c.special || 'нет'}`,
     ...(c.lesson ? [`Задача книги (мягко помочь ребёнку через опыт героя, без морали в лоб): ${c.lesson}`] : []),
     ...(c.sequel ? [`Продолжение прошлой книги (те же спутники, коротко вспомнить прошлое приключение, новый законченный сюжет): ${c.sequel}`] : []),
+    ...(from ? [`Книгу дарит: ${from} (посвящение — от имени этого человека, обращение к ребёнку на «ты»)`] : []),
     '</анкета>'
   ].join('\n');
 }
@@ -175,7 +177,7 @@ export function buildPlanPrompt(input) {
   const genrePrompt = GENRE_PROMPT[themeKey];
   const genreLine = genrePrompt ? genrePrompt.line : '';
   const genreField = genrePrompt ? `"genre":"${genrePrompt.example}",` : '';
-  const user = `${formBlock(c)}
+  const user = `${formBlock(c, input)}
 
 Придумай книгу для этого ребёнка. Это ПЛАН: сам текст будет писаться позже, по главам.
 
@@ -199,7 +201,7 @@ export function buildChapterPrompt(input, plan, index, summaries, tail) {
   const themeKey = themeKeyFor(c);
   const ch = plan.chapters[index];
   const last = index === plan.chapters.length - 1;
-  const user = `${formBlock(c)}
+  const user = `${formBlock(c, input)}
 
 ОБЩИЙ ПЛАН КНИГИ «${plan.title}»
 Суть: ${plan.logline}
@@ -490,7 +492,7 @@ export function templateBook(input) {
     genre: style ? styleKey : undefined,
     frame: style ? style.frame : undefined,
     footer: style ? style.footer : undefined,
-    dedication: { title: 'Посвящается', lead: dedicationFallback(c, style ? styleKey : null), paragraphs: ['Эта книга написана специально для тебя.'] },
+    dedication: dedicationFor(input, { lead: dedicationFallback(c, style ? styleKey : null), paragraphs: ['Эта книга написана специально для тебя.'] }),
     chapters: [mk(1, titles[0], story.pages.slice(0, half)), mk(2, titles[1], story.pages.slice(half))]
   };
 }
@@ -515,11 +517,7 @@ function assemble(input, plan, chapters, meta, library) {
     genre: plan.genre || undefined,
     frame: style ? style.frame : undefined,
     footer: style ? style.footer : undefined,
-    dedication: {
-      title: 'Посвящается',
-      lead: plan.dedication.lead || dedicationFallback(c, plan.genre),
-      paragraphs: plan.dedication.paragraphs
-    },
+    dedication: dedicationFor(input, { lead: plan.dedication.lead || dedicationFallback(c, plan.genre), paragraphs: plan.dedication.paragraphs }),
     chapters: chapters.map((ch, i) => ({
       n: i + 1,
       title: plan.chapters[i].title,
