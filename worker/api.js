@@ -249,6 +249,7 @@ export async function handleApi(request, env) {
     if (url.searchParams.get('openai') === '1' && env.OPENAI_API_KEY && !(await limited(env.EDIT_LIMITER, `${clientIp(request)}:health`))) {
       const r = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } }).catch(() => null);
       out.openai = r ? r.status : 'network error';
+      console.log(`[health] colo ${out.colo} openai ${out.openai}`);
     }
     return json(out);
   }
