@@ -196,8 +196,6 @@
     book.chapters.some(function (c) { return c.blocks.some(function (b) { if (b.t === 'image') { first = b; return true; } return false; }); });
     var src = book.cover || (first ? imageSrc(first) : null);
     if (src) page.appendChild(img(src, 'bk-cover-img', book.title));
-    // готовая обложка из макета (название уже на картинке) — показываем как есть
-    if (book.coverPrinted) { page.classList.add('bk-cover-printed'); return { page: page, folio: null }; }
     var head = h('div', 'bk-cover-head');
     head.appendChild(h('div', 'bk-cover-kicker', 'Персональная книга'));
     head.appendChild(h('div', 'bk-cover-title', book.title));
@@ -288,8 +286,8 @@
   // Задняя обложка: иллюстрация в арке, аннотация, возраст и знак Героёнка (нужна и для печати в твёрдом переплёте)
   function backCoverSheet(root, book, opts) {
     var page = newSheet(root, 'bk-back');
-    // готовая задняя обложка из макета — картинкой целиком
-    if (book.backCover) { page.classList.add('bk-back-printed'); page.appendChild(img(book.backCover, 'bk-cover-img', 'Задняя обложка')); return { page: page, folio: null }; }
+    // цитата из книги над иллюстрацией (у образцов)
+    if (book.backQuote) { page.classList.add('bk-back-has-quote'); page.appendChild(h('div', 'bk-back-quote', typo(book.backQuote))); }
     var src = backImageFor(book, opts && opts.onlyGenerated);
     if (src) {
       var arch = h('div', 'bk-back-arch');

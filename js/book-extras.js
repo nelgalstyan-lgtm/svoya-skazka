@@ -194,8 +194,8 @@
   }
 
   /** Блок «Отсканируйте — и книга откроется на телефоне»: узел или null. */
-  function qrBlock(page, jobId, className, label) {
-    var svg = qrSvg(bookUrl(page, jobId));
+  function qrBlock(page, jobId, className, label, url) {
+    var svg = qrSvg(url || bookUrl(page, jobId));
     if (!svg) return null;
     var box = document.createElement('div');
     box.className = className || 'qr-block';
