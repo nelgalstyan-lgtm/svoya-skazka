@@ -3,7 +3,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleApi } from '../api.js';
+import { handleApi, PREVIEW_LIMITS } from '../api.js';
 import { runBook } from '../book.js';
 import { jsonStringField } from '../bytes.js';
 import { queueHandler } from '../queue.js';
@@ -75,7 +75,7 @@ function fakeEnv(extra = {}) {
 }
 
 // OpenAI images/edits: отвечает маленькой «картинкой» и запоминает запросы
-function stubOpenAI({ failKinds = [] } = {}) {
+function stubOpenAI({ failKinds = [], failOnce = [] } = {}) {
   const calls = [];
   const original = globalThis.fetch;
   globalThis.fetch = async (url, init) => {
@@ -85,6 +85,8 @@ function stubOpenAI({ failKinds = [] } = {}) {
     const kind = /coloring page/.test(prompt) ? 'coloring' : /character reference sheet on a plain/.test(prompt) ? 'sheet' : /front cover/.test(prompt) ? 'cover' : 'scene';
     calls.push({ kind, format: form.get('output_format'), images: form.getAll('image[]').length, prompt });
     if (failKinds.includes(kind)) return new Response(JSON.stringify({ error: { message: 'bad request' } }), { status: 400 });
+    const once = failOnce.indexOf(kind);
+    if (once >= 0) { failOnce.splice(once, 1); return new Response(JSON.stringify({ error: { message: 'bad request' } }), { status: 400 }); }
     const b64 = Buffer.from(`img-${calls.length}`).toString('base64');
     return new Response(`{"created":1,"data":[{"b64_json":"${b64}"}],"usage":{}}`, { status: 200 });
   };
@@ -266,6 +268,17 @@ test('правка текста — только после оплаты', async
   } finally { ai.restore(); }
 });
 
+test('не нарисовалось с первого раза — вторая попытка отдельным шагом', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI({ failOnce: ['cover'] });
+  try {
+    const id = await order(env);
+    assert.equal(ai.calls.filter((c) => c.kind === 'cover').length, 2);
+    assert.ok(env.runs[0].step.names.has('cover-retry'));
+    assert.match((await status(env, id)).result.cover, /^\/api\/img\//);
+  } finally { ai.restore(); }
+});
+
 test('картинки не рисуются вовсе — книга всё равно готова', async () => {
   const env = fakeEnv();
   const ai = stubOpenAI({ failKinds: ['sheet', 'cover', 'scene'] });
@@ -291,6 +304,31 @@ test('зависшая книга: через 15 минут клиент пол�
   assert.equal(s.status, 'completed');
   assert.equal(s.result.pages.length, 2); // превью: остальное — после оплаты
   assert.ok(s.result.lockedPages >= 2);
+});
+
+test('лимит бесплатных превью: 3 в день с браузера, 10 с адреса; хозяйке — без лимита', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  try {
+    const send = (device, ip = '1.1.1.1', headers = {}) => api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, photos: [PHOTO], device }, headers: { 'cf-connecting-ip': ip, ...headers } });
+    const devA = 'aaaaaaaa-0000-4000-8000-000000000001';
+    for (let i = 0; i < PREVIEW_LIMITS.device; i++) assert.equal((await send(devA)).status, 200);
+    const denied = await send(devA);
+    assert.equal(denied.status, 429);
+    assert.match((await denied.json()).error, /дневной лимит/);
+    assert.equal((await send(devA, '1.1.1.1', { 'x-admin-key': 'admin' })).status, 200, 'хозяйка проверяет без лимита');
+
+    // другой браузер в той же сети — можно, пока не кончится лимит адреса
+    let n = PREVIEW_LIMITS.device;
+    for (let d = 2; n < PREVIEW_LIMITS.ip; d++) {
+      const dev = `aaaaaaaa-0000-4000-8000-00000000000${d}`;
+      for (let i = 0; i < PREVIEW_LIMITS.device && n < PREVIEW_LIMITS.ip; i++, n++) assert.equal((await send(dev)).status, 200);
+    }
+    assert.equal((await send('bbbbbbbb-0000-4000-8000-000000000001')).status, 429, 'адрес исчерпал лимит');
+    assert.equal((await send('bbbbbbbb-0000-4000-8000-000000000001', '2.2.2.2')).status, 200, 'другой адрес — можно');
+    // адрес и браузер хранятся только хэшем
+    assert.ok(env.BUCKET.keys('limits/').every((k) => !k.includes('1.1.1.1') && !k.includes('aaaaaaaa')));
+  } finally { ai.restore(); }
 });
 
 test('неизвестная книга и мусорный адрес — 404', async () => {

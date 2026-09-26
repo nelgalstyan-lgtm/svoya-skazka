@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import { buildProviders, createHealth } from '../lib/providers.js';
 import { generateStory } from '../lib/story.js';
-import { createJobQueue } from '../lib/jobs.js';
 import { buildTemplateStory } from '../lib/story.js';
 
 const INPUT = { name: 'Милена', age: '7', gender: 'Девочка', eyes: 'Карие', theme: 'Приключения', habits: 'Обожает собирать камни', friends: 'Тигран', cast: 'мама Лена, кот Барсик' };
@@ -90,24 +89,6 @@ test('упавший провайдер «остывает» и не тормо�
   await generateStory(INPUT, { providers, health, log: quiet });
   close();
   assert.equal(hits, 1);
-});
-
-test('очередь: сбой раннера и переполнение — результат всё равно есть', async () => {
-  const q = createJobQueue({
-    runner: async () => { throw new Error('boom'); },
-    fallback: buildTemplateStory,
-    concurrency: 1,
-    maxQueue: 0,
-    log: quiet
-  });
-  const overflow = q.submit(INPUT);
-  assert.equal(overflow.status, 'completed');
-
-  const q2 = createJobQueue({ runner: async () => { throw new Error('boom'); }, fallback: buildTemplateStory, log: quiet });
-  const job = q2.submit(INPUT);
-  await new Promise((r) => setTimeout(r, 50));
-  assert.equal(q2.get(job.id).status, 'completed');
-  assert.equal(q2.get(job.id).result.source, 'template');
 });
 
 test('шаблон: мальчик и девочка, все темы, без «undefined»', () => {

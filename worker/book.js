@@ -8,7 +8,7 @@
 // mode 'preview' — бесплатное превью: весь текст + лист персонажа, обложка и первая иллюстрация.
 // mode 'complete' — после оплаты: остальные иллюстрации и раскраска, потом фото удаляются.
 
-import { generateStory, prepareHeroPages } from '../server/lib/story.js';
+import { generateStory } from '../server/lib/story.js';
 import { writePlan, writeChapter, chapterContext, assembleBigBook, templateBook } from '../server/lib/bigstory.js';
 import template from '../js/story-template.js';
 import { createStore } from './store.js';
@@ -109,7 +109,7 @@ async function previewFlow(ctx) {
   if (!big) {
     text = await step.do('story', TEXT_STEP, async () => {
       await progress('Пишем историю…');
-      return prepareHeroPages(input, await generateStory(input, { log }));
+      return generateStory(input, { log }); // текст + описания иллюстраций (heroBrief, coverBrief)
     });
   } else {
     const planned = await step.do('plan', TEXT_STEP, async () => {

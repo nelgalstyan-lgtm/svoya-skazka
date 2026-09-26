@@ -1116,9 +1116,24 @@ section.tight{ padding:56px 0; }
       return new Blob([bytes], { type: mime });
     }
 
+    // Номер этого браузера — только для дневного лимита бесплатных превью (сервер хранит его хэш не дольше 3 дней)
+    function deviceId() {
+      try {
+        let id = localStorage.getItem('geroenok:device');
+        if (!id) {
+          id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+          localStorage.setItem('geroenok:device', id);
+        }
+        return id;
+      } catch (e) {
+        return ''; // хранилище недоступно (приватный режим) — остаётся лимит по адресу
+      }
+    }
+
     function orderForm(answers, photos) {
       const form = new FormData();
       form.append('answers', JSON.stringify(answers));
+      form.append('device', deviceId());
       photos.forEach(function (src, i) { form.append('photo', dataUrlToBlob(src), 'photo-' + (i + 1)); });
       return form;
     }

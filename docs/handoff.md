@@ -17,11 +17,14 @@
 - Тестовые заказы через `curl -F` из Git Bash портят кириллицу (имя «������» → ИИ отвечает «нет имени», текст из шаблона). Для ручных проверок — JSON-файл в UTF-8 (`--data-binary @file`), не аргументы командной строки.
 - Фото-«заглушка» без ребёнка (картинка леса) → OpenAI может отказать в листе персонажа (safety). С настоящим фото этого не было.
 
+Сделано 26.09 позже:
+- Старый Express-сервер удалён (`server/index.js`, `jobs.js`, `photostore.js`, `complete.js`, скрипты фонов, их тесты, зависимости). `server/` теперь — общая библиотека (`lib/`) и тесты; рисования там нет (оно в `worker/art.js`). `server/README.md` переписан.
+- **Лимит бесплатных превью:** 3 в сутки с браузера (`device` — случайный id в localStorage `geroenok:device`), 10 с IP (CGNAT мобильных). Счётчики в R2 `limits/<дата>/<хэш>` (хэш с солью `ADMIN_KEY`), правило R2 `limits-3d`. Заголовок `x-admin-key` — без лимита. Константы — `PREVIEW_LIMITS` в `worker/api.js`. В политике конфиденциальности (п. 1) добавлено предложение про это.
+
 Дальше:
-1. Удалить старый Express-сервер (`server/index.js`, `lib/jobs.js`, `lib/photostore.js`, `lib/complete.js`, тесты `preview` и `edits`), из зависимостей `@google/genai`, `express`, `cors`; поправить `server/README.md`.
-2. Оплата через ЮKassa (вебхук → `unlockBook` в `worker/api.js`).
-3. Лимит бесплатных превью на человека (сейчас только 3 заказа/мин с IP).
-4. Текстовые ИИ часто падают (Gemini 503, OpenRouter 429/404 для `z-ai/glm-5.2:free`) — обновить списки моделей.
+1. Оплата через ЮKassa (вебхук → `unlockBook` в `worker/api.js`) — когда владелица скажет.
+2. Текстовые ИИ часто падают (Gemini 503, OpenRouter 429/404 для `z-ai/glm-5.2:free`) — обновить списки моделей.
+3. В политике конфиденциальности (п. 2) названы только OpenAI и Gemini, а текст пишут ещё Groq и OpenRouter — показать владелице.
 
 ### Как устроено (26.09)
 - `wrangler.jsonc`: `main: worker/index.js`, статика `dist/` (сборка `scripts/build-pages.sh`), `/api/*` → Worker, `nodejs_compat` (process.env из секретов).
@@ -33,7 +36,7 @@
 - Страховка: если книга не готова за 15 мин (большая — за 30), `/status` отдаёт книгу из шаблона.
 - Сайт: `create.html` уменьшает фото до 1536 px JPEG перед отправкой (разбор JSON на 24 МБ не влез бы в 10 мс); `API_BASE` пустой (тот же адрес); `book-engine.js` понимает картинки `/api/img/`.
 - Логика текста общая, в `server/lib/*`. Из `bigstory.js` вынесены `writePlan`, `writeChapter`, `chapterContext`, `assembleBigBook`; из `story.js` — `prepareHeroPages`; из `illustrate.js` — `imageRequest`.
-- Тесты: `cd server && npm test` — 82 (70 старых + 12 для Worker'а с поддельными R2, очередью, Workflow и OpenAI).
+- Тесты: `cd server && npm test` — 62 (логика книги + 14 для Worker'а с поддельными R2, очередью, Workflow и OpenAI). Бесплатно.
 - Локально: `npx wrangler dev` (сайт и API на :8787; ключи в `.dev.vars`, не в git). Без ключей текст берётся из шаблона, картинок нет. В журнале после завершения Workflow бывает «code had hung»: это особенность локального имитатора, книги при этом готовы (статус Completed). Проверено 26.09: «Сказка», «Большая история», разблокировка.
 
 ### Сделано 26.09 раньше
@@ -112,7 +115,7 @@
 ## Как запустить локально
 - Сайт: `cd svoya-skazka && python -m http.server 8080` → http://localhost:8080
 - Сборка для Pages: `bash scripts/build-pages.sh` → `dist/`. В git не попадает. В `dist/` идут только `*.html`, `assets/`, `js/`.
-- Сервер: `cd svoya-skazka/server && node index.js` (порт 3000). Ключи в `server/.env`, в git не попадает.
+- Сервер и сайт: `npx wrangler dev` (порт 8787). Ключи — секреты Worker'а; локально `.dev.vars`; список — `server/.env.example`.
 - Образцы книг:
   - Макс, превью: `book.html?job=55555555-5555-5555-5555-555555555555`
   - Макс, полная: `book.html?job=33333333-3333-3333-3333-333333333333`

@@ -1,6 +1,5 @@
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
-import { generateHeroImage, illustrateBook, photosFrom } from './illustrate.js';
 
 const { buildTemplateStory, normalizeInput, sceneLibraryFor } = template;
 
@@ -142,13 +141,6 @@ function fallbackBrief(scene, library) {
   return `The child explores the scene: ${library.scenes[scene] || 'a place from the story'}, in an active natural pose, with warm story-book lighting.`;
 }
 
-/** Сколько иллюстраций рисуем в бесплатном превью (плюс лист персонажа и обложка); остальные — после оплаты. */
-export const PREVIEW_IMAGES = 1;
-
-/**
- * Рисует ребёнка на обложке и на страницах (по одному листу персонажа). preview — только первые PREVIEW_IMAGES
- * страниц: остальные дорисуются после оплаты (см. complete.js). Сбой любой картинки не мешает выдаче книги.
- */
 /** Ребёнок на каждой странице: у каждой страницы есть описание иллюстрации, у книги — описание обложки. */
 export function prepareHeroPages(rawInput, story) {
   const library = sceneLibraryFor(normalizeInput(rawInput).kind, rawInput.occasion);
@@ -157,44 +149,18 @@ export function prepareHeroPages(rawInput, story) {
   return story;
 }
 
-async function attachHeroImages(rawInput, story, { illustrate, deadlineAt, progress, log, preview = false }) {
-  if (!photosFrom(rawInput).length) return;
-  const { pages, coverBrief } = prepareHeroPages(rawInput, story);
-  const art = await illustrateBook({ ...rawInput, eyes: normalizeInput(rawInput).eyes }, {
-    scenes: pages.map((p) => ({ brief: p.heroBrief })),
-    coverBrief,
-    look: story.look,
-    illustrate,
-    deadlineAt,
-    coloring: !preview && rawInput.coloring === true,
-    only: preview ? pages.map((_, i) => i).slice(0, PREVIEW_IMAGES) : null,
-    onProgress: (done, total) => progress(`Рисуем иллюстрации с вашим ребёнком (${done} из ${total})…`),
-    log
-  });
-  art.scenes.forEach((src, i) => { if (src) pages[i].heroImage = src; });
-  if (preview) story.preview = true;
-  if (art.cover) story.cover = art.cover;
-  if (art.sheet) story.sheet = art.sheet; // нужен для бесплатной перерисовки: фото ребёнка к тому времени уже удалено
-  if (art.coloring.length) story.coloring = art.coloring;
-}
-
 /**
- * Главная функция: ВСЕГДА возвращает готовую книгу.
- * Сначала ИИ (с переключением между провайдерами), если не вышло — локальный шаблон.
+ * Главная функция: ВСЕГДА возвращает готовый текст книги с описаниями иллюстраций (heroBrief, coverBrief).
+ * Сначала ИИ (с переключением между провайдерами), если не вышло — локальный шаблон. Картинки рисует worker/book.js.
  */
 export async function generateStory(rawInput, {
   providers = getDefaultProviders(),
   deadlineMs = Number(process.env.AI_DEADLINE_MS || 55_000),
   attemptTimeoutMs = Number(process.env.AI_ATTEMPT_TIMEOUT_MS || 35_000),
   health = sharedHealth,
-  log = console.warn,
-  illustrate = generateHeroImage,
-  progress = () => {},
-  preview = false,
-  imageBudgetMs = Number(process.env.SHORT_IMAGE_BUDGET_MS || 4 * 60_000)
+  log = console.warn
 } = {}) {
   const started = Date.now();
-  const art = (story) => attachHeroImages(rawInput, story, { illustrate, deadlineAt: Date.now() + imageBudgetMs, progress, log, preview });
   const c = normalizeInput(rawInput);
   const name = c.name;
   const library = sceneLibraryFor(c.kind, rawInput.occasion);
@@ -208,9 +174,7 @@ export async function generateStory(rawInput, {
         health,
         log
       });
-      const result = { ...value, source: 'ai', provider, model };
-      await art(result);
-      return { ...result, tookMs: Date.now() - started };
+      return prepareHeroPages(rawInput, { ...value, source: 'ai', provider, model, tookMs: Date.now() - started });
     } catch (error) {
       log(`[story] AI unavailable, using template: ${error?.message || error}`);
     }
@@ -218,10 +182,8 @@ export async function generateStory(rawInput, {
     log('[story] no AI providers configured, using template');
   }
 
-  // даже книга из шаблона получает иллюстрации с ребёнком, если есть фото
-  const story = { ...buildTemplateStory(rawInput), source: 'template', provider: null, model: null };
-  await art(story);
-  return { ...story, tookMs: Date.now() - started };
+  // даже книга из шаблона получает описания иллюстраций: ребёнок будет нарисован и в ней
+  return prepareHeroPages(rawInput, { ...buildTemplateStory(rawInput), source: 'template', provider: null, model: null, tookMs: Date.now() - started });
 }
 
 export { buildTemplateStory };

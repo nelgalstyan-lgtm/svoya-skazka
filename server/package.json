@@ -1,17 +1,10 @@
 {
-  "name": "geroenok-backend",
+  "name": "geroenok-lib",
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "description": "Общая логика книги (текст, промпты, типографика) для Cloudflare Worker в ../worker и её тесты",
   "scripts": {
-    "dev": "node --watch index.js",
-    "start": "node index.js",
     "test": "node --test test/*.test.js ../worker/test/*.test.js"
-  },
-  "dependencies": {
-    "@google/genai": "^1.11.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2"
   }
 }

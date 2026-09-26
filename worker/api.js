@@ -1,5 +1,5 @@
 // API на geroenok.online/api/* (тот же Worker, что отдаёт сайт). Маршруты и ответы — как у старого сервера
-// (server/index.js), чтобы сайт не пришлось переделывать. Книга создаётся в фоне Workflow'ом (book.js).
+// (бывший server/index.js на Express), чтобы сайт не пришлось переделывать. Книга создаётся в фоне Workflow'ом (book.js).
 
 import { buildTemplateStory, describeProviders } from '../server/lib/story.js';
 import { templateBook } from '../server/lib/bigstory.js';
@@ -54,10 +54,10 @@ async function readOrder(request) {
     try { body = JSON.parse(String(form.get('answers') || '{}')); } catch { return null; }
     const files = form.getAll('photo').filter((f) => typeof f === 'object' && f && /^image\/(jpeg|png|webp)$/.test(f.type) && f.size > 0 && f.size <= PHOTO_MAX_BYTES);
     const photos = await Promise.all(files.slice(0, MAX_PHOTOS).map(async (f) => ({ mime: f.type, bytes: new Uint8Array(await f.arrayBuffer()) })));
-    return { body, photos };
+    return { body, photos, device: String(form.get('device') || '') };
   }
   const body = await readJson(request);
-  return body && { body, photos: parsePhotos(body) };
+  return body && { body, photos: parsePhotos(body), device: String(body.device || '') };
 }
 
 async function readJson(request) {
@@ -72,6 +72,37 @@ async function limited(limiter, key) {
 }
 
 const clientIp = (request) => request.headers.get('cf-connecting-ip') || 'local';
+
+// Бесплатные превью в сутки (каждое ≈15 ₽ картинок): с одного браузера — 3; с одного адреса — 10, с запасом,
+// потому что у мобильных операторов один адрес на многих людей. Хозяйка (заголовок x-admin-key) — без лимита.
+export const PREVIEW_LIMITS = { device: 3, ip: 10 };
+const DEVICE_RE = /^[a-z0-9-]{16,64}$/i;
+
+/** Счётчики превью за сутки: R2 limits/<дата>/<хэш>. Адрес и id браузера храним только хэшем; правило R2 удаляет limits/ через 3 дня. */
+async function previewCounters(env, request, device) {
+  const day = new Date().toISOString().slice(0, 10);
+  const salt = env.ADMIN_KEY || 'geroenok';
+  const hash = async (value) => {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}:${value}`));
+    return [...new Uint8Array(digest)].slice(0, 16).map((b) => b.toString(16).padStart(2, '0')).join('');
+  };
+  const keys = { ip: `limits/${day}/ip-${await hash(`ip:${clientIp(request)}`)}` };
+  if (DEVICE_RE.test(device || '')) keys.device = `limits/${day}/dev-${await hash(`device:${device}`)}`;
+  const counts = {};
+  await Promise.all(Object.entries(keys).map(async ([kind, key]) => {
+    const obj = await env.BUCKET.get(key);
+    counts[kind] = obj ? Number((await obj.json()).n) || 0 : 0;
+  }));
+  return {
+    exceeded: Object.keys(keys).find((kind) => counts[kind] >= PREVIEW_LIMITS[kind]) || null,
+    count: () => Promise.all(Object.entries(keys).map(([kind, key]) => env.BUCKET.put(key, JSON.stringify({ n: counts[kind] + 1 }))))
+  };
+}
+
+const LIMIT_MESSAGES = {
+  device: `Сегодня здесь уже сделано ${PREVIEW_LIMITS.device} бесплатных превью — это дневной лимит. Готовые превью можно открыть по ссылке и оплатить, а новое сделать завтра.`,
+  ip: 'Из вашей сети сегодня сделано много бесплатных превью. Попробуйте завтра или напишите нам — поможем.'
+};
 
 // ---------------------------------------------------------------- маршруты
 
@@ -89,6 +120,10 @@ async function generate(request, env, store) {
   // Главная ценность книги — ребёнок, похожий на себя, на каждой иллюстрации: без фото заказ не принимаем
   if (!photos.length) return fail(400, 'Загрузите хотя бы одно фото ребёнка — по нему рисуются все иллюстрации книги.');
 
+  const owner = Boolean(env.ADMIN_KEY) && request.headers.get('x-admin-key') === env.ADMIN_KEY;
+  const counters = owner ? null : await previewCounters(env, request, order.device);
+  if (counters?.exceeded) return fail(429, LIMIT_MESSAGES[counters.exceeded]);
+
   const input = {};
   for (const key of ['name', 'age', 'gender', 'eyes', 'occasion', 'habits', 'friends', 'cast', 'style', 'theme', 'interests', 'special', 'lesson', 'design']) {
     input[key] = typeof body[key] === 'string' || typeof body[key] === 'number' ? String(body[key]).slice(0, 500) : '';
@@ -104,6 +139,7 @@ async function generate(request, env, store) {
   await store.savePhotos(id, photos);
   await store.saveJob(job);
   await startBook(env, id, 'preview');
+  await counters?.count();
   return json({ ok: true, jobId: id, status: job.status, position: 0 });
 }
 
