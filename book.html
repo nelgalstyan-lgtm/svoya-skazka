@@ -570,9 +570,10 @@ body.t-newyear .sheet{ background:
       window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return [book.title].concat(book.pages.map(pageText)); });
       return;
     }
+    // озвучка рассказчиком (если уже готова), иначе — голос устройства
     window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () {
       return [book.title].concat(book.pages.map(pageText));
-    });
+    }, book.audio);
     window.SkazkaExtras.attachEditor({
       button: document.getElementById('editBtn'),
       apiBase: API_BASE,

@@ -6,7 +6,8 @@
 // step — объект Workflow (step.do(name, config, fn)); в тестах — простая замена, которая сразу вызывает fn.
 //
 // mode 'preview' — бесплатное превью: весь текст + лист персонажа, обложка и первая иллюстрация.
-// mode 'complete' — после оплаты: остальные иллюстрации и раскраска, потом фото удаляются.
+// mode 'complete' — после оплаты: остальные иллюстрации и раскраска, потом фото удаляются, потом озвучка (voice.js).
+// mode 'voice' — переозвучка после правки текста (только изменившиеся главы).
 
 import { generateStory } from '../server/lib/story.js';
 import { writePlan, writeChapter, chapterContext, assembleBigBook, templateBook } from '../server/lib/bigstory.js';
@@ -15,6 +16,7 @@ import template from '../js/story-template.js';
 import { createStore } from './store.js';
 import { drawImage } from './art.js';
 import { isDrawn, bookImages } from './view.js';
+import { voiceFlow } from './voice.js';
 
 const { normalizeInput } = template;
 
@@ -28,6 +30,7 @@ export async function runBook(env, { id, mode }, step, { log = console.warn } = 
   const store = createStore(env.BUCKET);
   const progress = (text) => store.updateJob(id, (job) => { job.progress = text; if (job.status === 'queued') { job.status = 'processing'; job.startedAt = Date.now(); } });
   const ctx = { env, store, id, step, log, progress };
+  if (mode === 'voice') return voiceFlow(ctx);
   return mode === 'complete' ? completeFlow(ctx) : previewFlow(ctx);
 }
 
@@ -215,5 +218,8 @@ async function completeFlow(ctx) {
     });
     await store.removePhotos(id); // книга дорисована — фото больше не нужны
   });
+
+  // озвучка — уже после того, как книга открыта покупателю: пока она идёт, «Слушать» читает голос устройства
+  await voiceFlow(ctx);
 }
 

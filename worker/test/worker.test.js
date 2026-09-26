@@ -7,6 +7,7 @@ import { handleApi, PREVIEW_LIMITS } from '../api.js';
 import { runBook } from '../book.js';
 import { jsonStringField } from '../bytes.js';
 import { queueHandler } from '../queue.js';
+import { splitText, voiceTracks } from '../voice.js';
 
 const worker = { queue: queueHandler };
 
@@ -91,6 +92,23 @@ function stubOpenAI({ failKinds = [], failOnce = [] } = {}) {
     return new Response(`{"created":1,"data":[{"b64_json":"${b64}"}],"usage":{}}`, { status: 200 });
   };
   return { calls, restore: () => { globalThis.fetch = original; } };
+}
+
+// Yandex SpeechKit v3: построчный JSON с кусками mp3 в base64 (ставится поверх stubOpenAI)
+function stubYandex({ fail = false } = {}) {
+  const calls = [];
+  const inner = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (!String(url).startsWith('https://tts.api.cloud.yandex.net/')) return inner(url, init);
+    const body = JSON.parse(init.body);
+    calls.push({ auth: init.headers.Authorization, text: body.text, voice: body.hints[0].voice });
+    if (fail) return new Response('{"error":"quota"}', { status: 429 });
+    const line = (s) => `{"result":{"audioChunk":{"data":"${Buffer.from(s).toString('base64')}"},"textChunk":{"text":"\\"data\\""}}}`;
+    return new Response(`${line(`A${calls.length}`)}
+${line(`B${calls.length}`)}
+`, { status: 200 });
+  };
+  return { calls, restore: () => { globalThis.fetch = inner; } };
 }
 
 const PHOTO = `data:image/jpeg;base64,${Buffer.from('photo-bytes').toString('base64')}`;
@@ -378,4 +396,65 @@ test('неизвестная книга и мусорный адрес — 404',
   assert.equal((await api(env, '/api/book/00000000-0000-0000-0000-000000000000/status')).status, 404);
   assert.equal((await api(env, '/api/book/../../jobs/status')).status, 404);
   assert.equal((await api(env, '/api/nothing')).status, 404);
+});
+
+test('озвучка: текст режется на куски по абзацам и предложениям, не длиннее предела', () => {
+  const long = 'Первое предложение тут. '.repeat(40) + '\nКороткий абзац.';
+  const chunks = splitText(long, 300);
+  assert.ok(chunks.length > 2);
+  assert.ok(chunks.every((c) => c.length <= 300), 'каждый кусок в пределе');
+  assert.equal(chunks.join(' ').replace(/\s+/g, ' ').length, long.replace(/\s+/g, ' ').trim().length);
+  const tracks = voiceTracks({ book: { title: 'Т', dedication: { lead: 'Тебе', paragraphs: ['Абзац'], signature: 'С любовью,\nмама' }, chapters: [{ n: 1, title: 'Начало', blocks: [{ t: 'p', text: 'Раз' }, { t: 'image', caption: 'картинка' }, { t: 'note', text: 'Вывод' }] }] } });
+  assert.deepEqual(tracks.map((t) => t.title), ['Посвящение', 'Глава 1. Начало']);
+  assert.ok(!tracks[1].text.includes('картинка'), 'подписи к картинкам не читаем');
+});
+
+test('озвучка после оплаты: главы голосом Ермиля в R2, книга отдаёт их; без ключа — голос устройства', async () => {
+  const env = fakeEnv({ YANDEX_API_KEY: 'ya-key' });
+  const ai = stubOpenAI();
+  const ya = stubYandex();
+  try {
+    const id = await order(env, { coloring: true });
+    assert.equal(ya.calls.length, 0, 'превью не озвучиваем');
+    await api(env, `/api/book/${id}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } });
+    assert.ok(ya.calls.length >= 1);
+    assert.ok(ya.calls.every((c) => c.auth === 'Api-Key ya-key' && c.voice === 'ermil' && c.text.length <= 1500));
+    const s = await status(env, id);
+    assert.equal(s.result.audio.length, 1, 'сказка — одна дорожка');
+    const src = s.result.audio[0].src;
+    assert.match(src, /^\/api\/media\/[a-f0-9-]{36}\/track-1-[a-f0-9]{8}\.mp3$/);
+    const mp3 = await (await api(env, src)).text();
+    assert.equal(mp3, ya.calls.map((_, i) => `A${i + 1}B${i + 1}`).join(''), 'куски склеены по порядку');
+    assert.equal(env.BUCKET.keys('voice-tmp/').length, 0, 'временные куски удалены');
+
+    // правка текста — переозвучивается только изменившееся, старый файл удаляется
+    const before = ya.calls.length;
+    await api(env, `/api/book/${id}/edit`, { method: 'POST', body: { edits: [{ page: 0, text: 'Совсем новый текст первой страницы' }] } });
+    assert.ok(ya.calls.length > before);
+    const s2 = await status(env, id);
+    assert.notEqual(s2.result.audio[0].src, src);
+    assert.equal(env.BUCKET.keys('media/').length, 1);
+
+    // без ключа — никакой озвучки
+    const env2 = fakeEnv();
+    const id2 = await order(env2);
+    const n = ya.calls.length;
+    await api(env2, `/api/book/${id2}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } });
+    assert.equal(ya.calls.length, n);
+    assert.deepEqual((await status(env2, id2)).result.audio, []);
+  } finally { ya.restore(); ai.restore(); }
+});
+
+test('озвучка не удалась — книга готова, «Слушать» остаётся голосом устройства', async () => {
+  const env = fakeEnv({ YANDEX_API_KEY: 'ya-key' });
+  const ai = stubOpenAI();
+  const ya = stubYandex({ fail: true });
+  try {
+    const id = await order(env, { tariff: 'big' });
+    await api(env, `/api/book/${id}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } });
+    const s = await status(env, id);
+    assert.equal(s.paid, true);
+    assert.ok(!s.result.book.audio || s.result.book.audio.length === 0);
+    assert.equal(env.BUCKET.keys('voice-tmp/').length + env.BUCKET.keys('media/').length, 0);
+  } finally { ya.restore(); ai.restore(); }
 });

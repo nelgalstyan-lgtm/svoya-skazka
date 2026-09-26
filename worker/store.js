@@ -1,6 +1,7 @@
 // Хранилище в R2 (бакет geroenok):
 //   jobs/<id>.json      — задача и книга; картинок внутри нет, только ссылки /api/img/…
 //   img/<id>/<file>     — иллюстрации (WebP), лист персонажа, раскраска
+//   media/<id>/<file>   — озвучка книги (mp3 на главу, отдаётся через /api/media/…); voice-tmp/<id>/ — куски до склейки
 //   photos/<id>/<n>     — фото ребёнка: до оплаты (не дольше PHOTO_TTL_HOURS) и до конца дорисовки
 // Правило жизненного цикла R2 дополнительно удаляет photos/ старше 2 суток — даже если код что-то пропустит.
 
@@ -75,7 +76,31 @@ export function createStore(bucket, { photoTtlMs = 48 * 60 * 60_000 } = {}) {
     return d ? { mime: d[1], bytes: fromBase64(src.slice(d[0].length)) } : null;
   }
 
+  // ---------- озвучка
+  const MEDIA_SRC_RE = /^\/api\/media\/([a-f0-9-]{36})\/([a-z0-9-]+\.mp3)$/;
+  const mediaKey = (src) => { const m = MEDIA_SRC_RE.exec(String(src || '')); return m ? `media/${m[1]}/${m[2]}` : null; };
+
+  async function putMedia(key, bytes) {
+    await bucket.put(key, bytes, { httpMetadata: { contentType: 'audio/mpeg' } });
+  }
+
+  /** Склеивает куски mp3 в один файл главы и возвращает его адрес /api/media/<id>/<name>-<хвост>.mp3. */
+  async function joinMedia(id, name, keys) {
+    const parts = await Promise.all(keys.map(async (k) => { const o = await bucket.get(k); return o ? new Uint8Array(await o.arrayBuffer()) : null; }));
+    if (parts.some((p) => !p)) return null;
+    const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+    let at = 0;
+    for (const p of parts) { out.set(p, at); at += p.length; }
+    const file = `${name}-${crypto.randomUUID().slice(0, 8)}.mp3`;
+    await putMedia(`media/${id}/${file}`, out);
+    return `/api/media/${id}/${file}`;
+  }
+
+  async function removeMedia(keys) {
+    if (keys.length) await bucket.delete(keys);
+  }
+
   const getImageObject = (id, file) => (isJobId(id) && isImageFile(file) ? bucket.get(`img/${id}/${file}`) : null);
 
-  return { getJob, saveJob, updateJob, savePhotos, loadPhotos, removePhotos, putImage, loadImage, getImageObject };
+  return { getJob, saveJob, updateJob, savePhotos, loadPhotos, removePhotos, putImage, loadImage, getImageObject, putMedia, joinMedia, removeMedia, mediaKey };
 }

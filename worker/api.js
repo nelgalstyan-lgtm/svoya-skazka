@@ -232,7 +232,10 @@ async function edit(request, env, store, id) {
       if (page) { page.text = text; applied += 1; }
     }
   }
+  const revoice = applied && env.YANDEX_API_KEY && (job.voiceRuns || 0) < VOICE_RUNS_MAX;
+  if (revoice) job.voiceRuns = (job.voiceRuns || 0) + 1;
   if (applied) await store.saveJob(job);
+  if (revoice) await startBook(env, id, 'voice', job.voiceRuns); // озвучка догонит правку через пару минут
   return json({ ok: true, applied });
 }
 
@@ -249,9 +252,13 @@ async function unlock(request, env, store, id) {
  * Запуск создания книги — через очередь, а не прямо отсюда. Если Workflow создать из запроса покупателя,
  * OpenAI видит страну покупателя и отказывает заказам из РФ; из обработчика очереди — не видит (проверено 26.09).
  */
-async function startBook(env, id, mode) {
-  await env.START_QUEUE.send({ instance: mode === 'complete' ? `${id}-complete` : id, id, mode });
+async function startBook(env, id, mode, run = 0) {
+  const instance = mode === 'complete' ? `${id}-complete` : mode === 'voice' ? `${id}-voice-${run}` : id;
+  await env.START_QUEUE.send({ instance, id, mode });
 }
+
+// Сколько раз можно переозвучить книгу после правок (каждый раз — только изменившиеся главы)
+const VOICE_RUNS_MAX = 10;
 
 /** Отмечает книгу оплаченной и запускает дорисовку. Повторный вызов для той же книги ничего не делает. */
 export async function unlockBook(env, store, id) {
@@ -269,7 +276,7 @@ export async function unlockBook(env, store, id) {
   return { ok: true, paid: true };
 }
 
-// Медиа сайта из R2 (media/…): аудиокнига-образец. Отдаём кусками (Range → 206) — без этого Safari на iPhone
+// Медиа из R2 (media/…): аудиокнига-образец и озвучка книг покупателей. Отдаём кусками (Range → 206) — без этого Safari на iPhone
 // не проигрывает звук, а перемотка не работает; R2 режет файл сам, процессор Worker'а не тратится.
 const MEDIA_RE = /^[a-z0-9-]+\/[a-z0-9-]+\.mp3$/;
 async function media(request, env, path) {
