@@ -233,9 +233,10 @@ body.t-newyear .sheet{ background:
     <button class="btn ghost" id="editBtn" type="button" hidden>✏️ Править книгу</button>
     <button class="btn ghost" id="sequelBtn" type="button" hidden>✨ Заказать продолжение</button>
     <button class="btn" id="pdfBtn" type="button">Скачать PDF</button>
+    <button class="btn ghost" id="printBtn" type="button">Для типографии</button>
   </div>
 </div>
-<p class="hint no-print" id="pdfHint">«Скачать PDF» сохраняет книгу файлом формата A4 — его можно распечатать дома или в копицентре. <a href="how-it-works.html#print" target="_blank" style="color:inherit;">Как напечатать книгу →</a></p>
+<p class="hint no-print" id="pdfHint">«Скачать PDF» — вся книга одним файлом A4, чтобы распечатать дома или в копицентре. «Для типографии» — два файла: страницы и обложка одним листом. <a href="how-it-works.html#print" target="_blank" style="color:inherit;">Как напечатать книгу →</a></p>
 
 <main class="book" id="book"></main>
 
@@ -556,6 +557,7 @@ body.t-newyear .sheet{ background:
     if (data.locked) {
       // в превью — только чтение и прослушивание; правки, продолжение и PDF — после оплаты
       document.getElementById('pdfBtn').style.display = 'none';
+      document.getElementById('printBtn').style.display = 'none';
       document.getElementById('pdfHint').style.display = 'none';
       window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return [book.title].concat(book.pages.map(pageText)); });
       return;
@@ -621,6 +623,7 @@ body.t-newyear .sheet{ background:
 
   function showEmpty() {
     document.getElementById('pdfBtn').style.display = 'none';
+    document.getElementById('printBtn').style.display = 'none';
     document.getElementById('pdfHint').style.display = 'none';
     const box = el('div', 'gw-card');
     const art = el('img', 'gw-art'); art.src = 'assets/brand/pose-walking.webp'; art.alt = 'Героёнок идёт с сумкой книг';
@@ -648,10 +651,18 @@ body.t-newyear .sheet{ background:
     // «Скачать PDF» — файл формата A4 (страницы 794×1123 px); печать — запасной вариант внутри attachPdf
     const pdfBtn = document.getElementById('pdfBtn');
     // образцы — книги детей: полистать и послушать можно, забрать файлом — нет
-    if (params.get('demo')) { pdfBtn.style.display = 'none'; document.getElementById('pdfHint').style.display = 'none'; }
+    if (params.get('demo')) { pdfBtn.style.display = 'none'; document.getElementById('printBtn').style.display = 'none'; document.getElementById('pdfHint').style.display = 'none'; }
     window.SkazkaExtras.attachPdf(pdfBtn, {
       selector: '.sheet', widthMm: 210, heightMm: 297, scaleVar: '--scale',
       fileName: function () { return window.SkazkaExtras.pdfName(document.title.replace(/ — Героёнок$/, '')); }
+    });
+    // «Для типографии»: страницы без обложки + обложка одним листом (задняя, корешок, лицевая)
+    window.SkazkaExtras.attachPrintKit(document.getElementById('printBtn'), {
+      blockSelector: '.sheet:not(.cover):not(.back)', frontSelector: '.sheet.cover', backSelector: '.sheet.back',
+      widthMm: 210, heightMm: 297, scaleVar: '--scale', spineColor: '#1c1a24', spineFont: "'Lora', Georgia, serif",
+      title: function () { return document.title.replace(/ — Героёнок$/, ''); },
+      fileBase: function () { return window.SkazkaExtras.pdfName(document.title.replace(/ — Героёнок$/, '')).replace(/\.pdf$/, ''); },
+      pagesCount: function () { return document.querySelectorAll('.sheet:not(.cover):not(.back)').length; }
     });
     // ссылка «Скачать PDF» из анкеты (?print=1) — сразу собираем файл, когда книга и картинки готовы
     if (params.get('print') === '1') {

@@ -41,9 +41,10 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     <button class="btn ghost" id="editBtn" type="button" hidden>✏️ Править книгу</button>
     <button class="btn ghost" id="sequelBtn" type="button" hidden>✨ Заказать продолжение</button>
     <button class="btn" id="pdfBtn" type="button">Скачать PDF</button>
+    <button class="btn ghost" id="printBtn" type="button">Для типографии</button>
   </div>
 </div>
-<p class="hint no-print">«Скачать PDF» сохраняет книгу файлом (формат 154×235 мм) — его можно распечатать дома или в копицентре. <a href="how-it-works.html#print" target="_blank" style="color:inherit;">Как напечатать книгу →</a></p>
+<p class="hint no-print">«Скачать PDF» — вся книга одним файлом (154×235 мм), чтобы распечатать дома или в копицентре. «Для типографии» — два файла: страницы и обложка одним листом. <a href="how-it-works.html#print" target="_blank" style="color:inherit;">Как напечатать книгу →</a></p>
 
 <main id="book" class="bk-book-view"></main>
 
@@ -91,6 +92,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       window.__bookData = book;
       if (locked) {
         document.getElementById('pdfBtn').style.display = 'none';
+        document.getElementById('printBtn').style.display = 'none';
         window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
       } else {
         attachActions(book, answers, jobId, status || {});
@@ -102,11 +104,20 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   // «Скачать PDF» — файл (страницы 154×235 мм); печать остаётся запасным вариантом
   if (params.get('demo')) {
     document.getElementById('pdfBtn').style.display = 'none';
+    document.getElementById('printBtn').style.display = 'none';
     var demoHint = document.querySelector('.hint.no-print'); if (demoHint) demoHint.style.display = 'none';
   }
   window.SkazkaExtras.attachPdf(document.getElementById('pdfBtn'), {
     selector: '.bk-page', widthMm: 154, heightMm: 235, scaleVar: '--bk-scale',
     fileName: function () { return window.SkazkaExtras.pdfName((window.__bookData || {}).title); }
+  });
+  // «Для типографии»: страницы без обложки + обложка одним листом (задняя, корешок, лицевая)
+  window.SkazkaExtras.attachPrintKit(document.getElementById('printBtn'), {
+    blockSelector: '.bk-page:not(.bk-cover):not(.bk-back)', frontSelector: '.bk-cover', backSelector: '.bk-back',
+    widthMm: 154, heightMm: 235, scaleVar: '--bk-scale', spineColor: '#1c1410', spineFont: "'Cormorant Garamond', Georgia, serif",
+    title: function () { return (window.__bookData || {}).title; },
+    fileBase: function () { return window.SkazkaExtras.pdfName((window.__bookData || {}).title).replace(/\.pdf$/, ''); },
+    pagesCount: function () { return document.querySelectorAll('.bk-page:not(.bk-cover):not(.bk-back)').length; }
   });
 
   function listenTexts(book) {

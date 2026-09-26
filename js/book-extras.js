@@ -130,44 +130,167 @@
    * без сервера). opts: { selector — страницы, widthMm, heightMm, scaleVar — CSS-переменная масштаба страниц,
    * fileName() }. Не вышло (старый браузер, нет интернета для библиотек) — открываем печать, там есть «Сохранить как PDF».
    */
+  function libsReady() {
+    return loadScript(PDF_LIBS[0]).then(function () { return loadScript(PDF_LIBS[1]); })
+      .then(function () { return document.fonts ? document.fonts.ready : null; });
+  }
+
+  // снимок страницы книги в полном размере (без уменьшения под экран)
+  function snap(node, scale, scaleVar) {
+    return global.html2canvas(node, {
+      scale: scale, useCORS: true, backgroundColor: '#ffffff', logging: false,
+      onclone: function (doc) { if (scaleVar) doc.documentElement.style.setProperty(scaleVar, '1'); }
+    });
+  }
+
+  /** Собирает PDF из страниц (selector) — по странице на лист widthMm×heightMm. */
+  function buildPdf(button, opts) {
+    var original = button.textContent;
+    button.textContent = 'Готовим PDF…';
+    return libsReady().then(function () {
+      var pages = Array.prototype.slice.call(document.querySelectorAll(opts.selector));
+      var w = opts.widthMm, h = opts.heightMm;
+      var pdf = new global.jspdf.jsPDF({ unit: 'mm', format: [w, h], orientation: w > h ? 'l' : 'p', compress: true });
+      var i = 0;
+      function next() {
+        if (i >= pages.length) return pdf;
+        button.textContent = 'Готовим PDF: ' + (i + 1) + ' из ' + pages.length;
+        return snap(pages[i], 2, opts.scaleVar).then(function (canvas) {
+          if (i > 0) pdf.addPage([w, h], w > h ? 'l' : 'p');
+          pdf.addImage(canvas.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, w, h, undefined, 'FAST');
+          i += 1;
+          return new Promise(function (r) { setTimeout(r, 0); }).then(next);
+        });
+      }
+      return next();
+    }).then(function (pdf) { pdf.save(opts.fileName()); })
+      .then(function () { button.textContent = original; }, function (error) { button.textContent = original; throw error; });
+  }
+
   function attachPdf(button, opts) {
     if (!button) return;
     var busy = false;
     button.addEventListener('click', function () {
       if (busy) return;
       busy = true;
-      var original = button.textContent;
-      button.textContent = 'Готовим PDF…';
-      loadScript(PDF_LIBS[0]).then(function () { return loadScript(PDF_LIBS[1]); })
-        .then(function () { return document.fonts ? document.fonts.ready : null; })
-        .then(function () {
-          var pages = Array.prototype.slice.call(document.querySelectorAll(opts.selector));
-          var w = opts.widthMm, h = opts.heightMm;
-          var pdf = new global.jspdf.jsPDF({ unit: 'mm', format: [w, h], orientation: w > h ? 'l' : 'p', compress: true });
-          var i = 0;
-          function next() {
-            if (i >= pages.length) return pdf;
-            button.textContent = 'Готовим PDF: ' + (i + 1) + ' из ' + pages.length;
-            return global.html2canvas(pages[i], {
-              scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
-              // в копии страницы — без уменьшения под экран: в PDF страница в полном размере
-              onclone: function (doc) { if (opts.scaleVar) doc.documentElement.style.setProperty(opts.scaleVar, '1'); }
-            }).then(function (canvas) {
-              if (i > 0) pdf.addPage([w, h], w > h ? 'l' : 'p');
-              pdf.addImage(canvas.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, w, h, undefined, 'FAST');
-              i += 1;
-              return new Promise(function (r) { setTimeout(r, 0); }).then(next);
-            });
-          }
-          return next();
-        })
-        .then(function (pdf) { pdf.save(opts.fileName()); })
+      buildPdf(button, opts)
         .catch(function (error) {
           console.warn('[pdf]', error);
           hintNear(button, 'Не получилось собрать PDF в этом браузере. Открываем печать — выберите «Сохранить как PDF».');
           setTimeout(function () { global.print(); }, 800);
         })
-        .then(function () { busy = false; button.textContent = original; });
+        .then(function () { busy = false; });
+    });
+  }
+
+  /**
+   * Обложка для типографии одним листом: задняя сторона, корешок и лицевая, с запасом под обрез со всех сторон.
+   * Размер листа: (ширина страницы × 2 + корешок + 2 × запас) × (высота + 2 × запас), в мм.
+   */
+  function buildCoverSpread(button, opts, spineMm) {
+    var BLEED = 5; // мм под обрез (у твёрдого переплёта типография может попросить больше — это видно в их шаблоне)
+    var original = button.textContent;
+    button.textContent = 'Готовим обложку…';
+    return libsReady().then(function () {
+      var front = document.querySelector(opts.frontSelector);
+      var back = document.querySelector(opts.backSelector);
+      if (!front || !back) throw new Error('no cover pages');
+      return snap(back, 3, opts.scaleVar).then(function (b) {
+        return snap(front, 3, opts.scaleVar).then(function (f) { return [b, f]; });
+      });
+    }).then(function (pair) {
+      var b = pair[0], f = pair[1];
+      var pxmm = f.width / opts.widthMm;
+      var bleed = Math.round(BLEED * pxmm), spine = Math.round(spineMm * pxmm);
+      var W = bleed * 2 + b.width + spine + f.width, H = bleed * 2 + f.height;
+      var c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      var g = c.getContext('2d');
+      g.drawImage(b, bleed, bleed);
+      g.drawImage(f, bleed + b.width + spine, bleed);
+      // корешок: цвет обложки, название снизу вверх и «Героёнок»
+      g.fillStyle = opts.spineColor || '#1c1410';
+      g.fillRect(bleed + b.width, bleed, spine, f.height);
+      if (spineMm >= 6) {
+        var text = (opts.title() || '') + '   ·   Героёнок';
+        var size = Math.min(spine * 0.42, 6 * pxmm);
+        g.save();
+        g.translate(bleed + b.width + spine / 2, bleed + f.height / 2);
+        g.rotate(-Math.PI / 2);
+        g.fillStyle = opts.spineInk || '#fbe6b0';
+        g.textAlign = 'center'; g.textBaseline = 'middle';
+        do { g.font = '700 ' + Math.round(size) + 'px ' + (opts.spineFont || 'Georgia, serif'); size *= 0.94; }
+        while (g.measureText(text).width > f.height * 0.86 && size > 8);
+        g.fillText(text, 0, 0);
+        g.restore();
+      }
+      // запас под обрез: крайние ряды и столбцы вытягиваем наружу
+      var t = document.createElement('canvas');
+      t.width = W; t.height = H;
+      var tg = t.getContext('2d');
+      tg.drawImage(c, 0, 0);
+      g.drawImage(t, 0, bleed, W, 1, 0, 0, W, bleed);
+      g.drawImage(t, 0, bleed + f.height - 1, W, 1, 0, bleed + f.height, W, bleed);
+      tg.drawImage(c, 0, 0);
+      g.drawImage(t, bleed, 0, 1, H, 0, 0, bleed, H);
+      g.drawImage(t, W - bleed - 1, 0, 1, H, W - bleed, 0, bleed, H);
+      var wmm = W / pxmm, hmm = H / pxmm;
+      var pdf = new global.jspdf.jsPDF({ unit: 'mm', format: [wmm, hmm], orientation: 'l', compress: true });
+      pdf.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, wmm, hmm, undefined, 'FAST');
+      pdf.save(opts.fileBase() + ' — обложка (корешок ' + spineMm + ' мм).pdf');
+    }).then(function () { button.textContent = original; }, function (error) { button.textContent = original; throw error; });
+  }
+
+  /**
+   * Кнопка «Для типографии»: панель с двумя файлами — страницы книги без обложки и обложка одним листом.
+   * В типографии обложку печатают отдельно от страниц, поэтому файлов два.
+   */
+  function attachPrintKit(button, opts) {
+    if (!button) return;
+    if (!document.getElementById('sk-print-kit-css')) {
+      var css = document.createElement('style');
+      css.id = 'sk-print-kit-css';
+      css.textContent =
+        '.print-kit{position:absolute;right:12px;top:100%;margin-top:8px;width:min(420px,calc(100vw - 24px));z-index:20;padding:16px 18px;border-radius:14px;background:#FFFCF5;color:#3F2816;font:14px/1.45 "PT Sans",Arial,sans-serif;box-shadow:0 14px 30px -12px rgba(0,0,0,.6);border:1px solid #E2D3B5;text-align:left}' +
+        '.print-kit p{margin:0 0 12px}.print-kit .pk-note{margin:8px 0 0;font-size:12.5px;color:#7a6440}' +
+        '.pk-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #EADFC8}' +
+        '.pk-row b{display:block;font-size:15px}.pk-row span{display:block;font-size:13px;color:#6b5a48}' +
+        '.pk-btn{flex:none;border:none;border-radius:10px;padding:9px 16px;background:#C99A4B;color:#3F2816;font:700 14px Arial,sans-serif;cursor:pointer}' +
+        '.pk-spine{display:flex;align-items:center;gap:10px;padding-top:10px;border-top:1px solid #EADFC8;font-weight:700}' +
+        '.pk-spine input{width:72px;padding:6px 8px;border:1px solid #CDBB98;border-radius:8px;font:15px Arial,sans-serif}';
+      document.head.appendChild(css);
+    }
+    var panel = null;
+    button.setAttribute('aria-expanded', 'false');
+    button.addEventListener('click', function () {
+      if (panel) { panel.remove(); panel = null; button.setAttribute('aria-expanded', 'false'); return; }
+      // примерная ширина корешка: лист ≈ 0,1 мм (2 страницы) плюс обложка
+      var spineDefault = Math.max(5, Math.round(Math.ceil(opts.pagesCount() / 2) * 0.1 + 3));
+      panel = document.createElement('div');
+      panel.className = 'print-kit';
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-label', 'Файлы для типографии');
+      panel.innerHTML = '<p class="pk-lead">В типографии обложку печатают отдельно от страниц — поэтому файлов два.</p>'
+        + '<div class="pk-row"><div><b>1. Страницы книги</b><span>Все страницы, кроме обложки</span></div><button type="button" class="pk-btn" data-kind="block">Скачать</button></div>'
+        + '<div class="pk-row"><div><b>2. Обложка одним листом</b><span>Задняя сторона, корешок и лицевая — на одном листе, с запасом 5 мм под обрез</span></div><button type="button" class="pk-btn" data-kind="cover">Скачать</button></div>'
+        + '<label class="pk-spine">Ширина корешка, мм <input type="number" min="0" max="60" step="0.5" value="' + spineDefault + '"></label>'
+        + '<p class="pk-note">Точную ширину корешка скажут в типографии: она зависит от бумаги и переплёта. Впишите их число и скачайте обложку заново.</p>';
+      button.parentNode.style.position = 'relative';
+      button.parentNode.appendChild(panel);
+      button.setAttribute('aria-expanded', 'true');
+      var busy = false;
+      panel.addEventListener('click', function (e) {
+        var b = e.target.closest('.pk-btn');
+        if (!b || busy) return;
+        busy = true;
+        var job = b.getAttribute('data-kind') === 'block'
+          ? buildPdf(b, { selector: opts.blockSelector, widthMm: opts.widthMm, heightMm: opts.heightMm, scaleVar: opts.scaleVar, fileName: function () { return opts.fileBase() + ' — страницы.pdf'; } })
+          : buildCoverSpread(b, opts, Math.max(0, Number(panel.querySelector('input').value) || spineDefault));
+        job.catch(function (error) {
+          console.warn('[print-kit]', error);
+          hintNear(button, 'Не получилось собрать файл в этом браузере. Попробуйте Chrome на компьютере.');
+        }).then(function () { busy = false; });
+      });
     });
   }
 
@@ -404,6 +527,7 @@
     paragraphText: paragraphText,
     attachListen: attachListen,
     attachPdf: attachPdf,
+    attachPrintKit: attachPrintKit,
     pdfName: pdfName,
     bookUrl: bookUrl,
     qrBlock: qrBlock,
