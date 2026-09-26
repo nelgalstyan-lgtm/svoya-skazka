@@ -80,6 +80,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       frame: params.get('frame'), footer: params.get('footer'),
       onlyGenerated: Boolean(jobId), // заказ клиента: фоновые сцены без героя не показываем
       qr: window.SkazkaExtras.qrBlock('book-pro.html', jobId),
+      backQr: window.SkazkaExtras.qrBlock('book-pro.html', jobId, 'bk-back-qr', 'Читать и слушать онлайн'),
       certificate: name ? window.SkazkaExtras.certificate(name, book.title, girl) : null
     }).then(function (res) {
       document.title = book.title + ' — Героёнок';

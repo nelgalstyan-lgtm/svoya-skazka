@@ -194,7 +194,7 @@
   }
 
   /** Блок «Отсканируйте — и книга откроется на телефоне»: узел или null. */
-  function qrBlock(page, jobId, className) {
+  function qrBlock(page, jobId, className, label) {
     var svg = qrSvg(bookUrl(page, jobId));
     if (!svg) return null;
     var box = document.createElement('div');
@@ -204,7 +204,7 @@
     code.innerHTML = svg; // SVG собран библиотекой из нашего же адреса, пользовательского текста в нём нет
     var text = document.createElement('div');
     text.className = 'qr-text';
-    text.textContent = 'Наведите камеру телефона — книга откроется онлайн: её можно читать и слушать вслух';
+    text.textContent = label || 'Наведите камеру телефона — книга откроется онлайн: её можно читать и слушать вслух';
     box.append(code, text);
     return box;
   }

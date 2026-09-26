@@ -196,6 +196,8 @@
     book.chapters.some(function (c) { return c.blocks.some(function (b) { if (b.t === 'image') { first = b; return true; } return false; }); });
     var src = book.cover || (first ? imageSrc(first) : null);
     if (src) page.appendChild(img(src, 'bk-cover-img', book.title));
+    // готовая обложка из макета (название уже на картинке) — показываем как есть
+    if (book.coverPrinted) { page.classList.add('bk-cover-printed'); return { page: page, folio: null }; }
     var head = h('div', 'bk-cover-head');
     head.appendChild(h('div', 'bk-cover-kicker', 'Персональная книга'));
     head.appendChild(h('div', 'bk-cover-title', book.title));
@@ -286,6 +288,8 @@
   // Задняя обложка: иллюстрация в арке, аннотация, возраст и знак Героёнка (нужна и для печати в твёрдом переплёте)
   function backCoverSheet(root, book, opts) {
     var page = newSheet(root, 'bk-back');
+    // готовая задняя обложка из макета — картинкой целиком
+    if (book.backCover) { page.classList.add('bk-back-printed'); page.appendChild(img(book.backCover, 'bk-cover-img', 'Задняя обложка')); return { page: page, folio: null }; }
     var src = backImageFor(book, opts && opts.onlyGenerated);
     if (src) {
       var arch = h('div', 'bk-back-arch');
@@ -301,6 +305,8 @@
     foot.append(seal, brand);
     if (book.ageGroup) foot.appendChild(h('div', 'bk-back-age', book.ageGroup.replace('-', '–') + ' лет'));
     page.appendChild(foot);
+    // QR на онлайн-версию книги (в ней «Слушать»): у заказа есть, у образцов без адреса — нет
+    if (opts && opts.backQr) { page.classList.add('bk-back-has-qr'); page.appendChild(opts.backQr); }
     return { page: page, folio: null };
   }
 

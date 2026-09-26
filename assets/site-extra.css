@@ -41,6 +41,11 @@
 .book3d-spine{ display:flex; flex-direction:column; align-items:center; justify-content:space-between; padding:16px 0 12px; overflow:hidden; }
 .book3d-spine span{ writing-mode:vertical-rl; font-family:var(--font-display, Georgia, serif); font-weight:700; font-size:13px; letter-spacing:.06em; color:#fbe6b0; white-space:nowrap; }
 .book3d-spine img{ width:calc(var(--d) - 10px); height:auto; border-radius:50%; background:#f3e3c2; padding:2px; }
+/* книга с готовой обложкой из макета: без надписей и затемнения поверх, корешок — картинкой, толщина по корешку макета */
+.book3d-printed{ --d:26px; }
+.book3d-printed .book3d-cover::before{ display:none; }
+.book3d-printed .book3d-spine{ padding:0; }
+.book3d-printed .book3d-spine img{ width:100%; height:100%; object-fit:cover; border-radius:0; background:none; padding:0; }
 /* оборот по нажатию: к задней обложке, пауза, обратно к лицевой (итого 360°) */
 .book3d.is-spinning{ animation:book3d-spin 6.5s ease-in-out; }
 @keyframes book3d-spin{
@@ -55,7 +60,7 @@
 .book3d-turn:focus-visible{ outline:3px solid var(--btn, #8a5a36); outline-offset:4px; }
 .book3d-turn:hover .book3d:not(.is-spinning){ transform:rotateY(-12deg) rotateX(2deg); }
 .book3d-tip{ margin:0 0 6px; font-size:14px; color:var(--text-soft, #6b5a48); text-align:center; }
-@media (max-width:520px){ .book3d{ --w:210px; --h:320px; --d:26px; } .book3d-title{ font-size:20px; } .book3d-title small{ white-space:normal; line-height:1.5; } .book3d-spine span{ font-size:11px; } }
+@media (max-width:520px){ .book3d{ --w:210px; --h:320px; --d:26px; } .book3d-title{ font-size:20px; } .book3d-title small{ white-space:normal; line-height:1.5; } .book3d-spine span{ font-size:11px; } .book3d-printed{ --d:21px; } }
 @media (prefers-reduced-motion: reduce){ .book3d{ transition:none; } }
 
 /* ---------- сравнение «обычная книга vs наша» ---------- */
