@@ -249,7 +249,10 @@ export async function handleApi(request, env) {
     if (url.searchParams.get('openai') === '1' && env.OPENAI_API_KEY && !(await limited(env.EDIT_LIMITER, `${clientIp(request)}:health`))) {
       const r = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } }).catch(() => null);
       out.openai = r ? r.status : 'network error';
-      console.log(`[health] colo ${out.colo} openai ${out.openai}`);
+      const detail = r && !r.ok ? (await r.text().catch(() => '')).slice(0, 160) : '';
+      console.log(`[health] colo ${out.colo} country ${request.cf?.country} openai ${out.openai} ${detail}`);
+      // ВРЕМЕННО (проверка 26.09): пускает ли OpenAI фоновый Workflow, запущенный посетителем из этой страны
+      if (url.searchParams.get('workflow') === '1') await env.BOOK_WORKFLOW.create({ params: { mode: 'diag', country: request.cf?.country || null } });
     }
     return json(out);
   }
