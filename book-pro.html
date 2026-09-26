@@ -6,15 +6,15 @@
 <title>Ваша книга — Героёнок</title>
 <link rel="stylesheet" href="assets/kit/parchment.css">
 <style>
-:root{ --ink:#232C4D; --gold:#D79A3A; --text-light:#F4EFE0; --bk-scale:1; }
+:root{ --ink:#4A3527; --gold:#C99A4B; --text-light:#FBF3E3; --bk-scale:1; } /* палитра листа Героёнка */
 *{ box-sizing:border-box; }
 html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
 /* при чтении на экране — «стол» из тёмного дерева; в печать не попадает */
 @media screen{ body{ background:#2a1c11 radial-gradient(ellipse at 50% 15%, rgba(255,205,140,.13), transparent 62%) fixed; } #book{ padding-left:26px; } }
-.toolbar{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 20px; background:rgba(35,44,77,.96); color:var(--text-light); }
+.toolbar{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 20px; background:rgba(58,41,30,.97); color:var(--text-light); }
 .toolbar a.logo{ color:var(--text-light); text-decoration:none; font-family:Georgia,serif; font-size:18px; }
-.btn{ background:var(--gold); color:var(--ink); border:none; cursor:pointer; text-decoration:none; padding:10px 20px; border-radius:999px; font-weight:700; font-size:15px; }
+.btn{ background:var(--gold); color:var(--ink); border:none; cursor:pointer; text-decoration:none; padding:10px 20px; border-radius:12px; font-weight:700; font-size:15px; }
 .btn.ghost{ background:transparent; color:var(--text-light); border:1px solid rgba(255,255,255,.35); }
 .hint{ text-align:center; color:rgba(244,239,224,.6); font-size:13px; margin:14px 16px 0; }
 #book{ padding:20px 12px 60px; display:flex; flex-direction:column; align-items:center; gap:24px; }
@@ -25,6 +25,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   #book{ padding:0; gap:0; display:block; }
 }
 </style>
+<link rel="stylesheet" href="assets/geroenok-states.css">
 </head>
 <body>
 
@@ -146,8 +147,10 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   // Книга заказана: ждём готовности на сервере и показываем ход работы (пишется глава за главой, это несколько минут)
   function waitForJob(jobId) {
     var box = document.createElement('div');
-    box.className = 'empty';
-    box.innerHTML = '<h2>Пишем вашу книгу</h2><p id="jobText">Начинаем…</p><p style="opacity:.6;font-size:14px">Большая история пишется глава за главой, это занимает несколько минут. Страницу можно не закрывать.</p>';
+    box.className = 'gw-card';
+    box.innerHTML = '<img class="gw-art" src="assets/brand/pose-reading.webp" alt="Героёнок читает книгу">'
+      + '<h2>Героёнок пишет вашу историю</h2><div class="gw-book" aria-hidden="true"><i></i><i></i><i></i></div>'
+      + '<p id="jobText" role="status">Начинаем…</p><p class="gw-small">Большая история пишется глава за главой, это занимает несколько минут. Страницу можно не закрывать.</p>';
     root.appendChild(box);
     var text = box.querySelector('#jobText');
     var errors = 0;

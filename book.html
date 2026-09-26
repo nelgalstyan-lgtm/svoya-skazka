@@ -8,7 +8,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Caveat:wght@600;700&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap');
 
 :root{
-  --ink:#232C4D; --gold:#D79A3A; --gold-dark:#B87F27;
+  --ink:#4A3527; --gold:#C99A4B; --gold-dark:#8C6428; /* палитра листа Героёнка (docs/brand) */
   --cream:#FBF7ED; --text:#241F33; --text-soft:#514A63; --text-light:#F4EFE0; --line:#DCCEA9;
   --font-display:'Merriweather',Georgia,serif; --font-script:'Caveat',cursive; --font-body:'PT Sans',Arial,sans-serif;
   --scale:1;
@@ -21,7 +21,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 .toolbar{
   position:sticky; top:0; z-index:10;
   display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
-  padding:12px 20px; background:rgba(35,44,77,.96); color:var(--text-light);
+  padding:12px 20px; background:rgba(58,41,30,.97); color:var(--text-light);
   border-bottom:1px solid rgba(255,255,255,.08);
 }
 .logo{ font-family:var(--font-display); font-size:18px; color:var(--text-light); text-decoration:none; }
@@ -29,7 +29,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 .toolbar-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 .btn{
   background:var(--gold); color:var(--ink); border:none; cursor:pointer; text-decoration:none;
-  padding:10px 20px; border-radius:999px; font-weight:700; font-size:15px; font-family:var(--font-body);
+  padding:10px 20px; border-radius:12px; font-weight:700; font-size:15px; font-family:var(--font-body);
 }
 .btn.ghost{ background:transparent; color:var(--text-light); border:1px solid rgba(255,255,255,.35); }
 .hint{ text-align:center; color:rgba(244,239,224,.6); font-size:13px; margin:14px 16px 0; }
@@ -187,6 +187,7 @@ body.t-newyear .sheet{ background:
   * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 }
 </style>
+<link rel="stylesheet" href="assets/geroenok-states.css">
 </head>
 <body>
 
@@ -237,10 +238,12 @@ body.t-newyear .sheet{ background:
   function waitNote(text) {
     let box = document.getElementById('waitNote');
     if (!box) {
-      box = el('div', 'empty');
+      box = el('div', 'gw-card');
       box.id = 'waitNote';
-      box.appendChild(el('h2', '', 'Книга ещё рисуется'));
-      box.appendChild(el('p', ''));
+      const art = el('img', 'gw-art'); art.src = 'assets/brand/pose-reading.webp'; art.alt = 'Героёнок читает книгу';
+      const book = el('div', 'gw-book'); book.setAttribute('aria-hidden', 'true'); book.innerHTML = '<i></i><i></i><i></i>';
+      const p = el('p', ''); p.setAttribute('role', 'status');
+      box.append(art, el('h2', '', 'Героёнок дорисовывает вашу книгу'), book, p);
       root.appendChild(box);
     }
     box.querySelector('p').textContent = text || 'Это займёт несколько минут. Страницу можно не закрывать — книга появится сама.';
@@ -423,7 +426,8 @@ body.t-newyear .sheet{ background:
     if (data.locked) {
       end.parentNode.remove();
       const lock = sheet('locked');
-      lock.appendChild(el('div', 'locked-icon', '🔒'));
+      const key = el('img', 'locked-art'); key.src = 'assets/brand/item-key.webp'; key.alt = 'Золотой ключик — дверь в продолжение истории';
+      lock.appendChild(key);
       lock.appendChild(el('h2', '', 'Продолжение — в полной книге'));
       lock.appendChild(el('p', '', window.SkazkaExtras.lockedText({
         pages: book.lockedPages, name: name || 'ваш ребёнок',
@@ -530,25 +534,16 @@ body.t-newyear .sheet{ background:
   function showEmpty() {
     document.getElementById('pdfBtn').style.display = 'none';
     document.getElementById('pdfHint').style.display = 'none';
-    const box = el('div', 'empty');
-    box.appendChild(el('h2', '', 'Книги пока нет'));
-    box.appendChild(el('p', '', 'Заполните анкету и нажмите «Показать бесплатное превью» — книга появится здесь.'));
-    const actions = el('p');
-    const a1 = el('a', 'btn', 'К анкете'); a1.href = 'create.html';
-    const a2 = el('a', 'btn ghost', 'Посмотреть пример'); a2.href = 'book.html?demo=1'; a2.style.marginLeft = '10px';
+    const box = el('div', 'gw-card');
+    const art = el('img', 'gw-art'); art.src = 'assets/brand/pose-walking.webp'; art.alt = 'Героёнок идёт с сумкой книг';
+    box.append(art, el('h2', '', 'Здесь пока нет книги'), el('p', '', 'Героёнок отправится искать историю, как только вы расскажете о ребёнке. Заполните анкету — бесплатное превью появится здесь через пару минут.'));
+    const actions = el('div', 'gw-actions');
+    const a1 = el('a', 'gw-btn', 'К анкете'); a1.href = 'create.html';
+    const a2 = el('a', 'gw-btn gw-ghost', 'Посмотреть пример'); a2.href = 'book.html?demo=1';
     actions.append(a1, a2);
     box.appendChild(actions);
     root.appendChild(box);
   }
-
-  function waitForImages() {
-    return Promise.all(Array.prototype.map.call(document.images, function (img) {
-      return img.complete ? null : new Promise(function (resolve) { img.onload = img.onerror = resolve; });
-    }));
-  }
-
-  updateScale();
-  window.addEventListener('resize', updateScale);
 
   function show(data) {
     if (!data) {
