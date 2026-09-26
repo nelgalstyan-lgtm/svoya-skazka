@@ -10,7 +10,6 @@
    Дизайн-система «Героёнок» — тёплая книжная эстетика
    =========================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400&family=Caveat:wght@500;600;700&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap');
 
 :root{
   /* --- палитра --- */
@@ -468,46 +467,56 @@ section.tight{ padding:56px 0; }
 .hero-art{ background:none; border:none; min-height:0; }
 </style>
 <link rel="stylesheet" href="assets/site-extra.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="assets/geroenok.css">
 </head>
 <body>
 
 <header class="site-header">
   <div class="container">
     <a href="index.html" class="logo">Героёнок</a>
-    <nav class="main-nav">
+    <nav class="main-nav" aria-label="Основное меню">
       <a href="create.html">Создать книгу</a>
       <a href="how-it-works.html">Как это работает</a>
       <a href="examples.html">Примеры</a>
       <a href="pricing.html">Цены</a>
       <a href="audiobook.html">Аудиокниги</a>
     </nav>
+    <details class="nav-mobile">
+      <summary>Меню</summary>
+      <nav aria-label="Меню сайта">
+      <a href="create.html">Создать книгу</a>
+      <a href="how-it-works.html">Как это работает</a>
+      <a href="examples.html">Примеры</a>
+      <a href="pricing.html">Цены</a>
+      <a href="audiobook.html">Аудиокниги</a>
+    </nav>
+    </details>
     <a href="create.html" class="header-cta">Создать книгу</a>
   </div>
 </header>
 
-<section class="section-ink stars hero">
+<section class="hero hero-storybook">
   <div class="container">
-    <div>
-      <h1>Книга, в которой ваш ребёнок — не персонаж, а действительно он сам</h1>
-      <p class="lead">Не открытка на десять страниц, а настоящая книга с главами. Ребёнок нарисован на каждой иллюстрации по вашему фото, а в сюжете — его привычки, смешные словечки, друзья и семья.</p>
-      <div class="hero-cta-row">
-        <a href="create.html" class="btn btn-primary">Создать книгу</a>
-        <a href="how-it-works.html" class="btn btn-ghost-light">Как это устроено</a>
-      </div>
-    </div>
-    <div class="hero-art">
-      <div class="book3d-stage">
-        <div class="book3d" aria-label="Пример обложки книги">
-          <div class="book3d-back"></div>
-          <div class="book3d-pages"></div>
-          <div class="book3d-spine"></div>
-          <div class="book3d-cover">
-            <img src="assets/hero/milena-watercolor.jpg" alt="Обложка: девочка в акварельном лесу">
-            <div class="book3d-title"><small>Персональная книга</small>Милена и тайна светящегося камня</div>
-            <div class="book3d-hero">Милена</div>
-          </div>
+    <div class="storybook-page">
+      <div class="storybook-text">
+        <span class="kicker">Каждая книга — это чья-то маленькая сказка</span>
+        <h1>Книга, в которой ваш ребёнок — не персонаж, а действительно он сам</h1>
+        <p class="lead">Не открытка на десять страниц, а настоящая книга с главами. Ребёнок нарисован на каждой иллюстрации по вашему фото, а в сюжете — его привычки, смешные словечки, друзья и семья.</p>
+        <div class="hero-cta-row">
+          <a href="create.html" class="btn btn-primary">Создать книгу</a>
+          <a href="how-it-works.html" class="btn btn-ghost-dark">Как это устроено</a>
         </div>
+        <p class="hero-facts">Бесплатное превью за пару минут · книга от 690 ₽ · читать, слушать и распечатать</p>
       </div>
+      <figure class="storybook-art">
+        <img class="brand-art" src="assets/brand/geroenok-main-560.webp"
+             srcset="assets/brand/geroenok-main-360.webp 360w, assets/brand/geroenok-main-560.webp 560w, assets/brand/geroenok-main-820.webp 820w"
+             sizes="(max-width: 900px) 58vw, 360px" width="560" height="943"
+             alt="Героёнок — зайчик в зелёной курточке с сумкой книг и книгой со звездой в лапах" fetchpriority="high">
+        <figcaption class="storybook-note">Я Героёнок, хранитель историй. Найду ту, что написана для вашего ребёнка</figcaption>
+      </figure>
     </div>
   </div>
 </section>
@@ -524,7 +533,7 @@ section.tight{ padding:56px 0; }
         <p class="spread-text">Милена опустилась на колени у старого дуба и копнула ещё раз. Лопатка звякнула обо что-то твёрдое. — Ну вот, — прошептала она светлячку, который весь вечер кружил рядом. — Я же говорила, что камни просто так не светятся.</p>
         <p class="spread-text">Из земли показался край гладкого серого камня. Внутри него мерцал крошечный огонёк — точь-в-точь как тот, что Милена видела вчера из окна. Тигран бы сказал, что это совпадение. Но Тигран ещё не знал, что камень умеет отвечать.</p>
       </div>
-      <div class="spread-illustration has-img"><img src="assets/hero/milena-watercolor.jpg" alt="Иллюстрация с героиней книги в акварели"></div>
+      <div class="spread-illustration has-img"><img src="assets/scenes/forest_path.jpg" alt="Акварельная иллюстрация: тропинка в вечернем лесу" loading="lazy" width="1024" height="1536"></div>
     </div>
   </div>
 </section>
@@ -561,7 +570,7 @@ section.tight{ padding:56px 0; }
     </div>
     <div class="compare-wrap">
       <table class="compare">
-        <thead><tr><th></th><th>Обычная именная книга</th><th class="ours">«Большая история» от Своей Сказки</th></tr></thead>
+        <thead><tr><th></th><th>Обычная именная книга</th><th class="ours">«Большая история» от Героёнка</th></tr></thead>
         <tbody>
           <tr><td>Объём текста</td><td>5–10 страниц, около 700 слов</td><td class="ours">6 глав, 3 000–5 000 слов</td></tr>
           <tr><td>Время чтения</td><td>5 минут</td><td class="ours">Несколько вечеров, 30–40 минут</td></tr>
@@ -585,10 +594,10 @@ section.tight{ padding:56px 0; }
         <a href="create.html?tariff=big" class="btn btn-primary" style="margin-top:12px;">Создать «Большую историю»</a>
       </div>
       <div class="feature-grid" style="grid-template-columns:1fr 1fr;">
-        <div class="feature"><span class="ico">🗝️</span><h3>Загадка</h3><p>Сюжет держит до последней главы, а разгадку находит сам герой.</p></div>
-        <div class="feature"><span class="ico">💬</span><h3>Диалоги</h3><p>Друзья из анкеты спорят, шутят и спасают положение.</p></div>
-        <div class="feature"><span class="ico">📓</span><h3>Записи героя</h3><p>Каждая глава заканчивается выводом «из записей» ребёнка.</p></div>
-        <div class="feature"><span class="ico">🗺️</span><h3>Своё оформление</h3><p>Рамки, буквицы и колонтитулы под жанр книги.</p></div>
+        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-key.webp" alt="" width="52" height="52" loading="lazy"><h3>Загадка</h3><p>Сюжет держит до последней главы, а разгадку находит сам герой.</p></div>
+        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-letter.webp" alt="" width="52" height="52" loading="lazy"><h3>Диалоги</h3><p>Друзья из анкеты спорят, шутят и спасают положение.</p></div>
+        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-feather.webp" alt="" width="52" height="52" loading="lazy"><h3>Записи героя</h3><p>Каждая глава заканчивается выводом «из записей» ребёнка.</p></div>
+        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-map.webp" alt="" width="52" height="52" loading="lazy"><h3>Своё оформление</h3><p>Рамки, буквицы и колонтитулы под жанр книги.</p></div>
       </div>
     </div>
   </div>
@@ -690,6 +699,7 @@ section.tight{ padding:56px 0; }
     <div class="footer-grid">
       <div>
         <a href="index.html" class="logo" style="margin-bottom:14px; display:inline-flex;">Героёнок</a>
+        <p class="footer-tagline">там, где живут твои истории</p>
         <p style="max-width:260px; color:var(--text-light-soft);">Именные электронные книги, где ребёнок — по-настоящему главный герой.</p>
       </div>
       <div>

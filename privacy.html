@@ -10,7 +10,6 @@
    Дизайн-система «Героёнок» — тёплая книжная эстетика
    =========================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400&family=Caveat:wght@500;600;700&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap');
 
 :root{
   /* --- палитра --- */
@@ -464,19 +463,32 @@ section.tight{ padding:56px 0; }
 .page-intro p{ color:var(--text-soft); font-size:18px; max-width:640px; }
 
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="assets/geroenok.css">
 </head>
 <body>
 
 <header class="site-header">
   <div class="container">
     <a href="index.html" class="logo">Героёнок</a>
-    <nav class="main-nav">
+    <nav class="main-nav" aria-label="Основное меню">
       <a href="create.html">Создать книгу</a>
       <a href="how-it-works.html">Как это работает</a>
       <a href="examples.html">Примеры</a>
       <a href="pricing.html">Цены</a>
       <a href="audiobook.html">Аудиокниги</a>
     </nav>
+    <details class="nav-mobile">
+      <summary>Меню</summary>
+      <nav aria-label="Меню сайта">
+      <a href="create.html">Создать книгу</a>
+      <a href="how-it-works.html">Как это работает</a>
+      <a href="examples.html">Примеры</a>
+      <a href="pricing.html">Цены</a>
+      <a href="audiobook.html">Аудиокниги</a>
+    </nav>
+    </details>
     <a href="create.html" class="header-cta">Создать книгу</a>
   </div>
 </header>
@@ -513,6 +525,7 @@ section.tight{ padding:56px 0; }
 
 <footer class="site-footer">
   <div class="container">
+    <p class="footer-tagline" style="margin-bottom:16px;">Героёнок — там, где живут твои истории</p>
     <div class="footer-bottom" style="border-top:1px solid var(--line-dark); padding-top:20px; flex-wrap:wrap;">
       <span>© 2026 Героёнок</span>
       <span style="display:flex; gap:18px; flex-wrap:wrap;">

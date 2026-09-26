@@ -8,7 +8,7 @@
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "build": { "command": "bash scripts/build-pages.sh" },
-  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/api/*"], "not_found_handling": "404-page" },
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "geroenok" }],
   "workflows": [{ "name": "geroenok-book", "binding": "BOOK_WORKFLOW", "class_name": "BookWorkflow" }],
   // лимиты с одного адреса в минуту: бесплатное превью стоит ≈15 ₽ картинок

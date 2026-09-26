@@ -1,0 +1,348 @@
+/*
+ * Дизайн-система «Героёнок» — Geroenok Storybook Style.
+ * Канон: docs/brand/character-sheet.png (палитра, персонаж, предметы). Подключается ПОСЛЕ встроенных стилей
+ * страницы и переопределяет их переменные и общие блоки (шапка, кнопки, карточки, подвал) — на всех страницах сразу.
+ *
+ * Палитра снята с листа персонажа. Контраст текста (WCAG): основной 12:1, приглушённый 6:1, на кнопке 5,5:1.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Caveat:wght@500;600;700&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root{
+  /* --- бумага --- */
+  --paper:      #F6F3E7;   /* фон листа персонажа */
+  --paper-2:    #F1E7D2;   /* крем — полосы и подложки */
+  --cream:      #FBF8EF;   /* светлая страница книги */
+  --card:       #FFFCF5;   /* карточка «из архива» */
+
+  /* --- краски листа --- */
+  --sand:       #DFC39A;
+  --brown:      #B87F52;   /* сумка, шерсть */
+  --walnut:     #4A3527;   /* «вечернее чтение» — тёмные секции */
+  --walnut-2:   #5B4332;
+  --sage-light: #AAB8A2;   /* курточка */
+  --blue:       #7C9CA3;   /* книга со звездой (светлый) */
+  --blue-deep:  #4F6E75;   /* книга со звездой — для текста и значков */
+  --peach:      #EEC8B4;   /* ушки */
+  --brass:      #C99A4B;   /* ключ, звезда — только декор и крупные значки */
+  --brass-text: #8C6428;   /* латунь для текста */
+
+  /* --- переменные, которые уже используют страницы: теперь в палитре листа --- */
+  --ink:        var(--walnut);
+  --ink-2:      var(--walnut-2);
+  --gold:       var(--brass);
+  --gold-dark:  var(--brass-text);
+  --berry:      #A5583F;   /* терракота вместо ягоды (редкий второй акцент) */
+  --sage:       #56714F;   /* шалфей для текста */
+  --text:       #3F2816;
+  --text-soft:  #6B5443;
+  --text-light: #FBF3E3;
+  --text-light-soft: #E6D8C2;
+  --line:       #E2D3B5;
+  --line-dark:  #6A5140;
+
+  --btn:        #8A5A36;   /* основная кнопка */
+  --btn-hover:  #7A4E2E;
+
+  --radius-s: 8px;
+  --radius-m: 16px;
+  --radius-l: 24px;
+
+  --font-display: 'Lora', Georgia, 'Times New Roman', serif;
+  --font-script:  'Caveat', cursive;
+  --font-body:    'PT Sans', Arial, sans-serif;
+
+  --shadow-soft:  0 18px 36px -22px rgba(74,53,39,.38);
+  --shadow-paper: 0 1px 0 rgba(255,255,255,.7) inset, 0 10px 24px -18px rgba(74,53,39,.35);
+
+  /* бумажная фактура: едва заметный шум, без файла */
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .31 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- основа ---------- */
+body{
+  background-color:var(--paper);
+  background-image:var(--paper-grain);
+  color:var(--text);
+}
+h1,h2,h3,h4{ font-family:var(--font-display); font-weight:600; letter-spacing:0; color:var(--text); }
+h1{ font-weight:700; }
+.section-ink h1,.section-ink h2,.section-ink h3{ color:var(--text-light); }
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible{
+  outline:3px solid var(--brass-text);
+  outline-offset:3px;
+  border-radius:6px;
+}
+.section-ink a:focus-visible, .site-footer a:focus-visible{ outline-color:var(--brass); }
+::selection{ background:var(--peach); color:var(--text); }
+
+/* Картинки Героёнка и предметов: бумага в файле белая, на странице — исчезает (см. scripts/brand_assets.py) */
+.brand-art{ mix-blend-mode:multiply; display:block; height:auto; }
+
+/* ---------- шапка: светлая, как верх страницы книги ---------- */
+.site-header{
+  background:rgba(246,243,231,.94);
+  background-image:var(--paper-grain);
+  color:var(--text);
+  border-bottom:1px solid var(--line);
+  backdrop-filter:saturate(1.1);
+}
+.site-header .container{ padding-top:12px; padding-bottom:12px; }
+.logo{
+  color:var(--text);
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:23px;
+  align-items:center;
+  gap:8px;
+}
+.logo::before{
+  content:""; width:18px; height:18px; flex:none;
+  background:url("brand/star.svg") center/contain no-repeat;
+}
+.main-nav{ gap:26px; }
+.main-nav a{ color:var(--text-soft); font-weight:700; font-size:15px; }
+.main-nav a:hover, .main-nav a.active{ color:var(--text); border-bottom-color:var(--brass); }
+.header-cta{
+  background:var(--btn); color:var(--text-light);
+  border-radius:12px; padding:10px 18px;
+  box-shadow:0 0 0 1px rgba(201,154,75,.0);
+  transition:background .2s ease, box-shadow .2s ease;
+}
+.header-cta:hover{ background:var(--btn-hover); color:var(--text-light); box-shadow:0 0 0 3px rgba(201,154,75,.35); }
+
+/* мобильное меню: <details class="nav-mobile"> — без скриптов, работает с клавиатуры */
+.nav-mobile{ display:none; position:relative; }
+.nav-mobile summary{
+  list-style:none; cursor:pointer; user-select:none;
+  display:inline-flex; align-items:center; gap:8px;
+  border:1.5px solid var(--line); border-radius:12px; padding:8px 12px;
+  font-weight:700; font-size:15px; color:var(--text); background:var(--card);
+}
+.nav-mobile summary::-webkit-details-marker{ display:none; }
+.nav-mobile summary::before{ content:"☰"; font-size:17px; line-height:1; }
+.nav-mobile[open] summary::before{ content:"✕"; }
+.nav-mobile nav{
+  position:absolute; right:0; top:calc(100% + 10px); z-index:60;
+  min-width:230px; padding:10px;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius-m);
+  box-shadow:var(--shadow-soft); display:grid;
+}
+.nav-mobile nav a{ padding:12px 14px; border-radius:10px; text-decoration:none; font-weight:700; color:var(--text); }
+.nav-mobile nav a:hover, .nav-mobile nav a.active{ background:var(--paper-2); }
+@media (max-width:880px){
+  .nav-mobile{ display:block; }
+  .site-header .container{ gap:12px; }
+  .header-cta{ margin-left:auto; }
+}
+@media (max-width:420px){
+  .logo{ font-size:20px; }
+  .header-cta{ padding:9px 12px; font-size:14px; }
+}
+
+/* ---------- кнопки: мягкие, «переплётные», но настоящие элементы интерфейса ---------- */
+.btn{
+  border-radius:14px;
+  padding:14px 26px;
+  font-weight:700;
+  letter-spacing:.01em;
+  transition:background .2s ease, color .2s ease, box-shadow .2s ease, border-color .2s ease, transform .2s ease;
+  min-height:48px; /* удобно пальцем */
+}
+.btn:active{ transform:translateY(1px); }
+.btn[disabled], .btn.is-disabled, button:disabled.btn{
+  opacity:.55; cursor:not-allowed; box-shadow:none; transform:none;
+}
+.btn-primary{
+  background:var(--btn); color:var(--text-light);
+  box-shadow:0 1px 0 rgba(255,255,255,.18) inset, 0 8px 18px -12px rgba(74,53,39,.7);
+}
+.btn-primary:hover{ background:var(--btn-hover); color:var(--text-light); box-shadow:0 0 0 3px rgba(201,154,75,.35), 0 8px 18px -12px rgba(74,53,39,.7); }
+.btn-primary::after{
+  content:""; width:14px; height:14px; flex:none;
+  background:url("brand/star.svg") center/contain no-repeat;
+  transition:transform .4s ease;
+}
+.btn-primary:hover::after{ transform:rotate(18deg) scale(1.08); }
+.btn-ghost-dark{ border-color:var(--btn); color:var(--btn); background:transparent; }
+.btn-ghost-dark:hover{ background:var(--paper-2); color:var(--btn-hover); border-color:var(--btn-hover); }
+.btn-ghost-light{ border-color:rgba(251,243,227,.5); color:var(--text-light); }
+.btn-ghost-light:hover{ border-color:var(--text-light); background:rgba(251,243,227,.08); }
+.btn-berry{ background:var(--berry); color:var(--text-light); }
+.btn-berry:hover{ background:#8E4832; }
+/* третья кнопка: текстовая, со звёздочкой */
+.btn-link{
+  display:inline-flex; align-items:center; gap:8px; min-height:44px;
+  color:var(--btn); font-weight:700; text-decoration:underline; text-decoration-color:rgba(138,90,54,.35);
+  text-underline-offset:4px; background:none; border:0; padding:0; cursor:pointer; font:inherit;
+}
+.btn-link:hover{ text-decoration-color:currentColor; color:var(--btn-hover); }
+
+/* ---------- секции ---------- */
+.section-cream{ background-color:var(--cream); background-image:var(--paper-grain); }
+.section-paper2{ background-color:var(--paper-2); background-image:var(--paper-grain); }
+.section-ink{ background-color:var(--walnut); background-image:var(--paper-grain); color:var(--text-light); }
+.kicker{ color:var(--brass-text); font-size:23px; }
+.section-ink .kicker{ color:var(--brass); }
+.section-head p{ color:var(--text-soft); }
+
+/* звёзды на тёмных секциях — латунные, редкие и мягко мерцают */
+.stars::before{
+  background-image:
+    radial-gradient(2px 2px at 12% 22%, rgba(251,243,227,.45) 0, transparent 60%),
+    radial-gradient(2px 2px at 82% 16%, rgba(201,154,75,.7) 0, transparent 60%),
+    radial-gradient(1.5px 1.5px at 62% 58%, rgba(201,154,75,.55) 0, transparent 60%),
+    radial-gradient(1.5px 1.5px at 32% 78%, rgba(251,243,227,.3) 0, transparent 60%),
+    radial-gradient(1.5px 1.5px at 92% 72%, rgba(251,243,227,.35) 0, transparent 60%);
+  animation:twinkle 6s ease-in-out infinite alternate;
+}
+@keyframes twinkle{ from{ opacity:.65; } to{ opacity:1; } }
+
+/* разделитель-веточка между блоками (опционально: <div class="sprig-divider" aria-hidden="true"></div>) */
+.sprig-divider{ display:flex; align-items:center; justify-content:center; gap:14px; margin:0 auto; max-width:420px; }
+.sprig-divider::before, .sprig-divider::after{ content:""; flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--line)); }
+.sprig-divider::after{ background:linear-gradient(90deg, var(--line), transparent); }
+
+/* ---------- карточки: страницы из сказочного архива ---------- */
+.feature, .price-card, .example-card, .faq-panel{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-m);
+  box-shadow:var(--shadow-paper);
+}
+.feature{ position:relative; transition:transform .25s ease, box-shadow .25s ease; }
+.feature:hover{ transform:translateY(-2px); box-shadow:0 14px 28px -20px rgba(74,53,39,.45); }
+.section-ink .feature{ background:rgba(251,243,227,.06); border-color:rgba(251,243,227,.16); box-shadow:none; }
+.feature .ico{ filter:saturate(.55) sepia(.25); } /* эмодзи приглушаем под акварель, пока не заменены рисунками */
+.feature .ico-art{ width:52px; height:52px; object-fit:contain; margin-bottom:12px; }
+
+.price-card{ background:var(--card); }
+.price-card.is-popular{ border-color:var(--brass); box-shadow:0 0 0 1px var(--brass), var(--shadow-soft); }
+.price-card .badge{ background:var(--brass); color:var(--walnut); border-radius:10px; }
+.price-card li::before{ content:"★"; color:var(--brass); font-size:13px; top:3px; }
+
+.theme-card{ border:1px solid var(--line); box-shadow:var(--shadow-paper); transition:transform .25s ease, box-shadow .25s ease; }
+.theme-card:hover{ transform:translateY(-3px); box-shadow:0 16px 30px -20px rgba(74,53,39,.5); }
+.theme-card--adventure{ background:linear-gradient(155deg,#EDEBDD,#D9E0CF); }
+.theme-card--fairytale{ background:linear-gradient(155deg,#F5E6DA,#EFD6C8); }
+.theme-card--holiday{ background:linear-gradient(155deg,#F6EAD3,#EBD3A8); }
+
+.spread{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius-l); }
+.spread-page + .spread-page{ border-left-color:var(--line); }
+
+/* сравнение */
+.compare{ background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow-paper); border-radius:var(--radius-m); }
+.compare thead th{ background:var(--walnut); color:var(--text-light); }
+.compare thead th.ours{ background:var(--btn); }
+.compare td.ours{ background:#F7EBD6; }
+
+/* формы (анкета) */
+.form-shell{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius-l); box-shadow:var(--shadow-soft); }
+.field input[type="text"], .field input[type="number"], .field input[type="email"], .field input[type="tel"], .field select, .field textarea{
+  background:#FFFEFA; border-color:var(--line); border-radius:10px; color:var(--text);
+  transition:border-color .2s ease, box-shadow .2s ease;
+}
+.field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--brass-text); box-shadow:0 0 0 3px rgba(201,154,75,.25); outline:none; }
+.choice-card{ background:#FFFEFA; border-color:var(--line); border-radius:12px; transition:border-color .2s ease, background .2s ease; }
+.choice-card:hover{ border-color:var(--sand); }
+.choice-card.is-selected{ border-color:var(--btn); background:#F7EBD6; box-shadow:0 0 0 3px rgba(201,154,75,.25); }
+.photo-drop{ background:#FFFEFA; border-color:var(--sand); border-radius:var(--radius-m); }
+.progress-track span{ background:var(--line); }
+.progress-track span.done{ background:var(--brass); }
+.upsell-row{ background:var(--paper-2); }
+.upsell-row span.tag{ background:var(--sage); }
+
+/* ---------- подвал: тёмный орех, как корешок книги ---------- */
+.site-footer{
+  background-color:var(--walnut);
+  background-image:var(--paper-grain);
+  color:var(--text-light-soft);
+  position:relative;
+}
+.site-footer .logo{ color:var(--text-light); }
+.footer-grid{ border-bottom-color:var(--line-dark); }
+.footer-grid h4{ color:var(--text-light); }
+.footer-grid a{ color:var(--text-light-soft); }
+.footer-grid a:hover{ color:var(--brass); }
+.footer-tagline{
+  font-family:var(--font-script); font-size:24px; color:var(--brass);
+  display:flex; align-items:center; gap:10px; margin:0 0 6px;
+}
+.footer-tagline::before{
+  content:""; width:20px; height:20px; flex:none; background:url("brand/star.svg") center/contain no-repeat;
+}
+
+/* ---------- мягкое появление при прокрутке (класс ставит assets/geroenok.js) ---------- */
+.reveal{ opacity:0; transform:translateY(12px); transition:opacity .8s ease, transform .8s ease; }
+.reveal.is-visible{ opacity:1; transform:none; }
+
+@media (prefers-reduced-motion: reduce){
+  .stars::before{ animation:none; }
+  .reveal{ opacity:1; transform:none; transition:none; }
+  .feature, .theme-card, .btn{ transition:none; }
+}
+
+/* ---------- главная: первый экран — первая страница книги ---------- */
+.hero-storybook{ padding:40px 0 72px; background:transparent; }
+.hero-storybook .container{ display:block; }
+.storybook-page{
+  position:relative;
+  display:grid; grid-template-columns:1.15fr .85fr; gap:40px; align-items:center;
+  padding:56px 56px 48px;
+  background:var(--card);
+  border-radius:6px 22px 22px 6px;
+  box-shadow:var(--shadow-soft);
+}
+/* двойная рамка старой книги */
+.storybook-page::before{
+  content:""; position:absolute; inset:14px; pointer-events:none;
+  border:1px solid var(--line); border-radius:4px 16px 16px 4px;
+  box-shadow:0 0 0 4px var(--card), 0 0 0 5px rgba(201,154,75,.35);
+}
+.storybook-text{ position:relative; }
+.hero-storybook h1{ color:var(--text); font-size:44px; line-height:1.15; }
+.hero-storybook .lead{ color:var(--text-soft); font-size:19px; max-width:540px; }
+.hero-facts{ margin:22px 0 0; color:var(--text-soft); font-size:15px; }
+.storybook-art{ margin:0; position:relative; justify-self:center; text-align:center; }
+.storybook-art img{ width:min(360px, 100%); margin:0 auto; animation:breathe 7s ease-in-out infinite; transform-origin:50% 100%; }
+@keyframes breathe{ 0%,100%{ transform:rotate(0) } 50%{ transform:rotate(-1.2deg) } }
+.storybook-note{
+  font-family:var(--font-script); font-size:21px; line-height:1.25; color:var(--brass-text);
+  max-width:260px; margin:6px auto 0; transform:rotate(-2deg);
+}
+@media (max-width:900px){
+  .hero-storybook{ padding:16px 0 44px; }
+  .storybook-page{ grid-template-columns:1fr; gap:4px; padding:30px 24px 28px; }
+  .storybook-page::before{ inset:9px; }
+  .hero-storybook h1{ font-size:30px; }
+  .hero-storybook .lead{ font-size:17px; }
+  /* на телефоне Героёнок встречает рядом со своей запиской и не отодвигает кнопку */
+  .storybook-art{ order:-1; display:flex; align-items:center; gap:10px; justify-self:stretch; text-align:left; margin-bottom:6px; }
+  .storybook-art img{ width:96px; margin:0; flex:none; }
+  .storybook-note{ font-size:19px; margin:0; max-width:none; transform:none; }
+  .storybook-text .kicker{ display:none; } /* та же мысль уже в записке */
+}
+@media (max-width:420px){
+  .container{ padding-left:16px; padding-right:16px; }
+  .storybook-page{ padding:30px 20px 26px; }
+  .hero-storybook h1{ font-size:28px; }
+  .hero-cta-row .btn{ flex:1 1 100%; justify-content:center; }
+}
+@media (prefers-reduced-motion: reduce){ .storybook-art img{ animation:none; } }
+
+/* предметы на тёмном фоне — в светлом медальоне (бумага картинки белая, «умножение» работает только на светлом) */
+.section-ink .ico-art{ mix-blend-mode:normal; background:#fff; border-radius:50%; padding:8px; box-shadow:0 0 0 2px rgba(201,154,75,.45); width:60px; height:60px; }
+
+/* ---------- страница 404 и другие «состояния» (ошибка, пусто, загрузка) ---------- */
+.state-page{ padding:56px 0 88px; }
+.state-card{
+  max-width:720px; margin:0 auto; text-align:center;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius-l);
+  box-shadow:var(--shadow-soft); padding:44px 32px 40px;
+}
+.state-card img{ margin:0 auto 10px; width:170px; }
+.state-card h1{ font-size:34px; margin-bottom:12px; }
+.state-card p{ color:var(--text-soft); font-size:18px; max-width:520px; margin-left:auto; margin-right:auto; }
+.state-actions{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:26px; }
+.state-links{ margin-top:22px; display:flex; gap:10px 22px; justify-content:center; flex-wrap:wrap; }
+@media (max-width:520px){ .state-card{ padding:32px 20px; } .state-card h1{ font-size:27px; } .state-actions .btn{ flex:1 1 100%; justify-content:center; } }
