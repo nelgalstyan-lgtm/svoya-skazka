@@ -69,6 +69,19 @@
 .bk-cover-hero small{ display:block; margin-bottom:6px; font:600 13px/1 'Cormorant Garamond',serif; letter-spacing:.28em; text-transform:uppercase; color:#f7ead0; opacity:.85; }
 .bk-cover-brand{ position:absolute; z-index:2; left:0; right:0; bottom:34px; text-align:center; font:600 16px/1 'Cormorant Garamond',serif; letter-spacing:.2em; text-transform:uppercase; color:#f7ead0; opacity:.75; }
 
+/* ---------- задняя обложка ---------- */
+.bk-back{ background:#1c1410 radial-gradient(ellipse at 50% 30%, #3a2718, #1c1410 70%); color:#f7ead0; text-align:center; }
+.bk-back::before{ content:""; position:absolute; inset:26px; border:1.5px solid rgba(201,154,75,.55); border-radius:6px; pointer-events:none; }
+.bk-back-arch{ position:absolute; left:111px; right:111px; top:70px; height:430px; border-radius:180px 180px 10px 10px; overflow:hidden;
+  border:3px solid #c99a4b; box-shadow:0 0 0 6px rgba(201,154,75,.18), 0 14px 30px rgba(0,0,0,.5); }
+.bk-back-arch img{ width:100%; height:100%; object-fit:cover; display:block; }
+.bk-back-text{ position:absolute; left:70px; right:70px; top:530px; font:italic 19px/30px 'Tinos',serif; color:#f3e3c2; text-wrap:pretty; }
+.bk-back-foot{ position:absolute; left:60px; right:60px; bottom:52px; display:flex; align-items:center; justify-content:center; gap:12px; }
+.bk-back-seal{ width:52px; height:52px; object-fit:contain; padding:4px; border-radius:50%; background:#f3e3c2; }
+.bk-back-brand{ font:700 22px/1 'Cormorant Garamond',serif; letter-spacing:.14em; text-transform:uppercase; color:#fbe6b0; text-align:left; }
+.bk-back-brand small{ display:block; margin-top:5px; font:500 14px/1 'Cormorant Garamond',serif; letter-spacing:.1em; text-transform:none; color:#e8d3a8; }
+.bk-back-age{ position:absolute; right:0; bottom:10px; padding:5px 10px; border:1px solid rgba(201,154,75,.6); border-radius:4px; font:600 14px/1 'Cormorant Garamond',serif; color:#e8d3a8; }
+
 /* ---------- последние страницы: «Конец», сертификат, раскраска ---------- */
 .bk-finale, .bk-cert{ text-align:center; }
 .bk-finale-title{ position:absolute; left:var(--l); width:var(--w); top:230px; font:700 64px/1 'Cormorant Garamond',serif; color:#4a3220; }

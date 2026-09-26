@@ -260,6 +260,50 @@
     return { page: page, folio: null };
   }
 
+  // Текст для задней обложки: своя аннотация книги (book.blurb) или общий текст о герое
+  function blurbFor(book) {
+    if (book.blurb) return book.blurb;
+    var name = book.meta && book.meta.heroName;
+    if (!name) return 'Эта книга написана для одного-единственного читателя. Её герой — настоящий ребёнок: он нарисован по фото на обложке и на каждой иллюстрации.';
+    var g = book.meta.heroGirl;
+    return (g ? 'Главная героиня' : 'Главный герой') + ' этой книги — ' + name + '. Не выдуманный персонаж, а настоящий ребёнок: ' + (g ? 'она нарисована' : 'он нарисован')
+      + ' по фото на обложке и на каждой иллюстрации, а история написана специально для ' + (g ? 'неё' : 'него')
+      + ' — с ' + (g ? 'её' : 'его') + ' привычками, друзьями и близкими.';
+  }
+
+  // Картинка для задней обложки: book.backImage или последняя иллюстрация книги (у заказа — только нарисованная по фото)
+  function backImageFor(book, onlyGenerated) {
+    if (book.backImage) return book.backImage;
+    var last = null;
+    book.chapters.forEach(function (c) {
+      c.blocks.forEach(function (b) {
+        if (b.t === 'image' && (!onlyGenerated || /^(data:|\/api\/img\/)/.test(b.src || ''))) last = imageSrc(b);
+      });
+    });
+    return last || book.cover || null;
+  }
+
+  // Задняя обложка: иллюстрация в арке, аннотация, возраст и знак Героёнка (нужна и для печати в твёрдом переплёте)
+  function backCoverSheet(root, book, opts) {
+    var page = newSheet(root, 'bk-back');
+    var src = backImageFor(book, opts && opts.onlyGenerated);
+    if (src) {
+      var arch = h('div', 'bk-back-arch');
+      arch.appendChild(img(src, '', ''));
+      page.appendChild(arch);
+    }
+    page.appendChild(h('div', 'bk-back-text', typo(blurbFor(book))));
+    var foot = h('div', 'bk-back-foot');
+    var seal = document.createElement('img');
+    seal.className = 'bk-back-seal'; seal.src = 'assets/brand/logo-mark-alpha.png'; seal.alt = '';
+    var brand = h('div', 'bk-back-brand', 'Героёнок');
+    brand.appendChild(h('small', '', 'geroenok.online'));
+    foot.append(seal, brand);
+    if (book.ageGroup) foot.appendChild(h('div', 'bk-back-age', book.ageGroup.replace('-', '–') + ' лет'));
+    page.appendChild(foot);
+    return { page: page, folio: null };
+  }
+
   function coloringSheet(root, src, first) {
     var page = newSheet(root, 'bk-coloring');
     page.appendChild(h('div', 'bk-coloring-title', first ? 'Раскрась свою книгу' : 'Раскраска'));
@@ -402,6 +446,7 @@
         if (opts && opts.certificate) sheets.push(certificateSheet(root, opts.certificate));
         (book.coloring || []).forEach(function (src, i) { sheets.push(coloringSheet(root, src, i === 0)); });
       }
+      if (!(opts && (opts.noCover || opts.noBackCover))) sheets.push(backCoverSheet(root, book, opts));
 
       // сквозная нумерация по физическим страницам (иллюстрации считаются, но номер не показывают — как в образце)
       sheets.forEach(function (s, i) { if (s.folio) s.folio.textContent = String(i + 1); });
@@ -409,5 +454,5 @@
     });
   }
 
-  global.SkazkaBook = { render: render };
+  global.SkazkaBook = { render: render, blurbFor: blurbFor };
 })(window);

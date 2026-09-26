@@ -520,11 +520,14 @@ section.tight{ padding:56px 0; }
 <section class="tight">
   <div class="container">
     <div class="book-shelf">
-      <a class="book3d-link" href="book-pro.html?demo=alex3d" data-src="book-pro.html?demo=alex3d" aria-label="Открыть книгу «Алекс и тайна Ани»">
-        <div class="book3d-stage"><div class="book3d"><div class="book3d-back"></div><div class="book3d-pages"></div><div class="book3d-spine"></div>
-          <div class="book3d-cover"><img src="assets/examples/alex-3d/cover-480.webp" alt="" loading="lazy"><div class="book3d-title"><small>Большая история · 3D-мультфильм</small>Алекс и тайна Ани</div><div class="book3d-hero">Алекс</div></div></div></div>
-        <span class="book3d-open">Открыть книгу ↓</span>
-      </a>
+      <div class="book3d-item">
+        <div class="book3d-turn" role="button" tabindex="0" aria-label="Повернуть книгу «Алекс и тайна Ани» и посмотреть заднюю обложку">
+          <div class="book3d-stage"><div class="book3d"><div class="book3d-back"><img src="assets/examples/alex-3d/back-480.webp" alt="" loading="lazy"></div><div class="book3d-pages"></div><div class="book3d-spine"><span>Алекс и тайна Ани</span><img src="assets/brand/logo-mark-alpha.png" alt=""></div>
+            <div class="book3d-cover"><img src="assets/examples/alex-3d/cover-480.webp" alt="" loading="lazy"><div class="book3d-title"><small>Большая история · 3D&#8209;мультфильм</small>Алекс и тайна Ани</div><div class="book3d-hero">Алекс</div></div></div></div>
+        </div>
+        <p class="book3d-tip">Нажмите на книгу — она повернётся, и вы увидите заднюю обложку</p>
+        <a class="book3d-link book3d-open" href="book-pro.html?demo=alex3d" data-src="book-pro.html?demo=alex3d">Открыть книгу ↓</a>
+      </div>
     </div>
 
     <div class="flip">
@@ -662,6 +665,20 @@ section.tight{ padding:56px 0; }
       document.querySelectorAll('.flip-tabs button').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-src') === src); });
       frame.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+  });
+  // Нажатие на книгу: медленный оборот на 360° с остановкой на задней обложке.
+  // Если анимации в системе отключены — просто переворачиваем книгу задней стороной и обратно.
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('.book3d-turn').forEach(function (btn) {
+    var book = btn.querySelector('.book3d');
+    function turn() {
+      if (still) { book.classList.toggle('is-back'); return; }
+      if (book.classList.contains('is-spinning')) return;
+      book.classList.add('is-spinning');
+    }
+    btn.addEventListener('click', turn);
+    btn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); turn(); } });
+    book.addEventListener('animationend', function () { book.classList.remove('is-spinning'); });
   });
 })();
 </script>

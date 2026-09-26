@@ -6,7 +6,7 @@
 /* ---------- объёмный макет книги: обложка с иллюстрацией, корешок и срез страниц ---------- */
 .book3d-stage{ perspective:1400px; display:flex; justify-content:center; padding:24px 0; }
 .book3d{
-  --w:300px; --h:400px; --d:34px;
+  --w:262px; --h:400px; --d:34px; /* пропорции страницы книги 154×235 мм */
   position:relative; width:var(--w); height:var(--h);
   transform-style:preserve-3d; transform:rotateY(-26deg) rotateX(4deg);
   transition:transform .6s ease;
@@ -25,7 +25,7 @@
   font-family:var(--font-display, Georgia, serif); font-weight:700; font-size:25px; line-height:1.15; color:#fff3d6;
   text-shadow:0 2px 12px rgba(0,0,0,.6);
 }
-.book3d-title small{ display:block; margin-bottom:8px; font-family:var(--font-body, Arial, sans-serif); font-weight:400; font-size:10.5px; letter-spacing:.3em; text-transform:uppercase; opacity:.85; }
+.book3d-title small{ display:block; margin-bottom:8px; font-family:var(--font-body, Arial, sans-serif); font-weight:400; font-size:9.5px; letter-spacing:.16em; white-space:nowrap; text-transform:uppercase; opacity:.85; }
 .book3d-hero{ position:absolute; left:0; right:0; bottom:18px; z-index:1; text-align:center; font-family:var(--font-script, cursive); font-size:24px; color:#ffd98f; text-shadow:0 2px 8px rgba(0,0,0,.7); }
 .book3d-spine{
   width:var(--d); left:calc(var(--d) / -2); background:linear-gradient(90deg,#3f2d20,#6a4b35 45%,#3a291d);
@@ -35,8 +35,27 @@
   width:var(--d); left:auto; right:calc(var(--d) / -2 + 3px); top:5px; bottom:5px;
   background:repeating-linear-gradient(90deg,#f6f0e2 0 2px,#e3d9c2 2px 3px); transform:rotateY(90deg);
 }
-.book3d-back{ transform:translateZ(calc(var(--d) / -2)); background:#3a291d; border-radius:3px 10px 10px 3px; }
-@media (max-width:520px){ .book3d{ --w:230px; --h:306px; --d:26px; } .book3d-title{ font-size:20px; } }
+/* задняя обложка смотрит наружу (развёрнута на 180°), корешок у неё справа */
+.book3d-back{ transform:translateZ(calc(var(--d) / -2)) rotateY(180deg); background:#1c1410; border-radius:10px 3px 3px 10px; overflow:hidden; }
+.book3d-back img{ width:100%; height:100%; object-fit:cover; display:block; }
+.book3d-spine{ display:flex; flex-direction:column; align-items:center; justify-content:space-between; padding:16px 0 12px; overflow:hidden; }
+.book3d-spine span{ writing-mode:vertical-rl; font-family:var(--font-display, Georgia, serif); font-weight:700; font-size:13px; letter-spacing:.06em; color:#fbe6b0; white-space:nowrap; }
+.book3d-spine img{ width:calc(var(--d) - 10px); height:auto; border-radius:50%; background:#f3e3c2; padding:2px; }
+/* оборот по нажатию: к задней обложке, пауза, обратно к лицевой (итого 360°) */
+.book3d.is-spinning{ animation:book3d-spin 6.5s ease-in-out; }
+@keyframes book3d-spin{
+  0%{ transform:rotateY(-26deg) rotateX(4deg); }
+  38%{ transform:rotateY(-180deg) rotateX(2deg); }
+  62%{ transform:rotateY(-180deg) rotateX(2deg); }
+  100%{ transform:rotateY(-386deg) rotateX(4deg); }
+}
+.book3d.is-back{ transform:rotateY(-180deg) rotateX(2deg) !important; }
+.book3d-item{ display:flex; flex-direction:column; align-items:center; }
+.book3d-turn{ cursor:pointer; border-radius:16px; -webkit-tap-highlight-color:transparent; }
+.book3d-turn:focus-visible{ outline:3px solid var(--btn, #8a5a36); outline-offset:4px; }
+.book3d-turn:hover .book3d:not(.is-spinning){ transform:rotateY(-12deg) rotateX(2deg); }
+.book3d-tip{ margin:0 0 6px; font-size:14px; color:var(--text-soft, #6b5a48); text-align:center; }
+@media (max-width:520px){ .book3d{ --w:210px; --h:320px; --d:26px; } .book3d-title{ font-size:20px; } .book3d-title small{ white-space:normal; line-height:1.5; } .book3d-spine span{ font-size:11px; } }
 @media (prefers-reduced-motion: reduce){ .book3d{ transition:none; } }
 
 /* ---------- сравнение «обычная книга vs наша» ---------- */
