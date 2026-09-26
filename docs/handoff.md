@@ -10,7 +10,8 @@
 - Домен `geroenok.online` уже на Cloudflare (NS nucum/nico), регистратор REG.RU. Старые A-записи на заглушку REG.RU (95.163.244.138, давали ошибку 525) владелица удаляет.
 - Вместо Pages создан **Worker** `svoya-skazka` с подключённым GitHub (Workers Builds: `npx wrangler deploy` при каждом пуше в `main`). Так даже лучше: API потом добавляется в этот же Worker.
 - Настройки в `wrangler.jsonc`: сборка `scripts/build-pages.sh`, статика из `dist/`.
-- Осталось: привязать домен к Worker'у (Settings → Domains & Routes → Add → Custom domain, `geroenok.online` и `www`), затем проверка из РФ.
+- Домен и `www` привязаны к Worker'у, сайт работает. check-host 26.09: Москва и СПб 200 OK за 0,2–0,3 с. `server/`, `docs/` отдают 404.
+- Сейчас: владелица создаёт API-токен и вписывает в `.env` в корне репозитория (заготовка с `CLOUDFLARE_ACCOUNT_ID` уже есть, файл в .gitignore; wrangler читает его сам). Затем проба (п. 3 ниже).
 
 **Когда домен привязан:**
 1. Проверить домен из России через API check-host.net (узлы ru1–ru3: Москва, СПб), как делали с findena.ru:
