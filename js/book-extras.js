@@ -143,10 +143,35 @@
       onclone: function (doc) {
         if (scaleVar) doc.documentElement.style.setProperty(scaleVar, '1');
         var copy = doc.querySelector('[data-pdf-snap]');
+        if (copy) keepImageFit(copy);
         if (adjust && copy) adjust(copy);
       }
     }).then(function (canvas) { node.removeAttribute('data-pdf-snap'); return canvas; },
       function (error) { node.removeAttribute('data-pdf-snap'); throw error; });
+  }
+
+  /**
+   * html2canvas не умеет object-fit и растягивает такие картинки на весь блок (обложка, арка, иллюстрации).
+   * В копии страницы заменяем их блоком с фоном: background-size cover/contain он рисует правильно.
+   */
+  function keepImageFit(page) {
+    var win = page.ownerDocument.defaultView || global;
+    Array.prototype.forEach.call(page.querySelectorAll('img'), function (im) {
+      var cs = win.getComputedStyle(im);
+      var fit = cs.objectFit;
+      if (fit !== 'cover' && fit !== 'contain') return;
+      var box = page.ownerDocument.createElement('div');
+      box.className = im.className;
+      box.style.cssText = im.style.cssText;
+      box.style.display = cs.display === 'inline' ? 'inline-block' : cs.display;
+      box.style.width = cs.width;
+      box.style.height = cs.height;
+      box.style.backgroundImage = 'url("' + String(im.currentSrc || im.src).replace(/"/g, '%22') + '")';
+      box.style.backgroundSize = fit;
+      box.style.backgroundPosition = cs.objectPosition || '50% 50%';
+      box.style.backgroundRepeat = 'no-repeat';
+      im.parentNode.replaceChild(box, im);
+    });
   }
 
   /**
