@@ -331,6 +331,27 @@ test('лимит бесплатных превью: 3 в день с брауз�
   } finally { ai.restore(); }
 });
 
+test('медиа из R2: целиком и кусками (Range → 206), чужие пути — 404', async () => {
+  const env = fakeEnv();
+  const data = new Uint8Array(100).map((_, i) => i);
+  env.BUCKET.get = async (key, opts = {}) => {
+    if (key !== 'media/alex-audio/ch1.mp3') return null;
+    const range = opts.range?.get?.('range');
+    const m = range && /bytes=(\d+)-(\d+)/.exec(range);
+    const offset = m ? Number(m[1]) : 0; const length = m ? Number(m[2]) - offset + 1 : 100;
+    return { size: 100, httpEtag: '"e"', httpMetadata: { contentType: 'audio/mpeg' }, range: m ? { offset, length } : undefined, body: new Blob([data.slice(offset, offset + length)]).stream() };
+  };
+  const full = await api(env, '/api/media/alex-audio/ch1.mp3');
+  assert.equal(full.status, 200);
+  assert.equal(full.headers.get('accept-ranges'), 'bytes');
+  const part = await api(env, '/api/media/alex-audio/ch1.mp3', { headers: { range: 'bytes=10-19' } });
+  assert.equal(part.status, 206);
+  assert.equal(part.headers.get('content-range'), 'bytes 10-19/100');
+  assert.equal((await part.arrayBuffer()).byteLength, 10);
+  assert.equal((await api(env, '/api/media/..%2Fjobs/x.mp3')).status, 404);
+  assert.equal((await api(env, '/api/media/alex-audio/ch1.json')).status, 404);
+});
+
 test('неизвестная книга и мусорный адрес — 404', async () => {
   const env = fakeEnv();
   assert.equal((await api(env, '/api/book/00000000-0000-0000-0000-000000000000/status')).status, 404);

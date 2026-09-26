@@ -266,6 +266,26 @@ export async function unlockBook(env, store, id) {
   return { ok: true, paid: true };
 }
 
+// Медиа сайта из R2 (media/…): аудиокнига-образец. Отдаём кусками (Range → 206) — без этого Safari на iPhone
+// не проигрывает звук, а перемотка не работает; R2 режет файл сам, процессор Worker'а не тратится.
+const MEDIA_RE = /^[a-z0-9-]+\/[a-z0-9-]+\.mp3$/;
+async function media(request, env, path) {
+  if (!MEDIA_RE.test(path)) return new Response('Not found', { status: 404, headers: CORS });
+  const obj = await env.BUCKET.get(`media/${path}`, { range: request.headers });
+  if (!obj) return new Response('Not found', { status: 404, headers: CORS });
+  const headers = new Headers({ 'content-type': obj.httpMetadata?.contentType || 'audio/mpeg', 'accept-ranges': 'bytes', 'cache-control': 'public, max-age=86400', etag: obj.httpEtag, ...CORS });
+  const r = obj.range;
+  if (r && request.headers.has('range')) {
+    const offset = r.offset ?? (obj.size - r.suffix);
+    const length = r.length ?? (obj.size - offset);
+    headers.set('content-range', `bytes ${offset}-${offset + length - 1}/${obj.size}`);
+    headers.set('content-length', String(length));
+    return new Response(obj.body, { status: 206, headers });
+  }
+  headers.set('content-length', String(obj.size));
+  return new Response(obj.body, { headers });
+}
+
 async function image(store, id, file) {
   const obj = await store.getImageObject(id, file);
   if (!obj) return new Response('Not found', { status: 404, headers: CORS });
@@ -299,6 +319,7 @@ export async function handleApi(request, env) {
     return json(out);
   }
   if (parts[1] === 'img' && parts.length === 4 && method === 'GET') return image(store, parts[2], parts[3]);
+  if (parts[1] === 'media' && parts.length === 4 && method === 'GET') return media(request, env, `${parts[2]}/${parts[3]}`);
   if (parts[1] === 'book') {
     if (parts[2] === 'generate' && parts.length === 3 && method === 'POST') return generate(request, env, store);
     const id = parts[2];
