@@ -109,10 +109,14 @@ function concat(parts) {
   return out;
 }
 
+// Интонация по тарифу (решение владелицы 27.09): «Сказка» — радостная (малыши, одна короткая история),
+// «Большая история» — обычная: 30–40 минут бодрости утомляют, и в тихих главах радость звучит невпопад
+export const roleFor = (input, env = {}) => (input?.tariff === 'big' ? env.YANDEX_TTS_ROLE_BIG || 'neutral' : env.YANDEX_TTS_ROLE_SHORT || 'good');
+
 /** Текст → mp3 (Uint8Array). Бросает ошибку, если сервис ответил ошибкой или без звука. */
-export async function synthesize(env, text) {
+export async function synthesize(env, text, role = env.YANDEX_TTS_ROLE) {
   const hints = [{ voice: env.YANDEX_TTS_VOICE || 'ermil' }];
-  if (env.YANDEX_TTS_ROLE) hints.push({ role: env.YANDEX_TTS_ROLE });
+  if (role) hints.push({ role });
   if (env.YANDEX_TTS_SPEED) hints.push({ speed: String(env.YANDEX_TTS_SPEED) });
   let res;
   try {
@@ -146,13 +150,15 @@ export async function voiceFlow(ctx) {
     const job = await store.getJob(id);
     if (!job?.paid || job.status !== 'completed') return null;
     const target = job.result.book || job.result;
+    const role = roleFor(job.input, env);
     const prev = new Map((target.audio || []).map((a) => [a.hash, a.src]));
     return voiceTracks(job.result).map((t) => {
-      const hash = textHash(t.text);
+      const hash = textHash(`${role}|${t.text}`);
       return prev.has(hash) ? { title: t.title, hash, src: prev.get(hash) } : { title: t.title, hash, chunks: splitText(t.text) };
     });
   });
   if (!plan || !plan.length) return;
+  const role = roleFor((await step.do('voice-role', QUICK_STEP, async () => ({ tariff: (await store.getJob(id))?.input?.tariff || '' }))), env);
 
   const tmp = (t, k) => `voice-tmp/${id}/${t}-${k}.mp3`;
   const jobs = plan.flatMap((t, ti) => (t.chunks || []).map((text, k) => ({ ti, k, text })));
@@ -163,7 +169,7 @@ export async function voiceFlow(ctx) {
       // сбой связи или перегрузка сервиса — повторяем внутри шага (ошибка шага остановила бы весь Workflow)
       for (let attempt = 1; ; attempt += 1) {
         try {
-          await store.putMedia(tmp(j.ti, j.k), await synthesize(env, j.text));
+          await store.putMedia(tmp(j.ti, j.k), await synthesize(env, j.text, role));
           return true;
         } catch (error) {
           log(`[voice] ${id}: track ${j.ti} part ${j.k}, attempt ${attempt}: ${error?.message || error}`);

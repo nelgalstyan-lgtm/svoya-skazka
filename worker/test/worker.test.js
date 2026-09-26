@@ -102,7 +102,7 @@ function stubYandex({ fail = false, dropOnce = 0 } = {}) {
   globalThis.fetch = async (url, init) => {
     if (!String(url).startsWith('https://tts.api.cloud.yandex.net/')) return inner(url, init);
     const body = JSON.parse(init.body);
-    calls.push({ auth: init.headers.Authorization, text: body.text, voice: body.hints[0].voice });
+    calls.push({ auth: init.headers.Authorization, text: body.text, voice: body.hints[0].voice, role: body.hints.find((h) => h.role)?.role });
     if (dropOnce > 0) { dropOnce -= 1; throw new TypeError('fetch failed'); } // обрыв связи
     if (fail) return new Response('{"error":"quota"}', { status: 429 });
     const line = (s) => `{"result":{"audioChunk":{"data":"${Buffer.from(s).toString('base64')}"},"textChunk":{"text":"\\"data\\""}}}`;
@@ -422,6 +422,7 @@ test('озвучка после оплаты: главы голосом Ерми
     await api(env, `/api/book/${id}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } });
     assert.ok(ya.calls.length >= 1);
     assert.ok(ya.calls.every((c) => c.auth === 'Api-Key ya-key' && c.voice === 'ermil' && c.text.length <= 1500));
+    assert.ok(ya.calls.every((c) => c.role === 'good'), '«Сказка» — радостная интонация');
     const s = await status(env, id);
     assert.equal(s.result.audio.length, 1, 'сказка — одна дорожка');
     const src = s.result.audio[0].src;
@@ -453,12 +454,14 @@ test('озвучка не удалась — книга готова, «Слуш
   const env = fakeEnv({ YANDEX_API_KEY: 'ya-key', VOICE_RETRY_MS: 0 });
   const ai = stubOpenAI();
   const ya = stubYandex({ fail: true });
+  env.VOICE_RETRY_MS = 0;
   try {
     const id = await order(env, { tariff: 'big' });
     await api(env, `/api/book/${id}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } });
     const s = await status(env, id);
     assert.equal(s.paid, true);
     assert.ok(!s.result.book.audio || s.result.book.audio.length === 0);
+    assert.ok(ya.calls.length && ya.calls.every((c) => c.role === 'neutral'), '«Большая история» — обычная интонация');
     assert.equal(env.BUCKET.keys('voice-tmp/').length + env.BUCKET.keys('media/').length, 0);
   } finally { ya.restore(); ai.restore(); }
 });
