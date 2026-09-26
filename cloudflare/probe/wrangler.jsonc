@@ -1,0 +1,9 @@
+// Пробный Worker: укладывается ли рисование через OpenAI в 10 мс CPU бесплатного тарифа.
+// Временный, после пробы удалить: npx wrangler delete --name geroenok-probe
+{
+  "name": "geroenok-probe",
+  "main": "index.js",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "observability": { "enabled": true }
+}
