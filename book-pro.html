@@ -43,7 +43,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     <button class="btn" id="pdfBtn" type="button">Скачать PDF</button>
   </div>
 </div>
-<p class="hint no-print">В окне печати выберите «Сохранить как PDF» и поля «Нет». <a href="how-it-works.html#print" target="_blank" style="color:inherit;">Как напечатать книгу →</a></p>
+<p class="hint no-print">«Скачать PDF» сохраняет книгу файлом (формат 154×235 мм) — его можно распечатать дома или в копицентре. <a href="how-it-works.html#print" target="_blank" style="color:inherit;">Как напечатать книгу →</a></p>
 
 <main id="book" class="bk-book-view"></main>
 
@@ -55,9 +55,13 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   var params = new URLSearchParams(location.search);
   var root = document.getElementById('book');
 
+  // Страница целиком помещается в окно — и по ширине, и по высоте (раньше подгонялась только по ширине и
+  // на большом экране вырастала до 145%: приходилось уменьшать масштаб браузера, чтобы листать)
   function scale() {
-    var s = Math.min(1.45, Math.max(0.4, (window.innerWidth - 24) / 582));
-    document.documentElement.style.setProperty('--bk-scale', String(s));
+    var bar = document.querySelector('.toolbar');
+    var free = window.innerHeight - (bar ? bar.offsetHeight : 64) - 56;
+    var s = Math.min(1.1, (window.innerWidth - 24) / 582, free / 888);
+    document.documentElement.style.setProperty('--bk-scale', String(Math.max(0.4, s)));
   }
   scale();
   window.addEventListener('resize', scale);
@@ -81,17 +85,26 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       document.title = book.title + ' — Героёнок';
       document.getElementById('count').textContent = res.pages + ' стр.';
       window.__bookReady = res;
+      window.__bookData = book;
       if (locked) {
         document.getElementById('pdfBtn').style.display = 'none';
-        window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); });
+        window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
       } else {
         attachActions(book, answers, jobId, status || {});
       }
-      if (params.get('print') === '1') setTimeout(function () { window.print(); }, 400);
+      if (params.get('print') === '1') setTimeout(function () { document.getElementById('pdfBtn').click(); }, 400);
     });
   }
 
-  document.getElementById('pdfBtn').addEventListener('click', function () { window.print(); });
+  // «Скачать PDF» — файл (страницы 154×235 мм); печать остаётся запасным вариантом
+  if (params.get('demo')) {
+    document.getElementById('pdfBtn').style.display = 'none';
+    var demoHint = document.querySelector('.hint.no-print'); if (demoHint) demoHint.style.display = 'none';
+  }
+  window.SkazkaExtras.attachPdf(document.getElementById('pdfBtn'), {
+    selector: '.bk-page', widthMm: 154, heightMm: 235, scaleVar: '--bk-scale',
+    fileName: function () { return window.SkazkaExtras.pdfName((window.__bookData || {}).title); }
+  });
 
   function listenTexts(book) {
     var out = [book.title];
@@ -127,14 +140,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       }
     });
 
-    window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () {
-      var out = [book.title];
-      book.chapters.forEach(function (c) {
-        out.push('Глава ' + c.n + '. ' + c.title);
-        c.blocks.forEach(function (b) { if (b.t === 'p' || b.t === 'card' || b.t === 'scrap') out.push(b.text); });
-      });
-      return out;
-    });
+    window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
     if (answers && answers.name) {
       var btn = document.getElementById('sequelBtn');
       btn.hidden = false;

@@ -19,12 +19,30 @@
     return ru.filter(function (v) { return /natural|google|online/i.test(v.name); })[0] || ru[0] || null;
   }
 
+  /** Короткая подсказка под кнопкой (например, почему не звучит голос устройства). */
+  function hintNear(button, text) {
+    var box = button.parentNode.querySelector('.listen-hint');
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'listen-hint';
+      box.setAttribute('role', 'status');
+      box.style.cssText = 'position:absolute; right:12px; top:100%; margin-top:8px; max-width:340px; z-index:20; padding:12px 14px; border-radius:12px; background:#FFFCF5; color:#3F2816; font:14px/1.45 "PT Sans",Arial,sans-serif; box-shadow:0 12px 26px -12px rgba(0,0,0,.55); border:1px solid #E2D3B5;';
+      button.parentNode.style.position = 'relative';
+      button.parentNode.appendChild(box);
+    }
+    box.textContent = text;
+    clearTimeout(box._t);
+    box._t = setTimeout(function () { box.remove(); }, 12000);
+  }
+
   /**
-   * Кнопка «Слушать книгу». texts — массив абзацев по порядку. Читает по одному абзацу, чтобы длинную книгу
-   * можно было поставить на паузу и продолжить с того же места.
+   * Кнопка «Слушать книгу».
+   * audio — готовая озвучка рассказчиком [{ title, src }] (если есть): играет главы по порядку.
+   * Иначе texts — абзацы по порядку: читает голос устройства, по одному абзацу (пауза и продолжение с того же места).
    */
-  function attachListen(button, getTexts) {
+  function attachListen(button, getTexts, audio) {
     if (!button) return;
+    if (audio && audio.length) return attachAudio(button, audio);
     if (!('speechSynthesis' in global)) { button.style.display = 'none'; return; }
     var synth = global.speechSynthesis;
     var queue = null;
@@ -52,9 +70,110 @@
       playing = true;
       label();
       speakNext();
+      // голос устройства может молчать (нет русского голоса, браузер без синтеза речи) — не оставляем человека в тишине
+      setTimeout(function () {
+        if (playing && !synth.speaking && !synth.pending) {
+          playing = false; synth.cancel(); label();
+          hintNear(button, 'Не получилось включить чтение вслух: в этом браузере нет русского голоса. Откройте книгу в Chrome, Edge или Safari — или на телефоне.');
+        }
+      }, 2500);
     });
     global.addEventListener('beforeunload', function () { synth.cancel(); });
     label();
+  }
+
+  /** Настоящая озвучка: главы по порядку одной кнопкой, пауза и продолжение. */
+  function attachAudio(button, tracks) {
+    var player = new Audio();
+    player.preload = 'none';
+    var index = 0;
+    function label() {
+      button.textContent = !player.paused ? '⏸ Пауза' : (index > 0 || player.currentTime > 0 ? '▶ Продолжить' : '🔊 Слушать книгу');
+      button.title = tracks[index] ? 'Сейчас: ' + tracks[index].title : '';
+    }
+    function load(i) { index = i; player.src = tracks[i].src; }
+    player.addEventListener('ended', function () {
+      if (index + 1 < tracks.length) { load(index + 1); player.play(); } else { index = 0; player.removeAttribute('src'); label(); }
+    });
+    player.addEventListener('play', label);
+    player.addEventListener('pause', label);
+    player.addEventListener('error', function () { label(); hintNear(button, 'Не получилось загрузить озвучку. Проверьте интернет и попробуйте ещё раз.'); });
+    button.addEventListener('click', function () {
+      if (!player.paused) { player.pause(); return; }
+      if (!player.getAttribute('src')) load(index);
+      player.play().catch(function () { hintNear(button, 'Браузер не дал включить звук — нажмите ещё раз.'); });
+    });
+    label();
+  }
+
+  // ---------------------------------------------------------------- PDF-файл книги
+
+  var PDF_LIBS = [
+    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+  ];
+
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      if (document.querySelector('script[data-src="' + src + '"]')) return resolve();
+      var el = document.createElement('script');
+      el.src = src;
+      el.setAttribute('data-src', src);
+      el.onload = resolve;
+      el.onerror = function () { reject(new Error('не загрузилось: ' + src)); };
+      document.head.appendChild(el);
+    });
+  }
+
+  /**
+   * Кнопка «Скачать PDF»: страницы книги рисуются в картинки и собираются в PDF-файл нужного формата (в браузере,
+   * без сервера). opts: { selector — страницы, widthMm, heightMm, scaleVar — CSS-переменная масштаба страниц,
+   * fileName() }. Не вышло (старый браузер, нет интернета для библиотек) — открываем печать, там есть «Сохранить как PDF».
+   */
+  function attachPdf(button, opts) {
+    if (!button) return;
+    var busy = false;
+    button.addEventListener('click', function () {
+      if (busy) return;
+      busy = true;
+      var original = button.textContent;
+      button.textContent = 'Готовим PDF…';
+      loadScript(PDF_LIBS[0]).then(function () { return loadScript(PDF_LIBS[1]); })
+        .then(function () { return document.fonts ? document.fonts.ready : null; })
+        .then(function () {
+          var pages = Array.prototype.slice.call(document.querySelectorAll(opts.selector));
+          var w = opts.widthMm, h = opts.heightMm;
+          var pdf = new global.jspdf.jsPDF({ unit: 'mm', format: [w, h], orientation: w > h ? 'l' : 'p', compress: true });
+          var i = 0;
+          function next() {
+            if (i >= pages.length) return pdf;
+            button.textContent = 'Готовим PDF: ' + (i + 1) + ' из ' + pages.length;
+            return global.html2canvas(pages[i], {
+              scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+              // в копии страницы — без уменьшения под экран: в PDF страница в полном размере
+              onclone: function (doc) { if (opts.scaleVar) doc.documentElement.style.setProperty(opts.scaleVar, '1'); }
+            }).then(function (canvas) {
+              if (i > 0) pdf.addPage([w, h], w > h ? 'l' : 'p');
+              pdf.addImage(canvas.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, w, h, undefined, 'FAST');
+              i += 1;
+              return new Promise(function (r) { setTimeout(r, 0); }).then(next);
+            });
+          }
+          return next();
+        })
+        .then(function (pdf) { pdf.save(opts.fileName()); })
+        .catch(function (error) {
+          console.warn('[pdf]', error);
+          hintNear(button, 'Не получилось собрать PDF в этом браузере. Открываем печать — выберите «Сохранить как PDF».');
+          setTimeout(function () { global.print(); }, 800);
+        })
+        .then(function () { busy = false; button.textContent = original; });
+    });
+  }
+
+  /** Имя файла из названия книги: «Алекс и тайна Ани.pdf». */
+  function pdfName(title) {
+    return (String(title || 'Книга').replace(/[\\/:*?"<>|]+/g, '').trim() || 'Книга') + '.pdf';
   }
 
   // ---------------------------------------------------------------- QR-код на онлайн-версию
@@ -284,6 +403,8 @@
     attachEditor: attachEditor,
     paragraphText: paragraphText,
     attachListen: attachListen,
+    attachPdf: attachPdf,
+    pdfName: pdfName,
     bookUrl: bookUrl,
     qrBlock: qrBlock,
     orderSequel: orderSequel,
