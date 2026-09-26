@@ -136,11 +136,35 @@
   }
 
   // снимок страницы книги в полном размере (без уменьшения под экран)
-  function snap(node, scale, scaleVar) {
+  function snap(node, scale, scaleVar, adjust) {
+    node.setAttribute('data-pdf-snap', '1');
     return global.html2canvas(node, {
       scale: scale, useCORS: true, backgroundColor: '#ffffff', logging: false,
-      onclone: function (doc) { if (scaleVar) doc.documentElement.style.setProperty(scaleVar, '1'); }
-    });
+      onclone: function (doc) {
+        if (scaleVar) doc.documentElement.style.setProperty(scaleVar, '1');
+        var copy = doc.querySelector('[data-pdf-snap]');
+        if (adjust && copy) adjust(copy);
+      }
+    }).then(function (canvas) { node.removeAttribute('data-pdf-snap'); return canvas; },
+      function (error) { node.removeAttribute('data-pdf-snap'); throw error; });
+  }
+
+  /**
+   * В переплёте правая страница (1-я, 3-я… в файле) прилегает к корешку левым краем, левая — правым.
+   * Оформление сбоку (полоса, карта) должно быть с внешнего края, иначе у половины страниц оно уходит в клей:
+   * на правых страницах переносим его вправо, а текст сдвигаем к корешку, сохраняя поля страницы.
+   */
+  function mirrorForBinding(page) {
+    var win = page.ownerDocument.defaultView || global; // копия страницы живёт в своём окне
+    var strip = page.querySelector('.bk-strip');
+    if (!strip || win.getComputedStyle(strip).display === 'none') return;
+    var cs = win.getComputedStyle(page);
+    var l = parseFloat(cs.getPropertyValue('--l')), w = parseFloat(cs.getPropertyValue('--w'));
+    if (!(l >= 0 && w > 0)) return;
+    page.style.setProperty('--l', (page.offsetWidth - l - w) + 'px');
+    strip.style.left = 'auto';
+    strip.style.right = '0';
+    strip.style.transform = 'scaleX(-1)';
   }
 
   /** Собирает PDF из страниц (selector) — по странице на лист widthMm×heightMm. */
@@ -155,7 +179,8 @@
       function next() {
         if (i >= pages.length) return pdf;
         button.textContent = 'Готовим PDF: ' + (i + 1) + ' из ' + pages.length;
-        return snap(pages[i], 2, opts.scaleVar).then(function (canvas) {
+        // чётный номер в файле (с нуля) — правая страница разворота
+        return snap(pages[i], 2, opts.scaleVar, i % 2 === 0 ? mirrorForBinding : null).then(function (canvas) {
           if (i > 0) pdf.addPage([w, h], w > h ? 'l' : 'p');
           pdf.addImage(canvas.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, w, h, undefined, 'FAST');
           i += 1;
