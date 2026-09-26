@@ -1,8 +1,10 @@
-// Worker «Героёнок»: сайт (статика из dist/) и API на /api/*. Книги создаются в фоне Workflow'ом BookWorkflow.
+// Worker «Героёнок»: сайт (статика из dist/) и API на /api/*. Книги создаются в фоне Workflow'ом BookWorkflow,
+// который запускается из очереди geroenok-start.
 
 import { WorkflowEntrypoint } from 'cloudflare:workers';
 import { handleApi } from './api.js';
 import { runBook } from './book.js';
+import { queueHandler } from './queue.js';
 
 export class BookWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
@@ -24,20 +26,6 @@ export default {
     return env.ASSETS.fetch(request);
   },
 
-  // ВРЕМЕННО (проверка 26.09): отвечает ли OpenAI, если рисование запущено не из запроса покупателя
-  async scheduled(event, env) {
-    if (new Date(event.scheduledTime).getUTCMinutes() % 2) return;
-    const r = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } }).catch(() => null);
-    console.log(`[diag] cron: openai ${r ? r.status : 'network error'}`);
-    await env.BOOK_WORKFLOW.create({ params: { mode: 'diag', country: 'cron' } });
-  },
-
-  async queue(batch, env) {
-    for (const msg of batch.messages) {
-      const r = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } }).catch(() => null);
-      console.log(`[diag] queue from ${msg.body.country}: openai ${r ? r.status : 'network error'}`);
-      await env.BOOK_WORKFLOW.create({ params: { mode: 'diag', country: `queue-from-${msg.body.country}` } });
-      msg.ack();
-    }
-  }
+  // книги запускаются из очереди: так OpenAI не видит страну покупателя (см. queue.js)
+  queue: queueHandler
 };

@@ -103,7 +103,7 @@ async function generate(request, env, store) {
   // фото — отдельно от книги: понадобятся, чтобы дорисовать книгу после оплаты, и удалятся не позже чем через 48 ч
   await store.savePhotos(id, photos);
   await store.saveJob(job);
-  await env.BOOK_WORKFLOW.create({ id, params: { id, mode: 'preview' } });
+  await startBook(env, id, 'preview');
   return json({ ok: true, jobId: id, status: job.status, position: 0 });
 }
 
@@ -206,6 +206,14 @@ async function unlock(request, env, store, id) {
   return json(r, r.ok ? 200 : 404);
 }
 
+/**
+ * Запуск создания книги — через очередь, а не прямо отсюда. Если Workflow создать из запроса покупателя,
+ * OpenAI видит страну покупателя и отказывает заказам из РФ; из обработчика очереди — не видит (проверено 26.09).
+ */
+async function startBook(env, id, mode) {
+  await env.START_QUEUE.send({ instance: mode === 'complete' ? `${id}-complete` : id, id, mode });
+}
+
 /** Отмечает книгу оплаченной и запускает дорисовку. Повторный вызов для той же книги ничего не делает. */
 export async function unlockBook(env, store, id) {
   const job = await store.getJob(id);
@@ -218,7 +226,7 @@ export async function unlockBook(env, store, id) {
     j.progress = 'Дорисовываем иллюстрации…';
   });
   // дорисовка идёт в фоне: клиент следит за ходом через /status
-  await env.BOOK_WORKFLOW.create({ id: `${id}-complete`, params: { id, mode: 'complete' } });
+  await startBook(env, id, 'complete');
   return { ok: true, paid: true };
 }
 
@@ -245,15 +253,12 @@ export async function handleApi(request, env) {
 
   if (parts[1] === 'health' && method === 'GET') {
     const out = { ok: true, colo: request.cf?.colo || null, providers: describeProviders(), heroIllustrations: Boolean(env.OPENAI_API_KEY || env.GEMINI_API_KEY), guaranteedFallback: true };
-    // ?openai=1 — отвечает ли OpenAI из этого дата-центра Cloudflare (из РФ OpenAI запросы не принимает); бесплатный запрос
+    // ?openai=1 — отвечает ли OpenAI на запрос прямо из обработки этого посетителя (из РФ — 403; поэтому книги идут через очередь)
     if (url.searchParams.get('openai') === '1' && env.OPENAI_API_KEY && !(await limited(env.EDIT_LIMITER, `${clientIp(request)}:health`))) {
       const r = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } }).catch(() => null);
       out.openai = r ? r.status : 'network error';
       const detail = r && !r.ok ? (await r.text().catch(() => '')).slice(0, 160) : '';
       console.log(`[health] colo ${out.colo} country ${request.cf?.country} openai ${out.openai} ${detail}`);
-      // ВРЕМЕННО (проверка 26.09): пускает ли OpenAI фоновый Workflow, запущенный посетителем из этой страны
-      if (url.searchParams.get('workflow') === '1') await env.BOOK_WORKFLOW.create({ params: { mode: 'diag', country: request.cf?.country || null } });
-      if (url.searchParams.get('workflow') === '1' && env.START_QUEUE) await env.START_QUEUE.send({ country: request.cf?.country || null });
     }
     return json(out);
   }

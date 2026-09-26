@@ -6,6 +6,9 @@ import assert from 'node:assert/strict';
 import { handleApi } from '../api.js';
 import { runBook } from '../book.js';
 import { jsonStringField } from '../bytes.js';
+import { queueHandler } from '../queue.js';
+
+const worker = { queue: queueHandler };
 
 // ---------------------------------------------------------------- подделки
 
@@ -58,6 +61,14 @@ function fakeEnv(extra = {}) {
       const step = fakeStep();
       env.runs.push({ id, params, step });
       await runBook(env, params, step, { log: () => {} });
+    }
+  };
+  // очередь сразу передаёт сообщение обработчику из index.js — как Cloudflare, только без задержки
+  env.START_QUEUE = {
+    async send(body) {
+      const msg = { body, ack() { this.acked = true; }, retry() { this.retried = true; } };
+      await worker.queue({ messages: [msg] }, env);
+      assert.ok(msg.acked, 'сообщение очереди должно быть подтверждено');
     }
   };
   return env;
@@ -269,7 +280,7 @@ test('картинки не рисуются вовсе — книга всё р
 
 test('зависшая книга: через 15 минут клиент получает книгу из шаблона', async () => {
   const env = fakeEnv();
-  env.BOOK_WORKFLOW = { async create() {} }; // Workflow так и не отработал
+  env.START_QUEUE = { async send() {} }; // книга так и не запустилась
   const id = await order(env);
   assert.equal((await status(env, id)).status, 'queued');
   const key = `jobs/${id}.json`;

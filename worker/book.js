@@ -27,7 +27,6 @@ export async function runBook(env, { id, mode }, step, { log = console.warn } = 
   const store = createStore(env.BUCKET);
   const progress = (text) => store.updateJob(id, (job) => { job.progress = text; if (job.status === 'queued') { job.status = 'processing'; job.startedAt = Date.now(); } });
   const ctx = { env, store, id, step, log, progress };
-  if (mode === 'diag') return diagFlow(ctx, arguments[1]); // ВРЕМЕННО, см. api.js health
   return mode === 'complete' ? completeFlow(ctx) : previewFlow(ctx);
 }
 
@@ -215,11 +214,3 @@ async function completeFlow(ctx) {
   });
 }
 
-// ВРЕМЕННО (проверка 26.09): отвечает ли OpenAI фоновому шагу, если заказ пришёл из РФ
-async function diagFlow({ env, step }, { country }) {
-  await step.do('diag-openai', QUICK_STEP, async () => {
-    const r = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } }).catch(() => null);
-    const detail = r && !r.ok ? (await r.text().catch(() => '')).slice(0, 160) : '';
-    console.log(`[diag] workflow from ${country}: openai ${r ? r.status : 'network error'} ${detail}`);
-  });
-}
