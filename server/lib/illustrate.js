@@ -22,9 +22,11 @@ const SHEET_COMPOSITION = 'Composition: a character reference sheet on a plain w
 const AVOID_BLOCK = 'Avoid: photorealistic rendering, extra or malformed fingers, blurry or distorted anatomy, watermarks, signatures, logos, brand names, characters from existing cartoons, films or games, and any text or lettering.';
 
 // Два стиля на запуск: фирменная акварель и объёмная 3D-анимация (самый востребованный на рынке)
-const STYLE_TECHNIQUE = {
+export const STYLE_TECHNIQUE = {
   watercolor: 'traditional hand-painted watercolor children’s book illustration, smooth transparent washes that blend softly into each other, soft wet-on-wet edges, visible cold-press paper texture only in the lightest areas, delicate fine ink linework accents, warm natural light; clean painterly surfaces with no pixelation, mosaic, dotted or blocky texture',
-  animated3d: 'stylized 3D computer animation like a still frame from a modern animated feature film — clearly a CG cartoon render, never a photograph: simplified smooth forms, soft matte skin without pores, hair sculpted into soft clumps, clean saturated colors, soft global illumination and gentle rim light, a slightly miniature, toy-like world'
+  // 3D «мультяшнее» за счёт форм, а не глаз (глаза как на фото — иначе теряется сходство); детские пропорции только малышам —
+  // подростка они молодят, а сайт обещает книгу «не стыдно читать и в двенадцать» (решения 26.09)
+  animated3d: 'stylized 3D computer animation like a still frame from a modern animated feature film — clearly a CG cartoon render, never a photograph: noticeably cartoon stylization that respects the child’s real age: young children get rounder softer faces, full cheeks and a slightly larger head, while older children and teenagers keep a longer face, visible cheekbones and jaw and teenage body proportions and must not look younger, clothing simplified into bold clean shapes with few folds, hair sculpted into large chunky stylized clumps, soft matte skin without pores, rich saturated colors, soft global illumination and gentle rim light, a slightly miniature, toy-like world; the eyes stay natural in size and shape, true to the real child'
 };
 
 export const STYLE_LABELS = { watercolor: 'Акварель', animated3d: '3D-мультфильм' };

@@ -199,6 +199,12 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     st.src = 'assets/demo-travel.js';
     st.onload = function () { var b = window.SKAZKA_DEMO_TRAVEL; b.frame = tpair[0]; b.footer = tpair[1]; start(b); };
     document.body.appendChild(st);
+  } else if (params.get('demo') === 'alex3d') {
+    // образец «3D-мультфильм»: книга Алекса (публикуется с согласия родителей)
+    var s3 = document.createElement('script');
+    s3.src = 'assets/examples/alex-3d/book.js';
+    s3.onload = function () { start(window.SKAZKA_ALEX3D_BOOK); };
+    document.body.appendChild(s3);
   } else if (params.get('demo') === 'alex') {
     // локальный тест на образце: данные лежат только на компьютере автора
     var s = document.createElement('script');

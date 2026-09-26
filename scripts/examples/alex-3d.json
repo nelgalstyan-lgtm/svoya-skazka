@@ -1,0 +1,49 @@
+{
+  "comment": "Книга-образец «Алекс и тайна Ани» в стиле 3D-мультфильм (согласие родителей есть, 26.09). Исходные иллюстрации — assets/kit/alex (не в git). ill-1 нарисована отдельно (scripts/restyle_3d.mjs, проба 4).",
+  "outDir": "assets/examples/alex-3d",
+  "jobs": [
+    {
+      "name": "ill-2", "mode": "restyle", "source": "assets/kit/alex/ill-2.jpg", "refs": ["{ref}/alex-3d.jpg"],
+      "scene": "Add Alex (the teenage boy from the character reference) into the scene: he sits at the table among the boxes and holds this old leather book with the carved lion in both hands, looking at the lion with curiosity. The book with the lion stays large and in focus.",
+      "people": "Alex, 13 years old, a teenager"
+    },
+    {
+      "name": "ill-5", "mode": "restyle", "source": "assets/kit/alex/ill-5.jpg", "refs": ["{ref}/alex-3d.jpg"],
+      "scene": "Add Alex (the teenage boy from the character reference, with a backpack) standing in the left foreground on the path, holding an old book with a lion on the cover and looking up at the church. The church stays the main subject.",
+      "people": "Alex, 13 years old, a teenager"
+    },
+    {
+      "name": "ill-3", "mode": "restyle", "source": "assets/kit/alex/ill-3.jpg", "refs": ["{ref}/alex-3d.jpg"],
+      "scene": "The car has stopped at a viewpoint on the mountain road: add Alex (the teenage boy from the character reference) standing next to the car, one hand on the open door, holding an old book with a lion on the cover and looking at the mountains and the river valley.",
+      "people": "Alex, 13 years old, a teenager"
+    },
+    {
+      "name": "ill-4", "mode": "restyle", "source": "assets/kit/alex/ill-4.jpg", "refs": ["{ref}/alex-3d.jpg"],
+      "scene": "Alex stands in the stone gateway as in the reference, with the carved lion above the gate.",
+      "people": "Alex, 13 years old, a teenager"
+    },
+    {
+      "name": "ill-6", "mode": "restyle", "source": "assets/kit/alex/ill-6.jpg", "refs": ["{ref}/alex-3d.jpg"], "keepTop": 0.78,
+      "scene": "Add Alex (the teenage boy from the character reference) kneeling at the bottom-left edge of the frame, his head and shoulders visible, holding a pencil and a notebook and studying the four carved symbols. The four symbols (lion, rosette, cross, eight-pointed star) stay large, clear and in the same places.",
+      "people": "Alex, 13 years old, a teenager"
+    },
+    {
+      "name": "ill-7", "mode": "restyle", "source": "assets/kit/alex/ill-7.jpg", "refs": ["{ref}/boys-3d.jpg"],
+      "scene": "Keep the three people together in front of the ruins exactly as in the reference.",
+      "people": "Alex, the teenage boy on the left, 13 years old; their mother in the middle, an adult woman; Max, the young boy on the right, about 6 years old"
+    },
+    {
+      "name": "ill-8", "mode": "new", "refs": ["{ref}/boys-3d.jpg", "assets/kit/alex/ill-5.jpg"],
+      "scene": "At the ruined medieval Cathedral of Ani (Armenian stone architecture like the church in the second reference, golden evening light): Alex, the teenage boy, crouches over a fallen carved stone fragment with a round petal rosette ornament; Max, the young boy, stands beside him pointing at the rosette with a curious smile. The huge ruined cathedral rises behind them.",
+      "people": "Alex, 13 years old, a teenager; Max, about 6 years old"
+    },
+    {
+      "name": "cover", "mode": "new", "kind": "cover", "refs": ["{ref}/alex-3d.jpg", "assets/kit/alex/ill-4.jpg"],
+      "scene": "Alex, the teenage boy with a backpack, stands in front of the ancient stone Lion Gate of Ani (like the second reference), holding an old leather book with a carved lion on the cover, looking ahead with excitement; ruins of the medieval city and a glowing evening sky around him.",
+      "people": "Alex, 13 years old, a teenager"
+    },
+    { "name": "coloring-1", "mode": "coloring", "source": "assets/examples/alex-3d/ill-1.webp" },
+    { "name": "coloring-2", "mode": "coloring", "source": "assets/examples/alex-3d/ill-4.webp" },
+    { "name": "coloring-3", "mode": "coloring", "source": "assets/examples/alex-3d/ill-6.webp" }
+  ]
+}
