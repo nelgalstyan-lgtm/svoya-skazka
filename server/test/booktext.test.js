@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { genitiveName, fixDialogue, cleanNoteText, normalizeChapterBlocks, normalizeBook } from '../lib/booktext.js';
+import { genitiveName, fixDialogue, cleanNoteText, normalizeChapterBlocks, normalizeBook, ageVoiceRule } from '../lib/booktext.js';
+import { buildPrompt } from '../lib/story.js';
+import { buildPlanPrompt, buildChapterPrompt } from '../lib/bigstory.js';
 
 test('имя в родительном падеже: «Из записей Артура», а не «Артур»', () => {
   const cases = [['Артур', false, 'Артура'], ['Милена', true, 'Милены'], ['Тигран', false, 'Тиграна'], ['Настя', true, 'Насти'],
@@ -114,4 +116,21 @@ test('возрастные группы и оформление путешест
   assert.deepEqual(styleFor('wild', undefined), TRAVEL_STYLES.wild);
   // праздник и сказка от возраста пока не зависят
   assert.deepEqual(styleFor('birthday', '5-10'), TRAVEL_STYLES.birthday);
+});
+
+test('правило возраста: своё для малыша, дошкольника, школьника и подростка — и всегда про живой язык', () => {
+  const rules = [3, 6, 9, 13, undefined].map(ageVoiceRule);
+  assert.equal(new Set(rules).size, rules.length);
+  assert.match(rules[0], /читают ему вслух/);
+  assert.match(rules[1], /перед сном/);
+  assert.match(rules[3], /подросток/);
+  for (const r of rules) assert.match(r, /не бедность/);
+});
+
+test('правило возраста попадает в промпты «Сказки» и «Большой истории»', () => {
+  const input = { name: 'Макс', gender: 'мальчик', age: '4', theme: 'приключения' };
+  assert.match(buildPrompt(input).user, /малыш 4 лет/);
+  assert.match(buildPlanPrompt(input).user, /малыш 4 лет/);
+  const plan = { title: 'Т', logline: 'Л', motifs: ['м'], chapters: [{ n: 1, title: 'Г', goal: 'ц', beats: ['с'], hook: 'х', note: 'з', images: [] }] };
+  assert.match(buildChapterPrompt(input, plan, 0, [], []).user, /малыш 4 лет/);
 });

@@ -81,7 +81,7 @@
 .bk-back-brand{ font:700 22px/1 'Cormorant Garamond',serif; letter-spacing:.14em; text-transform:uppercase; color:#fbe6b0; text-align:left; }
 .bk-back-brand small{ display:block; margin-top:5px; font:500 14px/1 'Cormorant Garamond',serif; letter-spacing:.1em; text-transform:none; color:#e8d3a8; }
 .bk-back-quote{ position:absolute; left:60px; right:60px; top:58px; font:700 27px/1.2 'Cormorant Garamond',serif; color:#fbe6b0; text-wrap:balance; }
-.bk-back-age{ position:absolute; right:0; bottom:10px; padding:5px 10px; border:1px solid rgba(201,154,75,.6); border-radius:4px; font:600 14px/1 'Cormorant Garamond',serif; color:#e8d3a8; }
+.bk-back-age{ position:absolute; right:0; bottom:10px; padding:5px 10px; border:1px solid rgba(201,154,75,.6); border-radius:4px; font:700 14px/1 'Tinos',serif; color:#e8d3a8; }
 /* с QR: арка ниже, подпись и возраст — слева, QR — справа внизу */
 .bk-back-has-qr .bk-back-arch{ height:370px; }
 .bk-back-has-qr .bk-back-text{ top:466px; }

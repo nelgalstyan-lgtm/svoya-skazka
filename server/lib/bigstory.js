@@ -17,7 +17,7 @@
 
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
-import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, ageGroupFor, styleFor, dedicationFor } from './booktext.js';
+import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, ageGroupFor, styleFor, dedicationFor, ageVoiceRule } from './booktext.js';
 import { ORIGINALITY_RULE, brandMentions } from './story.js';
 
 const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind } = template;
@@ -180,6 +180,7 @@ export function buildPlanPrompt(input) {
   const user = `${formBlock(c, input)}
 
 Придумай книгу для этого ребёнка. Это ПЛАН: сам текст будет писаться позже, по главам.
+Возраст: ${ageVoiceRule(c.age)} Сюжет, загадка и темы — по этому возрасту.
 
 Требования:
 — Ровно ${CHAPTERS} глав. Название главы — короткое, до 5 слов, без слова «глава».
@@ -219,6 +220,7 @@ ${summaries.length ? `УЖЕ НАПИСАНО (кратко):\n${summaries.map((
 Объём: каждая сцена из списка — отдельный эпизод из 5–8 абзацев (80–120 слов) с действием, репликами и конкретными деталями. В главе выходит 500–800 слов и 40–60 абзацев. Не сжимай несколько сцен в одну и не пересказывай — показывай.
 Повторы: фирменные словечки и сравнения героев из анкеты (коронную фразу, повторяющееся сравнение или прозвище) используй не чаще 1–2 раз за главу и каждый раз в новой ситуации, иначе шутка перестаёт быть смешной. Не начинай подряд несколько абзацев одинаково.
 Пиши сразу с действия, без пересказа плана.
+Возраст: ${ageVoiceRule(c.age)}
 
 Формат ответа — строго JSON без пояснений и markdown:
 {"summary":"2 предложения о том, что произошло в главе","blocks":[ ... ]}

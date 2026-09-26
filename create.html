@@ -405,6 +405,8 @@ section.tight{ padding:56px 0; }
 .tariff-card .name{ font-family:var(--font-display); font-size:21px; }
 .tariff-card .t-price{ display:block; margin:6px 0 10px; font-family:var(--font-display); font-size:26px; color:var(--gold-dark); }
 .tariff-card ul{ margin:0; padding-left:18px; color:var(--text-soft); font-size:14px; line-height:1.55; }
+.tariff-age{ margin-top:16px; }
+.tariff-tip{ margin:10px 0 0; padding:10px 14px; border-radius:12px; background:#F4EEDD; border:1px solid var(--line); font-size:15px; color:var(--text); }
 .tariff-card .t-for{ display:inline-block; margin-top:4px; font-size:12.5px; font-weight:700; letter-spacing:.04em; color:var(--sage); text-transform:uppercase; }
 
 .upsell-row{
@@ -771,7 +773,7 @@ section.tight{ padding:56px 0; }
         <div class="choice-cards tariff-cards">
           <div class="choice-card tariff-card is-selected" data-choice-group="tariff" data-value="short" data-price="690">
             <span class="name">Сказка</span>
-            <span class="t-for">для 2–7 лет</span>
+            <span class="t-for">история на один вечер</span>
             <span class="t-price">690 ₽</span>
             <ul>
               <li>8 страниц истории, 5–10 минут чтения</li>
@@ -782,7 +784,7 @@ section.tight{ padding:56px 0; }
           </div>
           <div class="choice-card tariff-card" data-choice-group="tariff" data-value="big" data-price="1490">
             <span class="name">Большая история</span>
-            <span class="t-for">для 6–16 лет</span>
+            <span class="t-for">книга с главами на несколько вечеров</span>
             <span class="t-price">1 490 ₽</span>
             <ul>
               <li>6 глав, 3 000–5 000 слов — на несколько вечеров</li>
@@ -793,6 +795,9 @@ section.tight{ padding:56px 0; }
             </ul>
           </div>
         </div>
+
+        <p class="help tariff-age">Подходят для любого возраста: текст пишется под возраст ребёнка из анкеты. «Сказку» чаще берут для 2–6 лет, «Большую историю» слушают с 5 лет и читают сами примерно с 8.</p>
+        <p class="tariff-tip" id="tariffTip" role="status" hidden></p>
 
         <div class="upsell-row" id="coloringRow" style="margin-top:18px;">
           <input type="checkbox" id="coloring">
@@ -1334,6 +1339,18 @@ section.tight{ padding:56px 0; }
       price.textContent = formatRub(total) + ' ';
       price.appendChild(document.createElement('small')).textContent = 'превью — бесплатно, оплата только если книга понравилась';
       updateDesignStep();
+      updateTariffTip();
+    }
+
+    // Мягкая подсказка по возрасту — ничего не запрещает, только помогает выбрать
+    function updateTariffTip() {
+      const tip = document.getElementById('tariffTip');
+      const age = Number(readInput('age'));
+      let text = '';
+      if (age >= 1 && age <= 4 && isBig()) text = 'Малышу «Большую историю» удобно читать по главе за вечер. Если хочется прочитать всё за один раз — подойдёт «Сказка».';
+      else if (age >= 9 && !isBig()) text = 'Детям от 9 лет часто больше нравится «Большая история» — с главами и загадкой. Но и «Сказка» будет написана под возраст.';
+      tip.textContent = text;
+      tip.hidden = !text;
     }
 
     function updateDesignStep() {
@@ -1343,6 +1360,7 @@ section.tight{ padding:56px 0; }
     }
     document.querySelectorAll('.choice-card[data-choice-group="tariff"]').forEach(function (card) { card.addEventListener('click', updateTariff); });
     document.getElementById('coloring').addEventListener('change', updateTariff);
+    document.getElementById('age').addEventListener('input', updateTariffTip);
     document.querySelectorAll('.choice-card[data-choice-group="theme"]').forEach(function (card) { card.addEventListener('click', updateDesignStep); });
     document.getElementById('occasion').addEventListener('input', updateDesignStep);
     updateTariff();

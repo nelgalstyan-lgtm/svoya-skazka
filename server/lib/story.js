@@ -1,5 +1,6 @@
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
+import { ageVoiceRule } from './booktext.js';
 
 const { buildTemplateStory, normalizeInput, sceneLibraryFor } = template;
 
@@ -68,6 +69,7 @@ export function buildPrompt(rawInput, library = sceneLibraryFor(normalizeInput(r
     ...(c.lesson ? [`Задача книги: ${c.lesson}`] : []),
     ...(c.sequel ? [`Продолжение: ${c.sequel}`] : []),
     '</анкета>',
+    `Как писать для этого возраста: ${ageVoiceRule(c.age)}`,
     'Напиши историю и верни JSON.'
   ].join('\n');
 

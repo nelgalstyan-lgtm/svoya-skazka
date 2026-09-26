@@ -301,7 +301,7 @@
     var brand = h('div', 'bk-back-brand', 'Героёнок');
     brand.appendChild(h('small', '', 'geroenok.online'));
     foot.append(seal, brand);
-    if (book.ageGroup) foot.appendChild(h('div', 'bk-back-age', book.ageGroup.replace('-', '–') + ' лет'));
+    foot.appendChild(h('div', 'bk-back-age', '0+')); // возрастной знак: книга подходит любому возрасту
     page.appendChild(foot);
     // QR на онлайн-версию книги (в ней «Слушать»): у заказа есть, у образцов без адреса — нет
     if (opts && opts.backQr) { page.classList.add('bk-back-has-qr'); page.appendChild(opts.backQr); }
