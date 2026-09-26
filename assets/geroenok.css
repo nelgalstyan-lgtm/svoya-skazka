@@ -505,3 +505,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .dedication-block{ margin-top:30px; padding-top:26px; border-top:1px dashed var(--line); }
 .dedication-block h3{ font-size:21px; margin-bottom:6px; }
 .dedication-block .help{ color:var(--text-soft); margin-bottom:18px; }
+
+/* пара «фото → иллюстрация»: фото из анкеты маленькое — показываем почти в родном размере, без растягивания */
+.before-after{ max-width:500px; }
