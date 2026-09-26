@@ -544,6 +544,52 @@ section.tight{ padding:56px 0; }
   </div>
 </section>
 
+<section class="section-paper2" id="audiobook-example">
+  <div class="container">
+    <div class="section-head">
+      <span class="kicker">Послушайте</span>
+      <h2>Аудиокнига: «Алекс и тайна Ани»</h2>
+      <p>Настоящая книга «Алекс и тайна Ани» (Алексу 13 лет), озвученная голосом рассказчика — посвящение и шесть глав. Публикуем с согласия родителей.</p>
+    </div>
+    <div class="audio-book">
+      <figure class="audio-book-cover">
+        <img src="assets/examples/alex-3d/cover-480.webp" width="240" height="360" loading="lazy" alt="Обложка аудиокниги «Алекс и тайна Ани»">
+        <figcaption>«Алекс и тайна Ани» · 6 глав · 39 минут</figcaption>
+      </figure>
+      <ol class="audio-tracks">
+          <li class="audio-track">
+            <span class="audio-track-name">Посвящение</span><span class="audio-track-time">1:27</span>
+            <audio controls preload="none" src="assets/examples/alex-audio/dedication.mp3" aria-label="Посвящение"></audio>
+          </li>
+          <li class="audio-track">
+            <span class="audio-track-name">Глава 1. Книга со львом</span><span class="audio-track-time">8:51</span>
+            <audio controls preload="none" src="assets/examples/alex-audio/ch1.mp3" aria-label="Глава 1. Книга со львом"></audio>
+          </li>
+          <li class="audio-track">
+            <span class="audio-track-name">Глава 2. Дорога</span><span class="audio-track-time">5:54</span>
+            <audio controls preload="none" src="assets/examples/alex-audio/ch2.mp3" aria-label="Глава 2. Дорога"></audio>
+          </li>
+          <li class="audio-track">
+            <span class="audio-track-name">Глава 3. Собор</span><span class="audio-track-time">5:52</span>
+            <audio controls preload="none" src="assets/examples/alex-audio/ch3.mp3" aria-label="Глава 3. Собор"></audio>
+          </li>
+          <li class="audio-track">
+            <span class="audio-track-name">Глава 4. Ошибка</span><span class="audio-track-time">5:12</span>
+            <audio controls preload="none" src="assets/examples/alex-audio/ch4.mp3" aria-label="Глава 4. Ошибка"></audio>
+          </li>
+          <li class="audio-track">
+            <span class="audio-track-name">Глава 5. То, что осталось</span><span class="audio-track-time">4:49</span>
+            <audio controls preload="none" src="assets/examples/alex-audio/ch5.mp3" aria-label="Глава 5. То, что осталось"></audio>
+          </li>
+          <li class="audio-track">
+            <span class="audio-track-name">Глава 6. То, что остаётся</span><span class="audio-track-time">7:20</span>
+            <audio controls preload="none" src="assets/examples/alex-audio/ch6.mp3" aria-label="Глава 6. То, что остаётся"></audio>
+          </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
 <section class="section-paper2 tight">
   <div class="container">
     <div class="grid grid-2" style="align-items:center;">
@@ -599,5 +645,18 @@ section.tight{ padding:56px 0; }
   </div>
 </footer>
 
+<script>
+// Аудиокнига-образец: одновременно играет только одна дорожка, следующая глава включается сама
+(function () {
+  var tracks = Array.prototype.slice.call(document.querySelectorAll('.audio-track audio'));
+  tracks.forEach(function (a, i) {
+    a.addEventListener('play', function () {
+      tracks.forEach(function (b) { if (b !== a) b.pause(); });
+      document.querySelectorAll('.audio-track').forEach(function (li) { li.classList.toggle('is-playing', li.contains(a)); });
+    });
+    a.addEventListener('ended', function () { if (tracks[i + 1]) tracks[i + 1].play(); });
+  });
+})();
+</script>
 </body>
 </html>

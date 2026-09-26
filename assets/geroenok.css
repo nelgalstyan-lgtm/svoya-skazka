@@ -469,3 +469,23 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 @media (max-width:880px){ .progress-track{ top:64px; } }
 .form-shell{ overflow:clip; } /* обрезает углы как hidden, но не ломает прилипающую полосу прогресса */
 .style-sample.is-3d{ background:linear-gradient(160deg,#DCE4DA,#AAB8A2 55%,#7C9CA3); }
+
+/* ---------- аудиокнига-образец: обложка и дорожки по главам ---------- */
+.audio-book{ display:grid; grid-template-columns:240px 1fr; gap:36px; align-items:start; }
+.audio-book-cover{ margin:0; text-align:center; }
+.audio-book-cover img{ width:240px; height:auto; border-radius:6px 14px 14px 6px; box-shadow:var(--shadow-soft); }
+.audio-book-cover figcaption{ margin-top:12px; color:var(--text-soft); font-size:15px; }
+.audio-tracks{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.audio-track{
+  display:grid; grid-template-columns:1fr auto; gap:6px 12px; align-items:center;
+  background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 16px;
+  transition:border-color .2s ease, box-shadow .2s ease;
+}
+.audio-track.is-playing{ border-color:var(--brass); box-shadow:0 0 0 3px rgba(201,154,75,.2); }
+.audio-track-name{ font-weight:700; }
+.audio-track-time{ color:var(--text-soft); font-size:14px; font-variant-numeric:tabular-nums; }
+.audio-track audio{ grid-column:1 / -1; width:100%; height:40px; }
+@media (max-width:760px){
+  .audio-book{ grid-template-columns:1fr; gap:20px; }
+  .audio-book-cover img{ width:170px; }
+}
