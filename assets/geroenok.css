@@ -441,3 +441,20 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   .hero-inner .storybook-art img{ max-width:120px; max-height:160px; margin:0 auto; }
   .hero-inner .storybook-text .kicker{ display:block; }
 }
+
+/* ---------- логотип (docs/brand/logo.png): Героёнок + надпись; в тёмных местах — светлая надпись ---------- */
+.logo.logo-img{ gap:6px; line-height:0; }
+.logo.logo-img::before{ content:none; }
+.logo-img .logo-mark{ width:46px; height:auto; margin:-4px 0 -4px; }
+.logo-img .logo-word{ width:150px; height:auto; }
+.logo-light img{ width:160px; height:auto; }
+@media (max-width:420px){
+  .logo-img .logo-mark{ width:38px; }
+  .logo-img .logo-word{ width:112px; }
+}
+/* на узком телефоне у кнопки меню остаётся только значок, слово «Меню» — для программ чтения экрана */
+@media (max-width:480px){
+  .nav-mobile summary{ padding:9px 11px; gap:0; }
+  .nav-mobile-label{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .site-header .container{ gap:8px; }
+}

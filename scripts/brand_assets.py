@@ -18,6 +18,7 @@ OUT = ROOT / 'assets' / 'brand'
 
 # имя: (файл-источник, (left, top, right, bottom), ширины для сайта; () — один файл name.webp в исходном размере)
 SHEET = 'emotions-actions.png'
+LOGO = 'logo.png'
 CANON = 'character-sheet.png'
 CROPS = {
     'geroenok-main': ('geroenok-main.png', (60, 40, 990, 1490), (360, 560, 820)),
@@ -51,7 +52,25 @@ CROPS = {
     'item-star': (CANON, (746, 1079, 805, 1156), ()),
     'item-map': (CANON, (820, 1079, 903, 1156), ()),
     'sprig': (CANON, (1114, 737, 1173, 875), ()),
+    # логотип (docs/brand/logo.png): надпись и Героёнок для шапки, весь знак целиком
+    'logo-wordmark': (LOGO, (250, 776, 1025, 950), (220, 440)),
+    'logo-mark': (LOGO, (470, 158, 830, 530), (96,)),
+    'logo-full': (LOGO, (250, 150, 1025, 1095), (480,)),
 }
+
+# Светлые версии с прозрачностью — для тёмного фона (подвал, панель книги), где «умножение» не работает
+LIGHT = {'logo-wordmark-light': (LOGO, (250, 776, 1025, 950), (220, 440), (0xFB, 0xF3, 0xE3))}
+
+# Над надписью заканчиваются цветы под фигурой: закрашиваем бумагой всё правее «Г» выше строки 792
+ERASE = {'logo-wordmark': [(420, 776, 1025, 792)], 'logo-wordmark-light': [(420, 776, 1025, 792)]}
+
+
+def erase(img, name, box):
+    from PIL import ImageDraw
+    d = ImageDraw.Draw(img)
+    for (x0, y0, x1, y1) in ERASE.get(name, []):
+        d.rectangle((x0 - box[0], y0 - box[1], x1 - box[0], y1 - box[1]), fill=tuple(int(v) for v in paper_color(img)))
+    return img
 
 
 def paper_color(img):
@@ -81,7 +100,7 @@ def content_box(img):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for name, (src, box, widths) in CROPS.items():
-        img = Image.open(SRC / src).convert('RGB').crop(box)
+        img = erase(Image.open(SRC / src).convert('RGB').crop(box), name, box)
         cut = paper_to_white(img, paper_color(img))
         cut = cut.crop(content_box(cut))  # без пустых полей
         if not widths:
@@ -91,6 +110,19 @@ def main():
         for w in widths:
             h = round(cut.height * w / cut.width)
             cut.resize((w, h), Image.LANCZOS).save(OUT / f'{name}-{w}.webp', 'WEBP', quality=80, method=6)
+        print(f'{name}: {cut.size} -> {widths}')
+    for name, (src, box, widths, color) in LIGHT.items():
+        img = erase(Image.open(SRC / src).convert('RGB').crop(box), name, box)
+        paper = paper_color(img)
+        a = np.asarray(img).astype(np.float64)
+        ink = np.clip((np.asarray(paper, dtype=np.float64) - a).max(axis=2) / 140, 0, 1)  # насколько пиксель темнее бумаги
+        ink[ink < 0.06] = 0
+        rgba = np.dstack([np.broadcast_to(np.array(color, dtype=np.float64), a.shape), ink * 255]).astype(np.uint8)
+        cut = Image.fromarray(rgba, 'RGBA')
+        cut = cut.crop(cut.getbbox())
+        for w in widths:
+            h = round(cut.height * w / cut.width)
+            cut.resize((w, h), Image.LANCZOS).save(OUT / f'{name}-{w}.webp', 'WEBP', quality=90, method=6)
         print(f'{name}: {cut.size} -> {widths}')
 
 if __name__ == '__main__':
