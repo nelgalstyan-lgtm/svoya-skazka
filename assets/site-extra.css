@@ -110,3 +110,12 @@
 .gift-card .g-to{ font-family:var(--font-script, cursive); font-size:28px; }
 .gift-card .g-note{ font-size:14px; opacity:.85; }
 @media (max-width:520px){ .gift-card{ padding:22px; } .gift-card .g-amount{ font-size:30px; } }
+
+/* «Примеры»: раскраска — пары «иллюстрация → раскраска» */
+.coloring-head{ max-width:720px; margin:0 auto 26px; text-align:center; }
+.coloring-pairs{ display:grid; grid-template-columns:1fr 1fr; gap:34px; max-width:1000px; margin:0 auto; }
+.coloring-pair{ max-width:none; }
+.coloring-pair img{ aspect-ratio:2/3; background:#fff; }
+.coloring-print{ margin:26px 0 0; text-align:center; }
+.coloring-print a{ color:var(--btn); font-weight:700; text-underline-offset:4px; }
+@media (max-width:760px){ .coloring-pairs{ grid-template-columns:1fr; gap:26px; } .coloring-pair{ gap:10px; } .coloring-pair .arrow{ font-size:24px; } }
