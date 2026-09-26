@@ -6,18 +6,26 @@
 Подробности по коду: `docs/project-brief.md`, `server/README.md`, `server/.env.example`, `wrangler.jsonc`.
 
 ## ▶ Начать отсюда
-**Сервер переписан на Cloudflare Worker (папка `worker/`), но ещё НЕ выложен:** коммит только локальный, в GitHub не отправлен. Любой пуш в `main` сразу выкладывается на geroenok.online (Workers Builds, `npx wrangler deploy`), поэтому сначала секреты.
+**Сервер работает на Cloudflare Worker (папка `worker/`), выложен на geroenok.online 26.09.** Любой пуш в `main` сразу выкладывается (Workers Builds).
 
-Что осталось (нужно разрешение владелицы: без него система безопасности не даёт записывать секреты):
-1. Секреты Worker'а `svoya-skazka`: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY` (из `server/.env`), `ADMIN_KEY` (новый случайный). Команда: `npx wrangler secret put ИМЯ`.
-2. Правило R2: удалять `photos/` старше 2 суток: `npx wrangler r2 bucket lifecycle add geroenok photos-2d photos/ --expire-days 2`.
-3. Пуш → выкладка. Проверить: заказ превью (≈15 ₽), `wrangler tail svoya-skazka --format json` → `cpuTime` каждого шага < 10 мс; разблокировка `POST /api/book/<id>/unlock` с заголовком `x-admin-key`.
-4. Проверить, что ИИ отвечает, когда запрос идёт через московский дата-центр Cloudflare (риск: OpenAI не принимает запросы из РФ). Если нет — `placement` для Workflow.
-5. После проверки удалить старый Express-сервер (`server/index.js`, `lib/jobs.js`, `lib/photostore.js`, `lib/complete.js`, тесты `preview` и `edits`), из зависимостей — `@google/genai`, `express`, `cors`.
+⚠ **Тесты с OpenAI платные: на счёте OpenAI осталось ≈$2 из $5 на все тесты** (26.09 потрачено ≈$3). Проверять бесплатно: `npm test` (OpenAI подделан), `/api/health`, `/api/health?openai=1` (бесплатный список моделей), журналы. Платный заказ — только с разрешения владелицы.
+
+Сделано и проверено 26.09 на проде:
+- Секреты заданы: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`, `ADMIN_KEY` (он же в `.env` в корне, не в git). Правило R2 `photos-2d`: `photos/` удаляются через 2 суток.
+- Заказ → превью (≈65–100 с) → `unlock` → дорисовка (≈1 мин) — работает. CPU: приём заказа 6 мс (фото файлами, multipart), шаг Workflow ≈6–7 мс, статус 1 мс.
+- **Страна покупателя.** Cloudflare передаёт OpenAI страну посетителя: запросы из РФ (идут через ARN/AMS/LHR) и Workflow, созданный прямо из такого запроса, получают 403 `unsupported_country_region_territory`. Workflow, созданный **из обработчика очереди**, — 200. Поэтому книги запускаются через очередь `geroenok-start` (`worker/queue.js`, `startBook` в `api.js`). Проверено check-host'ом с узлов ru1/ru3 (временный код проверки убран).
+- Тестовые заказы через `curl -F` из Git Bash портят кириллицу (имя «������» → ИИ отвечает «нет имени», текст из шаблона). Для ручных проверок — JSON-файл в UTF-8 (`--data-binary @file`), не аргументы командной строки.
+- Фото-«заглушка» без ребёнка (картинка леса) → OpenAI может отказать в листе персонажа (safety). С настоящим фото этого не было.
+
+Дальше:
+1. Удалить старый Express-сервер (`server/index.js`, `lib/jobs.js`, `lib/photostore.js`, `lib/complete.js`, тесты `preview` и `edits`), из зависимостей `@google/genai`, `express`, `cors`; поправить `server/README.md`.
+2. Оплата через ЮKassa (вебхук → `unlockBook` в `worker/api.js`).
+3. Лимит бесплатных превью на человека (сейчас только 3 заказа/мин с IP).
+4. Текстовые ИИ часто падают (Gemini 503, OpenRouter 429/404 для `z-ai/glm-5.2:free`) — обновить списки моделей.
 
 ### Как устроено (26.09)
 - `wrangler.jsonc`: `main: worker/index.js`, статика `dist/` (сборка `scripts/build-pages.sh`), `/api/*` → Worker, `nodejs_compat` (process.env из секретов).
-- Привязки: R2 `BUCKET` = `geroenok`, Workflow `BOOK_WORKFLOW` (`geroenok-book`, класс `BookWorkflow`), лимиты с одного IP: `GEN_LIMITER` 3/мин, `BIG_LIMITER` 1/мин, `EDIT_LIMITER` 20/мин.
+- Привязки: R2 `BUCKET` = `geroenok`, очередь `START_QUEUE` = `geroenok-start` (запуск книг), Workflow `BOOK_WORKFLOW` (`geroenok-book`, класс `BookWorkflow`), лимиты с одного IP: `GEN_LIMITER` 3/мин, `BIG_LIMITER` 1/мин, `EDIT_LIMITER` 20/мин.
 - `worker/api.js` — те же маршруты и ответы, что у старого сервера (сайт почти не менялся).
 - `worker/book.js` — книга по шагам Workflow: текст (или план, 6 глав и сборка), лист персонажа, обложка и сцены по 3 параллельно, повтор неудавшихся, раскраска. У каждого шага свои 10 мс CPU.
 - `worker/art.js` — OpenAI в **WebP**; base64 вырезается без `JSON.parse` всего ответа (`worker/bytes.js`). Gemini запасной (REST, без SDK).
@@ -25,7 +33,7 @@
 - Страховка: если книга не готова за 15 мин (большая — за 30), `/status` отдаёт книгу из шаблона.
 - Сайт: `create.html` уменьшает фото до 1536 px JPEG перед отправкой (разбор JSON на 24 МБ не влез бы в 10 мс); `API_BASE` пустой (тот же адрес); `book-engine.js` понимает картинки `/api/img/`.
 - Логика текста общая, в `server/lib/*`. Из `bigstory.js` вынесены `writePlan`, `writeChapter`, `chapterContext`, `assembleBigBook`; из `story.js` — `prepareHeroPages`; из `illustrate.js` — `imageRequest`.
-- Тесты: `cd server && npm test` — 81 (70 старых + 11 для Worker'а с поддельными R2, Workflow и OpenAI).
+- Тесты: `cd server && npm test` — 82 (70 старых + 12 для Worker'а с поддельными R2, очередью, Workflow и OpenAI).
 - Локально: `npx wrangler dev` (сайт и API на :8787; ключи в `.dev.vars`, не в git). Без ключей текст берётся из шаблона, картинок нет. В журнале после завершения Workflow бывает «code had hung»: это особенность локального имитатора, книги при этом готовы (статус Completed). Проверено 26.09: «Сказка», «Большая история», разблокировка.
 
 ### Сделано 26.09 раньше
