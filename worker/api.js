@@ -250,6 +250,15 @@ async function unlock(request, env, store, id) {
   return json(r, r.ok ? 200 : 404);
 }
 
+// Удалить книгу раньше срока по просьбе заказчика (политика конфиденциальности): вручную, заголовок x-admin-key
+async function removeBookNow(request, env, store, id) {
+  if (!env.ADMIN_KEY || request.headers.get('x-admin-key') !== env.ADMIN_KEY) return fail(403, 'Нет доступа');
+  if (!(await store.getJob(id))) return fail(404, 'Книга не найдена');
+  const files = await store.removeBook(id);
+  console.log(`[delete] ${id}: удалена по просьбе заказчика (${files} файлов)`);
+  return json({ ok: true, files });
+}
+
 /**
  * Запуск создания книги — через очередь, а не прямо отсюда. Если Workflow создать из запроса покупателя,
  * OpenAI видит страну покупателя и отказывает заказам из РФ; из обработчика очереди — не видит (проверено 26.09).
@@ -341,6 +350,7 @@ export async function handleApi(request, env) {
     if (action === 'redraw' && method === 'POST') return redraw(request, env, store, id);
     if (action === 'edit' && method === 'POST') return edit(request, env, store, id);
     if (action === 'unlock' && method === 'POST') return unlock(request, env, store, id);
+    if (action === 'delete' && method === 'POST') return removeBookNow(request, env, store, id);
   }
   return fail(404, 'Not found');
 }

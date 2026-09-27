@@ -4,6 +4,8 @@
 //   media/<id>/<file>   — озвучка книги (mp3 на главу, отдаётся через /api/media/…); voice-tmp/<id>/ — куски до склейки
 //   photos/<id>/<n>     — фото ребёнка: до оплаты (не дольше PHOTO_TTL_HOURS) и до конца дорисовки
 // Правило жизненного цикла R2 дополнительно удаляет photos/ старше 2 суток — даже если код что-то пропустит.
+// Книга целиком (все эти папки) удаляется через год после заказа — см. cleanup.js; дата заказа хранится
+// и в метаданных jobs/<id>.json, чтобы находить старые книги по списку, не открывая каждую.
 
 import { fromBase64 } from './bytes.js';
 
@@ -26,7 +28,47 @@ export function createStore(bucket, { photoTtlMs = 48 * 60 * 60_000 } = {}) {
   }
 
   async function saveJob(job) {
-    await bucket.put(jobKey(job.id), JSON.stringify(job), { httpMetadata: { contentType: 'application/json' } });
+    await bucket.put(jobKey(job.id), JSON.stringify(job), {
+      httpMetadata: { contentType: 'application/json' },
+      customMetadata: { createdAt: String(job.createdAt || Date.now()) }
+    });
+  }
+
+  /** Все ключи под префиксом (R2 отдаёт список страницами по 1000). */
+  async function listKeys(prefix, include) {
+    const out = [];
+    let cursor;
+    do {
+      const page = await bucket.list({ prefix, cursor, ...(include ? { include } : {}) });
+      out.push(...page.objects);
+      cursor = page.truncated ? page.cursor : undefined;
+    } while (cursor);
+    return out;
+  }
+
+  /** Книги, заказанные раньше before (мс): [id]. У старых записей без метаданных — дата последнего сохранения (она не раньше заказа). */
+  async function jobsCreatedBefore(before) {
+    const objects = await listKeys('jobs/', ['customMetadata']);
+    return objects
+      .filter((o) => {
+        const created = Number(o.customMetadata?.createdAt) || new Date(o.uploaded).getTime();
+        return created < before;
+      })
+      .map((o) => o.key.slice(5, -5))
+      .filter(isJobId);
+  }
+
+  /** Удаляет книгу со всеми файлами: иллюстрации, озвучка, песня, фото. Саму запись — последней, чтобы при сбое повторить. */
+  async function removeBook(id) {
+    if (!isJobId(id)) return 0;
+    let removed = 0;
+    for (const prefix of [`img/${id}/`, `media/${id}/`, `voice-tmp/${id}/`, `photos/${id}/`]) {
+      const keys = (await listKeys(prefix)).map((o) => o.key);
+      for (let k = 0; k < keys.length; k += 1000) await bucket.delete(keys.slice(k, k + 1000));
+      removed += keys.length;
+    }
+    await bucket.delete(jobKey(id));
+    return removed + 1;
   }
 
   /** Прочитать задачу, поменять и сохранить. Возвращает изменённую задачу (или null, если её нет). */
@@ -102,5 +144,5 @@ export function createStore(bucket, { photoTtlMs = 48 * 60 * 60_000 } = {}) {
 
   const getImageObject = (id, file) => (isJobId(id) && isImageFile(file) ? bucket.get(`img/${id}/${file}`) : null);
 
-  return { getJob, saveJob, updateJob, savePhotos, loadPhotos, removePhotos, putImage, loadImage, getImageObject, putMedia, joinMedia, removeMedia, mediaKey };
+  return { getJob, saveJob, updateJob, jobsCreatedBefore, removeBook, savePhotos, loadPhotos, removePhotos, putImage, loadImage, getImageObject, putMedia, joinMedia, removeMedia, mediaKey };
 }

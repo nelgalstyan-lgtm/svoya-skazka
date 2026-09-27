@@ -5,6 +5,7 @@ import { WorkflowEntrypoint } from 'cloudflare:workers';
 import { handleApi } from './api.js';
 import { runBook } from './book.js';
 import { queueHandler } from './queue.js';
+import { removeExpiredBooks } from './cleanup.js';
 
 export class BookWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
@@ -27,5 +28,10 @@ export default {
   },
 
   // книги запускаются из очереди: так OpenAI не видит страну покупателя (см. queue.js)
-  queue: queueHandler
+  queue: queueHandler,
+
+  // раз в час: удалить книги старше года (см. cleanup.js)
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(removeExpiredBooks(env));
+  }
 };

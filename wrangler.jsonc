@@ -23,5 +23,7 @@
     "producers": [{ "binding": "START_QUEUE", "queue": "geroenok-start" }],
     "consumers": [{ "queue": "geroenok-start", "max_batch_size": 10, "max_batch_timeout": 1 }]
   },
+  // раз в час удаляются книги старше года (worker/cleanup.js)
+  "triggers": { "crons": ["17 * * * *"] },
   "observability": { "enabled": true }
 }

@@ -8,6 +8,8 @@ import { runBook } from '../book.js';
 import { jsonStringField } from '../bytes.js';
 import { queueHandler } from '../queue.js';
 import { splitText, voiceTracks } from '../voice.js';
+import { removeExpiredBooks, KEEP_MS } from '../cleanup.js';
+import { createStore } from '../store.js';
 
 const worker = { queue: queueHandler };
 
@@ -28,9 +30,12 @@ function fakeBucket() {
     async get(key) { const v = items.get(key); return v ? wrap(key, v) : null; },
     async put(key, value, opts = {}) {
       const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : new Uint8Array(value);
-      items.set(key, { bytes, httpMetadata: opts.httpMetadata || {}, uploaded: new Date() });
+      items.set(key, { bytes, httpMetadata: opts.httpMetadata || {}, customMetadata: opts.customMetadata, uploaded: new Date() });
     },
-    async list({ prefix }) { return { objects: [...items].filter(([k]) => k.startsWith(prefix)).map(([key, v]) => ({ key, uploaded: v.uploaded })) }; },
+    async list({ prefix, include = [] }) {
+      const objects = [...items].filter(([k]) => k.startsWith(prefix)).map(([key, v]) => ({ key, uploaded: v.uploaded, ...(include.includes('customMetadata') ? { customMetadata: v.customMetadata || {} } : {}) }));
+      return { objects, truncated: false };
+    },
     async delete(keys) { for (const k of [].concat(keys)) items.delete(k); },
     keys(prefix) { return [...items.keys()].filter((k) => k.startsWith(prefix)); }
   };
@@ -542,4 +547,51 @@ test('песня: «Большая история» — входит; «Сказ
     assert.equal(sg.calls.music.length, 1, 'без ключа ElevenLabs — ни одного запроса');
     assert.equal((await status(env2, id2)).result.song, null);
   } finally { sg.restore(); ai.restore(); }
+});
+
+// ---------------------------------------------------------------- удаление через год
+
+async function bookWithFiles(env, id, createdAt) {
+  const store = createStore(env.BUCKET);
+  await store.saveJob({ id, status: 'completed', createdAt, input: { name: 'Аня' }, result: { title: 'Книга' } });
+  for (const key of [`img/${id}/cover-1.webp`, `img/${id}/scene-0-2.webp`, `media/${id}/track-0-3.mp3`, `media/${id}/song-4.mp3`, `photos/${id}/0`]) await env.BUCKET.put(key, 'x');
+}
+
+test('через год книга удаляется целиком, свежие книги и аудиокнига-образец остаются', async () => {
+  const env = fakeEnv();
+  const now = Date.now();
+  const oldId = '11111111-1111-4111-8111-111111111111';
+  const newId = '22222222-2222-4222-8222-222222222222';
+  await bookWithFiles(env, oldId, now - KEEP_MS - 60_000);
+  await bookWithFiles(env, newId, now - KEEP_MS + 24 * 60 * 60_000);
+  await env.BUCKET.put('media/alex-audio/ch1.mp3', 'x');
+
+  const removed = await removeExpiredBooks(env, { now, log: () => {} });
+  assert.deepEqual(removed, [oldId]);
+  for (const prefix of [`jobs/${oldId}`, `img/${oldId}/`, `media/${oldId}/`, `photos/${oldId}/`]) assert.deepEqual(env.BUCKET.keys(prefix), [], prefix);
+  assert.equal(env.BUCKET.keys(`img/${newId}/`).length, 2);
+  assert.ok(env.BUCKET.items.has(`jobs/${newId}.json`));
+  assert.ok(env.BUCKET.items.has('media/alex-audio/ch1.mp3'));
+});
+
+test('книга без даты в метаданных (сохранена до этой правки) — срок по дате последнего сохранения', async () => {
+  const env = fakeEnv();
+  const id = '33333333-3333-4333-8333-333333333333';
+  await env.BUCKET.put(`jobs/${id}.json`, JSON.stringify({ id, createdAt: 1 }));
+  assert.deepEqual(await removeExpiredBooks(env, { now: Date.now(), log: () => {} }), [], 'только что сохранена — не трогаем');
+  assert.deepEqual(await removeExpiredBooks(env, { now: Date.now() + KEEP_MS + 60_000, log: () => {} }), [id]);
+});
+
+test('удалить книгу раньше срока по просьбе заказчика — только с ключом хозяйки', async () => {
+  const env = fakeEnv();
+  const id = '44444444-4444-4444-8444-444444444444';
+  await bookWithFiles(env, id, Date.now());
+  const call = (key) => handleApi(new Request(`https://x/api/book/${id}/delete`, { method: 'POST', headers: key ? { 'x-admin-key': key } : {} }), env);
+  assert.equal((await call()).status, 403);
+  assert.equal((await call('wrong')).status, 403);
+  const r = await call('admin');
+  assert.equal(r.status, 200);
+  assert.equal((await r.json()).files, 6);
+  assert.deepEqual([...env.BUCKET.items.keys()].filter((k) => k.includes(id)), []);
+  assert.equal((await call('admin')).status, 404);
 });
