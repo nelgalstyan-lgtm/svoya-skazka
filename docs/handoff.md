@@ -7,7 +7,7 @@
 
 ## ▶ Начать отсюда (состояние на ночь 28.09)
 
-**Идёт работа: единый фирменный стиль всех книг.** Код готов и сохранён в `main`, **но НЕ выложен** (`main` впереди `origin/main` — пуш = выкладка сайта, только по слову владелицы «выкладывай»). Тесты: `cd server && npm test` — **85**, все проходят.
+**Идёт работа: единый фирменный стиль всех книг.** Код готов и сохранён в `main`, **но НЕ выложен** (`main` впереди `origin/main` — пуш = выкладка сайта, только по слову владелицы «выкладывай»). Резервная копия — ветка `oformlenie` на GitHub (сайт из неё не выкладывается); обновлять: `git push origin main:oformlenie`. Тесты: `cd server && npm test` — **85**, все проходят.
 
 **Первое в новом чате:** владелица обещала дорисовать остальные **7 боковых полос** (море, поход, королевство, лес, подводное, Новый год, день рождения) в `Desktop/svoya-skazka-primery/dlya-chatgpt/bokovye-polosy/` по `PROMPT.txt` там же (одна — `polosa-tajny` — уже стоит). Когда положит:
 1. `PYTHONIOENCODING=utf-8 python scripts/book_decor.py "C:/Users/Asus/Desktop/svoya-skazka-primery/dlya-chatgpt/oformlenie-knig" "C:/Users/Asus/Desktop/svoya-skazka-primery/dlya-chatgpt/bokovye-polosy"` — полосы → `assets/kit/decor/<тема>/strip.webp` (файлы у неё называются `*.png.png` — скрипт это понимает).
