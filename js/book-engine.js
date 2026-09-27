@@ -152,6 +152,12 @@
   function newSheet(root, kind) {
     var wrap = h('div', 'bk-wrap');
     var page = h('div', 'bk-page bk-f-' + FRAME + ' bk-footer-' + FOOTER + ART + EXTRA + ' ' + kind);
+    // фирменная рамка страницы: двойная линия по краю и веточки темы в углах (не на обложках, иллюстрациях и раскраске)
+    if (FRAME === 'brand' && /bk-(text|ded|finale|song)/.test(kind)) {
+      var frame = h('div', 'bk-brand-frame');
+      ['tl', 'tr', 'bl', 'br'].forEach(function (c) { frame.appendChild(img(decorItem(DECOR[SET].sprig), 'bk-decor bk-corner bk-corner-' + c, '')); });
+      page.appendChild(frame);
+    }
     wrap.appendChild(page);
     root.appendChild(wrap);
     return page;
