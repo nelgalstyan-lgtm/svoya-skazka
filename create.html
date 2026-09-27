@@ -1358,12 +1358,23 @@ section.tight{ padding:56px 0; }
       const isHoliday = /праздн/i.test(readChoiceText('theme'));
       const isNewYear = isHoliday && window.SkazkaTemplate.occasionKind(readInput('occasion')) === 'newyear' && readInput('occasion') !== '';
       document.getElementById('designStep').style.display = isBig() && isNewYear ? 'block' : 'none';
+      updateDesignThumbs();
+    }
+    // превью оформлений — в том же стиле, что и иллюстрации (акварель или 3D)
+    function updateDesignThumbs() {
+      const style = document.querySelector('.choice-card[data-choice-group="style"].is-selected');
+      const suffix = style && style.dataset.value === 'animated3d' ? '-3d' : '';
+      document.querySelectorAll('.choice-card[data-choice-group="design"]').forEach(function (card) {
+        const thumb = card.querySelector('.design-thumb');
+        if (thumb) thumb.src = 'assets/kit/preview-' + card.dataset.value + suffix + '.jpg';
+      });
     }
     document.querySelectorAll('.choice-card[data-choice-group="tariff"]').forEach(function (card) { card.addEventListener('click', updateTariff); });
     document.getElementById('coloring').addEventListener('change', updateTariff);
     document.getElementById('age').addEventListener('input', updateTariffTip);
     document.querySelectorAll('.choice-card[data-choice-group="theme"]').forEach(function (card) { card.addEventListener('click', updateDesignStep); });
     document.getElementById('occasion').addEventListener('input', updateDesignStep);
+    document.querySelectorAll('.choice-card[data-choice-group="style"]').forEach(function (card) { card.addEventListener('click', updateDesignThumbs); });
     updateTariff();
 
     generateBtn.addEventListener('click', async function () {

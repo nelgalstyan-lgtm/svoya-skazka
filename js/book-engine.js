@@ -84,6 +84,7 @@
 
   var FRAME = 'rope';
   var FOOTER = 'sea'; // колонтитул: treasure | wild | sea | birds
+  var ART = ''; // ' bk-art-3d' — книга в стиле «3D-мультфильм»
 
   // название главы в узкой шапке: сжимаем шрифт, пока не влезет (в одну строку или в высоту блока); совсем длинное — многоточие
   function fitRunTitle(span, run, multiline) {
@@ -116,7 +117,7 @@
 
   function newSheet(root, kind) {
     var wrap = h('div', 'bk-wrap');
-    var page = h('div', 'bk-page bk-f-' + FRAME + ' bk-footer-' + FOOTER + ' ' + kind);
+    var page = h('div', 'bk-page bk-f-' + FRAME + ' bk-footer-' + FOOTER + ART + ' ' + kind);
     wrap.appendChild(page);
     root.appendChild(wrap);
     return page;
@@ -402,6 +403,7 @@
 
   function preloadImages(book) {
     var urls = [book.cover || KIT + 'parchment.jpg', KIT + 'hdr-treasure-l.png', KIT + 'hdr-treasure-r.png', KIT + 'hdr-wild.png', KIT + 'hdr-sea.svg', KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png', KIT + 'frame-cookies.jpg', KIT + 'frame-elves.jpg', KIT + 'hdr-cookies-l.png', KIT + 'hdr-cookies-r.png', KIT + 'hdr-elves-l.png', KIT + 'hdr-elves-r.png', KIT + 'divider-cookies.png', KIT + 'divider-elves.png', KIT + 'frame-pirates.jpg', KIT + 'frame-jungle.jpg', KIT + 'orn-pirates-skull.png'];
+    if (ART && /^(pirates|jungle|cookies|elves)$/.test(FRAME)) urls.push(KIT + 'frame-' + FRAME + '-3d.jpg');
     book.chapters.forEach(function (c) {
       if (c.initial) urls.push(KIT + 'initials/' + c.initial + '.png');
       c.blocks.forEach(function (b) { if (b.t === 'image') urls.push(imageSrc(b)); });
@@ -415,6 +417,8 @@
   function render(book, root, opts) {
     FRAME = (opts && opts.frame) || book.frame || 'rope';
     FOOTER = (opts && opts.footer) || book.footer || (FRAME === 'vine' ? 'birds' : 'sea');
+    // книга в стиле «3D-мультфильм»: рисованные рамки берутся в 3D-варианте (parchment.css, .bk-art-3d)
+    ART = book.art === '3d' ? ' bk-art-3d' : '';
     return Promise.all([loadFonts(), preloadImages(book)]).then(function () {
       root.textContent = '';
       var sheets = [];

@@ -77,6 +77,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       text: window.SkazkaExtras.lockedText({ chapters: result.lockedChapters, images: result.lockedImages, coloring: true, name: name, girl: girl }),
       button: window.SkazkaExtras.payButton({ jobId: jobId, price: result.price, apiBase: API_BASE })
     } : null;
+    if (!jobId && params.get('art') === '3d') book.art = '3d'; // образец оформления в стиле «3D-мультфильм»
     window.SkazkaBook.render(book, root, {
       locked: locked,
       frame: params.get('frame'), footer: params.get('footer'),

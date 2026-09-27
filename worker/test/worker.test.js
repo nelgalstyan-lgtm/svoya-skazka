@@ -595,3 +595,11 @@ test('удалить книгу раньше срока по просьбе за
   assert.deepEqual([...env.BUCKET.items.keys()].filter((k) => k.includes(id)), []);
   assert.equal((await call('admin')).status, 404);
 });
+
+test('книга в 3D получает 3D-оформление рамок, акварельная — нет', async () => {
+  const { jobView } = await import('../view.js');
+  const job = (style) => ({ id: 'x', status: 'completed', paid: true, createdAt: 0, input: { style, tariff: 'big' }, result: { book: { title: 'К', frame: 'elves', footer: 'elves', genre: 'newyear_elves', chapters: [{ n: 1, title: 'Г', blocks: [{ t: 'p', text: 'Текст.' }] }] } } });
+  assert.equal(jobView(job('3D-мультфильм')).result.book.art, '3d');
+  assert.equal(jobView(job('animated3d')).result.book.art, '3d');
+  assert.equal(jobView(job('Акварель')).result.book.art, undefined);
+});

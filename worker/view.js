@@ -1,6 +1,7 @@
 // Что видит клиент: превью до оплаты и полная книга после. Перенесено со старого сервера на Express без изменений логики.
 
 import { normalizeBook } from '../server/lib/booktext.js';
+import { pickStyleKey } from '../server/lib/illustrate.js';
 
 // Нарисованная иллюстрация с ребёнком: картинка из хранилища (или старый data:URL), а не запасной фон assets/scenes/…
 export const isDrawn = (src) => /^(data:|\/api\/img\/)/.test(src || '');
@@ -17,6 +18,8 @@ function jobAnswers(job) {
 
 function clientBook(job) {
   const { sheet, ...book } = normalizeBook(job.result.book, { name: job.input?.name, girl: !/^(мал|boy|male)/i.test(job.input?.gender || '') });
+  // оформление под стиль иллюстраций: у книг в 3D рисованные рамки тоже в 3D (assets/kit/frame-*-3d.jpg)
+  if (pickStyleKey(job.input?.style) === 'animated3d') book.art = '3d';
   return book;
 }
 

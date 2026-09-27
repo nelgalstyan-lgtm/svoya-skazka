@@ -358,6 +358,9 @@
   --l:114px; --w:393px;
 }
 .bk-f-cookies .bk-strip, .bk-f-elves .bk-strip{ display:none; }
+/* книги в стиле «3D-мультфильм»: те же рамки в 3D (раскладка совпадает — координаты текста общие) */
+.bk-art-3d.bk-f-cookies.bk-text, .bk-art-3d.bk-f-cookies.bk-ded{ background-image:url(frame-cookies-3d.jpg); }
+.bk-art-3d.bk-f-elves.bk-text, .bk-art-3d.bk-f-elves.bk-ded{ background-image:url(frame-elves-3d.jpg); }
 .bk-f-cookies .bk-content{ top:162px; height:529px; }
 .bk-f-elves .bk-content{ top:215px; height:487px; }
 .bk-f-cookies .bk-content, .bk-f-elves .bk-content{ font-size:21px; line-height:36px; color:var(--ink); }
@@ -425,6 +428,9 @@
   background:#e8f2d8 url(frame-jungle.jpg) center/100% 100% no-repeat;
 }
 .bk-f-pirates .bk-strip, .bk-f-jungle .bk-strip{ display:none; }
+/* книги в стиле «3D-мультфильм»: те же рамки, перерисованные в 3D (раскладка совпадает — координаты текста общие) */
+.bk-art-3d.bk-f-pirates.bk-text, .bk-art-3d.bk-f-pirates.bk-ded{ background-image:url(frame-pirates-3d.jpg); }
+.bk-art-3d.bk-f-jungle.bk-text, .bk-art-3d.bk-f-jungle.bk-ded{ background-image:url(frame-jungle-3d.jpg); }
 .bk-f-pirates .bk-content{ top:200px; height:517px; }
 .bk-f-jungle .bk-content{ top:226px; height:481px; }
 .bk-f-pirates .bk-content, .bk-f-jungle .bk-content{ font-size:21px; line-height:36px; color:var(--ink); }
