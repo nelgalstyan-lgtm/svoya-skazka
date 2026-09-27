@@ -13,7 +13,9 @@ const CATALOG = {
     type: 'gemini',
     keyEnv: 'GEMINI_API_KEY',
     modelsEnv: 'GEMINI_MODELS',
-    defaultModels: ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.5-flash-lite'],
+    // проверено 27.09: 3.6 — основная (по ней принимали тексты), 3.8/3.7 — новые, flash-lite — быстрая запасная;
+    // 3.5-flash убрана — зависала на минуту
+    defaultModels: ['gemini-3.6-flash', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.5-flash-lite'],
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta'
   },
   groq: {
@@ -27,7 +29,8 @@ const CATALOG = {
     type: 'openai',
     keyEnv: 'OPENROUTER_API_KEY',
     modelsEnv: 'OPENROUTER_MODELS',
-    defaultModels: ['google/gemma-4-31b-it:free', 'z-ai/glm-5.2:free', 'qwen/qwen3.8-27b:free', 'nvidia/nemotron-3-super-120b-a12b:free'],
+    // z-ai/glm-5.2:free больше не бесплатная (404); gemma и qwen часто 429 — nemotron страхует
+    defaultModels: ['google/gemma-4-31b-it:free', 'qwen/qwen3.8-27b:free', 'nvidia/nemotron-3-ultra-550b-a55b:free', 'nvidia/nemotron-3-super-120b-a12b:free'],
     baseUrl: 'https://openrouter.ai/api/v1'
   },
   cerebras: {
