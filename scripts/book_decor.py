@@ -6,7 +6,8 @@
 Результат: assets/kit/decor/<тема>/item-N.webp (N по порядку на листе: слева направо, сверху вниз) и vignette.webp —
 на прозрачном фоне: бумага убирается, чтобы предмет лежал на странице книги как напечатанный.
 
-Запуск: python scripts/book_decor.py "C:/Users/Asus/Desktop/svoya-skazka-primery/dlya-chatgpt/oformlenie-knig"
+Запуск: python scripts/book_decor.py "C:/Users/Asus/Desktop/svoya-skazka-primery/dlya-chatgpt/oformlenie-knig" "C:/Users/Asus/Desktop/svoya-skazka-primery/dlya-chatgpt/bokovye-polosy"
+Боковые полосы (polosa-<тема>.png) → assets/kit/decor/<тема>/strip.webp; в js/book-engine.js у набора ставится strip: true.
 """
 import glob
 import os
@@ -113,6 +114,25 @@ def main(src):
             print(f'{theme}: {len(bs)} предметов')
 
 
+def strips(src):
+    """Боковые полосы (dlya-chatgpt/bokovye-polosy/polosa-<тема>.png): полоса у левого края листа 2:3 во всю высоту.
+    Берём от левого края до правой границы полосы; бумага полосы становится полупрозрачной — ляжет на бумагу книги."""
+    for path in sorted(glob.glob(os.path.join(src, 'polosa-*.png*'))):
+        theme = re.match(r'polosa-(.+?)\.png', os.path.basename(path)).group(1)
+        rgb = np.array(Image.open(path).convert('RGB'))
+        # цвет бумаги — по правой половине листа (там пусто), граница полосы — где кончаются закрашенные столбцы
+        paper = np.median(rgb[:, rgb.shape[1] // 2:].reshape(-1, 3), axis=0)
+        mask = object_mask(rgb, paper)
+        cols = np.nonzero(mask[:, : rgb.shape[1] // 2].mean(axis=0) > 0.08)[0]
+        right = int(cols.max()) + 8
+        folder = os.path.join(OUT, theme)
+        os.makedirs(folder, exist_ok=True)
+        im = Image.fromarray(to_rgba(rgb[:, :right], paper), 'RGBA')
+        im = im.resize((round(right * 1200 / rgb.shape[0]), 1200), Image.LANCZOS)  # высота 1200 px — запас для печати
+        im.save(os.path.join(folder, 'strip.webp'), 'WEBP', quality=88, method=6)
+        print(f'{theme}: полоса {right}px из {rgb.shape[1]}')
+
+
 def hare():
     """Героёнок машет на странице «Конец» — из листа эмоций (как pose-greeting на сайте), но с прозрачным фоном:
     на сайте белый фон убирает mix-blend-mode, а в PDF книги (html2canvas) он не работает."""
@@ -123,5 +143,8 @@ def hare():
 
 
 if __name__ == '__main__':
+    # python scripts/book_decor.py <папка oformlenie-knig> [<папка bokovye-polosy>]
     main(sys.argv[1] if len(sys.argv) > 1 else '.')
+    if len(sys.argv) > 2:
+        strips(sys.argv[2])
     hare()

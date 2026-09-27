@@ -638,8 +638,14 @@
 .bk-corner-br{ right:-14px; bottom:-16px; transform:scaleY(-1) rotate(-12deg); }
 .bk-f-brand .bk-run, .bk-f-brand .bk-content, .bk-f-brand .bk-folio, .bk-f-brand .bk-opener-head{ z-index:1; }
 /* предметы в углах рамки (у приключенческих тем): прямо, без поворота, чуть внутри рамки */
-.bk-corner-item{ width:54px; transform:none !important; }
+.bk-corner-item{ width:54px; height:54px; object-fit:contain; transform:none !important; }
 .bk-corner-item.bk-corner-tl{ left:-12px; top:-14px; } .bk-corner-item.bk-corner-tr{ right:-12px; top:-14px; }
 .bk-corner-item.bk-corner-bl{ left:-12px; bottom:-14px; } .bk-corner-item.bk-corner-br{ right:-12px; bottom:-14px; }
-.bk-teen .bk-corner-item{ width:44px; }
+.bk-teen .bk-corner-item{ width:44px; height:44px; }
 .bk-folio-brand img{ max-width:56px; object-fit:contain; }
+/* боковая полоса темы (у «Поисков и тайн» — карта, как в книге Алекса): текст сдвигается, рамка начинается после полосы */
+.bk-f-brand.bk-has-strip{ --l:124px; --w:404px; }
+.bk-f-brand.bk-has-strip .bk-strip{ display:block; width:88px; background:no-repeat left top / 100% 100%; }
+.bk-has-strip .bk-brand-frame{ left:104px; }
+.bk-has-strip .bk-corner-tl, .bk-has-strip .bk-corner-bl{ display:none; }
+.bk-teen .bk-strip{ filter:sepia(.3) saturate(.8); }

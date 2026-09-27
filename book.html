@@ -330,9 +330,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   // Набор акварельных предметов по теме (как DECOR в js/book-engine.js): sprig — веточка у номера страницы;
   // у дня рождения своей заставки нет — торт между веточками
   // folio — свои предметы у номера страницы (у приключений листики ни о чём не говорят): часы и сундучок
-  const DECOR = { tajny: { sprig: 9, folio: [6, 3] }, korolevstvo: { sprig: 9 }, 'novyj-god': { sprig: 10 }, 'den-rozhdeniya': { sprig: 9, compose: [9, 1, 10] } };
+  const DECOR = { tajny: { sprig: 9, folio: [6, 3] }, korolevstvo: { sprig: 9, boyFolio: [7, 6] }, 'novyj-god': { sprig: 10 }, 'den-rozhdeniya': { sprig: 9, compose: [9, 1, 10] } };
   const DECOR_BY_THEME = { adventure: 'tajny', fairytale: 'korolevstvo', newyear: 'novyj-god', birthday: 'den-rozhdeniya' };
   let SET = 'tajny';
+  let BOY = false;
   const decorSrc = (n, set) => 'assets/kit/decor/' + (set || SET) + '/item-' + n + '.webp';
   function decorImg(src, cls) { const i = el('img', 'decor' + (cls ? ' ' + cls : '')); i.src = src; i.alt = ''; return i; }
   function vignetteEl(set) {
@@ -345,7 +346,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   }
   function pageNumber(n) {
     const box = el('div', 'pageno');
-    const f = DECOR[SET].folio;
+    const f = (BOY && DECOR[SET].boyFolio) || DECOR[SET].folio; // у королевства розы — героиням, героям кубок и арфа
     if (f) box.append(decorImg(decorSrc(f[0])), el('span', '', String(n)), decorImg(decorSrc(f[1])));
     else box.append(decorImg(decorSrc(DECOR[SET].sprig), 'mirror'), el('span', '', String(n)), decorImg(decorSrc(DECOR[SET].sprig)));
     return box;
@@ -439,6 +440,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     SET = DECOR_BY_THEME[themeOf(data.answers)] || 'tajny';
     const answers = window.SkazkaTemplate.normalizeInput(data.answers || {});
     if (answers.age >= 11) document.body.classList.add('teen'); // подросткам предметы спокойнее
+    BOY = !answers.girl;
     const birthday = answers.kind !== 'holiday' && window.SkazkaTemplate.occasionKind(answers.occasion) === 'birthday';
     document.title = book.title + ' — Героёнок';
 

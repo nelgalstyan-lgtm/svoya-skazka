@@ -63,10 +63,11 @@
   // У приключенческих тем листики ни о чём не говорят — там вместо веточек предметы темы:
   // corners — углы рамки [лв, пв, лн, пн], folio — по бокам номера страницы, plate — по бокам подписи к иллюстрации.
   var DECOR = {
-    tajny: { icons: [2, 7], sprig: 9, corners: [1, 4, 5, 8], folio: [6, 3], plate: [1, 4] }, // карта, лупа, перо, дневник; часы, сундучок
+    tajny: { icons: [2, 7], sprig: 9, corners: [1, 4, 5, 8], folio: [6, 3], plate: [1, 4], strip: true }, // карта, лупа, перо, дневник; часы, сундучок; боковая полоса-карта
     more: { icons: [2, 8], sprig: 9, corners: [6, 7, 3, 1], plate: [6, 5] }, // ракушка, подзорная труба, канат, кораблик; у номера — морская трава
     poxod: { icons: [3, 4], sprig: 10 },
-    korolevstvo: { icons: [1, 4], sprig: 9 },
+    // розы — героиням; героям вместо роз корона, башня, свиток, ключ, кубок, арфа
+    korolevstvo: { icons: [1, 4], sprig: 9, boy: { corners: [1, 2, 5, 4], folio: [7, 6], plate: [2, 5] } },
     les: { icons: [1, 3], sprig: 5 },
     podvodnoe: { icons: [1, 4], sprig: 9 },
     'novyj-god': { icons: [2, 3], sprig: 10 },
@@ -76,10 +77,12 @@
   var DECOR_BY_GENRE = { sea: 'more', treasure: 'tajny', universal: 'tajny', wild: 'poxod', kingdom: 'korolevstvo', forest: 'les', underwater: 'podvodnoe', newyear: 'novyj-god', newyear_elves: 'novyj-god', birthday: 'den-rozhdeniya' };
   var DECOR_BY_FOOTER = { sea: 'more', treasure: 'tajny', pirates: 'tajny', wild: 'poxod', jungle: 'poxod', kingdom: 'korolevstvo', forest: 'les', underwater: 'podvodnoe', cookies: 'novyj-god', elves: 'novyj-god', birthday: 'den-rozhdeniya' };
   function decorFor(book) { return DECOR_BY_GENRE[book.genre] || DECOR_BY_FOOTER[book.footer] || 'tajny'; }
+  var BOY = false; // герой — мальчик: у некоторых наборов свои украшения (DECOR[set].boy)
+  function decorCfg() { var c = DECOR[SET]; return BOY && c.boy ? Object.assign({}, c, c.boy) : c; }
   function decorItem(n, set) { return KIT + 'decor/' + (set || SET) + '/item-' + n + '.webp'; }
   // пара украшений по бокам (номера страницы, подписи): свои предметы темы или веточка и её зеркальная копия
   function decorPair(key, cls) {
-    var cfg = DECOR[SET];
+    var cfg = decorCfg();
     if (cfg[key]) return [img(decorItem(cfg[key][0]), 'bk-decor ' + cls, ''), img(decorItem(cfg[key][1]), 'bk-decor ' + cls, '')];
     return [img(decorItem(cfg.sprig), 'bk-decor bk-mirror ' + cls, ''), img(decorItem(cfg.sprig), 'bk-decor ' + cls, '')];
   }
@@ -159,11 +162,12 @@
 
   function newSheet(root, kind) {
     var wrap = h('div', 'bk-wrap');
-    var page = h('div', 'bk-page bk-f-' + FRAME + ' bk-footer-' + FOOTER + ART + EXTRA + ' ' + kind);
+    var strip = FRAME === 'brand' && DECOR[SET].strip && /bk-text/.test(kind); // полоса во всю высоту у левого края — как карта у Алекса
+    var page = h('div', 'bk-page bk-f-' + FRAME + ' bk-footer-' + FOOTER + ART + EXTRA + (strip ? ' bk-has-strip' : '') + ' ' + kind);
     // фирменная рамка страницы: двойная линия по краю и веточки темы в углах (не на обложках, иллюстрациях и раскраске)
     if (FRAME === 'brand' && /bk-(text|ded|finale|song)/.test(kind)) {
       var frame = h('div', 'bk-brand-frame');
-      var corners = DECOR[SET].corners;
+      var corners = decorCfg().corners;
       ['tl', 'tr', 'bl', 'br'].forEach(function (c, i) {
         frame.appendChild(corners ? img(decorItem(corners[i]), 'bk-decor bk-corner bk-corner-item bk-corner-' + c, '') : img(decorItem(DECOR[SET].sprig), 'bk-decor bk-corner bk-corner-' + c, ''));
       });
@@ -176,7 +180,9 @@
 
   function textSheet(root, chapter, opener) {
     var page = newSheet(root, 'bk-text' + (opener ? ' bk-opener' : ''));
-    page.appendChild(h('div', 'bk-strip'));
+    var stripEl = h('div', 'bk-strip');
+    if (FRAME === 'brand' && DECOR[SET].strip) stripEl.style.backgroundImage = 'url("' + KIT + 'decor/' + SET + '/strip.webp")';
+    page.appendChild(stripEl);
 
     if (opener) {
       var head = h('div', 'bk-opener-head');
@@ -504,6 +510,8 @@
       var cfg = DECOR[SET];
       urls.push(decorItem(cfg.icons[0]), decorItem(cfg.icons[1]), decorItem(cfg.sprig), KIT + 'decor/hare-greeting.webp');
       [].concat(cfg.corners || [], cfg.folio || [], cfg.plate || []).forEach(function (n) { urls.push(decorItem(n)); });
+      if (cfg.boy) [].concat(cfg.boy.corners || [], cfg.boy.folio || [], cfg.boy.plate || []).forEach(function (n) { urls.push(decorItem(n)); });
+      if (cfg.strip) urls.push(KIT + 'decor/' + SET + '/strip.webp');
       if (cfg.compose) cfg.compose.forEach(function (n) { urls.push(decorItem(n)); });
       else urls.push(KIT + 'decor/' + SET + '/vignette.webp');
       if (OCCASION === 'birthday') DECOR['den-rozhdeniya'].compose.forEach(function (n) { urls.push(decorItem(n, 'den-rozhdeniya')); });
@@ -524,6 +532,7 @@
     FOOTER = FRAME === 'brand' ? 'brand' : (opts && opts.footer) || book.footer || (FRAME === 'vine' ? 'birds' : 'sea');
     SET = decorFor(book);
     OCCASION = book.occasion || '';
+    BOY = book.meta ? book.meta.heroGirl === false : false;
     EXTRA = FRAME === 'brand' ? ' bk-set-' + SET + (book.ageGroup === '11-16' ? ' bk-teen' : '') : '';
     // книга в стиле «3D-мультфильм»: рисованные рамки берутся в 3D-варианте (parchment.css, .bk-art-3d)
     ART = book.art === '3d' ? ' bk-art-3d' : '';
