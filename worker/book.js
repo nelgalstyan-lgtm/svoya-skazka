@@ -6,7 +6,8 @@
 // step — объект Workflow (step.do(name, config, fn)); в тестах — простая замена, которая сразу вызывает fn.
 //
 // mode 'preview' — бесплатное превью: весь текст + лист персонажа, обложка и первая иллюстрация.
-// mode 'complete' — после оплаты: остальные иллюстрации и раскраска, потом фото удаляются, потом озвучка (voice.js).
+// mode 'complete' — после оплаты: остальные иллюстрации и раскраска, потом фото удаляются, потом озвучка (voice.js)
+// и песня (song.js).
 // mode 'voice' — переозвучка после правки текста (только изменившиеся главы).
 
 import { generateStory } from '../server/lib/story.js';
@@ -17,6 +18,7 @@ import { createStore } from './store.js';
 import { drawImage } from './art.js';
 import { isDrawn, bookImages } from './view.js';
 import { voiceFlow } from './voice.js';
+import { songFlow } from './song.js';
 
 const { normalizeInput } = template;
 
@@ -221,5 +223,7 @@ async function completeFlow(ctx) {
 
   // озвучка — уже после того, как книга открыта покупателю: пока она идёт, «Слушать» читает голос устройства
   await voiceFlow(ctx);
+  // песня по книге (если заказана) — последней: слова пишутся по уже готовому тексту
+  await songFlow(ctx);
 }
 

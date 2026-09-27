@@ -38,6 +38,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   <div>
     <span id="count" style="color:rgba(244,239,224,.7); margin-right:12px; font-size:14px;"></span>
     <button class="btn ghost" id="listenBtn" type="button">🔊 Слушать книгу</button>
+    <button class="btn ghost" id="songBtn" type="button" hidden>🎵 Песня</button>
     <button class="btn ghost" id="editBtn" type="button" hidden>✏️ Править книгу</button>
     <button class="btn ghost" id="sequelBtn" type="button" hidden>✨ Заказать продолжение</button>
     <button class="btn" id="pdfBtn" type="button">Скачать PDF</button>
@@ -155,6 +156,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     });
 
     window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
+    window.SkazkaExtras.attachSong(document.getElementById('songBtn'), book.song);
     if (answers && answers.name) {
       var btn = document.getElementById('sequelBtn');
       btn.hidden = false;

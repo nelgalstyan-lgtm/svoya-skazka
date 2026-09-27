@@ -465,3 +465,81 @@ test('озвучка не удалась — книга готова, «Слуш
     assert.equal(env.BUCKET.keys('voice-tmp/').length + env.BUCKET.keys('media/').length, 0);
   } finally { ya.restore(); ai.restore(); }
 });
+
+// ---------------------------------------------------------------- песня по книге
+
+import { GOOD_SONG } from '../../server/test/song-fixture.js';
+
+// Текстовый ИИ (Groq) пишет слова песни, ElevenLabs отдаёт mp3 (ставится поверх stubOpenAI)
+function stubSong({ status = 200, lyrics = { ...GOOD_SONG, chorus: ['Милена, ты не сдавайся,', 'Если снова всё не так —', 'Начинай опять сначала,', 'Так советует нам Макс!'] } } = {}) {
+  const calls = { text: 0, music: [] };
+  const inner = globalThis.fetch;
+  const key = process.env.GROQ_API_KEY;
+  process.env.GROQ_API_KEY = 'groq-key';
+  globalThis.fetch = async (url, init) => {
+    const u = String(url);
+    if (u.startsWith('https://api.groq.com/')) {
+      const body = JSON.parse(init.body);
+      if (!/слова песни/.test(body.messages[1].content)) return new Response('{"error":"not a song"}', { status: 400 });
+      calls.text += 1;
+      return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(lyrics) } }] }), { status: 200 });
+    }
+    if (u.startsWith('https://api.elevenlabs.io/')) {
+      calls.music.push({ url: u, key: init.headers['xi-api-key'], body: JSON.parse(init.body) });
+      if (status !== 200) return new Response('{"detail":{"status":"bad_prompt"}}', { status });
+      return new Response(new Uint8Array(4000).fill(7), { status: 200, headers: { 'content-type': 'audio/mpeg' } });
+    }
+    return inner(url, init);
+  };
+  return { calls, restore: () => { globalThis.fetch = inner; if (key === undefined) delete process.env.GROQ_API_KEY; else process.env.GROQ_API_KEY = key; } };
+}
+
+test('песня: заказана к «Сказке» — после оплаты слова от ИИ, музыка ElevenLabs в R2; цена превью +290', async () => {
+  const env = fakeEnv({ ELEVENLABS_API_KEY: 'el-key', SONG_RETRY_MS: 0 });
+  const ai = stubOpenAI();
+  const sg = stubSong();
+  try {
+    const id = await order(env, { song: true });
+    assert.equal(sg.calls.music.length, 0, 'до оплаты песню не делаем');
+    assert.equal((await status(env, id)).result.price, 690 + 290);
+    await api(env, `/api/book/${id}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } });
+    assert.equal(sg.calls.music.length, 1);
+    const call = sg.calls.music[0];
+    assert.equal(call.key, 'el-key');
+    assert.match(call.url, /\/v1\/music\?output_format=mp3/);
+    assert.equal(call.body.music_length_ms, 120000);
+    assert.match(call.body.prompt, /\[Chorus\]\nМилена, ты не сдавайся/);
+    const s = await status(env, id);
+    const song = s.result.song;
+    assert.match(song.src, /^\/api\/media\/[a-f0-9-]{36}\/song-[a-f0-9]{8}\.mp3$/);
+    assert.equal(song.mood, 'thoughtful');
+    assert.equal(song.chorus[0], 'Милена, ты не сдавайся,');
+    assert.ok(!('prompt' in song));
+    assert.equal((await (await api(env, song.src)).arrayBuffer()).byteLength, 4000);
+  } finally { sg.restore(); ai.restore(); }
+});
+
+test('песня: «Большая история» — входит; «Сказка» без песни и без ключа — ни одного запроса; отказ сервиса — книга готова', async () => {
+  const ai = stubOpenAI();
+  const sg = stubSong({ status: 422 });
+  try {
+    const env = fakeEnv({ ELEVENLABS_API_KEY: 'el-key', SONG_RETRY_MS: 0 });
+    const big = await order(env, { tariff: 'big' });
+    await api(env, `/api/book/${big}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } });
+    assert.equal(sg.calls.music.length, 1, 'в «Большую историю» песня входит; 422 не повторяем');
+    const s = await status(env, big);
+    assert.equal(s.paid, true);
+    assert.ok(!s.result.book.song, 'песни нет, книга готова');
+    assert.equal(env.BUCKET.keys(`media/${big}/`).length, 0);
+
+    const short = await order(env);
+    await api(env, `/api/book/${short}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } });
+    assert.equal(sg.calls.music.length, 1, 'песню к «Сказке» не заказывали');
+
+    const env2 = fakeEnv();
+    const id2 = await order(env2, { song: true });
+    await api(env2, `/api/book/${id2}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } });
+    assert.equal(sg.calls.music.length, 1, 'без ключа ElevenLabs — ни одного запроса');
+    assert.equal((await status(env2, id2)).result.song, null);
+  } finally { sg.restore(); ai.restore(); }
+});

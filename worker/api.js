@@ -135,6 +135,8 @@ async function generate(request, env, store) {
   if (big) input.tariff = 'big';
   // раскраска входит в «Большую историю»; к «Сказке» её можно добавить отдельно
   if (big || body.coloring === true) input.coloring = true;
+  // песня по книге — так же: входит в «Большую историю», к «Сказке» — отдельно
+  if (big || body.song === true) input.song = true;
 
   const id = crypto.randomUUID();
   const job = { id, status: 'queued', createdAt: Date.now(), startedAt: null, finishedAt: null, input, progress: 'Готовимся…', result: null };

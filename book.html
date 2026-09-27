@@ -189,6 +189,16 @@ body.t-newyear .sheet{ background:
 .cert-seal{ width:84px; height:84px; object-fit:contain; padding:6px; border-radius:50%; border:2px solid var(--gold-dark); box-shadow:0 0 0 4px rgba(201,154,75,.18); transform:rotate(-6deg); }
 .cert-signature{ display:block; font-family:var(--font-script); font-weight:700; font-size:46px; line-height:1; color:var(--gold-dark); transform:rotate(-4deg); }
 
+/* Песня по книге: название и слова; припев — курсивом, второй раз — пометкой */
+.song{ align-items:center; text-align:center; }
+.song-kicker{ margin-top:92px; font-size:15px; letter-spacing:.4em; padding-left:.4em; text-transform:uppercase; color:var(--text-soft); }
+.song-title{ margin:12px 110px 0; font-family:var(--font-display); font-weight:700; font-size:40px; line-height:1.15; color:var(--ink); text-wrap:balance; }
+.song .song-lyrics{ margin:30px 110px 0; font-family:var(--font-display); font-size:19px; line-height:28px; color:var(--text); }
+.song .song-part{ margin-bottom:16px; }
+.song .song-chorus, .song .song-repeat{ font-style:italic; color:var(--gold-dark); }
+.song .song-label{ font-size:13px; line-height:20px; letter-spacing:.25em; text-transform:uppercase; color:var(--text-soft); font-style:normal; }
+.song-note{ position:absolute; left:0; right:0; bottom:70px; font-family:var(--font-display); font-style:italic; font-size:16px; color:var(--text-soft); }
+
 /* Раскраска: контурная картинка на белом листе */
 /* Закрытая страница превью: остальная книга — после оплаты */
 .locked{ align-items:center; justify-content:center; text-align:center; padding:0 90px; }
@@ -231,6 +241,7 @@ body.t-newyear .sheet{ background:
   <div class="toolbar-actions">
     <a class="btn ghost" href="create.html">← К анкете</a>
     <button class="btn ghost" id="listenBtn" type="button">🔊 Слушать книгу</button>
+    <button class="btn ghost" id="songBtn" type="button" hidden>🎵 Песня</button>
     <button class="btn ghost" id="editBtn" type="button" hidden>✏️ Править книгу</button>
     <button class="btn ghost" id="sequelBtn" type="button" hidden>✨ Заказать продолжение</button>
     <button class="btn" id="pdfBtn" type="button">Скачать PDF</button>
@@ -547,6 +558,15 @@ body.t-newyear .sheet{ background:
       cert.appendChild(foot);
     }
 
+    // Песня по книге (если заказана и готова): слова; послушать — кнопкой «Песня» или по QR на задней обложке
+    if (book.song && book.song.src && book.song.chorus) {
+      const page = sheet('song');
+      page.appendChild(el('div', 'song-kicker', 'Песня из сказки'));
+      page.appendChild(el('div', 'song-title', '«' + book.song.title + '»'));
+      page.appendChild(window.SkazkaExtras.songLyrics(book.song));
+      page.appendChild(el('div', 'song-note', 'Послушать песню — в онлайн-версии книги'));
+    }
+
     // Раскраска из иллюстраций книги
     (book.coloring || []).forEach(function (src, i) {
       const page = sheet('coloring');
@@ -574,6 +594,7 @@ body.t-newyear .sheet{ background:
     window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () {
       return [book.title].concat(book.pages.map(pageText));
     }, book.audio);
+    window.SkazkaExtras.attachSong(document.getElementById('songBtn'), book.song);
     window.SkazkaExtras.attachEditor({
       button: document.getElementById('editBtn'),
       apiBase: API_BASE,

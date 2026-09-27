@@ -131,6 +131,16 @@
 .bk-cert-seal{ width:74px; height:74px; object-fit:contain; padding:6px; border-radius:50%; border:2px solid rgba(138,90,43,.55); box-shadow:0 0 0 4px rgba(201,154,75,.18); transform:rotate(-6deg); }
 .bk-cert-signature{ display:block; font:44px/1 'Marck Script',cursive; color:#6b3f1c; transform:rotate(-4deg); margin-bottom:2px; }
 .bk-cert-hand b{ margin-top:4px; }
+/* песня по книге: название и слова; припев — курсивом, второй раз — пометкой */
+.bk-song{ text-align:center; }
+.bk-song-kicker{ position:absolute; left:var(--l); width:var(--w); top:74px; font:600 15px/1 'Cormorant Garamond',serif; letter-spacing:.35em; padding-left:.35em; text-transform:uppercase; color:var(--muted); }
+.bk-song-title{ position:absolute; left:var(--l); width:var(--w); top:100px; font:700 34px/1.1 'Cormorant Garamond',serif; color:#4a3220; text-wrap:balance; }
+.bk-song .bk-divider{ position:absolute; left:var(--l); width:var(--w); top:152px; }
+.bk-song .song-lyrics{ position:absolute; left:var(--l); width:var(--w); top:186px; font:16px/22px 'Tinos',serif; color:var(--ink); }
+.bk-song .song-part{ margin-bottom:11px; }
+.bk-song .song-chorus, .bk-song .song-repeat{ font-style:italic; color:var(--brown); }
+.bk-song .song-label{ font:600 13px/18px 'Cormorant Garamond',serif; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+.bk-song-note{ position:absolute; left:var(--l); width:var(--w); bottom:52px; font:italic 15px/20px 'Tinos',serif; color:var(--muted); }
 .bk-coloring{ background:#fff !important; }
 .bk-coloring-title{ position:absolute; left:0; right:0; top:40px; text-align:center; font:34px/1 'Marck Script',cursive; color:#8a5a2b; }
 .bk-coloring-img{ position:absolute; left:34px; top:96px; width:calc(100% - 68px); height:calc(100% - 130px); object-fit:contain; }

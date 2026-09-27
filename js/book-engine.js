@@ -317,6 +317,17 @@
     return { page: page, folio: null };
   }
 
+  // Песня по книге: название и слова; послушать — кнопкой «Песня» в онлайн-версии (QR на задней обложке)
+  function songSheet(root, song) {
+    var page = newSheet(root, 'bk-song');
+    page.appendChild(h('div', 'bk-song-kicker', 'Песня из книги'));
+    page.appendChild(h('div', 'bk-song-title', '«' + song.title + '»'));
+    page.appendChild(divider());
+    page.appendChild(global.SkazkaExtras.songLyrics(song));
+    page.appendChild(h('div', 'bk-song-note', 'Послушать песню — в онлайн-версии книги'));
+    return { page: page, folio: null };
+  }
+
   function coloringSheet(root, src, first) {
     var page = newSheet(root, 'bk-coloring');
     page.appendChild(h('div', 'bk-coloring-title', first ? 'Раскрась свою книгу' : 'Раскраска'));
@@ -457,6 +468,7 @@
       } else if (!(opts && opts.noFinale)) {
         sheets.push(finaleSheet(root, opts));
         if (opts && opts.certificate) sheets.push(certificateSheet(root, opts.certificate, book.cover));
+        if (book.song && book.song.src && book.song.chorus) sheets.push(songSheet(root, book.song));
         (book.coloring || []).forEach(function (src, i) { sheets.push(coloringSheet(root, src, i === 0)); });
       }
       if (!(opts && (opts.noCover || opts.noBackCover))) sheets.push(backCoverSheet(root, book, opts));

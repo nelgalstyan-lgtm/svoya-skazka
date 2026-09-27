@@ -106,6 +106,66 @@
     label();
   }
 
+  // ---------------------------------------------------------------- песня по книге
+
+  /**
+   * Слова песни для страницы книги (порядок, как её поют: куплет, припев, два куплета, припев, финал);
+   * второй раз припев — только пометкой. Оформление — у страницы (.song-lyrics и вложенные .song-part).
+   */
+  function songLyrics(song) {
+    var box = document.createElement('div');
+    box.className = 'song-lyrics';
+    var verses = song.verses || [];
+    var parts = [
+      { kind: 'verse', lines: verses[0] },
+      { kind: 'chorus', label: 'Припев', lines: song.chorus },
+      { kind: 'verse', lines: verses[1] },
+      { kind: 'verse', lines: verses[2] },
+      { kind: 'repeat', label: 'Припев' },
+      { kind: 'outro', lines: song.outro }
+    ];
+    parts.forEach(function (p) {
+      if (p.kind !== 'repeat' && !(p.lines && p.lines.length)) return;
+      var part = document.createElement('div');
+      part.className = 'song-part song-' + p.kind;
+      if (p.label) {
+        var label = document.createElement('div');
+        label.className = 'song-label';
+        label.textContent = p.label + (p.kind === 'repeat' ? ' (повтор)' : '');
+        part.appendChild(label);
+      }
+      (p.lines || []).forEach(function (line) {
+        var l = document.createElement('div');
+        l.className = 'song-line';
+        l.textContent = line;
+        part.appendChild(l);
+      });
+      box.appendChild(part);
+    });
+    return box;
+  }
+
+  /** Кнопка «🎵 Песня» в меню книги: включает и ставит на паузу. Песни нет — кнопка скрыта. */
+  function attachSong(button, song) {
+    if (!button) return;
+    if (!song || !song.src) { button.hidden = true; return; }
+    button.hidden = false;
+    var player = new Audio();
+    player.preload = 'none';
+    function label() { button.textContent = player.paused ? '🎵 Песня' : '⏸ Пауза'; }
+    player.addEventListener('play', label);
+    player.addEventListener('pause', label);
+    player.addEventListener('ended', function () { player.currentTime = 0; label(); });
+    player.addEventListener('error', function () { label(); hintNear(button, 'Не получилось загрузить песню. Проверьте интернет и попробуйте ещё раз.'); });
+    button.title = song.title ? '«' + song.title + '»' : '';
+    button.addEventListener('click', function () {
+      if (!player.paused) { player.pause(); return; }
+      if (!player.getAttribute('src')) player.src = song.src;
+      player.play().catch(function () { hintNear(button, 'Браузер не дал включить звук — нажмите ещё раз.'); });
+    });
+    label();
+  }
+
   // ---------------------------------------------------------------- PDF-файл книги
 
   var PDF_LIBS = [
@@ -576,6 +636,8 @@
     attachEditor: attachEditor,
     paragraphText: paragraphText,
     attachListen: attachListen,
+    songLyrics: songLyrics,
+    attachSong: attachSong,
     attachPdf: attachPdf,
     attachPrintKit: attachPrintKit,
     pdfName: pdfName,
