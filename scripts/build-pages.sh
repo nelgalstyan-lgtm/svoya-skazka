@@ -10,5 +10,6 @@ mkdir -p dist
 cp ./*.html dist/
 cp -r assets js dist/
 cp robots.txt sitemap.xml dist/
+node scripts/clean-urls.mjs dist
 
 echo "dist: $(find dist -type f | wc -l) файлов"
