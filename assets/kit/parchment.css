@@ -348,19 +348,19 @@
    Рамка и бумага — одна картинка frame-*.jpg (без текста), поэтому боковая полоса и колонтитулы из комплекта не нужны.
    Границы текста подобраны по макету; шапка и номер страницы собираются из отдельных вырезанных значков. */
 .bk-f-cookies, .bk-f-elves{ --l:107px; --w:396px; }
-.bk-f-cookies.bk-text, .bk-f-cookies.bk-ded{
+.bk-f-cookies.bk-text, .bk-f-cookies.bk-ded, .bk-f-cookies.bk-finale, .bk-f-cookies.bk-song{
   --ink:#4b2a15; --brown:#5a3320; --muted:#7a5a3e; --line:#a98a5f;
   background:#f6e4c0 url(frame-cookies.jpg) center/100% 100% no-repeat;
 }
-.bk-f-elves.bk-text, .bk-f-elves.bk-ded{
+.bk-f-elves.bk-text, .bk-f-elves.bk-ded, .bk-f-elves.bk-finale, .bk-f-elves.bk-song{
   --ink:#17352a; --brown:#1f4a32; --muted:#4a7057; --line:#6f9a7e;
   background:#e6f1de url(frame-elves.jpg) center/100% 100% no-repeat;
   --l:114px; --w:393px;
 }
 .bk-f-cookies .bk-strip, .bk-f-elves .bk-strip{ display:none; }
 /* книги в стиле «3D-мультфильм»: те же рамки в 3D (раскладка совпадает — координаты текста общие) */
-.bk-art-3d.bk-f-cookies.bk-text, .bk-art-3d.bk-f-cookies.bk-ded{ background-image:url(frame-cookies-3d.jpg); }
-.bk-art-3d.bk-f-elves.bk-text, .bk-art-3d.bk-f-elves.bk-ded{ background-image:url(frame-elves-3d.jpg); }
+.bk-art-3d.bk-f-cookies.bk-text, .bk-art-3d.bk-f-cookies.bk-ded, .bk-art-3d.bk-f-cookies.bk-finale, .bk-art-3d.bk-f-cookies.bk-song{ background-image:url(frame-cookies-3d.jpg); }
+.bk-art-3d.bk-f-elves.bk-text, .bk-art-3d.bk-f-elves.bk-ded, .bk-art-3d.bk-f-elves.bk-finale, .bk-art-3d.bk-f-elves.bk-song{ background-image:url(frame-elves-3d.jpg); }
 .bk-f-cookies .bk-content{ top:162px; height:529px; }
 .bk-f-elves .bk-content{ top:215px; height:487px; }
 .bk-f-cookies .bk-content, .bk-f-elves .bk-content{ font-size:21px; line-height:36px; color:var(--ink); }
@@ -414,23 +414,44 @@
 .bk-f-cookies .bk-plate-div, .bk-f-elves .bk-plate-div{ display:none; }
 .bk-f-cookies .bk-plate-cap{ color:#5a3320; -webkit-text-stroke:0; } .bk-f-elves .bk-plate-cap{ color:#1f4a32; -webkit-text-stroke:0; }
 
+/* «Конец» в рисованных рамках: внизу рамки — монета, знак, гирлянда, поэтому «Героёнок» не внизу страницы.
+   У пиратов и джунглей — на ленте/вывеске сверху (там же, где название главы), в новогодних — над нижним краем рамки */
+.bk-f-cookies .bk-finale-brand, .bk-f-elves .bk-finale-brand{ left:var(--l); right:auto; width:var(--w); bottom:auto; top:718px; }
+.bk-f-pirates .bk-finale-brand{ left:149px; right:auto; width:290px; bottom:auto; top:92px; height:34px; font:400 26px/32px 'Lobster',cursive; letter-spacing:0; text-transform:none; color:var(--brown); }
+.bk-f-jungle .bk-finale-brand{ left:190px; right:auto; width:222px; bottom:auto; top:68px; height:78px; display:flex; align-items:center; justify-content:center; font:800 27px/30px 'Podkova',serif; letter-spacing:0; text-transform:none; color:var(--brown); }
+
+/* «Песня из книги» в рисованных рамках: всё внутри пустого поля рамки, подпись «Песня из книги» — на ленте/вывеске */
+.bk-f-elves .song-lyrics, .bk-f-cookies .song-lyrics, .bk-f-pirates .song-lyrics, .bk-f-jungle .song-lyrics{ font-size:15px; line-height:20px; }
+.bk-f-pirates .bk-song-title, .bk-f-jungle .bk-song-title, .bk-f-cookies .bk-song-title, .bk-f-elves .bk-song-title{ font-size:28px; }
+.bk-f-pirates .bk-song-note, .bk-f-jungle .bk-song-note, .bk-f-cookies .bk-song-note, .bk-f-elves .bk-song-note{ bottom:auto; }
+.bk-f-pirates.bk-song .bk-divider, .bk-f-jungle.bk-song .bk-divider{ display:none; }
+.bk-f-pirates .song-part, .bk-f-jungle .song-part, .bk-f-cookies .song-part, .bk-f-elves .song-part{ margin-bottom:8px; }
+.bk-f-pirates .bk-song-kicker{ left:149px; width:290px; top:92px; height:34px; padding:0; font:400 26px/32px 'Lobster',cursive; letter-spacing:0; text-transform:none; color:var(--brown); }
+.bk-f-jungle .bk-song-kicker{ left:190px; width:222px; top:68px; height:78px; padding:0; display:flex; align-items:center; justify-content:center; font:800 27px/30px 'Podkova',serif; letter-spacing:0; text-transform:none; color:var(--brown); }
+.bk-f-pirates .bk-song-title{ top:196px; } .bk-f-pirates .song-lyrics{ top:244px; } .bk-f-pirates .bk-song-note{ top:700px; }
+.bk-f-jungle .bk-song-title{ top:222px; } .bk-f-jungle .song-lyrics{ top:268px; } .bk-f-jungle .bk-song-note{ top:716px; }
+.bk-f-cookies .bk-song-kicker{ top:60px; } .bk-f-cookies .bk-song-title{ top:84px; } .bk-f-cookies.bk-song .bk-divider{ top:128px; }
+.bk-f-cookies .song-lyrics{ top:168px; } .bk-f-cookies .bk-song-note{ top:664px; }
+.bk-f-elves .bk-song-kicker{ top:116px; } .bk-f-elves .bk-song-title{ top:140px; } .bk-f-elves.bk-song .bk-divider{ top:180px; }
+.bk-f-elves .song-lyrics{ top:218px; } .bk-f-elves .bk-song-note{ top:676px; }
+
 /* ---------- Путешествие для 5–10 лет: «Пираты и карта сокровищ» (pirates) и «Сафари в джунглях» (jungle) ----------
    Полные иллюстрированные рамки из макетов (frame-*.jpg, без текста). Название главы стоит на баннере рамки
    (волна-лента / деревянная вывеска), номер страницы — на монете и дорожном знаке. Для 11–16 остаётся «Пергамент». */
 .bk-f-pirates{ --l:108px; --w:395px; }
 .bk-f-jungle{ --l:124px; --w:366px; }
-.bk-f-pirates.bk-text, .bk-f-pirates.bk-ded{
+.bk-f-pirates.bk-text, .bk-f-pirates.bk-ded, .bk-f-pirates.bk-finale, .bk-f-pirates.bk-song{
   --ink:#3d2412; --brown:#4a2b14; --muted:#7a5a3e; --line:#a98a5f;
   background:#f6e2b8 url(frame-pirates.jpg) center/100% 100% no-repeat;
 }
-.bk-f-jungle.bk-text, .bk-f-jungle.bk-ded{
+.bk-f-jungle.bk-text, .bk-f-jungle.bk-ded, .bk-f-jungle.bk-finale, .bk-f-jungle.bk-song{
   --ink:#3f1f14; --brown:#4a2412; --muted:#6b4a32; --line:#8a7a55;
   background:#e8f2d8 url(frame-jungle.jpg) center/100% 100% no-repeat;
 }
 .bk-f-pirates .bk-strip, .bk-f-jungle .bk-strip{ display:none; }
 /* книги в стиле «3D-мультфильм»: те же рамки, перерисованные в 3D (раскладка совпадает — координаты текста общие) */
-.bk-art-3d.bk-f-pirates.bk-text, .bk-art-3d.bk-f-pirates.bk-ded{ background-image:url(frame-pirates-3d.jpg); }
-.bk-art-3d.bk-f-jungle.bk-text, .bk-art-3d.bk-f-jungle.bk-ded{ background-image:url(frame-jungle-3d.jpg); }
+.bk-art-3d.bk-f-pirates.bk-text, .bk-art-3d.bk-f-pirates.bk-ded, .bk-art-3d.bk-f-pirates.bk-finale, .bk-art-3d.bk-f-pirates.bk-song{ background-image:url(frame-pirates-3d.jpg); }
+.bk-art-3d.bk-f-jungle.bk-text, .bk-art-3d.bk-f-jungle.bk-ded, .bk-art-3d.bk-f-jungle.bk-finale, .bk-art-3d.bk-f-jungle.bk-song{ background-image:url(frame-jungle-3d.jpg); }
 .bk-f-pirates .bk-content{ top:200px; height:517px; }
 .bk-f-jungle .bk-content{ top:226px; height:481px; }
 .bk-f-pirates .bk-content, .bk-f-jungle .bk-content{ font-size:21px; line-height:36px; color:var(--ink); }
