@@ -8,13 +8,32 @@ import { buildProviders, createHealth } from '../lib/providers.js';
 const { buildTemplateStory, sceneLibraryFor, occasionKind } = template;
 const quiet = () => {};
 
-test('occasionKind: узнаёт Новый год по ключевым словам, иначе — день рождения', () => {
+test('occasionKind: повод отдельно от темы — день рождения, Новый год, своё событие или без повода', () => {
   assert.equal(occasionKind('Новый год'), 'newyear');
   assert.equal(occasionKind('наряжаем ёлку 31 декабря'), 'newyear');
   assert.equal(occasionKind('Дед Мороз обещал приехать'), 'newyear');
+  assert.equal(occasionKind('НГ'), 'newyear');
   assert.equal(occasionKind('День рождения, 7 лет'), 'birthday');
-  assert.equal(occasionKind(''), 'birthday');
-  assert.equal(occasionKind('Первый день в садике'), 'birthday'); // повод вне первого набора — нейтральный праздничный вариант
+  assert.equal(occasionKind('ДР'), 'birthday');
+  assert.equal(occasionKind(''), '');
+  assert.equal(occasionKind('Первый день в садике'), 'other'); // не день рождения: книга мягко обыгрывает само событие
+  assert.equal(occasionKind('рождение братика'), 'other');
+  assert.equal(occasionKind('тренинг по плаванию'), 'other');
+});
+
+test('повод вплетается в тему: правило в запросе «Сказки» и «Большой истории», новогоднее оформление у приключения', async () => {
+  const { buildPrompt: shortPrompt } = await import('../lib/story.js');
+  const { buildPlanPrompt, buildChapterPrompt, validatePlan, templateBook } = await import('../lib/bigstory.js');
+  const base = { name: 'Аня', gender: 'девочка', age: 7, theme: 'Сказка' };
+  assert.match(shortPrompt({ ...base, occasion: 'День рождения' }).user, /Повод — день рождения героя/);
+  assert.match(shortPrompt({ ...base, occasion: 'Первый день в садике' }).user, /Повод — «Первый день в садике»/);
+  assert.doesNotMatch(shortPrompt(base).user, /Как учесть повод/);
+  assert.match(buildPlanPrompt({ ...base, occasion: 'Новый год' }).user, /Повод — Новый год/);
+  // оформление: у сказки к Новому году — новогоднее, без повода — жанр от ИИ
+  const tb = templateBook({ ...base, theme: 'Приключения', occasion: 'Новый год', design: 'elves' });
+  assert.equal(tb.frame, 'elves');
+  assert.match(tb.dedication.lead, /Новым годом/);
+  assert.match(templateBook({ ...base, occasion: 'День рождения' }).dedication.lead, /день рождения/);
 });
 
 test('sceneLibraryFor: у праздника свой набор сцен, у путешествия — старый', () => {

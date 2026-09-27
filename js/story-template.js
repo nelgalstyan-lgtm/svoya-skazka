@@ -90,15 +90,25 @@
     }
   };
 
-  var NEWYEAR_RE = /нов.{0,3}год|нг\b|ёлк|елк|рождеств|снегурочк|дед\s*мороз/i;
-  /** День рождения — нейтральный «праздничный» вариант по умолчанию, если повод не назван или это не Новый год. */
+  var NEWYEAR_RE = /нов.{0,3}год|(^|[^а-яё])нг([^а-яё]|$)|ёлк|елк|рождеств|снегурочк|дед\s*мороз/i;
+  var BIRTHDAY_RE = /(^|[^а-яё])д\.?\s?р\.?([^а-яё]|$)|д[а-яё]{1,3}\s+рожд|днюх|именин|исполн[а-яё]*\s+\d/i;
+  /**
+   * Повод книги (отдельно от темы): '' — без повода, 'birthday', 'newyear' или 'other' — своё событие
+   * («первый день в садике», «рождение братика»), которое книга мягко обыгрывает.
+   */
   function occasionKind(occasion) {
-    return NEWYEAR_RE.test(String(occasion || '')) ? 'newyear' : 'birthday';
+    var o = String(occasion || '').trim();
+    if (!o || /^(нет|без повода|-|—)$/i.test(o)) return '';
+    if (NEWYEAR_RE.test(o)) return 'newyear';
+    if (BIRTHDAY_RE.test(o)) return 'birthday';
+    return 'other';
   }
+  // Старые заказы с темой «Праздник»: любой повод, кроме Нового года, оформлялся как день рождения
+  function holidayKind(occasion) { return occasionKind(occasion) === 'newyear' ? 'newyear' : 'birthday'; }
 
   /** Библиотека сцен для темы+повода. */
   function sceneLibraryFor(kind, occasion) {
-    if (kind === 'holiday') return SCENE_LIBRARIES[occasionKind(occasion)];
+    if (kind === 'holiday') return SCENE_LIBRARIES[holidayKind(occasion)];
     if (kind === 'fairytale') return SCENE_LIBRARIES.fairytale;
     return SCENE_LIBRARIES.adventure;
   }
@@ -202,7 +212,19 @@
       ];
     }
 
-    var scenes = c.kind === 'holiday' ? TEMPLATE_SCENES[occasionKind(c.occasion)] : TEMPLATE_SCENES[c.kind];
+    // повод (день рождения, Новый год, своё событие) вплетается в тему: начало и финал истории
+    var occ = c.kind === 'holiday' ? '' : occasionKind(c.occasion);
+    if (occ === 'birthday') {
+      pages[1] = 'Это случилось в день рождения ' + g('нашего героя', 'нашей героини') + '. ' + pages[1];
+      pages[pages.length - 1] = pages[pages.length - 1].replace(/ Конец\.$/, '') + ' А вечером все вместе зажгли свечи на праздничном торте — ведь это был ' + g('его', 'её') + ' день рождения. Конец.';
+    } else if (occ === 'newyear') {
+      pages[1] = 'Это случилось накануне Нового года, когда за окном кружил снег. ' + pages[1];
+      pages[pages.length - 1] = pages[pages.length - 1].replace(/ Конец\.$/, '') + ' А в полночь все вместе загадали желания под бой курантов. Конец.';
+    } else if (occ === 'other') {
+      pages[1] = 'Это случилось незадолго до важного события: ' + lowerFirst(c.occasion) + '. ' + pages[1];
+    }
+
+    var scenes = c.kind === 'holiday' ? TEMPLATE_SCENES[holidayKind(c.occasion)] : TEMPLATE_SCENES[c.kind];
     return {
       title: title,
       pages: pages.map(function (text, i) { return { text: text, scene: scenes[i], hero: i === 4 }; })
@@ -215,6 +237,7 @@
     cleanText: clean,
     SCENES: SCENES,
     sceneLibraryFor: sceneLibraryFor,
-    occasionKind: occasionKind
+    occasionKind: occasionKind,
+    holidayKind: holidayKind
   };
 });

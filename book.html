@@ -381,7 +381,9 @@ body.t-newyear .sheet{ background:
 
   function themeOf(answers) {
     const c = window.SkazkaTemplate.normalizeInput(answers || {});
-    return c.kind === 'holiday' ? window.SkazkaTemplate.occasionKind(c.occasion) : c.kind;
+    if (c.kind === 'holiday') return window.SkazkaTemplate.holidayKind(c.occasion);
+    // повод «Новый год» у любой темы — новогодние обложка и финал (день рождения и свои поводы — сцены темы)
+    return window.SkazkaTemplate.occasionKind(c.occasion) === 'newyear' ? 'newyear' : c.kind;
   }
 
   function coverAndFinaleScenes(answers) {

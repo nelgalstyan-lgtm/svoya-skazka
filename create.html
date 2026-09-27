@@ -432,6 +432,11 @@ section.tight{ padding:56px 0; }
 
 .sequel-banner{ margin:24px 48px 0; padding:18px 20px; border-radius:14px; background:#FBF2DF; border:1px solid var(--gold); display:grid; gap:6px; font-size:14.5px; color:var(--text-soft); }
 .sequel-banner[hidden]{ display:none; }
+.occasion-title{ margin:30px 0 12px; font-size:19px; }
+.occasion-cards{ grid-template-columns:repeat(4,1fr); }
+.occasion-cards .choice-card{ padding:14px 10px; }
+@media (max-width:640px){ .occasion-cards{ grid-template-columns:1fr 1fr; } }
+#occasionOther[hidden]{ display:none; }
 .sequel-banner strong{ color:var(--text); font-size:16px; }
 .sequel-banner button{ justify-self:start; background:none; border:none; padding:0; color:#B87F27; text-decoration:underline; cursor:pointer; font:inherit; font-size:13.5px; }
 @media (max-width:640px){ .sequel-banner{ margin:20px 20px 0; } }
@@ -699,19 +704,26 @@ section.tight{ padding:56px 0; }
         <img class="step-companion brand-art" src="assets/brand/item-map.webp" alt="" loading="lazy">
         <span class="form-step-label">Страница 3 из 5</span>
         <h2>О чём будет книга?</h2>
-        <p class="help">Самые популярные темы — можно выбрать одну или совместить несколько.</p>
-        <div class="choice-cards" style="grid-template-columns:repeat(3,1fr);">
+        <p class="help">Выберите тему истории, а ниже — повод, если книга к празднику или важному событию. Повод вплетается в тему: например, сказка в новогоднюю ночь или поиски клада в день рождения.</p>
+        <div class="choice-cards" style="grid-template-columns:1fr 1fr;">
           <div class="choice-card is-selected" data-choice-group="theme"><img class="choice-art brand-art" src="assets/brand/item-map.webp" alt=""><span class="name">Приключения</span></div>
           <div class="choice-card" data-choice-group="theme"><img class="choice-art brand-art" src="assets/brand/item-key.webp" alt=""><span class="name">Сказка</span></div>
-          <div class="choice-card" data-choice-group="theme"><img class="choice-art brand-art" src="assets/brand/item-star.webp" alt=""><span class="name">Праздник / повод</span></div>
         </div>
-        <div class="field" style="margin-top:22px;">
-          <label for="occasion">Если выбрали «Праздник» — какой повод?</label>
-          <input type="text" id="occasion" placeholder="День рождения, первый день в садике, Новый год…">
+        <h3 class="occasion-title">Есть ли повод?</h3>
+        <div class="choice-cards occasion-cards">
+          <div class="choice-card is-selected" data-choice-group="occasion" data-value="none"><span class="name">Без повода</span></div>
+          <div class="choice-card" data-choice-group="occasion" data-value="birthday"><span class="name">День рождения</span></div>
+          <div class="choice-card" data-choice-group="occasion" data-value="newyear"><span class="name">Новый год</span></div>
+          <div class="choice-card" data-choice-group="occasion" data-value="other"><span class="name">Другое событие</span></div>
+        </div>
+        <div class="field" id="occasionOther" style="margin-top:18px;" hidden>
+          <label for="occasion">Какое событие?</label>
+          <input type="text" id="occasion" placeholder="Первый день в садике, рождение братика, переезд…">
+          <span class="hint">История мягко подготовит ребёнка к этому событию или поможет его прожить.</span>
         </div>
       </div>
 
-      <!-- Оформление страниц: только для «Большой истории», темы «Праздник» и повода «Новый год» -->
+      <!-- Оформление страниц: только для «Большой истории» с поводом «Новый год» -->
       <div class="form-step" id="designStep" style="display:none;">
         <img class="step-companion brand-art" src="assets/brand/item-lantern.webp" alt="" loading="lazy">
         <span class="form-step-label">Оформление</span>
@@ -892,6 +904,15 @@ section.tight{ padding:56px 0; }
     function readChoiceValue(groupName) {
       const active = document.querySelector('.choice-card[data-choice-group="' + groupName + '"].is-selected');
       return active ? active.getAttribute('data-value') || '' : '';
+    }
+
+    // повод: день рождения и Новый год — словами (так их понимают ИИ и оформление), другое событие — как написали
+    function readOccasion() {
+      const kind = readChoiceValue('occasion');
+      if (kind === 'birthday') return 'День рождения';
+      if (kind === 'newyear') return 'Новый год';
+      if (kind === 'other') return readInput('occasion');
+      return '';
     }
 
     function readChoiceText(groupName) {
@@ -1084,7 +1105,7 @@ section.tight{ padding:56px 0; }
         age: readInput('age'),
         gender: readChoiceText('gender'),
         eyes: readInput('eyes'),
-        occasion: readInput('occasion'),
+        occasion: readOccasion(),
         habits: readInput('habits'),
         friends: readInput('friends'),
         cast: readInput('cast'),
@@ -1306,7 +1327,8 @@ section.tight{ padding:56px 0; }
     }
     if (sequel && sequel.answers) {
       const a = sequel.answers;
-      ['name', 'age', 'eyes', 'occasion', 'habits', 'friends', 'cast', 'lesson'].forEach(function (id) {
+      // повод не переносим: продолжение обычно дарят уже по другому случаю
+      ['name', 'age', 'eyes', 'habits', 'friends', 'cast', 'lesson'].forEach(function (id) {
         const el = document.getElementById(id);
         if (el && a[id]) el.value = a[id];
       });
@@ -1355,9 +1377,9 @@ section.tight{ padding:56px 0; }
     }
 
     function updateDesignStep() {
-      const isHoliday = /праздн/i.test(readChoiceText('theme'));
-      const isNewYear = isHoliday && window.SkazkaTemplate.occasionKind(readInput('occasion')) === 'newyear' && readInput('occasion') !== '';
-      document.getElementById('designStep').style.display = isBig() && isNewYear ? 'block' : 'none';
+      const occasion = readChoiceValue('occasion');
+      document.getElementById('occasionOther').hidden = occasion !== 'other';
+      document.getElementById('designStep').style.display = isBig() && occasion === 'newyear' ? 'block' : 'none';
       updateDesignThumbs();
     }
     // превью оформлений — в том же стиле, что и иллюстрации (акварель или 3D)
@@ -1372,8 +1394,7 @@ section.tight{ padding:56px 0; }
     document.querySelectorAll('.choice-card[data-choice-group="tariff"]').forEach(function (card) { card.addEventListener('click', updateTariff); });
     document.getElementById('coloring').addEventListener('change', updateTariff);
     document.getElementById('age').addEventListener('input', updateTariffTip);
-    document.querySelectorAll('.choice-card[data-choice-group="theme"]').forEach(function (card) { card.addEventListener('click', updateDesignStep); });
-    document.getElementById('occasion').addEventListener('input', updateDesignStep);
+    document.querySelectorAll('.choice-card[data-choice-group="occasion"]').forEach(function (card) { card.addEventListener('click', updateDesignStep); });
     document.querySelectorAll('.choice-card[data-choice-group="style"]').forEach(function (card) { card.addEventListener('click', updateDesignThumbs); });
     updateTariff();
 

@@ -1,8 +1,8 @@
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
-import { ageVoiceRule } from './booktext.js';
+import { ageVoiceRule, occasionRule } from './booktext.js';
 
-const { buildTemplateStory, normalizeInput, sceneLibraryFor } = template;
+const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind } = template;
 
 const PAGES_TARGET = 8;
 
@@ -88,6 +88,7 @@ export function buildPrompt(rawInput, library = sceneLibraryFor(normalizeInput(r
     ...(c.sequel ? [`Продолжение: ${c.sequel}`] : []),
     '</анкета>',
     `Как писать для этого возраста: ${ageVoiceRule(c.age)}`,
+    ...(c.kind !== 'holiday' && occasionRule(occasionKind(c.occasion), c.occasion) ? [`Как учесть повод: ${occasionRule(occasionKind(c.occasion), c.occasion)}`] : []),
     'Напиши историю и верни JSON.'
   ].join('\n');
 

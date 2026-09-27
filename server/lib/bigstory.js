@@ -17,10 +17,10 @@
 
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
-import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, ageGroupFor, styleFor, dedicationFor, ageVoiceRule } from './booktext.js';
+import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, ageGroupFor, styleFor, dedicationFor, ageVoiceRule, occasionRule } from './booktext.js';
 import { ORIGINALITY_RULE, BLURB_RULE, brandMentions, cleanBlurb } from './story.js';
 
-const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind } = template;
+const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind, holidayKind } = template;
 
 export const CHAPTERS = 6;
 // Ребёнок нарисован на каждой иллюстрации книги (плюс обложка) — фоновые сцены остаются только запасным вариантом
@@ -31,7 +31,7 @@ const ADVENTURE_LIBRARY = sceneLibraryFor('adventure');
 
 /** 'adventure' | 'fairytale' | 'birthday' | 'newyear' — выбирает голос и сцены. */
 function themeKeyFor(c) {
-  if (c.kind === 'holiday') return occasionKind(c.occasion);
+  if (c.kind === 'holiday') return holidayKind(c.occasion); // старые заказы с темой «Праздник»
   if (c.kind === 'fairytale') return 'fairytale';
   return 'adventure';
 }
@@ -145,6 +145,11 @@ const STYLE_FAIRYTALE = `Ты — писатель детской сказочн
 const STYLE_BY_THEME = { adventure: STYLE_ADVENTURE, fairytale: STYLE_FAIRYTALE, birthday: STYLE_BIRTHDAY, newyear: STYLE_NEWYEAR };
 const systemFor = (themeKey) => `${STYLE_BY_THEME[themeKey]}\n\nОригинальность: ${ORIGINALITY_RULE}`;
 
+/** Повод новой книги (у старых заказов с темой «Праздник» повод — это и есть тема, отдельно не учитывается). */
+const occasionOf = (c) => (c.kind === 'holiday' ? '' : occasionKind(c.occasion));
+const occasionLine = (c) => { const r = occasionRule(occasionOf(c), c.occasion); return r ? `
+Повод книги: ${r}` : ''; };
+
 function formBlock(c, input = {}) {
   const from = String(input.from || '').trim().slice(0, 80);
   return [
@@ -180,7 +185,7 @@ export function buildPlanPrompt(input) {
   const user = `${formBlock(c, input)}
 
 Придумай книгу для этого ребёнка. Это ПЛАН: сам текст будет писаться позже, по главам.
-Возраст: ${ageVoiceRule(c.age)} Сюжет, загадка и темы — по этому возрасту.
+Возраст: ${ageVoiceRule(c.age)} Сюжет, загадка и темы — по этому возрасту.${occasionLine(c)}
 
 Требования:
 — Ровно ${CHAPTERS} глав. Название главы — короткое, до 5 слов, без слова «глава».
@@ -221,7 +226,7 @@ ${summaries.length ? `УЖЕ НАПИСАНО (кратко):\n${summaries.map((
 Объём: каждая сцена из списка — отдельный эпизод из 5–8 абзацев (80–120 слов) с действием, репликами и конкретными деталями. В главе выходит 500–800 слов и 40–60 абзацев. Не сжимай несколько сцен в одну и не пересказывай — показывай.
 Повторы: фирменные словечки и сравнения героев из анкеты (коронную фразу, повторяющееся сравнение или прозвище) используй не чаще 1–2 раз за главу и каждый раз в новой ситуации, иначе шутка перестаёт быть смешной. Не начинай подряд несколько абзацев одинаково.
 Пиши сразу с действия, без пересказа плана.
-Возраст: ${ageVoiceRule(c.age)}
+Возраст: ${ageVoiceRule(c.age)}${occasionLine(c)}
 
 Формат ответа — строго JSON без пояснений и markdown:
 {"summary":"2 предложения о том, что произошло в главе","blocks":[ ... ]}
@@ -272,7 +277,7 @@ function cleanImage(im, i, beatsCount, library) {
   };
 }
 
-export function validatePlan(raw, name, { library = ADVENTURE_LIBRARY, themeKey = 'adventure', design = '' } = {}) {
+export function validatePlan(raw, name, { library = ADVENTURE_LIBRARY, themeKey = 'adventure', design = '', occasion = '' } = {}) {
   const p = parseJson(raw);
   const title = strip(p.title);
   if (!title || title.length > 120) throw new Error('plan: bad title');
@@ -307,7 +312,8 @@ export function validatePlan(raw, name, { library = ADVENTURE_LIBRARY, themeKey 
   const plan = {
     title,
     // путешествие и сказка — жанр выбирает ИИ; праздник — жанр это сам повод, известен заранее
-    genre: LLM_CLASSIFIES_GENRE.has(themeKey) ? normalizeGenre(p.genre) : designGenre(themeKey, design),
+    // повод «Новый год» у приключения или сказки — новогоднее оформление (вариант выбирает заказчик)
+    genre: occasion === 'newyear' ? designGenre('newyear', design) : LLM_CLASSIFIES_GENRE.has(themeKey) ? normalizeGenre(p.genre) : designGenre(themeKey, design),
     logline: strip(p.logline),
     // English-описания для иллюстраций; checkRussian их не проверяет
     look: strip(p.look).slice(0, 500),
@@ -464,6 +470,8 @@ const CHAPTER_TITLES = {
 
 /** Тёплая фраза-посвящение, если ИИ не написал свою (или для книги целиком из шаблона). */
 function dedicationFallback(c, genreKey) {
+  const occ = occasionOf(c);
+  if (occ === 'birthday' || occ === 'newyear') genreKey = occ;
   if (genreKey === 'birthday') return `${c.name} — ${c.girl ? 'имениннице' : 'имениннику'} в день рождения, с любовью.`;
   if (genreKey === 'newyear' || genreKey === 'newyear_elves') return `${c.name} — с Новым годом, ${c.girl ? 'наша волшебница' : 'наш волшебник'}.`;
   if (FAIRYTALE_GENRES.has(genreKey)) return `${c.name} — ${c.girl ? 'главной героине' : 'главному герою'} этой волшебной сказки, с любовью.`;
@@ -476,7 +484,7 @@ export function templateBook(input) {
   const themeKey = themeKeyFor(c);
   const library = sceneLibraryFor(c.kind, c.occasion);
   // локальный шаблон без ИИ: у праздника жанр — сам повод; у сказки всегда «королевство»; у путешествия жанр решит normalizeBook по тексту
-  const styleKey = themeKey === 'fairytale' ? 'kingdom' : designGenre(themeKey, input.design);
+  const styleKey = occasionOf(c) === 'newyear' ? designGenre('newyear', input.design) : themeKey === 'fairytale' ? 'kingdom' : designGenre(themeKey, input.design);
   const ageGroup = ageGroupFor(c.age);
   const style = styleKey === 'adventure' ? null : styleFor(styleKey, ageGroup);
   const titles = CHAPTER_TITLES[styleKey] || CHAPTER_TITLES[themeKey] || CHAPTER_TITLES.adventure;
@@ -561,7 +569,7 @@ export async function writePlan(input, options = {}) {
   const themeKey = themeKeyFor(c);
   try {
     const r = await generateWithFailover(providers, buildPlanPrompt(input), {
-      validate: (raw) => validatePlan(raw, c.name, { library, themeKey, design: input.design }),
+      validate: (raw) => validatePlan(raw, c.name, { library, themeKey, design: input.design, occasion: occasionOf(c) }),
       deadlineAt: Date.now() + stepDeadlineMs, attemptTimeoutMs, health, log
     });
     return { plan: r.value, provider: r.provider };
