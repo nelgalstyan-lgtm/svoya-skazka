@@ -213,13 +213,24 @@
     page.appendChild(pic);
     // у оформлений темы «Путешествие» на табличке деревянный медальон; у праздничных (лента/изморозь) — бумажная розетка
     var wood = FRAME === 'rope' || FRAME === 'chart' || FRAME === 'fern';
-    var rosette = img(KIT + (wood ? 'medallion.png' : 'rosette.png'), wood ? 'bk-medal' : 'bk-rosette', '');
-    if (FRAME !== 'brand') page.appendChild(rosette); // в фирменном оформлении подпись — на бумажной карточке, без медальона
+    var rosette;
+    if (FRAME === 'brand') {
+      // фирменная подпись: бумажная табличка в двойной рамке, сверху медальон с предметом темы, по краям веточки
+      rosette = h('div', 'bk-brand-medal');
+      rosette.appendChild(img(decorItem(DECOR[SET].icons[0]), 'bk-decor', ''));
+    } else {
+      rosette = img(KIT + (wood ? 'medallion.png' : 'rosette.png'), wood ? 'bk-medal' : 'bk-rosette', '');
+    }
+    page.appendChild(rosette);
     var plate = h('div', 'bk-plate');
     if (block.plateTop) { // подпись в несколько строк: табличка выше стандартной
       plate.style.top = block.plateTop + '%';
       plate.style.height = (96.3 - block.plateTop) + '%';
-      rosette.style.top = (block.plateTop - (wood ? 4.4 : 2.2)) + '%';
+      rosette.style.top = (block.plateTop - (wood ? 4.4 : FRAME === 'brand' ? 3.4 : 2.2)) + '%';
+    }
+    if (FRAME === 'brand') {
+      plate.appendChild(img(decorItem(DECOR[SET].sprig), 'bk-decor bk-plate-sprig bk-plate-sprig-l bk-mirror', ''));
+      plate.appendChild(img(decorItem(DECOR[SET].sprig), 'bk-decor bk-plate-sprig bk-plate-sprig-r', ''));
     }
     var d = h('div', 'bk-plate-div');
     d.append(h('i'), h('b'), h('i'));
