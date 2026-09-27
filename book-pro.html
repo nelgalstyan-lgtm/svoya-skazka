@@ -116,7 +116,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   // «Для типографии»: страницы без обложки + обложка одним листом (задняя, корешок, лицевая)
   window.SkazkaExtras.attachPrintKit(document.getElementById('printBtn'), {
     blockSelector: '.bk-page:not(.bk-cover):not(.bk-back)', frontSelector: '.bk-cover', backSelector: '.bk-back',
-    widthMm: 154, heightMm: 235, scaleVar: '--bk-scale', spineColor: '#1c1410', spineFont: "'Cormorant Garamond', Georgia, serif",
+    widthMm: 154, heightMm: 235, scaleVar: '--bk-scale', spineColor: '#1c1410', spineFont: "'Lora', Georgia, serif",
     title: function () { return (window.__bookData || {}).title; },
     fileBase: function () { return window.SkazkaExtras.pdfName((window.__bookData || {}).title).replace(/\.pdf$/, ''); },
     pagesCount: function () { return document.querySelectorAll('.bk-page:not(.bk-cover):not(.bk-back)').length; }

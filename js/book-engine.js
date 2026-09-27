@@ -390,14 +390,17 @@
 
   function overflows(content) { return content.scrollHeight > content.clientHeight + 1; }
 
+  // с образцом текста: без него браузер грузит только латиницу, и кириллица приходит позже — после замеров страниц
+  var CYR = 'Аа Жж Юю Ёё Aa 0';
+
   function loadFonts() {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
     return Promise.all([
-      document.fonts.load('25px Tinos'), document.fonts.load('700 25px Tinos'),
-      document.fonts.load('italic 15px Tinos'), document.fonts.load('italic 700 17px Tinos'),
-      document.fonts.load('700 46px "Cormorant Garamond"'), document.fonts.load('600 22px "Cormorant Garamond"'),
-      document.fonts.load('26px "Marck Script"'), document.fonts.load('700 30px Caveat'),
-      document.fonts.load('26px Lobster'), document.fonts.load('800 27px Podkova')
+      document.fonts.load('25px Literata', CYR), document.fonts.load('700 25px Literata', CYR),
+      document.fonts.load('italic 15px Literata', CYR), document.fonts.load('italic 700 17px Literata', CYR),
+      document.fonts.load('700 46px Lora', CYR), document.fonts.load('600 22px Lora', CYR),
+      document.fonts.load('26px "Marck Script"', CYR), document.fonts.load('700 30px Caveat', CYR),
+      document.fonts.load('26px Lobster', CYR), document.fonts.load('800 27px Podkova', CYR)
     ]).catch(function () {});
   }
 
