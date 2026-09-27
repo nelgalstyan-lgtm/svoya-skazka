@@ -522,3 +522,93 @@
   .bk-wrap:last-child{ break-after:auto; page-break-after:auto; }
   .bk-page{ transform:none !important; box-shadow:none; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 }
+
+/* =====================================================================================================
+   ФИРМЕННОЕ ОФОРМЛЕНИЕ «ГЕРОЁНОК» — у всех книг (book-engine.js: FRAME 'brand').
+   Светлая бумага в цвет сайта, коричневые чернила, тема — акварельными предметами (assets/kit/decor/<набор>/):
+   значки в шапке, заставка главы, веточки у номера страницы. Прежние рамки выше — только для сравнения (?frame=…).
+   Подросткам (bk-teen) предметы мельче и приглушённее: тот же рисунок, спокойнее тон.
+   ===================================================================================================== */
+.bk-f-brand{ --l:74px; --w:434px; --ink:#2f2419; --brown:#5b4128; --line:#c9b28a; --muted:#8a7355; }
+/* обложки остаются тёмными (свои правила выше), остальные страницы — светлая бумага */
+.bk-f-brand:not(.bk-cover):not(.bk-back){
+  /* пергамент под светлой вуалью — бумага в цвет сайта, но с живой фактурой */
+  background:linear-gradient(rgba(248,243,230,.8), rgba(248,243,230,.8)), url(parchment.jpg) center/100% 100% no-repeat #f6efdf;
+}
+.bk-f-brand .bk-strip{ display:none; }
+.bk-f-brand .bk-decor{ display:block; }
+.bk-f-brand .bk-mirror{ transform:scaleX(-1); }
+.bk-teen .bk-decor{ filter:sepia(.4) saturate(.7); opacity:.92; }
+
+/* шапка: предмет — название главы — предмет, под ней тонкая линия */
+.bk-f-brand .bk-run{ top:66px; height:40px; gap:16px; font:600 20px/26px 'Lora',serif; letter-spacing:.03em; }
+.bk-f-brand .bk-run img{ height:38px; width:auto; opacity:1; }
+.bk-teen .bk-run img{ height:30px; }
+.bk-f-brand .bk-run span{ flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bk-f-brand .bk-run-rule{ top:118px; left:calc(var(--l) + var(--w) / 2 - 130px); width:260px; height:1px; background:linear-gradient(90deg,transparent,var(--line) 20%,var(--line) 80%,transparent); }
+.bk-f-brand .bk-content{ top:146px; height:640px; font-size:22px; line-height:36px; }
+
+/* номер страницы между веточками темы */
+.bk-folio-brand{ top:800px; height:44px; align-items:center; gap:10px; }
+.bk-folio-brand::after{ display:none; }
+.bk-folio-brand img{ height:40px; width:auto; }
+.bk-teen .bk-folio-brand img{ height:32px; }
+.bk-folio-brand .bk-no{ margin:0; font:600 18px/1 'Lora',serif; color:var(--brown); }
+
+/* заставка под «Глава N» и в посвящении */
+.bk-vignette{ height:auto; margin:14px auto 0; display:flex; justify-content:center; align-items:flex-end; gap:0; }
+.bk-vignette img{ width:300px; height:auto; }
+.bk-teen .bk-vignette img{ width:240px; }
+.bk-vignette i{ display:none; }
+/* день рождения: торт между веточками */
+.bk-vignette img.bk-vg-main{ width:96px; margin:0 -6px; position:relative; z-index:1; }
+.bk-vignette img:not(.bk-vg-main):not(:only-child){ width:92px; }
+.bk-f-brand .bk-chapter-no{ color:var(--muted); }
+.bk-f-brand .bk-chapter-title{ margin-top:14px; color:#4a3220; }
+.bk-f-brand .bk-dropcap{ color:#9a6a33; text-shadow:none; }
+
+/* посвящение: крупнее и по центру страницы, без двойной рамки */
+.bk-f-brand.bk-ded::after, .bk-f-brand .bk-ded-rule{ display:none; }
+.bk-f-brand .bk-ded-title{ top:132px; font-size:30px; }
+.bk-f-brand.bk-ded .bk-vignette{ position:absolute; left:0; right:0; top:188px; margin:0; }
+.bk-f-brand .bk-ded-lead{ left:78px; right:78px; top:330px; font-size:21px; line-height:1.45; }
+.bk-f-brand .bk-ded-body{ left:78px; right:78px; top:420px; font-size:17.5px; line-height:1.55; text-align:left; }
+.bk-f-brand .bk-ded-body p{ text-indent:0; margin:0 0 12px; }
+.bk-f-brand .bk-ded-foot{ bottom:80px; }
+
+/* «Конец»: Героёнок машет на прощание */
+.bk-f-brand .bk-finale-title{ top:118px; font-size:58px; }
+.bk-finale-hare{ position:absolute; left:50%; top:196px; width:150px; height:auto; transform:translateX(-50%); }
+.bk-f-brand .bk-finale-text{ top:430px; font-size:19px; line-height:31px; }
+.bk-f-brand .bk-qr{ top:580px; }
+.bk-f-brand .bk-finale-brand{ bottom:56px; color:var(--muted); }
+.bk-f-brand.bk-locked .bk-finale-hare{ display:none; }
+.bk-f-brand.bk-locked .bk-finale-text{ top:230px; }
+
+/* иллюстрация: подпись на светлой бумажной карточке */
+.bk-f-brand .bk-plate{ left:6%; right:6%; top:83.5%; height:11.5%; padding:14px 26px; background:#f8f2e4; border-radius:6px; box-shadow:0 8px 22px rgba(0,0,0,.35); }
+.bk-f-brand .bk-plate::before, .bk-f-brand .bk-plate::after, .bk-f-brand .bk-plate-div{ display:none; }
+.bk-f-brand .bk-plate-cap{ font:600 22px/1.25 'Lora',serif; color:#4a3220; -webkit-text-stroke:0; text-shadow:none; }
+
+/* сертификат: разделитель между портретом и именем — не заставка, а тонкая веточка */
+.bk-f-brand.bk-cert .bk-vignette{ top:228px; }
+.bk-f-brand.bk-cert .bk-vignette img{ width:150px; }
+.bk-f-brand.bk-cert.bk-cert-has-portrait .bk-vignette{ display:none; }
+
+/* короткое посвящение — по центру, длинное — по левому краю (размер подбирает движок, чтобы не налезало на подпись) */
+.bk-f-brand.bk-ded-short .bk-ded-body{ text-align:center; }
+.bk-f-brand.bk-ded-long .bk-ded-title{ top:74px; font-size:26px; }
+.bk-f-brand.bk-ded-long .bk-vignette{ top:116px; }
+.bk-f-brand.bk-ded-long .bk-vignette img{ width:190px; }
+.bk-f-brand.bk-ded-long .bk-ded-lead{ top:200px; left:60px; right:60px; font-size:18px; }
+.bk-f-brand.bk-ded-long .bk-ded-body{ left:60px; right:60px; line-height:1.5; }
+.bk-f-brand.bk-ded-long .bk-ded-foot{ bottom:52px; }
+
+/* песня */
+.bk-f-brand .bk-song-kicker{ top:70px; }
+.bk-f-brand .bk-song-title{ top:96px; font-size:30px; }
+.bk-f-brand.bk-song .bk-vignette{ position:absolute; left:0; right:0; top:140px; margin:0; }
+.bk-f-brand.bk-song .bk-vignette img{ width:200px; }
+.bk-f-brand .song-lyrics{ top:218px; font-size:15.5px; line-height:21px; }
+.bk-f-brand .song-part{ margin-bottom:9px; }
+.bk-f-brand .bk-song-note{ bottom:44px; }

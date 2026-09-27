@@ -501,6 +501,7 @@ export function templateBook(input) {
     title: story.title,
     theme: 'parchment',
     ageGroup,
+    ...(occasionOf(c) ? { occasion: occasionOf(c) } : {}),
     genre: style ? styleKey : undefined,
     frame: style ? style.frame : undefined,
     footer: style ? style.footer : undefined,
@@ -522,6 +523,7 @@ function assemble(input, plan, chapters, meta, library) {
     title: plan.title,
     logline: plan.logline, // для продолжения книги: о чём была первая
     look: plan.look, // одежда и спутники — для бесплатной перерисовки иллюстраций
+    ...(occasionOf(c) ? { occasion: occasionOf(c) } : {}), // повод: у дня рождения — праздничная заставка посвящения
     ...(plan.blurb ? { blurb: plan.blurb } : {}), // аннотация на задней обложке
     theme: 'parchment',
     ageGroup, // возрастная группа задаёт оформление (для путешествия: 5–10 — яркие рамки, 11–16 — «Пергамент»)

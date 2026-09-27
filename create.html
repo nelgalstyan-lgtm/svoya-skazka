@@ -378,7 +378,6 @@ section.tight{ padding:56px 0; }
 .photo-thumb{ position:relative; width:76px; height:76px; }
 .photo-thumb img{ width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid var(--line); display:block; }
 .photo-thumb button{ position:absolute; top:-4px; right:-4px; width:24px; height:24px; border-radius:50%; border:none; background:#B87F27; color:#fff; font-size:13px; line-height:24px; cursor:pointer; padding:0; }
-.design-thumb{ display:block; width:100%; max-width:130px; margin:0 auto 10px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.18); }
 .privacy-note{ margin:10px 0 0; font-size:13.5px; color:var(--text-soft); }
 .photo-why{ margin-top:12px; border:1px solid var(--line); border-radius:var(--radius-m); background:#fff; }
 .photo-why summary{ cursor:pointer; list-style:none; padding:14px 18px; font-weight:700; font-size:15px; display:flex; justify-content:space-between; gap:12px; }
@@ -723,18 +722,6 @@ section.tight{ padding:56px 0; }
         </div>
       </div>
 
-      <!-- Оформление страниц: только для «Большой истории» с поводом «Новый год» -->
-      <div class="form-step" id="designStep" style="display:none;">
-        <img class="step-companion brand-art" src="assets/brand/item-lantern.webp" alt="" loading="lazy">
-        <span class="form-step-label">Оформление</span>
-        <h2>Как оформить страницы?</h2>
-        <p class="help">Для Нового года есть два оформления рамки — выберите то, что вам больше нравится. Сюжет от этого не меняется.</p>
-        <div class="choice-cards" style="grid-template-columns:1fr 1fr;">
-          <div class="choice-card is-selected" data-choice-group="design" data-value="cookies"><img class="design-thumb" src="assets/kit/preview-cookies.jpg" alt=""><span class="name">Пряничное</span></div>
-          <div class="choice-card" data-choice-group="design" data-value="elves"><img class="design-thumb" src="assets/kit/preview-elves.jpg" alt=""><span class="name">Эльфийское</span></div>
-        </div>
-      </div>
-
       <!-- Шаг 4 — характер и близкие -->
       <div class="form-step">
         <img class="step-companion brand-art" src="assets/brand/emotion-smile.webp" alt="Героёнок улыбается" loading="lazy">
@@ -1042,7 +1029,7 @@ section.tight{ padding:56px 0; }
       const track = document.getElementById('progressTrack');
       if (!track) return;
       const bars = track.querySelectorAll('span');
-      const pages = Array.prototype.filter.call(document.querySelectorAll('.form-shell .form-step'), function (step) { return step.id !== 'designStep'; });
+      const pages = Array.prototype.slice.call(document.querySelectorAll('.form-shell .form-step'));
       let shown = -1;
       function update() {
         const line = window.innerHeight * 0.45; // страница «открыта», когда её начало поднялось выше середины экрана
@@ -1091,14 +1078,6 @@ section.tight{ padding:56px 0; }
       new MutationObserver(sync).observe(document.querySelector('.form-shell'), { subtree: true, attributes: true, attributeFilter: ['class'] });
     }
 
-    // Оформление выбирает заказчик; поле показывается только когда оно что-то меняет (см. updateDesignStep)
-    function readDesign() {
-      const step = document.getElementById('designStep');
-      if (!step || step.style.display === 'none') return '';
-      const active = step.querySelector('.choice-card.is-selected');
-      return active ? active.getAttribute('data-value') || '' : '';
-    }
-
     function collectAnswers() {
       return {
         name: readInput('name'),
@@ -1112,7 +1091,6 @@ section.tight{ padding:56px 0; }
         lesson: readInput('lesson'),
         style: readChoiceText('style'),
         theme: readChoiceText('theme'),
-        design: readDesign(),
         sequel: sequel ? sequel.sequel : '',
         from: readInput('from'),
         dedication: readInput('dedication'),
@@ -1379,23 +1357,11 @@ section.tight{ padding:56px 0; }
     function updateDesignStep() {
       const occasion = readChoiceValue('occasion');
       document.getElementById('occasionOther').hidden = occasion !== 'other';
-      document.getElementById('designStep').style.display = isBig() && occasion === 'newyear' ? 'block' : 'none';
-      updateDesignThumbs();
-    }
-    // превью оформлений — в том же стиле, что и иллюстрации (акварель или 3D)
-    function updateDesignThumbs() {
-      const style = document.querySelector('.choice-card[data-choice-group="style"].is-selected');
-      const suffix = style && style.dataset.value === 'animated3d' ? '-3d' : '';
-      document.querySelectorAll('.choice-card[data-choice-group="design"]').forEach(function (card) {
-        const thumb = card.querySelector('.design-thumb');
-        if (thumb) thumb.src = 'assets/kit/preview-' + card.dataset.value + suffix + '.jpg';
-      });
     }
     document.querySelectorAll('.choice-card[data-choice-group="tariff"]').forEach(function (card) { card.addEventListener('click', updateTariff); });
     document.getElementById('coloring').addEventListener('change', updateTariff);
     document.getElementById('age').addEventListener('input', updateTariffTip);
     document.querySelectorAll('.choice-card[data-choice-group="occasion"]').forEach(function (card) { card.addEventListener('click', updateDesignStep); });
-    document.querySelectorAll('.choice-card[data-choice-group="style"]').forEach(function (card) { card.addEventListener('click', updateDesignThumbs); });
     updateTariff();
 
     generateBtn.addEventListener('click', async function () {

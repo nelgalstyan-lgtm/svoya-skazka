@@ -57,6 +57,35 @@
     cookies: ['hdr-cookies-l.png', 'hdr-cookies-r.png', false],
     elves: ['hdr-elves-l.png', 'hdr-elves-r.png', false]
   };
+  // Фирменное оформление «Героёнок» (по умолчанию у всех книг): светлая бумага, акварельные предметы темы
+  // (assets/kit/decor/<набор>/item-N.webp — порядок как на листе владелицы, см. scripts/book_decor.py),
+  // заставка главы vignette.webp. icons — значки шапки, sprig — веточка у номера страницы.
+  var DECOR = {
+    tajny: { icons: [2, 7], sprig: 9 },
+    more: { icons: [2, 8], sprig: 9 },
+    poxod: { icons: [3, 4], sprig: 10 },
+    korolevstvo: { icons: [1, 4], sprig: 9 },
+    les: { icons: [1, 3], sprig: 5 },
+    podvodnoe: { icons: [1, 4], sprig: 9 },
+    'novyj-god': { icons: [2, 3], sprig: 10 },
+    'den-rozhdeniya': { icons: [3, 2], sprig: 9, compose: [9, 1, 10] } // своей заставки нет: торт между веточками
+  };
+  // набор по жанру книги; у старых книг без жанра — по прежнему колонтитулу
+  var DECOR_BY_GENRE = { sea: 'more', treasure: 'tajny', universal: 'tajny', wild: 'poxod', kingdom: 'korolevstvo', forest: 'les', underwater: 'podvodnoe', newyear: 'novyj-god', newyear_elves: 'novyj-god', birthday: 'den-rozhdeniya' };
+  var DECOR_BY_FOOTER = { sea: 'more', treasure: 'tajny', pirates: 'tajny', wild: 'poxod', jungle: 'poxod', kingdom: 'korolevstvo', forest: 'les', underwater: 'podvodnoe', cookies: 'novyj-god', elves: 'novyj-god', birthday: 'den-rozhdeniya' };
+  function decorFor(book) { return DECOR_BY_GENRE[book.genre] || DECOR_BY_FOOTER[book.footer] || 'tajny'; }
+  function decorItem(n, set) { return KIT + 'decor/' + (set || SET) + '/item-' + n + '.webp'; }
+
+  // заставка: у главы — по теме книги; у посвящения книги ко дню рождения — торт между веточками
+  function vignette(set) {
+    set = set || SET;
+    var box = h('div', 'bk-divider bk-vignette');
+    var c = DECOR[set].compose;
+    if (c) c.forEach(function (n, i) { box.appendChild(img(decorItem(n, set), 'bk-decor' + (i === 1 ? ' bk-vg-main' : '') + (i === 2 ? ' bk-mirror' : ''), '')); });
+    else box.appendChild(img(KIT + 'decor/' + set + '/vignette.webp', 'bk-decor', ''));
+    return box;
+  }
+
   // полноразмерные разделители под названием главы (вместо «линия–значок–линия»)
   var DIVIDERS = { cookies: 'divider-cookies.png', elves: 'divider-elves.png' };
   // границы текстового поля у оформлений с рамкой по периметру: нижний край и минимальный верх на странице открытия главы
@@ -65,10 +94,12 @@
     cookies: { bottom: 691, openerMin: 215, gap: 34 },
     elves: { bottom: 702, openerMin: 300, gap: 30 },
     pirates: { bottom: 717, openerMin: 222, gap: 18, banner: true },
-    jungle: { bottom: 707, openerMin: 234, gap: 18, banner: true, multiline: true }
+    jungle: { bottom: 707, openerMin: 234, gap: 18, banner: true, multiline: true },
+    brand: { bottom: 790, openerMin: 250, gap: 30 }
   };
 
   function divider(withLines) {
+    if (FRAME === 'brand') return vignette();
     if (DIVIDERS[FOOTER]) {
       var full = h('div', 'bk-divider bk-divider-img');
       full.appendChild(img(KIT + DIVIDERS[FOOTER], '', ''));
@@ -85,6 +116,9 @@
   var FRAME = 'rope';
   var FOOTER = 'sea'; // колонтитул: treasure | wild | sea | birds
   var ART = ''; // ' bk-art-3d' — книга в стиле «3D-мультфильм»
+  var SET = 'tajny'; // набор фирменного оформления (DECOR)
+  var EXTRA = ''; // классы страницы: набор, возраст (подросткам предметы мельче и приглушённее)
+  var OCCASION = ''; // повод книги: у дня рождения — своя заставка посвящения
 
   // название главы в узкой шапке: сжимаем шрифт, пока не влезет (в одну строку или в высоту блока); совсем длинное — многоточие
   function fitRunTitle(span, run, multiline) {
@@ -104,7 +138,7 @@
   // верхняя строка страницы: название главы (со значками и линией — или просто на баннере рамки)
   function addRun(page, title) {
     var lay = LAYOUT[FOOTER] || {};
-    var icons = HEADER_ICONS[FOOTER];
+    var icons = FRAME === 'brand' ? ['decor/' + SET + '/item-' + DECOR[SET].icons[0] + '.webp', 'decor/' + SET + '/item-' + DECOR[SET].icons[1] + '.webp', false] : HEADER_ICONS[FOOTER];
     var run = h('div', 'bk-run');
     if (!lay.banner) run.appendChild(img(KIT + (icons ? icons[0] : 'fleuron-l.png'), '', ''));
     var span = h('span', '', title);
@@ -117,7 +151,7 @@
 
   function newSheet(root, kind) {
     var wrap = h('div', 'bk-wrap');
-    var page = h('div', 'bk-page bk-f-' + FRAME + ' bk-footer-' + FOOTER + ART + ' ' + kind);
+    var page = h('div', 'bk-page bk-f-' + FRAME + ' bk-footer-' + FOOTER + ART + EXTRA + ' ' + kind);
     wrap.appendChild(page);
     root.appendChild(wrap);
     return page;
@@ -152,7 +186,13 @@
     }
 
     var folio;
-    if (FOOTER === 'birds') {
+    if (FRAME === 'brand') {
+      // номер страницы между двумя веточками темы
+      folio = h('div', 'bk-folio bk-folio-brand');
+      folio.appendChild(img(decorItem(DECOR[SET].sprig), 'bk-decor bk-mirror', ''));
+      folio.appendChild(h('span', 'bk-no', ''));
+      folio.appendChild(img(decorItem(DECOR[SET].sprig), 'bk-decor', ''));
+    } else if (FOOTER === 'birds') {
       folio = h('div', 'bk-folio');
       folio.appendChild(img(KIT + 'bird-l.png', '', ''));
       folio.appendChild(h('span', 'bk-no', ''));
@@ -174,7 +214,7 @@
     // у оформлений темы «Путешествие» на табличке деревянный медальон; у праздничных (лента/изморозь) — бумажная розетка
     var wood = FRAME === 'rope' || FRAME === 'chart' || FRAME === 'fern';
     var rosette = img(KIT + (wood ? 'medallion.png' : 'rosette.png'), wood ? 'bk-medal' : 'bk-rosette', '');
-    page.appendChild(rosette);
+    if (FRAME !== 'brand') page.appendChild(rosette); // в фирменном оформлении подпись — на бумажной карточке, без медальона
     var plate = h('div', 'bk-plate');
     if (block.plateTop) { // подпись в несколько строк: табличка выше стандартной
       plate.style.top = block.plateTop + '%';
@@ -212,10 +252,32 @@
     return { page: page, folio: null };
   }
 
+  // посвящение бывает и в строку, и на полстраницы: короткое — по центру, длинное уменьшаем, пока не встанет над подписью
+  function fitDedication(page, body, foot, d) {
+    var chars = (d.paragraphs || []).join(' ').length;
+    if (chars < 260) page.classList.add('bk-ded-short');
+    var lead = page.querySelector('.bk-ded-lead');
+    var shrink = function (min) {
+      // длинная первая фраза не наедет на текст
+      if (lead) body.style.top = (lead.offsetTop + lead.offsetHeight + 22) + 'px';
+      var size = parseFloat(getComputedStyle(body).fontSize) || 17.5;
+      while (body.offsetTop + body.offsetHeight > foot.offsetTop - 16 && size > min) {
+        size -= 0.5;
+        body.style.fontSize = size + 'px';
+      }
+      return body.offsetTop + body.offsetHeight <= foot.offsetTop - 16;
+    };
+    if (shrink(13.5)) return;
+    // совсем длинное (как у Алекса): заголовок выше, заставка меньше — больше места тексту
+    page.classList.add('bk-ded-long');
+    body.style.fontSize = '';
+    shrink(11.5);
+  }
+
   function dedicationSheet(root, d) {
     var page = newSheet(root, 'bk-ded');
     page.appendChild(h('div', 'bk-ded-title', d.title || 'Посвящается'));
-    page.appendChild(divider());
+    page.appendChild(FRAME === 'brand' && OCCASION === 'birthday' ? vignette('den-rozhdeniya') : divider());
     if (d.lead) page.appendChild(h('div', 'bk-ded-lead', d.lead));
     var body = h('div', 'bk-ded-body');
     (d.paragraphs || []).forEach(function (p) { body.appendChild(h('p', '', p)); });
@@ -225,6 +287,7 @@
     if (d.signature) foot.appendChild(h('div', 'bk-ded-sign', d.signature));
     page.appendChild(foot);
     page.appendChild(h('div', 'bk-ded-rule'));
+    if (FRAME === 'brand') fitDedication(page, body, foot, d);
     return { page: page, folio: null };
   }
 
@@ -232,7 +295,9 @@
   function finaleSheet(root, opts) {
     var page = newSheet(root, 'bk-finale');
     page.appendChild(h('div', 'bk-finale-title', 'Конец'));
-    page.appendChild(divider());
+    // Героёнок, хранитель историй, прощается с читателем
+    if (FRAME === 'brand') page.appendChild(img(KIT + 'decor/hare-greeting.webp', 'bk-finale-hare', ''));
+    else page.appendChild(divider());
     page.appendChild(h('div', 'bk-finale-text', 'Эта книга написана специально для своего героя — с привычками, друзьями и близкими из анкеты. Пусть она возвращается к вам снова и снова.'));
     if (opts && opts.qr) { opts.qr.classList.add('bk-qr'); page.appendChild(opts.qr); }
     page.appendChild(h('div', 'bk-finale-brand', 'Героёнок'));
@@ -407,6 +472,13 @@
   function preloadImages(book) {
     var urls = [book.cover || KIT + 'parchment.jpg', KIT + 'hdr-treasure-l.png', KIT + 'hdr-treasure-r.png', KIT + 'hdr-wild.png', KIT + 'hdr-sea.svg', KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png', KIT + 'frame-cookies.jpg', KIT + 'frame-elves.jpg', KIT + 'hdr-cookies-l.png', KIT + 'hdr-cookies-r.png', KIT + 'hdr-elves-l.png', KIT + 'hdr-elves-r.png', KIT + 'divider-cookies.png', KIT + 'divider-elves.png', KIT + 'frame-pirates.jpg', KIT + 'frame-jungle.jpg', KIT + 'orn-pirates-skull.png'];
     if (ART && /^(pirates|jungle|cookies|elves)$/.test(FRAME)) urls.push(KIT + 'frame-' + FRAME + '-3d.jpg');
+    if (FRAME === 'brand') {
+      var cfg = DECOR[SET];
+      urls.push(decorItem(cfg.icons[0]), decorItem(cfg.icons[1]), decorItem(cfg.sprig), KIT + 'decor/hare-greeting.webp');
+      if (cfg.compose) cfg.compose.forEach(function (n) { urls.push(decorItem(n)); });
+      else urls.push(KIT + 'decor/' + SET + '/vignette.webp');
+      if (OCCASION === 'birthday') DECOR['den-rozhdeniya'].compose.forEach(function (n) { urls.push(decorItem(n, 'den-rozhdeniya')); });
+    }
     book.chapters.forEach(function (c) {
       if (c.initial) urls.push(KIT + 'initials/' + c.initial + '.png');
       c.blocks.forEach(function (b) { if (b.t === 'image') urls.push(imageSrc(b)); });
@@ -418,8 +490,12 @@
 
   /** Раскладывает книгу по страницам внутри root. Возвращает { pages, sheets }. */
   function render(book, root, opts) {
-    FRAME = (opts && opts.frame) || book.frame || 'rope';
-    FOOTER = (opts && opts.footer) || book.footer || (FRAME === 'vine' ? 'birds' : 'sea');
+    // фирменное оформление у всех книг; прежние рамки — только если их явно просят (?frame=… — для сравнения)
+    FRAME = (opts && opts.frame) || 'brand';
+    FOOTER = FRAME === 'brand' ? 'brand' : (opts && opts.footer) || book.footer || (FRAME === 'vine' ? 'birds' : 'sea');
+    SET = decorFor(book);
+    OCCASION = book.occasion || '';
+    EXTRA = FRAME === 'brand' ? ' bk-set-' + SET + (book.ageGroup === '11-16' ? ' bk-teen' : '') : '';
     // книга в стиле «3D-мультфильм»: рисованные рамки берутся в 3D-варианте (parchment.css, .bk-art-3d)
     ART = book.art === '3d' ? ' bk-art-3d' : '';
     return Promise.all([loadFonts(), preloadImages(book)]).then(function () {
@@ -446,7 +522,8 @@
           if (!cur) { cur = textSheet(root, chapter, false); sheets.push(cur); }
 
           var isFirst = first && block.t === 'p';
-          var node = renderBlock(block, isFirst ? { initial: chapter.initial, dropcap: !chapter.initial } : null);
+          var initial = FRAME === 'brand' ? null : chapter.initial; // резные буквицы — у прежних рамок, в фирменном оформлении типографская
+          var node = renderBlock(block, isFirst ? { initial: initial, dropcap: !initial } : null);
           if (isFirst) first = false;
           cur.content.appendChild(node);
 
