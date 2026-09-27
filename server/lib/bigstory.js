@@ -18,7 +18,7 @@
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
 import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, ageGroupFor, styleFor, dedicationFor, ageVoiceRule } from './booktext.js';
-import { ORIGINALITY_RULE, brandMentions } from './story.js';
+import { ORIGINALITY_RULE, BLURB_RULE, brandMentions, cleanBlurb } from './story.js';
 
 const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind } = template;
 
@@ -190,10 +190,11 @@ export function buildPlanPrompt(input) {
 — Иллюстрации: всего ${IMAGES_MIN}–${IMAGES_MAX} на книгу, 1–2 на главу, в последней главе не больше 1. На КАЖДОЙ иллюстрации ребёнок в главной сцене. Для каждой: after_beat (номер пункта-сцены, после которого встаёт картинка, с 1), scene — один из тегов [${sceneListFor(library)}] (запасной фон), brief — описание сцены по-английски (1–2 предложения: что делает ребёнок, кто рядом, место, свет; без лица и эмоций, без текста на картинке; соседние сцены заметно различаются позой, планом и местом), caption — подпись под картинкой по-русски, до 10 слов.${genreLine}
 — look — по-английски, 1–2 предложения: во что одет ребёнок во всей книге (одежда, цвета, обувь — под тему) и как выглядят спутники из анкеты (питомцы, игрушки).
 — cover_brief — по-английски, 1 предложение: сцена для обложки, ребёнок в центре на фоне главного места истории.
+— blurb — ${BLURB_RULE}
 — dedication: lead — одна тёплая фраза-посвящение ребёнку без выдуманных фактов; paragraphs — 2 коротких тёплых абзаца (по 1–2 предложения) от того, кто дарит книгу, без выдуманных фактов.
 
 Ответ — строго JSON без пояснений и markdown:
-{"title":"",${genreField}"logline":"","look":"","cover_brief":"","motifs":[""],"dedication":{"lead":"","paragraphs":["",""]},"chapters":[{"n":1,"title":"","goal":"","beats":[""],"hook":"","note":"","images":[{"after_beat":2,"scene":"${Object.keys(library.scenes)[0]}","brief":"","caption":""}]}]}`;
+{"title":"",${genreField}"logline":"","look":"","cover_brief":"","blurb":"","motifs":[""],"dedication":{"lead":"","paragraphs":["",""]},"chapters":[{"n":1,"title":"","goal":"","beats":[""],"hook":"","note":"","images":[{"after_beat":2,"scene":"${Object.keys(library.scenes)[0]}","brief":"","caption":""}]}]}`;
   return { system: systemFor(themeKey), user };
 }
 
@@ -311,6 +312,7 @@ export function validatePlan(raw, name, { library = ADVENTURE_LIBRARY, themeKey 
     // English-описания для иллюстраций; checkRussian их не проверяет
     look: strip(p.look).slice(0, 500),
     coverBrief: strip(p.cover_brief).slice(0, 400),
+    blurb: cleanBlurb(p.blurb, name),
     motifs: (Array.isArray(p.motifs) ? p.motifs : []).map(strip).filter(Boolean).slice(0, 3),
     dedication: {
       lead: strip(ded.lead),
@@ -512,6 +514,7 @@ function assemble(input, plan, chapters, meta, library) {
     title: plan.title,
     logline: plan.logline, // для продолжения книги: о чём была первая
     look: plan.look, // одежда и спутники — для бесплатной перерисовки иллюстраций
+    ...(plan.blurb ? { blurb: plan.blurb } : {}), // аннотация на задней обложке
     theme: 'parchment',
     ageGroup, // возрастная группа задаёт оформление (для путешествия: 5–10 — яркие рамки, 11–16 — «Пергамент»)
     // путешествие — жанр от ИИ (море/канат, поиски/карта, дикая природа/лоза), праздник — сам повод;

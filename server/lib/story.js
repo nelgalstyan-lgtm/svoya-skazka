@@ -21,6 +21,23 @@ export function brandMentions(text) {
 // Никаких чужих брендов и персонажей: книга оригинальная и безопасна юридически
 export const ORIGINALITY_RULE = 'Никаких брендов, названий игр, мультфильмов, фильмов и их персонажей (Майнкрафт, Роблокс, Супермен, Эльза, Человек-паук и т.п.). Если ребёнок их любит, передай суть своими словами: «мир из кубиков», «герой в плаще», «снежная королева» — и придумай своих персонажей.';
 
+// Аннотация на задней обложке: о чём книга, без развязки
+export const BLURB_RULE = 'аннотация для задней обложки по-русски: 2–3 предложения (200–400 знаков), как на обороте настоящей книги. С именем героя, о чём история и какая загадка или цель его ждёт; развязку не раскрывай. Без слов «эта книга», «читатель», без восклицательных знаков подряд.';
+
+/** Аннотация от ИИ, прошедшая проверку, или '' (тогда на обложке общий текст о герое). Книгу из-за неё не бракуем. */
+export function cleanBlurb(value, name) {
+  const text = stripTags(value).replace(/\s+/g, ' ');
+  if (text.length < 120 || text.length > 600) return '';
+  // имя может стоять в другом падеже: «Ани», «Алексу» — сверяем по основе
+  const low = String(name || '').toLowerCase().replace(/[^\p{L} -]/gu, '').trim();
+  const stem = /[аяоеиыуюьй]$/.test(low) && low.length > 2 ? low.slice(0, -1) : low;
+  if (stem && !new RegExp(`(?<![а-яё])${stem}`, 'iu').test(text)) return '';
+  if (FOREIGN_SCRIPT.test(text) || cyrillicShare(text) < 0.85) return '';
+  const latin = text.split(/\s+/).map((w) => w.replace(/[^A-Za-z]/g, '')).filter((w) => w.length >= 3 && w.toLowerCase() !== String(name || '').toLowerCase());
+  if (latin.length || brandMentions(text).length) return '';
+  return text;
+}
+
 function buildSystemPrompt(library) {
   const tags = Object.keys(library.scenes);
   return `Ты — опытный детский писатель. Пишешь по-русски настоящую историю с сюжетом, а не пересказ анкеты.
@@ -47,9 +64,10 @@ ${tags.map((tag) => `- ${tag}: ${library.scenes[tag]}`).join('\n')}
 К КАЖДОЙ странице добавь "heroBrief" — описание иллюстрации на английском языке (1–2 предложения): что делает ребёнок в этот момент, кто рядом, окружение, освещение. Сцены на соседних страницах должны заметно различаться по позе, плану и месту. Без описания лица и эмоций — это добавится отдельно.
 "look" — на английском, 1–2 предложения: во что одет ребёнок во всей книге (одежда, цвета, обувь — под тему истории) и как выглядят спутники из анкеты (питомцы, игрушки). Одинаково на всех страницах.
 "coverBrief" — на английском, 1 предложение: сцена для обложки, ребёнок в центре на фоне главного места истории.
+"blurb" — ${BLURB_RULE}
 
 Ответ — строго JSON без пояснений и без markdown:
-{"title": "Название книги", "look": "…", "coverBrief": "…", "pages": [{"text": "текст страницы", "scene": "тег", "heroBrief": "описание иллюстрации по-английски"}]}`;
+{"title": "Название книги", "look": "…", "coverBrief": "…", "blurb": "…", "pages": [{"text": "текст страницы", "scene": "тег", "heroBrief": "описание иллюстрации по-английски"}]}`;
 }
 
 export function buildPrompt(rawInput, library = sceneLibraryFor(normalizeInput(rawInput).kind, rawInput.occasion)) {
@@ -125,7 +143,8 @@ export function parseStory(raw, name, library = sceneLibraryFor('adventure')) {
     if (!p.heroBrief) p.heroBrief = fallbackBrief(p.scene, library);
   });
 
-  return { title, pages, look: stripTags(data.look).slice(0, 500), coverBrief: stripTags(data.coverBrief).slice(0, 400) };
+  const blurb = cleanBlurb(data.blurb, name);
+  return { title, pages, look: stripTags(data.look).slice(0, 500), coverBrief: stripTags(data.coverBrief).slice(0, 400), ...(blurb ? { blurb } : {}) };
 }
 
 let defaultProviders = null;

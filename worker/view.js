@@ -41,7 +41,7 @@ function previewResult(job) {
 function fullResult(job) {
   return job.result.book
     ? { kind: 'book', book: clientBook(job), answers: jobAnswers(job) }
-    : { title: job.result.title, dedication: job.result.dedication || null, pages: job.result.pages, cover: job.result.cover || null, coloring: job.result.coloring || [], audio: job.result.audio || [], song: job.result.song || null, answers: jobAnswers(job) };
+    : { title: job.result.title, dedication: job.result.dedication || null, pages: job.result.pages, cover: job.result.cover || null, blurb: job.result.blurb || null, coloring: job.result.coloring || [], audio: job.result.audio || [], song: job.result.song || null, answers: jobAnswers(job) };
 }
 
 export function jobView(job, now = Date.now()) {
