@@ -59,10 +59,12 @@
   };
   // Фирменное оформление «Героёнок» (по умолчанию у всех книг): светлая бумага, акварельные предметы темы
   // (assets/kit/decor/<набор>/item-N.webp — порядок как на листе владелицы, см. scripts/book_decor.py),
-  // заставка главы vignette.webp. icons — значки шапки, sprig — веточка у номера страницы.
+  // заставка главы vignette.webp. icons — значки шапки, sprig — веточка (у номера страницы, в углах рамки, у подписи).
+  // У приключенческих тем листики ни о чём не говорят — там вместо веточек предметы темы:
+  // corners — углы рамки [лв, пв, лн, пн], folio — по бокам номера страницы, plate — по бокам подписи к иллюстрации.
   var DECOR = {
-    tajny: { icons: [2, 7], sprig: 9 },
-    more: { icons: [2, 8], sprig: 9 },
+    tajny: { icons: [2, 7], sprig: 9, corners: [1, 4, 5, 8], folio: [6, 3], plate: [1, 4] }, // карта, лупа, перо, дневник; часы, сундучок
+    more: { icons: [2, 8], sprig: 9, corners: [6, 7, 3, 1], plate: [6, 5] }, // ракушка, подзорная труба, канат, кораблик; у номера — морская трава
     poxod: { icons: [3, 4], sprig: 10 },
     korolevstvo: { icons: [1, 4], sprig: 9 },
     les: { icons: [1, 3], sprig: 5 },
@@ -75,6 +77,12 @@
   var DECOR_BY_FOOTER = { sea: 'more', treasure: 'tajny', pirates: 'tajny', wild: 'poxod', jungle: 'poxod', kingdom: 'korolevstvo', forest: 'les', underwater: 'podvodnoe', cookies: 'novyj-god', elves: 'novyj-god', birthday: 'den-rozhdeniya' };
   function decorFor(book) { return DECOR_BY_GENRE[book.genre] || DECOR_BY_FOOTER[book.footer] || 'tajny'; }
   function decorItem(n, set) { return KIT + 'decor/' + (set || SET) + '/item-' + n + '.webp'; }
+  // пара украшений по бокам (номера страницы, подписи): свои предметы темы или веточка и её зеркальная копия
+  function decorPair(key, cls) {
+    var cfg = DECOR[SET];
+    if (cfg[key]) return [img(decorItem(cfg[key][0]), 'bk-decor ' + cls, ''), img(decorItem(cfg[key][1]), 'bk-decor ' + cls, '')];
+    return [img(decorItem(cfg.sprig), 'bk-decor bk-mirror ' + cls, ''), img(decorItem(cfg.sprig), 'bk-decor ' + cls, '')];
+  }
 
   // заставка: у главы — по теме книги; у посвящения книги ко дню рождения — торт между веточками
   function vignette(set) {
@@ -155,7 +163,10 @@
     // фирменная рамка страницы: двойная линия по краю и веточки темы в углах (не на обложках, иллюстрациях и раскраске)
     if (FRAME === 'brand' && /bk-(text|ded|finale|song)/.test(kind)) {
       var frame = h('div', 'bk-brand-frame');
-      ['tl', 'tr', 'bl', 'br'].forEach(function (c) { frame.appendChild(img(decorItem(DECOR[SET].sprig), 'bk-decor bk-corner bk-corner-' + c, '')); });
+      var corners = DECOR[SET].corners;
+      ['tl', 'tr', 'bl', 'br'].forEach(function (c, i) {
+        frame.appendChild(corners ? img(decorItem(corners[i]), 'bk-decor bk-corner bk-corner-item bk-corner-' + c, '') : img(decorItem(DECOR[SET].sprig), 'bk-decor bk-corner bk-corner-' + c, ''));
+      });
       page.appendChild(frame);
     }
     wrap.appendChild(page);
@@ -195,9 +206,8 @@
     if (FRAME === 'brand') {
       // номер страницы между двумя веточками темы
       folio = h('div', 'bk-folio bk-folio-brand');
-      folio.appendChild(img(decorItem(DECOR[SET].sprig), 'bk-decor bk-mirror', ''));
-      folio.appendChild(h('span', 'bk-no', ''));
-      folio.appendChild(img(decorItem(DECOR[SET].sprig), 'bk-decor', ''));
+      var fp = decorPair('folio', '');
+      folio.append(fp[0], h('span', 'bk-no', ''), fp[1]);
     } else if (FOOTER === 'birds') {
       folio = h('div', 'bk-folio');
       folio.appendChild(img(KIT + 'bird-l.png', '', ''));
@@ -235,8 +245,9 @@
       rosette.style.top = (block.plateTop - (wood ? 4.4 : FRAME === 'brand' ? 3.4 : 2.2)) + '%';
     }
     if (FRAME === 'brand') {
-      plate.appendChild(img(decorItem(DECOR[SET].sprig), 'bk-decor bk-plate-sprig bk-plate-sprig-l bk-mirror', ''));
-      plate.appendChild(img(decorItem(DECOR[SET].sprig), 'bk-decor bk-plate-sprig bk-plate-sprig-r', ''));
+      var pp = decorPair('plate', 'bk-plate-sprig');
+      pp[0].classList.add('bk-plate-sprig-l'); pp[1].classList.add('bk-plate-sprig-r');
+      plate.append(pp[0], pp[1]);
     }
     var d = h('div', 'bk-plate-div');
     d.append(h('i'), h('b'), h('i'));
@@ -492,6 +503,7 @@
     if (FRAME === 'brand') {
       var cfg = DECOR[SET];
       urls.push(decorItem(cfg.icons[0]), decorItem(cfg.icons[1]), decorItem(cfg.sprig), KIT + 'decor/hare-greeting.webp');
+      [].concat(cfg.corners || [], cfg.folio || [], cfg.plate || []).forEach(function (n) { urls.push(decorItem(n)); });
       if (cfg.compose) cfg.compose.forEach(function (n) { urls.push(decorItem(n)); });
       else urls.push(KIT + 'decor/' + SET + '/vignette.webp');
       if (OCCASION === 'birthday') DECOR['den-rozhdeniya'].compose.forEach(function (n) { urls.push(decorItem(n, 'den-rozhdeniya')); });

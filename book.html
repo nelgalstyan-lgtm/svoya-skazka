@@ -98,7 +98,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   position:absolute; bottom:30px; left:0; right:0; display:flex; justify-content:center; align-items:center; gap:14px;
   font-family:var(--font-display); font-weight:600; font-size:20px; color:#5b4128;
 }
-.pageno img{ height:48px; width:auto; }
+.pageno img{ height:48px; width:auto; max-width:64px; object-fit:contain; }
 .teen .pageno img{ height:38px; }
 
 /* Обложка и финал */
@@ -329,7 +329,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
   // Набор акварельных предметов по теме (как DECOR в js/book-engine.js): sprig — веточка у номера страницы;
   // у дня рождения своей заставки нет — торт между веточками
-  const DECOR = { tajny: { sprig: 9 }, korolevstvo: { sprig: 9 }, 'novyj-god': { sprig: 10 }, 'den-rozhdeniya': { sprig: 9, compose: [9, 1, 10] } };
+  // folio — свои предметы у номера страницы (у приключений листики ни о чём не говорят): часы и сундучок
+  const DECOR = { tajny: { sprig: 9, folio: [6, 3] }, korolevstvo: { sprig: 9 }, 'novyj-god': { sprig: 10 }, 'den-rozhdeniya': { sprig: 9, compose: [9, 1, 10] } };
   const DECOR_BY_THEME = { adventure: 'tajny', fairytale: 'korolevstvo', newyear: 'novyj-god', birthday: 'den-rozhdeniya' };
   let SET = 'tajny';
   const decorSrc = (n, set) => 'assets/kit/decor/' + (set || SET) + '/item-' + n + '.webp';
@@ -344,7 +345,9 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   }
   function pageNumber(n) {
     const box = el('div', 'pageno');
-    box.append(decorImg(decorSrc(DECOR[SET].sprig), 'mirror'), el('span', '', String(n)), decorImg(decorSrc(DECOR[SET].sprig)));
+    const f = DECOR[SET].folio;
+    if (f) box.append(decorImg(decorSrc(f[0])), el('span', '', String(n)), decorImg(decorSrc(f[1])));
+    else box.append(decorImg(decorSrc(DECOR[SET].sprig), 'mirror'), el('span', '', String(n)), decorImg(decorSrc(DECOR[SET].sprig)));
     return box;
   }
 
