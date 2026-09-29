@@ -3,7 +3,7 @@
 Исходники (рисует владелица в ChatGPT по dlya-chatgpt/oformlenie-knig/PROMPT.txt, в git не кладём — большие):
   nabor-<тема>.png     — лист из 8 предметов и 2 веточек на бумаге
   zastavka-<тема>.png  — заставка под название главы
-Результат: assets/kit/decor/<тема>/item-N.webp (N по порядку на листе: слева направо, сверху вниз) и vignette.webp —
+Результат: assets/kit/decor/<тема>/item-N.webp (и крупные item-N-big.webp; N по порядку на листе: слева направо, сверху вниз) и vignette.webp —
 на прозрачном фоне: бумага убирается, чтобы предмет лежал на странице книги как напечатанный.
 
 Запуск: python scripts/book_decor.py "C:/Users/Asus/Desktop/svoya-skazka-primery/dlya-chatgpt/oformlenie-knig" "C:/Users/Asus/Desktop/svoya-skazka-primery/dlya-chatgpt/bokovye-polosy"
@@ -20,6 +20,7 @@ from PIL import Image
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'assets', 'kit', 'decor')
 ITEM_MAX = 240       # px по большей стороне: в книге значок 20–60 px, запас на печать и экраны с высокой плотностью
+ITEM_BIG = 520       # item-N-big.webp: крупный предмет на листе с текстом «Сказки» (до 220 px на странице, запас для печати)
 VIGNETTE_W = 900
 
 
@@ -111,6 +112,7 @@ def main(src):
             bs = boxes(mask)
             for i, b in enumerate(bs, 1):
                 save(crop(rgba, b), os.path.join(folder, f'item-{i}.webp'), max_side=ITEM_MAX)
+                save(crop(rgba, b), os.path.join(folder, f'item-{i}-big.webp'), max_side=ITEM_BIG)
             print(f'{theme}: {len(bs)} предметов')
 
 

@@ -135,6 +135,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 /* короткий текст — по центру листа, длинный — сверху (safe: не уезжает за верхний край) */
 .text-page .story{ display:flex; flex-direction:column; justify-content:safe center; padding-top:70px; }
 .pic-page{ padding:0; background:#1c1a24; }
+/* над текстом — акварельный предмет темы, на каждой странице свой (item-N-big: 1–8 — предметы, 9–10 — веточки) */
+.text-page.has-item .story{ padding-top:22px; }
+.page-item{ flex:none; display:flex; justify-content:center; align-items:flex-end; height:var(--ih, 160px); margin:58px 0 0; }
+.page-item img{ height:100%; width:auto; max-width:60%; object-fit:contain; }
 .pic-page .hero{ position:absolute; inset:0; float:none; width:auto; height:auto; margin:0; border-radius:0; box-shadow:none; }
 .qr-block{ display:flex; align-items:center; gap:18px; margin:26px 110px 0; text-align:left; }
 .qr-code{ width:104px; height:104px; flex:none; padding:8px; background:#fff; border-radius:8px; box-shadow:0 4px 12px rgba(60,40,10,.18); }
@@ -351,9 +355,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     else box.appendChild(decorImg('assets/kit/decor/' + set + '/vignette.webp'));
     return box;
   }
-  function pageNumber(n) {
+  function pageNumber(n, sprigOnly) {
     const box = el('div', 'pageno');
-    const f = (BOY && DECOR[SET].boyFolio) || DECOR[SET].folio; // у королевства розы — героиням, героям кубок и арфа
+    // на листе с крупным предметом у номера — веточки, чтобы предметы не повторялись
+    const f = !sprigOnly && ((BOY && DECOR[SET].boyFolio) || DECOR[SET].folio); // у королевства розы — героиням, героям кубок и арфа
     if (f) box.append(decorImg(decorSrc(f[0])), el('span', '', String(n)), decorImg(decorSrc(f[1])));
     else box.append(decorImg(decorSrc(DECOR[SET].sprig), 'mirror'), el('span', '', String(n)), decorImg(decorSrc(DECOR[SET].sprig)));
     return box;
@@ -513,7 +518,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       const scene = page.scene || 'forest_path';
 
       if (useHero) {
-        s.classList.add('text-page');
+        s.classList.add('text-page', 'has-item');
+        const item = el('div', 'page-item');
+        item.appendChild(decorImg('assets/kit/decor/' + SET + '/item-' + (index % 8 + 1) + '-big.webp'));
+        s.appendChild(item);
         addStory(s, page.text);
       } else if (SCENES) {
         // образец на сайте — с фоновыми сценами; в книге клиента фонов нет
@@ -523,7 +531,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
         s.classList.add('text-page');
         addStory(s, page.text);
       }
-      s.appendChild(pageNumber(index + 1));
+      s.appendChild(pageNumber(index + 1, Boolean(useHero)));
     });
 
     // Финал
@@ -667,9 +675,20 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       // лист только с текстом — крупный шрифт для чтения вслух малышам; подросткам — как раньше
       let size = story.closest('.text-page') && !document.body.classList.contains('teen') ? 26 : 19.5;
       story.style.setProperty('--fs', size + 'px');
-      while (story.scrollHeight > story.clientHeight + 1 && size > 10) {
-        size -= 0.25;
+      // предмет над текстом (160 px) — на каждой странице; если шрифт выходит мельче 21px, предмет уменьшается до 90 px
+      const item = story.parentNode.querySelector('.page-item');
+      const start = size;
+      let ih = 160;
+      for (;;) {
+        if (item) item.style.setProperty('--ih', ih + 'px');
+        size = start;
         story.style.setProperty('--fs', size + 'px');
+        while (story.scrollHeight > story.clientHeight + 1 && size > 10) {
+          size -= 0.25;
+          story.style.setProperty('--fs', size + 'px');
+        }
+        if (!item || size >= 21 || ih <= 90) break;
+        ih -= 14;
       }
     });
     fitBackText();
