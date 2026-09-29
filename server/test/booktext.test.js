@@ -137,13 +137,22 @@ test('правило возраста попадает в промпты «Ск�
 
 test('shortDedication: посвящение «Сказки» по поводу и полу, без выдуманных фактов', async () => {
   const { shortDedication, dedicationFor } = await import('../lib/booktext.js');
-  assert.match(shortDedication({ name: 'Макс', gender: 'Мальчик' }).lead, /^Макс — главному герою этой сказки/);
-  assert.match(shortDedication({ name: 'Аня', gender: 'Девочка', occasion: 'день рождения' }).lead, /имениннице/);
-  assert.match(shortDedication({ name: 'Аня', gender: 'Девочка', occasion: 'Новый год' }).lead, /с Новым годом, наша волшебница/);
+  // лист «Посвящается» — имя в дательном падеже
+  assert.match(shortDedication({ name: 'Макс', gender: 'Мальчик' }).lead, /^Максу — главному герою этой сказки, с любовью\.$/);
+  assert.match(shortDedication({ name: 'Аня', gender: 'Девочка', occasion: 'день рождения' }).lead, /^Ане — имениннице/);
+  assert.equal(shortDedication({ name: 'Аня', gender: 'Девочка', occasion: 'Новый год' }).lead, 'Ане, нашей волшебнице, — с Новым годом!');
   const d = dedicationFor({ name: 'Макс', from: 'мама' }, shortDedication({ name: 'Макс', gender: 'Мальчик', from: 'мама' }));
   assert.equal(d.signature, 'С любовью,\nмама');
-  assert.equal(d.lead, 'Макс — главному герою этой сказки.', 'с подписью «С любовью» не повторяем');
+  assert.equal(d.lead, 'Максу — главному герою этой сказки.', 'с подписью «С любовью» не повторяем');
   assert.equal(d.paragraphs.length, 2);
   const own = dedicationFor({ dedication: 'Наше слово' }, shortDedication({ name: 'Макс' }));
   assert.equal(own.lead, 'Наше слово');
+});
+
+test('имя в дательном падеже: «Посвящается Максу», а не «Макс»', async () => {
+  const { dativeName } = await import('../lib/booktext.js');
+  const cases = [['Макс', false, 'Максу'], ['Тигран', false, 'Тиграну'], ['Милена', true, 'Милене'], ['Никита', false, 'Никите'],
+    ['Настя', true, 'Насте'], ['Илья', false, 'Илье'], ['Мария', true, 'Марии'], ['Андрей', false, 'Андрею'], ['Игорь', false, 'Игорю'],
+    ['Любовь', true, 'Любови'], ['Маша', true, 'Маше'], ['Ника', true, 'Нике'], ['Нико', false, 'Нико'], ['Эстер', true, 'Эстер']];
+  for (const [n, girl, want] of cases) assert.equal(dativeName(n, girl), want, n);
 });

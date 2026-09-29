@@ -17,7 +17,7 @@
 
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
-import { fixDialogue, normalizeChapterBlocks, genitiveName, normalizeGenre, ageGroupFor, styleFor, dedicationFor, ageVoiceRule, occasionRule } from './booktext.js';
+import { fixDialogue, normalizeChapterBlocks, genitiveName, dativeName, normalizeGenre, ageGroupFor, styleFor, dedicationFor, ageVoiceRule, occasionRule } from './booktext.js';
 import { ORIGINALITY_RULE, BLURB_RULE, brandMentions, cleanBlurb } from './story.js';
 
 const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind, holidayKind } = template;
@@ -472,10 +472,11 @@ const CHAPTER_TITLES = {
 function dedicationFallback(c, genreKey) {
   const occ = occasionOf(c);
   if (occ === 'birthday' || occ === 'newyear') genreKey = occ;
-  if (genreKey === 'birthday') return `${c.name} — ${c.girl ? 'имениннице' : 'имениннику'} в день рождения, с любовью.`;
-  if (genreKey === 'newyear' || genreKey === 'newyear_elves') return `${c.name} — с Новым годом, ${c.girl ? 'наша волшебница' : 'наш волшебник'}.`;
-  if (FAIRYTALE_GENRES.has(genreKey)) return `${c.name} — ${c.girl ? 'главной героине' : 'главному герою'} этой волшебной сказки, с любовью.`;
-  return `${c.name} — ${c.girl ? 'самой смелой' : 'самому смелому'} путешественни${c.girl ? 'це' : 'ку'}.`;
+  const name = dativeName(c.name, c.girl); // лист «Посвящается» — «Посвящается Максу — …»
+  if (genreKey === 'birthday') return `${name} — ${c.girl ? 'имениннице' : 'имениннику'} в день рождения, с любовью.`;
+  if (genreKey === 'newyear' || genreKey === 'newyear_elves') return `${name}, ${c.girl ? 'нашей волшебнице' : 'нашему волшебнику'}, — с Новым годом!`;
+  if (FAIRYTALE_GENRES.has(genreKey)) return `${name} — ${c.girl ? 'главной героине' : 'главному герою'} этой волшебной сказки, с любовью.`;
+  return `${name} — ${c.girl ? 'самой смелой' : 'самому смелому'} путешественни${c.girl ? 'це' : 'ку'}.`;
 }
 
 /** Книга целиком из локального шаблона — если не получился даже план. */

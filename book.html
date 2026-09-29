@@ -449,7 +449,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     foot.append(seal, brand, el('div', 'back-age', '0+'));
     back.appendChild(foot);
     // QR на онлайн-версию книги (в ней «Слушать»)
-    const qr = window.SkazkaExtras.qrBlock('book.html', jobId, 'back-qr', 'Читать и слушать');
+    // у образца нет заказа — свой QR из book.backQr { label, url } (как у «Большой истории»)
+    const qr = book.backQr
+      ? window.SkazkaExtras.qrBlock('', null, 'back-qr', book.backQr.label, book.backQr.url)
+      : window.SkazkaExtras.qrBlock('book.html', jobId, 'back-qr', 'Читать и слушать');
     if (qr) { back.classList.add('has-qr'); back.appendChild(qr); }
   }
 
@@ -714,10 +717,12 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     const text = document.querySelector('.back .back-text');
     const foot = document.querySelector('.back .back-foot');
     if (!text || !foot) return;
+    const qr = document.querySelector('.back .back-qr');
+    const limit = function () { return Math.min(foot.getBoundingClientRect().top, qr ? qr.getBoundingClientRect().top : Infinity) - 12; };
     let size = 24;
     text.style.fontSize = '';
-    // масштаб листа (--scale) одинаково влияет на обе рамки, поэтому сравниваем их напрямую
-    while (text.getBoundingClientRect().bottom > foot.getBoundingClientRect().top - 12 && size > 15) {
+    // масштаб листа (--scale) одинаково влияет на все рамки, поэтому сравниваем их напрямую
+    while (text.getBoundingClientRect().bottom > limit() && size > 15) {
       size -= 0.5;
       text.style.fontSize = size + 'px';
     }

@@ -22,6 +22,21 @@ export function genitiveName(name, girl) {
   return n;                                                       // иностранные и несклоняемые имена
 }
 
+/** Имя в дательном падеже (для «Посвящается …»): «Макс» → «Максу», «Милена» → «Милене», «Мария» → «Марии». */
+export function dativeName(name, girl) {
+  const n = String(name || '').trim();
+  if (!n) return n;
+  const female = typeof girl === 'boolean' ? girl : FEMALE_GUESS.test(n);
+  const stem = n.slice(0, -1);
+
+  if (/ия$/i.test(n)) return stem + 'и';                          // Мария → Марии
+  if (/[аяАЯ]$/.test(n)) return stem + 'е';                       // Милена → Милене, Никита → Никите, Настя → Насте
+  if (/[йЙ]$/.test(n)) return stem + 'ю';                         // Андрей → Андрею
+  if (/[ьЬ]$/.test(n)) return female ? stem + 'и' : stem + 'ю';   // Любовь → Любови, Игорь → Игорю
+  if (/[бвгджзклмнпрстфхцчшщ]$/i.test(n)) return female ? n : n + 'у'; // Макс → Максу; Ольгерд → Ольгерду
+  return n;                                                       // иностранные и несклоняемые имена
+}
+
 const letters = (s) => String(s || '').toLowerCase().replace(/[^а-яёa-z0-9]+/g, ' ').trim();
 
 /** Один и тот же текст (или один содержится в другом). */
@@ -132,11 +147,12 @@ export function dedicationFor(input = {}, base = null, date = new Date()) {
  */
 export function shortDedication(input = {}) {
   const c = template.normalizeInput(input);
-  const name = c.name || 'Тебе';
+  // лист называется «Посвящается» — имя в дательном падеже: «Посвящается Максу — главному герою этой сказки»
+  const name = c.name ? dativeName(c.name, c.girl) : 'Тебе';
   const occ = c.kind === 'holiday' ? template.holidayKind(c.occasion) : template.occasionKind(c.occasion);
   const love = clip(input.from, 80) ? '.' : ', с любовью.'; // с подписью «С любовью, …» не повторяем
   const lead = occ === 'birthday' ? `${name} — ${c.girl ? 'имениннице' : 'имениннику'} в день рождения${love}`
-    : occ === 'newyear' ? `${name} — с Новым годом, ${c.girl ? 'наша волшебница' : 'наш волшебник'}.`
+    : occ === 'newyear' ? `${name}, ${c.girl ? 'нашей волшебнице' : 'нашему волшебнику'}, — с Новым годом!`
     : `${name} — ${c.girl ? 'главной героине' : 'главному герою'} этой сказки${love}`;
   return { lead, paragraphs: ['Эта сказка написана специально для тебя. Пусть в ней будет много чудес, смеха и тепла.', 'Возвращайся к ней снова и снова — она всегда будет тебя ждать.'] };
 }
