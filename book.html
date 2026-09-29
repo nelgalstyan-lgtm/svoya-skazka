@@ -87,7 +87,6 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   font-family:var(--font-display); font-weight:700; font-size:3.5em; color:#9a6a33;
   float:left; line-height:.86; margin:.06em .12em 0 0;
 }
-.hero-page .story{ padding-top:60px; }
 .hero{
   float:left; width:318px; height:486px; margin:2px 30px 14px 0; border-radius:8px; overflow:hidden;
   box-shadow:0 14px 30px -14px rgba(60,40,10,.6); shape-outside:margin-box;
@@ -132,6 +131,11 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 .finale h2:first-child{ margin-top:150px; }
 .cover:not(.art) h1{ margin-top:120px; }
 .text-page .story{ padding-top:90px; }
+/* «Сказка» для малышей: иллюстрация — на весь лист, текст — на следующем листе крупным шрифтом */
+/* короткий текст — по центру листа, длинный — сверху (safe: не уезжает за верхний край) */
+.text-page .story{ display:flex; flex-direction:column; justify-content:safe center; padding-top:70px; }
+.pic-page{ padding:0; background:#1c1a24; }
+.pic-page .hero{ position:absolute; inset:0; float:none; width:auto; height:auto; margin:0; border-radius:0; box-shadow:none; }
 .qr-block{ display:flex; align-items:center; gap:18px; margin:26px 110px 0; text-align:left; }
 .qr-code{ width:104px; height:104px; flex:none; padding:8px; background:#fff; border-radius:8px; box-shadow:0 4px 12px rgba(60,40,10,.18); }
 .qr-code svg{ width:100%; height:100%; display:block; }
@@ -493,27 +497,24 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       // сгенерированная иллюстрация с реальным лицом ребёнка — в приоритете; демо-фото по имени — запасной вариант для примеров
       const heroSrc = page.heroImage || demoHeroSrc;
       const useHero = page.hero && heroSrc;
-      const s = sheet(useHero ? 'hero-page' : '');
-      s.setAttribute('data-page', String(index));
-      const scene = page.scene || 'forest_path';
-
       if (useHero) {
-        const story = el('div', 'story');
+        // иллюстрация на весь лист перед текстом (data-pic — для «Перерисовать»)
+        const pic = sheet('pic-page');
+        pic.setAttribute('data-pic', String(index));
         const frame = el('div', 'hero');
         const img = document.createElement('img');
         img.src = heroSrc;
         img.alt = name;
         frame.appendChild(img);
-        story.appendChild(frame);
-        toParagraphs(page.text).forEach(function (para, i) {
-          const p = el('p');
-          if (i === 0) {
-            p.appendChild(el('span', 'dropcap', para.charAt(0)));
-            p.appendChild(document.createTextNode(para.slice(1)));
-          } else { p.textContent = para; }
-          story.appendChild(p);
-        });
-        s.appendChild(story);
+        pic.appendChild(frame);
+      }
+      const s = sheet('');
+      s.setAttribute('data-page', String(index));
+      const scene = page.scene || 'forest_path';
+
+      if (useHero) {
+        s.classList.add('text-page');
+        addStory(s, page.text);
       } else if (SCENES) {
         // образец на сайте — с фоновыми сценами; в книге клиента фонов нет
         s.appendChild(sceneBlock(scene));
@@ -639,9 +640,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       },
       images: function () {
         return Array.prototype.map.call(document.querySelectorAll('.sheet[data-page]'), function (s) {
-          const host = s.querySelector('.hero') || s.querySelector('.scene');
-          return { img: host.querySelector('img'), host: host, index: Number(s.getAttribute('data-page')) };
-        });
+          const i = s.getAttribute('data-page');
+          const host = document.querySelector('.sheet[data-pic="' + i + '"] .hero') || s.querySelector('.scene');
+          return host ? { img: host.querySelector('img'), host: host, index: Number(i) } : null;
+        }).filter(Boolean);
       }
     });
 
@@ -662,7 +664,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   // Подгоняем размер шрифта, чтобы текст целиком помещался на листе (и на экране, и в PDF)
   function fitText() {
     document.querySelectorAll('.story').forEach(function (story) {
-      let size = 19.5;
+      // лист только с текстом — крупный шрифт для чтения вслух малышам; подросткам — как раньше
+      let size = story.closest('.text-page') && !document.body.classList.contains('teen') ? 26 : 19.5;
       story.style.setProperty('--fs', size + 'px');
       while (story.scrollHeight > story.clientHeight + 1 && size > 10) {
         size -= 0.25;
