@@ -139,6 +139,14 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 .text-page.has-item .story{ padding-top:22px; }
 .page-item{ flex:none; display:flex; justify-content:center; align-items:flex-end; height:var(--ih, 160px); margin:58px 0 0; }
 .page-item img{ height:100%; width:auto; max-width:60%; object-fit:contain; }
+/* боковая полоса темы у левого края листа с текстом; в PDF у правых страниц переносится к внешнему краю
+   (mirrorForBinding в js/book-extras.js → .sk-strip-right), чтобы в переплёте не уйти в клей */
+.sk-strip{ position:absolute; top:0; bottom:0; left:0; width:88px; background-position:left top; background-size:88px 100%; background-repeat:no-repeat; z-index:1; }
+.has-strip .story{ padding-left:128px; }
+.has-strip .page-item, .has-strip .pageno{ padding-left:60px; }
+.sk-strip-right .sk-strip{ left:auto; right:0; transform:scaleX(-1); }
+.sk-strip-right .story{ padding-left:68px; padding-right:128px; }
+.sk-strip-right .page-item, .sk-strip-right .pageno{ padding-left:0; padding-right:60px; }
 .pic-page .hero{ position:absolute; inset:0; float:none; width:auto; height:auto; margin:0; border-radius:0; box-shadow:none; }
 .qr-block{ display:flex; align-items:center; gap:18px; margin:26px 110px 0; text-align:left; }
 .qr-code{ width:104px; height:104px; flex:none; padding:8px; background:#fff; border-radius:8px; box-shadow:0 4px 12px rgba(60,40,10,.18); }
@@ -341,7 +349,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   // Набор акварельных предметов по теме (как DECOR в js/book-engine.js): sprig — веточка у номера страницы;
   // у дня рождения своей заставки нет — торт между веточками
   // folio — свои предметы у номера страницы (у приключений листики ни о чём не говорят): часы и сундучок
-  const DECOR = { tajny: { sprig: 9, folio: [6, 3] }, korolevstvo: { sprig: 9, boyFolio: [7, 6] }, 'novyj-god': { sprig: 10 }, 'den-rozhdeniya': { sprig: 9, compose: [9, 1, 10] } };
+  // strip — боковая полоса на листах с текстом (assets/kit/decor/<набор>/strip.webp; у остальных наборов — когда нарисуют)
+  const DECOR = { tajny: { sprig: 9, folio: [6, 3], strip: true }, korolevstvo: { sprig: 9, boyFolio: [7, 6] }, 'novyj-god': { sprig: 10 }, 'den-rozhdeniya': { sprig: 9, compose: [9, 1, 10] } };
   const DECOR_BY_THEME = { adventure: 'tajny', fairytale: 'korolevstvo', newyear: 'novyj-god', birthday: 'den-rozhdeniya' };
   let SET = 'tajny';
   let BOY = false;
@@ -519,6 +528,12 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
       if (useHero) {
         s.classList.add('text-page', 'has-item');
+        if (DECOR[SET].strip) {
+          s.classList.add('has-strip');
+          const strip = el('div', 'sk-strip');
+          strip.style.backgroundImage = 'url("assets/kit/decor/' + SET + '/strip.webp")';
+          s.appendChild(strip);
+        }
         const item = el('div', 'page-item');
         item.appendChild(decorImg('assets/kit/decor/' + SET + '/item-' + (index % 8 + 1) + '-big.webp'));
         s.appendChild(item);

@@ -241,6 +241,8 @@
    */
   function mirrorForBinding(page) {
     var win = page.ownerDocument.defaultView || global; // копия страницы живёт в своём окне
+    // «Сказка» (book.html): полоса и поля меняются местами целиком через CSS-класс
+    if (page.querySelector('.sk-strip')) { page.classList.add('sk-strip-right'); return; }
     var strip = page.querySelector('.bk-strip');
     if (!strip || win.getComputedStyle(strip).display === 'none') return;
     var cs = win.getComputedStyle(page);
