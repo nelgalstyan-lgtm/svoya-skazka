@@ -1,5 +1,7 @@
 // Правила русской типографики и «записок» для готовой книги. Применяются и к новым книгам, и к уже сохранённым.
 
+import template from '../../js/story-template.js';
+
 const FEMALE_GUESS = /[аяАЯ]$/;
 
 /** Имя в родительном падеже: «Артур» → «Артура», «Милена» → «Милены», «Настя» → «Насти». */
@@ -121,6 +123,21 @@ export function dedicationFor(input = {}, base = null, date = new Date()) {
   if (own.length) { d.lead = own[0]; d.paragraphs = own.slice(1); }
   if (from) { d.signature = `С любовью,\n${from}`; d.date = dedicationDate(date); }
   return d;
+}
+
+/**
+ * Посвящение «Сказки», если родители не написали своё (анкета обещает: «тёплые слова напишем мы — от вашего имени»):
+ * одна фраза с именем по поводу книги и два коротких абзаца без выдуманных фактов. Подпись «С любовью, …» и своё
+ * посвящение добавляет dedicationFor.
+ */
+export function shortDedication(input = {}) {
+  const c = template.normalizeInput(input);
+  const name = c.name || 'Тебе';
+  const occ = c.kind === 'holiday' ? template.holidayKind(c.occasion) : template.occasionKind(c.occasion);
+  const lead = occ === 'birthday' ? `${name} — ${c.girl ? 'имениннице' : 'имениннику'} в день рождения, с любовью.`
+    : occ === 'newyear' ? `${name} — с Новым годом, ${c.girl ? 'наша волшебница' : 'наш волшебник'}.`
+    : `${name} — ${c.girl ? 'главной героине' : 'главному герою'} этой сказки, с любовью.`;
+  return { lead, paragraphs: ['Эта сказка написана специально для тебя. Пусть в ней будет много чудес, смеха и тепла.', 'Возвращайся к ней снова и снова — она всегда будет тебя ждать.'] };
 }
 
 /** Возрастная группа по возрасту ребёнка: 0–4, 5–10, 11–16. Возраст не указан — самая массовая, 5–10. */

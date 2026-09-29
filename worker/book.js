@@ -12,7 +12,7 @@
 
 import { generateStory } from '../server/lib/story.js';
 import { writePlan, writeChapter, chapterContext, assembleBigBook, templateBook } from '../server/lib/bigstory.js';
-import { dedicationFor } from '../server/lib/booktext.js';
+import { dedicationFor, shortDedication } from '../server/lib/booktext.js';
 import template from '../js/story-template.js';
 import { createStore } from './store.js';
 import { drawImage } from './art.js';
@@ -166,8 +166,8 @@ async function previewFlow(ctx) {
       result = { book, source: text.template ? 'template' : book.meta?.source || 'ai', provider, model: null };
     } else {
       result = { ...text, preview: true };
-      const dedication = dedicationFor(input); // только если родители подписали книгу или написали своё посвящение
-      if (dedication) result.dedication = dedication;
+      // посвящение есть всегда: своё от родителей или наши тёплые слова (так обещает анкета), с подписью «От кого»
+      result.dedication = dedicationFor(input, shortDedication(input));
       art.scenes.forEach((src, i) => { if (src) result.pages[i].heroImage = src; });
       if (art.cover) result.cover = art.cover;
       if (art.sheet) result.sheet = art.sheet; // нужен для бесплатной перерисовки: фото к тому времени уже удалено

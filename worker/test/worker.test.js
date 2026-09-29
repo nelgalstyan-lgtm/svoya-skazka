@@ -378,12 +378,14 @@ test('медиа из R2: целиком и кусками (Range → 206), чу
   assert.equal((await api(env, '/api/media/alex-audio/ch1.json')).status, 404);
 });
 
-test('посвящение: подпись «С любовью, …» и дата от родителей; своё посвящение заменяет текст; без полей у «Сказки» его нет', async () => {
+test('посвящение: подпись «С любовью, …» и дата от родителей; своё посвящение заменяет текст; без полей у «Сказки» — наши тёплые слова', async () => {
   const env = fakeEnv();
   const ai = stubOpenAI();
   try {
     const plain = await order(env);
-    assert.equal((await status(env, plain)).result.dedication, null);
+    const pd = (await status(env, plain)).result.dedication;
+    assert.ok(pd && pd.lead.length > 5 && pd.paragraphs.length === 2, 'анкета обещает: пустое поле — тёплые слова пишем мы');
+    assert.equal(pd.signature, undefined, 'без «От кого» — без подписи');
 
     const short = await order(env, { from: 'мама и папа', dedication: 'С днём рождения!\n\nМы тебя любим.' });
     const d = (await status(env, short)).result.dedication;
@@ -429,11 +431,13 @@ test('озвучка после оплаты: главы голосом Ерми
     assert.ok(ya.calls.every((c) => c.auth === 'Api-Key ya-key' && c.voice === 'ermil' && c.text.length <= 1500));
     assert.ok(ya.calls.every((c) => c.role === 'good'), '«Сказка» — радостная интонация');
     const s = await status(env, id);
-    assert.equal(s.result.audio.length, 1, 'сказка — одна дорожка');
-    const src = s.result.audio[0].src;
-    assert.match(src, /^\/api\/media\/[a-f0-9-]{36}\/track-1-[a-f0-9]{8}\.mp3$/);
-    const mp3 = await (await api(env, src)).text();
-    assert.equal(mp3, ya.sent.join(''), 'куски склеены по порядку, оборванный кусок повторён');
+    assert.equal(s.result.audio.length, 2, 'сказка — посвящение и вся сказка одной дорожкой');
+    assert.equal(s.result.audio[0].title, 'Посвящение');
+    const src = s.result.audio[1].src;
+    assert.match(src, /^\/api\/media\/[a-f0-9-]{36}\/track-2-[a-f0-9]{8}\.mp3$/);
+    // дорожки озвучиваются параллельно: каждый кусок попал ровно в одну дорожку целиком (A и B одного ответа подряд)
+    const mp3 = (await (await api(env, s.result.audio[0].src)).text()) + (await (await api(env, src)).text());
+    assert.deepEqual(mp3.split(/(?=A\d)/).sort(), [...ya.sent].sort(), 'куски склеены, оборванный кусок повторён');
     assert.equal(ya.calls.length, ya.sent.length + 1);
     assert.equal(env.BUCKET.keys('voice-tmp/').length, 0, 'временные куски удалены');
 
@@ -442,8 +446,9 @@ test('озвучка после оплаты: главы голосом Ерми
     await api(env, `/api/book/${id}/edit`, { method: 'POST', body: { edits: [{ page: 0, text: 'Совсем новый текст первой страницы' }] } });
     assert.ok(ya.calls.length > before);
     const s2 = await status(env, id);
-    assert.notEqual(s2.result.audio[0].src, src);
-    assert.equal(env.BUCKET.keys('media/').length, 1);
+    assert.notEqual(s2.result.audio[1].src, src);
+    assert.equal(s2.result.audio[0].src, s.result.audio[0].src, 'посвящение не менялось — не переозвучиваем');
+    assert.equal(env.BUCKET.keys('media/').length, 2);
 
     // без ключа — никакой озвучки
     const env2 = fakeEnv();
