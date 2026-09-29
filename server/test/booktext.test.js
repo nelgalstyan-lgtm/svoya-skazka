@@ -140,8 +140,9 @@ test('shortDedication: посвящение «Сказки» по поводу �
   assert.match(shortDedication({ name: 'Макс', gender: 'Мальчик' }).lead, /^Макс — главному герою этой сказки/);
   assert.match(shortDedication({ name: 'Аня', gender: 'Девочка', occasion: 'день рождения' }).lead, /имениннице/);
   assert.match(shortDedication({ name: 'Аня', gender: 'Девочка', occasion: 'Новый год' }).lead, /с Новым годом, наша волшебница/);
-  const d = dedicationFor({ name: 'Макс', from: 'мама' }, shortDedication({ name: 'Макс' }));
+  const d = dedicationFor({ name: 'Макс', from: 'мама' }, shortDedication({ name: 'Макс', gender: 'Мальчик', from: 'мама' }));
   assert.equal(d.signature, 'С любовью,\nмама');
+  assert.equal(d.lead, 'Макс — главному герою этой сказки.', 'с подписью «С любовью» не повторяем');
   assert.equal(d.paragraphs.length, 2);
   const own = dedicationFor({ dedication: 'Наше слово' }, shortDedication({ name: 'Макс' }));
   assert.equal(own.lead, 'Наше слово');

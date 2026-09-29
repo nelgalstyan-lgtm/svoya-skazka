@@ -134,9 +134,10 @@ export function shortDedication(input = {}) {
   const c = template.normalizeInput(input);
   const name = c.name || 'Тебе';
   const occ = c.kind === 'holiday' ? template.holidayKind(c.occasion) : template.occasionKind(c.occasion);
-  const lead = occ === 'birthday' ? `${name} — ${c.girl ? 'имениннице' : 'имениннику'} в день рождения, с любовью.`
+  const love = clip(input.from, 80) ? '.' : ', с любовью.'; // с подписью «С любовью, …» не повторяем
+  const lead = occ === 'birthday' ? `${name} — ${c.girl ? 'имениннице' : 'имениннику'} в день рождения${love}`
     : occ === 'newyear' ? `${name} — с Новым годом, ${c.girl ? 'наша волшебница' : 'наш волшебник'}.`
-    : `${name} — ${c.girl ? 'главной героине' : 'главному герою'} этой сказки, с любовью.`;
+    : `${name} — ${c.girl ? 'главной героине' : 'главному герою'} этой сказки${love}`;
   return { lead, paragraphs: ['Эта сказка написана специально для тебя. Пусть в ней будет много чудес, смеха и тепла.', 'Возвращайся к ней снова и снова — она всегда будет тебя ждать.'] };
 }
 
