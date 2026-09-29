@@ -10,6 +10,7 @@ window.SKAZKA_MAX3D_BOOK = {
   "occasion": ""
  },
  "book": {
+  "audio": [{"title": "Макс и чемодан-путешественник", "src": "/api/media/max-audio/skazka.mp3"}],
   "title": "Макс и чемодан-путешественник",
   "cover": "assets/examples/max-3d/cover.webp",
   "backImage": "assets/examples/max-3d/ill-7.webp",
