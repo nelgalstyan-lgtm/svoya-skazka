@@ -11,7 +11,7 @@ window.SKAZKA_MAX3D_BOOK = {
  },
  "book": {
   "dedication": {"title": "Посвящается", "lead": "Макс — главному герою этой сказки.", "paragraphs": ["Эта сказка написана специально для тебя. Пусть в ней будет много чудес, смеха и тепла.", "Возвращайся к ней снова и снова — она всегда будет тебя ждать."], "signature": "С любовью,\nмама", "date": "30.09.2026"},
-  "audio": [{"title": "Макс и чемодан-путешественник", "src": "/api/media/max-audio/skazka.mp3"}],
+  "audio": [{"title": "Посвящение", "src": "/api/media/max-audio/dedication.mp3"}, {"title": "Макс и чемодан-путешественник", "src": "/api/media/max-audio/skazka.mp3"}],
   "title": "Макс и чемодан-путешественник",
   "cover": "assets/examples/max-3d/cover.webp",
   "backImage": "assets/examples/max-3d/ill-7.webp",
