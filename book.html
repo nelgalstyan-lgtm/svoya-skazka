@@ -117,8 +117,9 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 .cover.art{ padding:0; justify-content:flex-start; background:#1c1a24; }
 .cover.art::after{ border-color:rgba(255,240,210,.35); z-index:2; }
 .cover-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-.cover.art::before{ content:""; position:absolute; left:0; right:0; top:0; height:46%; z-index:1; background:linear-gradient(rgba(18,16,30,.74), rgba(18,16,30,.35) 60%, transparent); }
-.cover-shade{ position:absolute; left:0; right:0; bottom:0; height:32%; z-index:1; background:linear-gradient(transparent, rgba(18,16,30,.78)); }
+/* затемнения на всю высоту листа: край слоя посередине обложки html2canvas рисует тёмной линией в PDF */
+.cover.art::before{ content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(rgba(18,16,30,.74), rgba(18,16,30,.35) 27.6%, rgba(18,16,30,0) 46%); }
+.cover-shade{ position:absolute; inset:0; z-index:1; background:linear-gradient(rgba(18,16,30,0) 68%, rgba(18,16,30,.78)); }
 .cover.art .kicker, .cover.art h1, .cover.art .orn, .cover.art .for, .cover.art .brand{ position:relative; z-index:2; }
 .cover.art .kicker{ color:rgba(255,244,222,.85); }
 .cover.art h1{ color:#fff3d6; text-shadow:0 3px 18px rgba(0,0,0,.55); }
@@ -257,6 +258,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
   const params = new URLSearchParams(location.search);
   const root = document.getElementById('book');
+  // фоновые сцены — только у старого образца ?demo=1; у образцов с иллюстрациями (?demo=max3d) их нет
+  const SCENES = params.get('demo') === '1';
 
   function el(tag, className, text) {
     const node = document.createElement(tag);
@@ -404,11 +407,12 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     return { cover: COVER_SCENE[kind] || 'castle_gate', finale: FINALE_SCENE[kind] || 'treasure_room' };
   }
 
-  // Задняя обложка: последняя иллюстрация с ребёнком (или обложка), текст о герое и знак Героёнка
+  // Задняя обложка: book.backImage или последняя иллюстрация с ребёнком (или обложка), текст о герое и знак Героёнка
   function backCover(book, name, girl, jobId) {
     const back = sheet('back');
     let src = book.cover || '';
     book.pages.forEach(function (p) { if (p.heroImage) src = p.heroImage; });
+    if (book.backImage) src = book.backImage;
     if (src) {
       const arch = el('div', 'back-arch');
       const pic = document.createElement('img'); pic.src = src; pic.alt = '';
@@ -457,7 +461,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     cover.appendChild(el('div', 'kicker', 'Персональная книга'));
     cover.appendChild(el('h1', '', book.title));
     cover.appendChild(book.cover ? el('div', 'orn', '✦ ✦ ✦') : vignetteEl());
-    if (!book.cover && params.get('demo')) cover.appendChild(sceneBlock(scenes.cover, 'Обложка'));
+    if (!book.cover && SCENES) cover.appendChild(sceneBlock(scenes.cover, 'Обложка'));
     if (name) {
       const who = el('div', 'for');
       who.appendChild(el('small', '', 'Главный герой'));
@@ -510,7 +514,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
           story.appendChild(p);
         });
         s.appendChild(story);
-      } else if (params.get('demo')) {
+      } else if (SCENES) {
         // образец на сайте — с фоновыми сценами; в книге клиента фонов нет
         s.appendChild(sceneBlock(scene));
         addStory(s, page.text);
@@ -523,11 +527,11 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
     // Финал
     const end = sheet('finale');
-    if (params.get('demo')) end.appendChild(sceneBlock(scenes.finale));
+    if (SCENES) end.appendChild(sceneBlock(scenes.finale));
     end.appendChild(el('h2', '', 'Конец'));
     // Героёнок, хранитель историй, прощается с читателем (прозрачный фон — переживает сборку PDF)
     // (у образца сверху сцена — Героёнку там не хватит места)
-    if (!params.get('demo')) end.appendChild(decorImg('assets/kit/decor/hare-greeting.webp', 'finale-hare'));
+    if (!SCENES) end.appendChild(decorImg('assets/kit/decor/hare-greeting.webp', 'finale-hare'));
     end.appendChild(el('p', '', 'Эта книга написана по вашей анкете — со всеми привычками, друзьями и близкими героя. Пусть она возвращается к вам снова и снова.'));
     const qr = window.SkazkaExtras.qrBlock('book.html', data.jobId);
     if (qr) end.appendChild(qr); else end.appendChild(vignetteEl());
@@ -665,6 +669,21 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
         story.style.setProperty('--fs', size + 'px');
       }
     });
+    fitBackText();
+  }
+
+  // Аннотация на задней обложке (у заказов — до 600 знаков) не должна наезжать на знак Героёнка и QR
+  function fitBackText() {
+    const text = document.querySelector('.back .back-text');
+    const foot = document.querySelector('.back .back-foot');
+    if (!text || !foot) return;
+    let size = 24;
+    text.style.fontSize = '';
+    // масштаб листа (--scale) одинаково влияет на обе рамки, поэтому сравниваем их напрямую
+    while (text.getBoundingClientRect().bottom > foot.getBoundingClientRect().top - 12 && size > 15) {
+      size -= 0.5;
+      text.style.fontSize = size + 'px';
+    }
   }
 
   // Лист целиком помещается в окно — и по ширине, и по высоте
@@ -729,7 +748,14 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
   const saved = params.get('demo') ? null : loadBook();
   const jobId = params.get('job') || (saved && saved.jobId);
-  if (jobId) {
+  if (params.get('demo') === 'max3d') {
+    // образец «Сказки» в 3D: книга Макса (иллюстрации — assets/examples/max-3d)
+    const sm = document.createElement('script');
+    sm.src = 'assets/examples/max-3d/book.js';
+    sm.onload = function () { show(window.SKAZKA_MAX3D_BOOK); };
+    sm.onerror = function () { show(null); };
+    document.body.appendChild(sm);
+  } else if (jobId) {
     loadFromServer(jobId).then(show, function () { show(params.get('demo') ? loadBook() : saved); });
   } else {
     show(loadBook());
