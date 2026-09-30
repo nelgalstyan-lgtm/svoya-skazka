@@ -4,12 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ваша книга — Героёнок</title>
-<script>
-// Образец Алекса остаётся в прежнем оформлении (решение владелицы 30.09): замороженная копия страницы.
-// Адрес ?demo=alex3d (QR на задней обложке образца) продолжает работать.
-if (new URLSearchParams(location.search).get('demo') === 'alex3d') location.replace('book-pro-alex.html' + location.search + location.hash);
-</script>
-<link rel="stylesheet" href="assets/kit/parchment.css">
+<link rel="stylesheet" href="assets/kit/parchment-alex.css">
 <style>
 :root{ --ink:#4A3527; --gold:#C99A4B; --text-light:#FBF3E3; --bk-scale:1; } /* палитра листа Героёнка */
 *{ box-sizing:border-box; }
@@ -54,9 +49,9 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
 
 <main id="book" class="bk-book-view"></main>
 
-<script src="js/book-engine.js"></script>
+<script src="js/book-engine-alex.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="js/book-extras.js"></script>
+<script src="js/book-extras-alex.js"></script>
 <script>
 (function () {
   var params = new URLSearchParams(location.search);
@@ -82,7 +77,6 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       text: window.SkazkaExtras.lockedText({ chapters: result.lockedChapters, images: result.lockedImages, coloring: true, name: name, girl: girl }),
       button: window.SkazkaExtras.payButton({ jobId: jobId, price: result.price, apiBase: API_BASE })
     } : null;
-    if (!jobId && params.get('art') === '3d') book.art = '3d'; // образец оформления в стиле «3D-мультфильм»
     window.SkazkaBook.render(book, root, {
       locked: locked,
       frame: params.get('frame'), footer: params.get('footer'),
@@ -121,7 +115,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   // «Для типографии»: страницы без обложки + обложка одним листом (задняя, корешок, лицевая)
   window.SkazkaExtras.attachPrintKit(document.getElementById('printBtn'), {
     blockSelector: '.bk-page:not(.bk-cover):not(.bk-back)', frontSelector: '.bk-cover', backSelector: '.bk-back',
-    widthMm: 154, heightMm: 235, scaleVar: '--bk-scale', spineColor: '#1c1410', spineFont: "'Lora', Georgia, serif",
+    widthMm: 154, heightMm: 235, scaleVar: '--bk-scale', spineColor: '#1c1410', spineFont: "'Cormorant Garamond', Georgia, serif",
     title: function () { return (window.__bookData || {}).title; },
     fileBase: function () { return window.SkazkaExtras.pdfName((window.__bookData || {}).title).replace(/\.pdf$/, ''); },
     pagesCount: function () { return document.querySelectorAll('.bk-page:not(.bk-cover):not(.bk-back)').length; }

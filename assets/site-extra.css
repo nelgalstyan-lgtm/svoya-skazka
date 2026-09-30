@@ -119,3 +119,9 @@
 .coloring-print{ max-width:640px; margin:26px auto 0; text-align:center; color:var(--text-soft); }
 .coloring-mascot{ width:180px; margin:0 auto 6px; }
 @media (max-width:760px){ .coloring-pairs{ grid-template-columns:1fr; gap:26px; } .coloring-pair{ gap:10px; } .coloring-pair .arrow{ font-size:24px; } }
+/* «Сказка» (образец Макса): лист A4 и тонкий блок, тёмно-синий переплёт как у задней обложки */
+.book3d.is-skazka{ --h:370px; --d:20px; }
+.book3d.is-skazka .book3d-spine{ background:linear-gradient(90deg,#1d1b33,#34305a 45%,#1a1830); }
+.book3d.is-skazka .book3d-back{ background:#1f1d36; }
+.book3d.is-skazka .book3d-spine span{ font-size:10px; }
+@media (max-width:520px){ .book3d.is-skazka{ --h:297px; --d:16px; } }
