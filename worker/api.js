@@ -71,7 +71,16 @@ async function limited(limiter, key) {
   try { return !(await limiter.limit({ key })).success; } catch { return false; }
 }
 
-const clientIp = (request) => request.headers.get('cf-connecting-ip') || 'local';
+/**
+ * Адрес посетителя для лимитов. Сайт открывается через шлюз Яндекса (API Gateway в России: часть российских провайдеров
+ * режет Cloudflare) — тогда Cloudflare видит адрес шлюза, а настоящий шлюз кладёт в x-real-remote-address. Этому заголовку
+ * верим, только если шлюз прислал и наш секрет x-geroenok-proxy (он вписан в спецификацию шлюза и в секрет PROXY_SECRET).
+ */
+export function clientIp(request, env = {}) {
+  const viaProxy = Boolean(env.PROXY_SECRET) && request.headers.get('x-geroenok-proxy') === env.PROXY_SECRET;
+  const real = viaProxy && (request.headers.get('x-real-remote-address') || '').trim();
+  return real || request.headers.get('cf-connecting-ip') || 'local';
+}
 
 // Бесплатные превью в сутки (каждое ≈15 ₽ картинок): с одного браузера — 3; с одного адреса — 10, с запасом,
 // потому что у мобильных операторов один адрес на многих людей. Хозяйка (заголовок x-admin-key) — без лимита.
@@ -86,7 +95,7 @@ async function previewCounters(env, request, device) {
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}:${value}`));
     return [...new Uint8Array(digest)].slice(0, 16).map((b) => b.toString(16).padStart(2, '0')).join('');
   };
-  const keys = { ip: `limits/${day}/ip-${await hash(`ip:${clientIp(request)}`)}` };
+  const keys = { ip: `limits/${day}/ip-${await hash(`ip:${clientIp(request, env)}`)}` };
   if (DEVICE_RE.test(device || '')) keys.device = `limits/${day}/dev-${await hash(`device:${device}`)}`;
   const counts = {};
   await Promise.all(Object.entries(keys).map(async ([kind, key]) => {
@@ -111,7 +120,7 @@ async function generate(request, env, store) {
   if (!order) return fail(400, 'Не получилось прочитать анкету. Попробуйте ещё раз.');
   const { body, photos } = order;
   const big = body.tariff === 'big';
-  const ip = clientIp(request);
+  const ip = clientIp(request, env);
   // большая книга — 7 запросов к ИИ и 10 иллюстраций, поэтому лимит строже и считается отдельно
   if (await limited(big ? env.BIG_LIMITER : env.GEN_LIMITER, ip)) {
     return fail(429, 'Слишком много запросов подряд. Подождите пару минут и попробуйте снова.');
@@ -177,7 +186,7 @@ async function redraw(request, env, store, id) {
   const job = await store.getJob(id);
   if (!job || job.status !== 'completed') return fail(404, 'Книга не найдена');
   if (!job.paid || job.finishing) return fail(402, 'Перерисовка доступна после оплаты книги.');
-  if (await limited(env.EDIT_LIMITER, `${clientIp(request)}:redraw`)) return fail(429, 'Слишком много запросов подряд. Подождите пару минут.');
+  if (await limited(env.EDIT_LIMITER, `${clientIp(request, env)}:redraw`)) return fail(429, 'Слишком много запросов подряд. Подождите пару минут.');
 
   const used = job.redraws || 0;
   if (used >= REDRAW_LIMIT) return fail(403, `Бесплатные перерисовки закончились (${REDRAW_LIMIT} на книгу). Напишите нам — поможем.`);
@@ -217,7 +226,7 @@ async function edit(request, env, store, id) {
   const job = await store.getJob(id);
   if (!job || job.status !== 'completed') return fail(404, 'Книга не найдена');
   if (!job.paid || job.finishing) return fail(402, 'Правка текста доступна после оплаты книги.');
-  if (await limited(env.EDIT_LIMITER, `${clientIp(request)}:edit`)) return fail(429, 'Слишком много запросов подряд. Подождите пару минут.');
+  if (await limited(env.EDIT_LIMITER, `${clientIp(request, env)}:edit`)) return fail(429, 'Слишком много запросов подряд. Подождите пару минут.');
 
   const body = await readJson(request);
   const edits = Array.isArray(body?.edits) ? body.edits.slice(0, 500) : [];
@@ -331,7 +340,7 @@ export async function handleApi(request, env) {
   if (parts[1] === 'health' && method === 'GET') {
     const out = { ok: true, colo: request.cf?.colo || null, providers: describeProviders(), heroIllustrations: Boolean(env.OPENAI_API_KEY || env.GEMINI_API_KEY), guaranteedFallback: true };
     // ?openai=1 — отвечает ли OpenAI на запрос прямо из обработки этого посетителя (из РФ — 403; поэтому книги идут через очередь)
-    if (url.searchParams.get('openai') === '1' && env.OPENAI_API_KEY && !(await limited(env.EDIT_LIMITER, `${clientIp(request)}:health`))) {
+    if (url.searchParams.get('openai') === '1' && env.OPENAI_API_KEY && !(await limited(env.EDIT_LIMITER, `${clientIp(request, env)}:health`))) {
       const r = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } }).catch(() => null);
       out.openai = r ? r.status : 'network error';
       const detail = r && !r.ok ? (await r.text().catch(() => '')).slice(0, 160) : '';

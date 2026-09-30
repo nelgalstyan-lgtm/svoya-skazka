@@ -912,7 +912,8 @@ section.tight{ padding:56px 0; }
     // Фото держим только в памяти вкладки: не кладём в localStorage вместе с answers (незачем разрастать хранилище)
     // и не показываем повторно при чтении сохранённой книги — на сервер они уходят один раз, при заказе.
     const PHOTO_MAX_BYTES = 25 * 1024 * 1024; // перед отправкой фото всё равно уменьшается (см. shrinkPhoto)
-    const PHOTO_SEND_SIDE = 1536; // больше для рисования не нужно, а сервер тратит меньше времени на приём
+    // 1280 px для рисования хватает с запасом; главное — вся анкета должна пройти через шлюз Яндекса (запрос до ~2,5 МБ)
+    const PHOTO_SEND_SIDE = 1280;
     const MAX_PHOTOS = 3;
     const MIN_PHOTO_SIDE = 600; // меньше — черты лица на иллюстрациях получаются «примерными»
     let selectedPhotos = [];
@@ -922,13 +923,13 @@ section.tight{ padding:56px 0; }
       const w = img.naturalWidth;
       const h = img.naturalHeight;
       const scale = Math.min(1, PHOTO_SEND_SIDE / Math.max(w, h));
-      if (scale === 1 && original.length < 2 * 1024 * 1024) return original;
+      if (scale === 1 && original.length < 500 * 1024) return original; // data:URL: ≈370 КБ файла
       try {
         const canvas = document.createElement('canvas');
         canvas.width = Math.round(w * scale);
         canvas.height = Math.round(h * scale);
         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        return canvas.toDataURL('image/jpeg', 0.9);
+        return canvas.toDataURL('image/jpeg', 0.85);
       } catch (e) {
         return original;
       }

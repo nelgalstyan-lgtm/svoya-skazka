@@ -608,3 +608,13 @@ test('книга в 3D получает 3D-оформление рамок, ак
   assert.equal(jobView(job('animated3d')).result.book.art, '3d');
   assert.equal(jobView(job('Акварель')).result.book.art, undefined);
 });
+
+test('адрес посетителя через шлюз Яндекса: x-real-remote-address — только вместе с секретом шлюза', async () => {
+  const { clientIp } = await import('../api.js');
+  const req = (h) => new Request('https://geroenok.online/api/health', { headers: { 'cf-connecting-ip': '178.154.1.1', ...h } });
+  const env = { PROXY_SECRET: 's3cret' };
+  assert.equal(clientIp(req({ 'x-real-remote-address': '93.1.2.3', 'x-geroenok-proxy': 's3cret' }), env), '93.1.2.3');
+  assert.equal(clientIp(req({ 'x-real-remote-address': '93.1.2.3', 'x-geroenok-proxy': 'wrong' }), env), '178.154.1.1');
+  assert.equal(clientIp(req({ 'x-real-remote-address': '93.1.2.3' }), {}), '178.154.1.1');
+  assert.equal(clientIp(req({}), env), '178.154.1.1');
+});

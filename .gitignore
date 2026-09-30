@@ -38,3 +38,4 @@ dist/
 # Секреты для локального wrangler dev
 .dev.vars
 .wrangler/
+yc-key.json
