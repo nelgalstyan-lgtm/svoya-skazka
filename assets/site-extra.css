@@ -125,3 +125,8 @@
 .book3d.is-skazka .book3d-back{ background:#1f1d36; }
 .book3d.is-skazka .book3d-spine span{ font-size:10px; }
 @media (max-width:520px){ .book3d.is-skazka{ --h:297px; --d:16px; } }
+/* подпись над книгой на «Примерах»: какой это тариф и тема — чтобы разница «Сказки» и «Большой истории» была видна сразу */
+.book3d-kind{ margin:0; display:flex; flex-direction:column; align-items:center; gap:2px; text-align:center; font-size:14px; color:var(--text-soft, #6b5a48); }
+.book3d-kind strong{ display:inline-block; margin-bottom:6px; padding:5px 16px; border-radius:999px; font-family:var(--font-display, Georgia, serif); font-size:18px; letter-spacing:.02em; color:#fff8e8; }
+.book3d-kind.is-big strong{ background:#6a4b35; }
+.book3d-kind.is-skazka strong{ background:#34305a; }

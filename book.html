@@ -751,6 +751,9 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     root.appendChild(box);
   }
 
+  updateScale();
+  window.addEventListener('resize', updateScale);
+
   function show(data) {
     if (!data) {
       showEmpty();
