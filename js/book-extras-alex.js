@@ -169,8 +169,8 @@
   // ---------------------------------------------------------------- PDF-файл книги
 
   var PDF_LIBS = [
-    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+    '/assets/vendor/html2canvas.min.js',
+    '/assets/vendor/jspdf.umd.min.js'
   ];
 
   function loadScript(src) {
