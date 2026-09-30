@@ -130,3 +130,4 @@
 .book3d-kind strong{ display:inline-block; margin-bottom:6px; padding:5px 16px; border-radius:999px; font-family:var(--font-display, Georgia, serif); font-size:18px; letter-spacing:.02em; color:#fff8e8; }
 .book3d-kind.is-big strong{ background:#6a4b35; }
 .book3d-kind.is-skazka strong{ background:#34305a; }
+.book3d-note{ max-width:300px; margin:10px 0 0; font-size:13px; line-height:1.45; color:var(--text-soft, #6b5a48); text-align:center; }
