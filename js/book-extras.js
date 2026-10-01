@@ -461,12 +461,21 @@
 
   // ---------------------------------------------------------------- сертификат героя
 
-  function formatDate(d) {
-    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  function formatDate(d, lang) {
+    return d.toLocaleDateString(lang === 'en' ? 'en-US' : 'ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   /** Текст сертификата «Герой книги» — оформление рисует страница. */
-  function certificate(name, title, girl) {
+  function certificate(name, title, girl, lang) {
+    if (lang === 'en') {
+      return {
+        kicker: 'Certificate',
+        title: 'Hero of the Book',
+        name: name,
+        text: 'This certifies that ' + name + ' is the ' + (girl ? 'heroine' : 'hero') + ' of the book “' + title + '” and has bravely passed all of its trials, showing courage, kindness and quick wits.',
+        date: formatDate(new Date(), 'en')
+      };
+    }
     return {
       kicker: 'Сертификат',
       title: girl ? 'Героиня книги' : 'Герой книги',

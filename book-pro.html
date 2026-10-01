@@ -87,11 +87,12 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       locked: locked,
       frame: params.get('frame'), footer: params.get('footer'),
       onlyGenerated: Boolean(jobId), // заказ клиента: фоновые сцены без героя не показываем
-      qr: window.SkazkaExtras.qrBlock('book-pro.html', jobId),
+      qr: book.onlineUrl ? window.SkazkaExtras.qrBlock('', null, null, book.lang === 'en' ? 'Scan with your phone camera to read and listen to the book online' : null, book.onlineUrl)
+        : window.SkazkaExtras.qrBlock('book-pro.html', jobId),
       // у образца — свой QR (аудиокнига на сайте), у заказа — страница книги
       backQr: book.backQr ? window.SkazkaExtras.qrBlock('', null, 'bk-back-qr', book.backQr.label, book.backQr.url)
-        : window.SkazkaExtras.qrBlock('book-pro.html', jobId, 'bk-back-qr', 'Читать и слушать'),
-      certificate: name ? window.SkazkaExtras.certificate(name, book.title, girl) : null
+        : window.SkazkaExtras.qrBlock('book-pro.html', jobId, 'bk-back-qr', book.lang === 'en' ? 'Read & listen' : 'Читать и слушать'),
+      certificate: name ? window.SkazkaExtras.certificate(name, book.title, girl, book.lang) : null
     }).then(function (res) {
       document.title = book.title + ' — Героёнок';
       document.getElementById('count').textContent = res.pages + ' стр.';
@@ -233,6 +234,12 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     s3.src = 'assets/examples/alex-3d/book.js';
     s3.onload = function () { start(window.SKAZKA_ALEX3D_BOOK); };
     document.body.appendChild(s3);
+  } else if (/^[a-z0-9-]+$/.test(params.get('local') || '')) {
+    // индивидуальный заказ, собранный вручную (данные только на компьютере, assets/kit/<имя>/ не в git): ?local=amelia
+    var sl = document.createElement('script');
+    sl.src = 'assets/kit/' + params.get('local') + '/book.js';
+    sl.onload = function () { start(window.SKAZKA_LOCAL_BOOK); };
+    document.body.appendChild(sl);
   } else if (params.get('demo') === 'alex') {
     // локальный тест на образце: данные лежат только на компьютере автора
     var s = document.createElement('script');

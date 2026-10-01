@@ -163,6 +163,7 @@
 
 /* ---------- вставки ---------- */
 .bk-card{
+  white-space:pre-line; /* надпись в несколько строк (лента-приглашение у «Амилии») */
   margin:10px 4px 24px; padding:20px 24px 18px; text-align:center; position:relative;
   background:linear-gradient(#f3e3b2,#ebd59c); border:1.5px solid #c1a05a; border-radius:4px;
   box-shadow:0 8px 18px -8px rgba(80,55,20,.5); font:italic 700 25px/1.4 'Literata',serif; color:#4a3220;
@@ -628,8 +629,10 @@
 .bk-f-brand .bk-song-note{ bottom:44px; }
 
 /* рамка страницы в фирменном оформлении: двойная линия (коричневая + золотистая) и веточки темы в углах */
-.bk-brand-frame{ position:absolute; inset:22px; border:1.5px solid rgba(125,91,52,.75); pointer-events:none; z-index:0;
-  box-shadow:inset 0 0 0 4px rgba(248,243,230,.0), inset 0 0 0 5px rgba(201,168,106,.8); }
+.bk-brand-frame{ position:absolute; inset:22px; border:1.5px solid rgba(125,91,52,.75); pointer-events:none; z-index:0; }
+/* вторая (золотистая) линия — отдельной рамкой, а не inset-тенью: html2canvas заливал тенью всю страницу, и в PDF
+   «Большой истории» текст стоял на тёмном прямоугольнике (найдено 01.10) */
+.bk-brand-frame::after{ content:""; position:absolute; inset:4px; border:1px solid rgba(201,168,106,.8); pointer-events:none; }
 .bk-corner{ position:absolute; width:78px; height:auto; }
 .bk-teen .bk-corner{ width:62px; }
 .bk-corner-tl{ left:-14px; top:-16px; transform:scaleX(-1) rotate(-12deg); }

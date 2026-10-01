@@ -39,3 +39,4 @@ dist/
 .dev.vars
 .wrangler/
 yc-key.json
+assets/kit/amelia/

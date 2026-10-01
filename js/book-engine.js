@@ -29,6 +29,10 @@
   var INITIALS = { lion: { w: 100, h: 118 }, arch: { w: 77, h: 159 }, disc: { w: 108, h: 105 } };
 
   var NBSP = ' ';
+  // Язык книги: book.lang === 'en' — английские надписи движка (первые заказы из США, 01.10); по умолчанию русский
+  var LANG = 'ru';
+  function t(ru, en) { return LANG === 'en' ? en : ru; }
+  function quoted(text) { return t('«', '“') + String(text).replace(/^[«“"]|[»”"]$/g, '') + t('»', '”'); }
   // Тире не должно оказываться в начале строки посреди реплики: «слово — слово» склеиваем неразрывным пробелом перед тире;
   // а тире в начале реплики — с первым словом («— Привет»)
   function typo(text) {
@@ -186,7 +190,7 @@
 
     if (opener) {
       var head = h('div', 'bk-opener-head');
-      head.appendChild(h('div', 'bk-chapter-no', 'Глава ' + (ROMAN[chapter.n] || chapter.n)));
+      head.appendChild(h('div', 'bk-chapter-no', t('Глава ', 'Chapter ') + (ROMAN[chapter.n] || chapter.n)));
       head.appendChild(divider());
       head.appendChild(h('div', 'bk-chapter-title', chapter.title));
       page.appendChild(head);
@@ -272,17 +276,17 @@
     var src = book.cover || (first ? imageSrc(first) : null);
     if (src) page.appendChild(img(src, 'bk-cover-img', book.title));
     var head = h('div', 'bk-cover-head');
-    head.appendChild(h('div', 'bk-cover-kicker', 'Персональная книга'));
+    head.appendChild(h('div', 'bk-cover-kicker', t('Персональная книга', 'A personalized book')));
     head.appendChild(h('div', 'bk-cover-title', book.title));
     page.appendChild(head);
     var name = book.meta && book.meta.heroName;
     if (name) {
       var who = h('div', 'bk-cover-hero');
-      who.appendChild(h('small', '', 'Главный герой'));
+      who.appendChild(h('small', '', t('Главный герой', 'Starring')));
       who.appendChild(document.createTextNode(name));
       page.appendChild(who);
     }
-    page.appendChild(h('div', 'bk-cover-brand', 'Героёнок'));
+    page.appendChild(h('div', 'bk-cover-brand', t('Героёнок', 'Geroenok')));
     return { page: page, folio: null };
   }
 
@@ -310,7 +314,7 @@
 
   function dedicationSheet(root, d) {
     var page = newSheet(root, 'bk-ded');
-    page.appendChild(h('div', 'bk-ded-title', d.title || 'Посвящается'));
+    page.appendChild(h('div', 'bk-ded-title', d.title || t('Посвящается', 'Dedicated to')));
     page.appendChild(FRAME === 'brand' && OCCASION === 'birthday' ? vignette('den-rozhdeniya') : divider());
     if (d.lead) page.appendChild(h('div', 'bk-ded-lead', d.lead));
     var body = h('div', 'bk-ded-body');
@@ -328,13 +332,13 @@
   // Последние страницы: «Конец» (с QR-кодом на онлайн-версию), сертификат героя и раскраска
   function finaleSheet(root, opts) {
     var page = newSheet(root, 'bk-finale');
-    page.appendChild(h('div', 'bk-finale-title', 'Конец'));
+    page.appendChild(h('div', 'bk-finale-title', t('Конец', 'The End')));
     // Героёнок, хранитель историй, прощается с читателем
     if (FRAME === 'brand') page.appendChild(img(KIT + 'decor/hare-greeting.webp', 'bk-finale-hare', ''));
     else page.appendChild(divider());
-    page.appendChild(h('div', 'bk-finale-text', 'Эта книга написана специально для своего героя — с привычками, друзьями и близкими из анкеты. Пусть она возвращается к вам снова и снова.'));
+    page.appendChild(h('div', 'bk-finale-text', t('Эта книга написана специально для своего героя — с привычками, друзьями и близкими из анкеты. Пусть она возвращается к вам снова и снова.', 'This book was written especially for its hero — with their own habits, friends and family. May you come back to it again and again.')));
     if (opts && opts.qr) { opts.qr.classList.add('bk-qr'); page.appendChild(opts.qr); }
-    page.appendChild(h('div', 'bk-finale-brand', 'Героёнок'));
+    page.appendChild(h('div', 'bk-finale-brand', t('Героёнок', 'Geroenok')));
     return { page: page, folio: null };
   }
 
@@ -355,14 +359,14 @@
     page.appendChild(h('div', 'bk-cert-name', c.name));
     page.appendChild(h('div', 'bk-cert-text', c.text));
     var foot = h('div', 'bk-cert-foot');
-    var d = h('div', '', c.date); d.appendChild(h('b', '', 'дата'));
+    var d = h('div', '', c.date); d.appendChild(h('b', '', t('дата', 'date')));
     // подпись: печать с Героёнком (PNG с прозрачностью — переживает сборку PDF) и росчерк «Героёнок»
     var sg = h('div', 'bk-cert-sign');
     var seal = document.createElement('img');
-    seal.className = 'bk-cert-seal'; seal.src = 'assets/brand/logo-mark-alpha.png'; seal.alt = 'Печать Героёнка';
+    seal.className = 'bk-cert-seal'; seal.src = 'assets/brand/logo-mark-alpha.png'; seal.alt = t('Печать Героёнка', 'Geroenok seal');
     var hand = h('div', 'bk-cert-hand');
-    hand.appendChild(h('span', 'bk-cert-signature', 'Героёнок'));
-    hand.appendChild(h('b', '', 'хранитель историй'));
+    hand.appendChild(h('span', 'bk-cert-signature', t('Героёнок', 'Geroenok')));
+    hand.appendChild(h('b', '', t('хранитель историй', 'keeper of stories')));
     sg.append(seal, hand);
     foot.append(d, sg);
     page.appendChild(foot);
@@ -373,6 +377,7 @@
   function blurbFor(book) {
     if (book.blurb) return book.blurb;
     var name = book.meta && book.meta.heroName;
+    if (LANG === 'en') return name ? 'The hero of this book is ' + name + '. Not a made-up character, but a real child: drawn from a photo on the cover and on every illustration, in a story written just for ' + (book.meta.heroGirl ? 'her' : 'him') + '.' : 'This book was written for one single reader. Its hero is a real child, drawn from a photo on the cover and on every illustration.';
     if (!name) return 'Эта книга написана для одного-единственного читателя. Её герой — настоящий ребёнок: он нарисован по фото на обложке и на каждой иллюстрации.';
     var g = book.meta.heroGirl;
     return (g ? 'Главная героиня' : 'Главный герой') + ' этой книги — ' + name + '. Не выдуманный персонаж, а настоящий ребёнок: ' + (g ? 'она нарисована' : 'он нарисован')
@@ -407,7 +412,7 @@
     var foot = h('div', 'bk-back-foot');
     var seal = document.createElement('img');
     seal.className = 'bk-back-seal'; seal.src = 'assets/brand/logo-mark-alpha.png'; seal.alt = '';
-    var brand = h('div', 'bk-back-brand', 'Героёнок');
+    var brand = h('div', 'bk-back-brand', t('Героёнок', 'Geroenok'));
     brand.appendChild(h('small', '', 'geroenok.online'));
     foot.append(seal, brand);
     foot.appendChild(h('div', 'bk-back-age', '0+')); // возрастной знак: книга подходит любому возрасту
@@ -420,18 +425,18 @@
   // Песня по книге: название и слова; послушать — кнопкой «Песня» в онлайн-версии (QR на задней обложке)
   function songSheet(root, song) {
     var page = newSheet(root, 'bk-song');
-    page.appendChild(h('div', 'bk-song-kicker', 'Песня из книги'));
-    page.appendChild(h('div', 'bk-song-title', '«' + song.title + '»'));
+    page.appendChild(h('div', 'bk-song-kicker', t('Песня из книги', 'The song from the book')));
+    page.appendChild(h('div', 'bk-song-title', quoted(song.title)));
     page.appendChild(divider());
     page.appendChild(global.SkazkaExtras.songLyrics(song));
-    page.appendChild(h('div', 'bk-song-note', 'Послушать песню — в онлайн-версии книги'));
+    page.appendChild(h('div', 'bk-song-note', t('Послушать песню — в онлайн-версии книги', 'Listen to the song in the online version of the book')));
     return { page: page, folio: null };
   }
 
   function coloringSheet(root, src, first) {
     var page = newSheet(root, 'bk-coloring');
-    page.appendChild(h('div', 'bk-coloring-title', first ? 'Раскрась свою книгу' : 'Раскраска'));
-    page.appendChild(img(src, 'bk-coloring-img', 'Раскраска'));
+    page.appendChild(h('div', 'bk-coloring-title', first ? t('Раскрась свою книгу', 'Color your book') : t('Раскраска', 'Coloring page')));
+    page.appendChild(img(src, 'bk-coloring-img', t('Раскраска', 'Coloring page')));
     return { page: page, folio: null };
   }
 
@@ -443,13 +448,13 @@
       case 'date':
         return h('p', 'bk-date', block.text);
       case 'card':
-        return h('div', 'bk-card', '«' + block.text.replace(/^«|»$/g, '') + '»');
+        return h('div', 'bk-card', quoted(block.text));
       case 'scrap':
         return h('div', 'bk-scrap', block.text);
       case 'note':
         node = h('div', 'bk-note');
-        node.appendChild(h('div', 'bk-note-lbl', block.label || 'Из записей'));
-        node.appendChild(h('div', '', '«' + block.text.replace(/^«|»$/g, '') + '»'));
+        node.appendChild(h('div', 'bk-note-lbl', block.label || t('Из записей', 'From the notes')));
+        node.appendChild(h('div', '', quoted(block.text)));
         return node;
       case 'search':
         node = h('div', 'bk-search');
@@ -528,6 +533,7 @@
   /** Раскладывает книгу по страницам внутри root. Возвращает { pages, sheets }. */
   function render(book, root, opts) {
     // фирменное оформление у всех книг; прежние рамки — только если их явно просят (?frame=… — для сравнения)
+    LANG = book.lang === 'en' ? 'en' : 'ru';
     FRAME = (opts && opts.frame) || 'brand';
     FOOTER = FRAME === 'brand' ? 'brand' : (opts && opts.footer) || book.footer || (FRAME === 'vine' ? 'birds' : 'sea');
     SET = decorFor(book);
