@@ -9,6 +9,11 @@ const IDENTITY_BLOCK = (eyes, count = 1) => `Preserve the child's exact identity
 // Лист персонажа идёт последним изображением в запросе: по нему держим одинаковыми одежду, причёску и спутников во всей книге
 const SHEET_BLOCK = 'The last attached image is the character reference sheet for this book: draw the child with exactly the same outfit, colors, hairstyle and proportions as on that sheet, and draw any companion (pet, toy, friend) shown there exactly the same way. The face must still match the reference photo first of all.';
 
+// Уроки ручной книги «Амилия» (01.10): модель сама добавляла панамки, а младших детей рисовала одного роста с малышами
+// и с «младенческими» лицами. Одежда меняется только по сюжету (пижама, зимняя куртка) — так было и у Макса.
+const OUTFIT_BLOCK = 'Outfit: keep exactly the same clothes, shoes and hairstyle as described for the whole book in every illustration; do not add hats, caps, sun hats, glasses, bags, jewelry or any other accessories that are not part of that outfit — change clothes only if the scene description explicitly requires it (pajamas at bedtime, a warm coat in the snow, a swimsuit at the sea).';
+const PEOPLE_AGE_BLOCK = 'Other people, if any appear: draw each one with the height, body proportions and face of their real age — a 4-year-old is a preschooler, clearly taller than a 2-year-old toddler and not a baby; younger children are always smaller than older ones; adults are adults. Everyone, adults too, is drawn in exactly the same stylized art style as the child, never photorealistic.';
+
 // Эмоция следует за сценой: на восьми-десяти страницах одно и то же «сосредоточенное» лицо выглядит мёртво
 const EMOTION_BLOCK = 'Facial expression: take it from this exact moment of the story, not from the reference photo — the photo only defines who the child is. Depending on the scene it can be quiet curiosity, calm focus, surprise, wonder, a small smile or open joy; bright engaged eyes.';
 
@@ -52,6 +57,8 @@ export function buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount = 1,
     kind === 'sheet' ? 'Facial expression: a friendly open smile, bright engaged eyes.' : EMOTION_BLOCK,
     kind === 'sheet' ? '' : scene,
     lookLine(look),
+    kind === 'sheet' ? '' : OUTFIT_BLOCK,
+    kind === 'sheet' ? '' : PEOPLE_AGE_BLOCK,
     `Art style and rendering technique: ${STYLE_TECHNIQUE[styleKey]}.`,
     composition,
     AVOID_BLOCK
@@ -60,7 +67,9 @@ export function buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount = 1,
 
 /** Раскраска из готовой иллюстрации: тот же рисунок, только чистый контур для печати. */
 export function buildColoringPrompt() {
-  return 'Turn the attached children’s book illustration into a clean black-and-white coloring page: keep the same composition, the same child and all key objects, redraw everything as clear, closed, smooth black outlines of even medium thickness on a pure white background. No shading, no gray fills, no color, no hatching, no text. Simplify tiny background details so that a child of 5–10 can color it with pencils.';
+  // «Амилия» (01.10): с общим описанием семьи модель дорисовала в раскраску родителей и аиста с узелком;
+  // «Макс» (29.09): без явной просьбы менялись принты на одежде. Поэтому — строго обвести то, что есть.
+  return 'Turn the attached children’s book illustration into a clean black-and-white coloring page by tracing THIS exact picture: keep the same composition and only the characters, animals and objects that are already in it — do NOT add any new people, animals or objects, and do not put anything new into anyone’s hands or beak. Keep every person recognizable exactly as in the illustration: the same faces, hairstyles, heights and proportions, and the same clothes with the same prints and patterns; do not redraw them in a different cartoon style. Redraw everything as clear, closed, smooth black outlines of even medium thickness on a pure white background. No shading, no gray fills, no color, no hatching, no text. Simplify tiny background details so that a child of 5–10 can color it with pencils.';
 }
 
 export const MAX_PHOTOS = 3;

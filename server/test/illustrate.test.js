@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildHeroPrompt, pickStyleKey, imageRequest } from '../lib/illustrate.js';
+import { buildHeroPrompt, buildColoringPrompt, pickStyleKey, imageRequest } from '../lib/illustrate.js';
 
 // Промпты иллюстраций. Само рисование (OpenAI, R2, шаги Workflow) проверяется в worker/test/worker.test.js.
 
@@ -54,4 +54,15 @@ test('imageRequest: фото + лист персонажа; без фото — 
   const redraw = imageRequest({ sheet, kind: 'scene', brief: 'x' });
   assert.ok(!/reference photo/.test(redraw.prompt), 'без фото лицо держит лист персонажа');
   assert.ok(/coloring page/.test(imageRequest({ kind: 'coloring', source: sheet }).prompt));
+});
+
+test('уроки «Амилии»: одежда без лишних аксессуаров, возраст других людей, раскраска без новых персонажей', () => {
+  const scene = buildHeroPrompt({ styleLabel: '3D', brief: 'The girl walks on a bridge with her 4-year-old cousin.' });
+  assert.match(scene, /do not add hats/);
+  assert.match(scene, /real age/);
+  const sheet = buildHeroPrompt({ styleLabel: '3D', kind: 'sheet' });
+  assert.doesNotMatch(sheet, /do not add hats/, 'лист персонажа — без правил сцен');
+  const coloring = buildColoringPrompt();
+  assert.match(coloring, /do NOT add any new people, animals or objects/);
+  assert.match(coloring, /same faces, hairstyles/);
 });
