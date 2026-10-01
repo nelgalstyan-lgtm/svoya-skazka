@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { handleApi, PREVIEW_LIMITS } from '../api.js';
-import { runBook } from '../book.js';
+import { runBook, spreadPick } from '../book.js';
 import { jsonStringField } from '../bytes.js';
 import { queueHandler } from '../queue.js';
 import { splitText, voiceTracks } from '../voice.js';
@@ -230,7 +230,7 @@ test('оплата: дорисовываются остальные страни
     assert.ok(pages.every((p) => /^\/api\/img\//.test(p.heroImage)), 'все страницы нарисованы');
     // новый лист персонажа не рисуем: дорисовка идёт по готовому
     assert.equal(ai.calls.filter((c) => c.kind === 'sheet').length, 1);
-    assert.equal(s.result.coloring.length, Math.min(6, pages.length));
+    assert.equal(s.result.coloring.length, Math.min(3, pages.length));
     assert.equal(env.BUCKET.keys('photos/').length, 0);
     // повторная оплата ничего не запускает
     await api(env, `/api/book/${id}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } });
@@ -617,4 +617,10 @@ test('адрес посетителя через шлюз Яндекса: x-real
   assert.equal(clientIp(req({ 'x-real-remote-address': '93.1.2.3', 'x-geroenok-proxy': 'wrong' }), env), '178.154.1.1');
   assert.equal(clientIp(req({ 'x-real-remote-address': '93.1.2.3' }), {}), '178.154.1.1');
   assert.equal(clientIp(req({}), env), '178.154.1.1');
+});
+
+test('раскраска — 3 страницы из начала, середины и конца книги', () => {
+  assert.deepEqual(spreadPick([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 3), [1, 6, 10]);
+  assert.deepEqual(spreadPick([1, 2, 3, 4, 5, 6, 7, 8], 3), [1, 5, 8]);
+  assert.deepEqual(spreadPick([1, 2], 3), [1, 2]);
 });

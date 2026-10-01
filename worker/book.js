@@ -26,7 +26,14 @@ const TEXT_STEP = { retries: { limit: 1, delay: '10 seconds', backoff: 'constant
 const IMAGE_STEP = { retries: { limit: 1, delay: '10 seconds', backoff: 'constant' }, timeout: '15 minutes' };
 const QUICK_STEP = { retries: { limit: 3, delay: '5 seconds', backoff: 'exponential' }, timeout: '1 minute' };
 const CONCURRENCY = 3;
-const MAX_COLORING = 6;
+const MAX_COLORING = 3; // решение владелицы 01.10: раскраска — 3 страницы (сайт обещает ровно 3)
+
+/** n элементов, равномерно разнесённых по списку (первый и последний — всегда), без повторов. */
+export function spreadPick(items, n) {
+  if (items.length <= n) return items.slice();
+  if (n === 1) return [items[0]];
+  return Array.from({ length: n }, (_, i) => items[Math.round(i * (items.length - 1) / (n - 1))]);
+}
 
 export async function runBook(env, { id, mode }, step, { log = console.warn } = {}) {
   const store = createStore(env.BUCKET);
@@ -86,10 +93,10 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, only = null, she
   };
 }
 
-/** Раскраска: контурные версии готовых иллюстраций (не больше MAX_COLORING). */
+/** Раскраска: контурные версии готовых иллюстраций — MAX_COLORING штук из начала, середины и конца книги. */
 async function drawColoring(ctx, sources) {
   const { env, store, id, step, log, progress } = ctx;
-  const list = sources.filter(Boolean).slice(0, MAX_COLORING);
+  const list = spreadPick(sources.filter(Boolean), MAX_COLORING);
   const out = [];
   for (let k = 0; k < list.length; k += CONCURRENCY) {
     const batch = list.slice(k, k + CONCURRENCY);
