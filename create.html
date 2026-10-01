@@ -912,27 +912,41 @@ section.tight{ padding:56px 0; }
     // Фото держим только в памяти вкладки: не кладём в localStorage вместе с answers (незачем разрастать хранилище)
     // и не показываем повторно при чтении сохранённой книги — на сервер они уходят один раз, при заказе.
     const PHOTO_MAX_BYTES = 25 * 1024 * 1024; // перед отправкой фото всё равно уменьшается (см. shrinkPhoto)
-    // 1280 px для рисования хватает с запасом; главное — вся анкета должна пройти через шлюз Яндекса (запрос до ~2,5 МБ)
+    // 1280 px для рисования хватает с запасом; главное — вся анкета должна пройти через шлюз Яндекса (запрос до 3,5 МБ)
     const PHOTO_SEND_SIDE = 1280;
+    // Потолок одного фото после сжатия: даже 6 фото (ребёнок + родные) — не больше ≈2,7 МБ
+    const PHOTO_SEND_BYTES = 450 * 1024;
     const MAX_PHOTOS = 3;
     const MIN_PHOTO_SIDE = 600; // меньше — черты лица на иллюстрациях получаются «примерными»
     let selectedPhotos = [];
 
-    // Фото с телефона весит 3–10 МБ: уменьшаем до PHOTO_SEND_SIDE по длинной стороне (JPEG). Маленькое отправляем как есть.
+    // Сколько байт займёт файл из data:URL (base64 — 4 знака на 3 байта)
+    function dataUrlBytes(src) {
+      return Math.round((src.length - src.indexOf(',') - 1) * 3 / 4);
+    }
+
+    // Фото с телефона весит 3–10 МБ: уменьшаем до PHOTO_SEND_SIDE по длинной стороне (JPEG) и, если файл всё ещё больше
+    // PHOTO_SEND_BYTES (очень детальный снимок), сначала снижаем качество, потом размер. Маленькое отправляем как есть.
     function shrinkPhoto(img, original) {
       const w = img.naturalWidth;
       const h = img.naturalHeight;
-      const scale = Math.min(1, PHOTO_SEND_SIDE / Math.max(w, h));
-      if (scale === 1 && original.length < 500 * 1024) return original; // data:URL: ≈370 КБ файла
+      if (Math.max(w, h) <= PHOTO_SEND_SIDE && dataUrlBytes(original) <= PHOTO_SEND_BYTES) return original;
+      const steps = [[PHOTO_SEND_SIDE, 0.85], [PHOTO_SEND_SIDE, 0.75], [1024, 0.75], [1024, 0.65], [800, 0.6]];
+      let out = original;
       try {
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(w * scale);
-        canvas.height = Math.round(h * scale);
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        return canvas.toDataURL('image/jpeg', 0.85);
+        for (const [side, quality] of steps) {
+          const scale = Math.min(1, side / Math.max(w, h));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(w * scale);
+          canvas.height = Math.round(h * scale);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          out = canvas.toDataURL('image/jpeg', quality);
+          if (dataUrlBytes(out) <= PHOTO_SEND_BYTES) break;
+        }
       } catch (e) {
-        return original;
+        /* браузер не смог перерисовать — отправляем как есть */
       }
+      return out;
     }
 
     function attachPhotoUpload() {
@@ -1400,6 +1414,13 @@ section.tight{ padding:56px 0; }
       } catch (error) {
         if (error.status === 400 && error.payload && error.payload.error) {
           setStatus(error.payload.error, 'error');
+          generateBtn.disabled = false;
+          generateBtn.textContent = 'Показать бесплатное превью';
+          return;
+        }
+        if (error.status === 413) {
+          // шлюз Яндекса не пропустил слишком большой запрос — повтор не поможет, нужно другое фото
+          setStatus('Фото получились слишком тяжёлыми для отправки. Уберите одно фото или выберите другое (обычный снимок с телефона подойдёт) и нажмите ещё раз.', 'error');
           generateBtn.disabled = false;
           generateBtn.textContent = 'Показать бесплатное превью';
           return;
