@@ -156,8 +156,9 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     ['editBtn', 'sequelBtn', 'songBtn'].forEach(function (id) { var el = document.getElementById(id); if (el) { el.hidden = true; el.style.display = 'none'; } });
     var hint = document.querySelector('.hint.no-print');
     if (hint) hint.textContent = '“Download PDF” saves the whole book as one file (154×235 mm) to print at home. “For the print shop” gives two files — pages and the cover as one sheet — plus the print specification.';
+    // логотип ведёт на русский сайт — у английской книги его нет, пока не готова английская версия сайта
     var logo = document.querySelector('.toolbar .logo');
-    if (logo) { logo.setAttribute('aria-label', 'Geroenok — home'); logo.innerHTML = '<img src="assets/brand/logo-mark-alpha.png" width="34" height="35" alt="" style="vertical-align:middle;margin-right:8px;object-fit:contain">Geroenok'; logo.style.cssText += ';color:#FBF3E3;font:700 20px Lora,Georgia,serif;text-decoration:none;display:inline-flex;align-items:center'; }
+    if (logo) logo.remove();
   }
 
   function attachActions(book, answers, jobId, status) {
