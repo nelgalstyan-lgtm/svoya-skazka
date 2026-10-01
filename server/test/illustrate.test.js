@@ -66,3 +66,9 @@ test('уроки «Амилии»: одежда без лишних аксесс
   assert.match(coloring, /do NOT add any new people, animals or objects/);
   assert.match(coloring, /same faces, hairstyles/);
 });
+
+test('обложка: лицо крупно по центру, верхняя треть свободна под название (урок «Амилии»)', () => {
+  const cover = buildHeroPrompt({ styleLabel: '3D', kind: 'cover' });
+  assert.match(cover, /never in the upper third/);
+  assert.match(cover, /no heads, faces, wings/);
+});

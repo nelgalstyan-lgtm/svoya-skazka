@@ -83,6 +83,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       button: window.SkazkaExtras.payButton({ jobId: jobId, price: result.price, apiBase: API_BASE })
     } : null;
     if (!jobId && params.get('art') === '3d') book.art = '3d'; // образец оформления в стиле «3D-мультфильм»
+    if (book.lang === 'en') englishChrome();
     window.SkazkaBook.render(book, root, {
       locked: locked,
       frame: params.get('frame'), footer: params.get('footer'),
@@ -94,8 +95,8 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
         : window.SkazkaExtras.qrBlock('book-pro.html', jobId, 'bk-back-qr', book.lang === 'en' ? 'Read & listen' : 'Читать и слушать'),
       certificate: name ? window.SkazkaExtras.certificate(name, book.title, girl, book.lang) : null
     }).then(function (res) {
-      document.title = book.title + ' — Героёнок';
-      document.getElementById('count').textContent = res.pages + ' стр.';
+      document.title = book.title + (book.lang === 'en' ? ' — Geroenok' : ' — Героёнок');
+      document.getElementById('count').textContent = res.pages + (book.lang === 'en' ? ' pages' : ' стр.');
       window.__bookReady = res;
       window.__bookData = book;
       if (locked) {
@@ -137,7 +138,26 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     return out;
   }
 
+  // Английская книга (заказы из США): кнопки и подсказка на английском, без правки текста и «Для типографии»
+  function englishChrome() {
+    document.documentElement.lang = 'en';
+    window.SkazkaExtras.setLang('en');
+    var set = function (id, text) { var el = document.getElementById(id); if (el) el.textContent = text; };
+    set('listenBtn', '🔊 Listen to the book');
+    set('pdfBtn', 'Download PDF');
+    ['editBtn', 'sequelBtn', 'printBtn', 'songBtn'].forEach(function (id) { var el = document.getElementById(id); if (el) { el.hidden = true; el.style.display = 'none'; } });
+    var hint = document.querySelector('.hint.no-print');
+    if (hint) hint.textContent = '“Download PDF” saves the whole book as one file (154×235 mm) to print at home or at a print shop.';
+    var logo = document.querySelector('.toolbar .logo');
+    if (logo) { logo.setAttribute('aria-label', 'Geroenok — home'); logo.innerHTML = '<img src="assets/brand/logo-mark-96.webp" width="34" height="35" alt="" style="vertical-align:middle;margin-right:8px">Geroenok'; logo.style.cssText += ';color:#FBF3E3;font:700 20px Lora,Georgia,serif;text-decoration:none;display:inline-flex;align-items:center'; }
+  }
+
   function attachActions(book, answers, jobId, status) {
+    // английская книга: правки текста и «продолжение» пока только на русском — у неё только чтение, озвучка и PDF
+    if (book.lang === 'en') {
+      window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
+      return;
+    }
     window.SkazkaExtras.attachEditor({
       button: document.getElementById('editBtn'),
       apiBase: API_BASE,

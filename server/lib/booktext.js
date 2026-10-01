@@ -238,6 +238,7 @@ export function normalizeBook(book, { name, girl } = {}) {
   return {
     ...book,
     ...(() => { const genre = normalizeGenre(book.genre) || inferGenre(book); const st = styleFor(genre, book.ageGroup); return { genre, frame: book.frame || st.frame, footer: book.footer || st.footer }; })(),
-    chapters: (book.chapters || []).map((c) => ({ ...c, blocks: normalizeChapterBlocks(c.blocks.map((b) => ({ ...b })), { name, girl }) }))
+    // английская книга (заказы из США, 01.10) собрана вручную: русские правки диалогов и «Из записей …» её не касаются
+    chapters: (book.chapters || []).map((c) => ({ ...c, blocks: book.lang === 'en' ? c.blocks.map((b) => ({ ...b })) : normalizeChapterBlocks(c.blocks.map((b) => ({ ...b })), { name, girl }) }))
   };
 }

@@ -185,6 +185,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 .cert-kicker{ font-size:15px; letter-spacing:.4em; padding-left:.4em; text-transform:uppercase; color:var(--text-soft); }
 .cert-title{ margin-top:14px; font-family:var(--font-display); font-weight:700; font-size:46px; color:var(--ink); }
 .cert-medal{ margin:30px 0 8px; width:84px; height:auto; }
+.cert-portrait.cert-face{ background-size:300% auto; background-position:50% 43%; } /* обложки с 01.10: крупное лицо по центру */
 .cert-portrait{ margin:30px 0 10px; width:210px; height:210px; border-radius:50%; background-repeat:no-repeat; background-size:160% auto; background-position:50% 30%; border:5px solid #c99a4b; box-shadow:0 0 0 8px rgba(201,154,75,.2), 0 10px 22px rgba(60,35,10,.35); }
 .cert-name{ font-family:var(--font-script); font-weight:700; font-size:76px; color:var(--gold-dark); line-height:1.1; }
 .cert-text{ margin:26px 110px 0; font-family:var(--font-book); font-size:19px; line-height:1.8; color:var(--text); }
@@ -595,6 +596,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       if (book.cover) {
         medal = el('div', 'cert-portrait');
         medal.style.backgroundImage = 'url("' + String(book.cover).replace(/"/g, '%22') + '")';
+        if (book.coverFace) medal.classList.add('cert-face'); // обложка нарисована с крупным лицом по центру (с 01.10)
       } else {
         medal = el('img', 'cert-medal'); medal.src = 'assets/brand/item-star-alpha.png'; medal.alt = '';
       }

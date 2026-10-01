@@ -83,13 +83,18 @@
   }
 
   /** Настоящая озвучка: главы по порядку одной кнопкой, пауза и продолжение. */
+  // Язык кнопок вокруг книги: 'en' у английских книг (setLang из страницы книги), иначе русский
+  var UI_LANG = 'ru';
+  function ui(ru, en) { return UI_LANG === 'en' ? en : ru; }
+  function setLang(lang) { UI_LANG = lang === 'en' ? 'en' : 'ru'; }
+
   function attachAudio(button, tracks) {
     var player = new Audio();
     player.preload = 'none';
     var index = 0;
     function label() {
-      button.textContent = !player.paused ? '⏸ Пауза' : (index > 0 || player.currentTime > 0 ? '▶ Продолжить' : '🔊 Слушать книгу');
-      button.title = tracks[index] ? 'Сейчас: ' + tracks[index].title : '';
+      button.textContent = !player.paused ? ui('⏸ Пауза', '⏸ Pause') : (index > 0 || player.currentTime > 0 ? ui('▶ Продолжить', '▶ Continue') : ui('🔊 Слушать книгу', '🔊 Listen to the book'));
+      button.title = tracks[index] ? ui('Сейчас: ', 'Now playing: ') + tracks[index].title : '';
     }
     function load(i) { index = i; player.src = tracks[i].src; }
     player.addEventListener('ended', function () {
@@ -97,11 +102,11 @@
     });
     player.addEventListener('play', label);
     player.addEventListener('pause', label);
-    player.addEventListener('error', function () { label(); hintNear(button, 'Не получилось загрузить озвучку. Проверьте интернет и попробуйте ещё раз.'); });
+    player.addEventListener('error', function () { label(); hintNear(button, ui('Не получилось загрузить озвучку. Проверьте интернет и попробуйте ещё раз.', 'Could not load the audio. Please check your connection and try again.')); });
     button.addEventListener('click', function () {
       if (!player.paused) { player.pause(); return; }
       if (!player.getAttribute('src')) load(index);
-      player.play().catch(function () { hintNear(button, 'Браузер не дал включить звук — нажмите ещё раз.'); });
+      player.play().catch(function () { hintNear(button, ui('Браузер не дал включить звук — нажмите ещё раз.', 'The browser blocked the sound — please tap again.')); });
     });
     label();
   }
@@ -252,12 +257,25 @@
     strip.style.left = 'auto';
     strip.style.right = '0';
     strip.style.transform = 'scaleX(-1)';
+    // рамка тоже уступает место полосе с другой стороны — иначе её линия идёт поперёк текста (найдено 01.10)
+    var frame = page.querySelector('.bk-brand-frame');
+    if (frame) {
+      var fs = win.getComputedStyle(frame);
+      var fl = fs.left, fr = fs.right;
+      frame.style.left = fr;
+      frame.style.right = fl;
+      var shown = frame.querySelector('.bk-corner-tr');
+      var display = shown ? win.getComputedStyle(shown).display : 'block';
+      Array.prototype.forEach.call(frame.querySelectorAll('.bk-corner'), function (c) {
+        c.style.display = /bk-corner-(tl|bl)/.test(c.className) ? display : 'none';
+      });
+    }
   }
 
   /** Собирает PDF из страниц (selector) — по странице на лист widthMm×heightMm. */
   function buildPdf(button, opts) {
     var original = button.textContent;
-    button.textContent = 'Готовим PDF…';
+    button.textContent = ui('Готовим PDF…', 'Preparing PDF…');
     return libsReady().then(function () {
       var pages = Array.prototype.slice.call(document.querySelectorAll(opts.selector));
       var w = opts.widthMm, h = opts.heightMm;
@@ -265,7 +283,7 @@
       var i = 0;
       function next() {
         if (i >= pages.length) return pdf;
-        button.textContent = 'Готовим PDF: ' + (i + 1) + ' из ' + pages.length;
+        button.textContent = ui('Готовим PDF: ' + (i + 1) + ' из ' + pages.length, 'Preparing PDF: ' + (i + 1) + ' of ' + pages.length);
         // чётный номер в файле (с нуля) — правая страница разворота
         return snap(pages[i], 2, opts.scaleVar, i % 2 === 0 ? mirrorForBinding : null).then(function (canvas) {
           if (i > 0) pdf.addPage([w, h], w > h ? 'l' : 'p');
@@ -288,7 +306,7 @@
       buildPdf(button, opts)
         .catch(function (error) {
           console.warn('[pdf]', error);
-          hintNear(button, 'Не получилось собрать PDF в этом браузере. Открываем печать — выберите «Сохранить как PDF».');
+          hintNear(button, ui('Не получилось собрать PDF в этом браузере. Открываем печать — выберите «Сохранить как PDF».', 'Could not build the PDF in this browser. Opening print — choose “Save as PDF”.'));
           setTimeout(function () { global.print(); }, 800);
         })
         .then(function () { busy = false; });
@@ -439,7 +457,7 @@
     code.innerHTML = svg; // SVG собран библиотекой из нашего же адреса, пользовательского текста в нём нет
     var text = document.createElement('div');
     text.className = 'qr-text';
-    text.textContent = label || 'Наведите камеру телефона — книга откроется онлайн: её можно читать и слушать вслух';
+    text.textContent = label || ui('Наведите камеру телефона — книга откроется онлайн: её можно читать и слушать вслух', 'Scan with your phone camera to open the book online — read it and listen to it');
     box.append(code, text);
     return box;
   }
@@ -642,6 +660,7 @@
   }
 
   global.SkazkaExtras = {
+    setLang: setLang,
     payButton: payButton,
     lockedText: lockedText,
     attachEditor: attachEditor,

@@ -123,6 +123,8 @@
   background-repeat:no-repeat; background-size:160% auto; background-position:50% 30%;
   border:4px solid #c99a4b; box-shadow:0 0 0 6px rgba(201,154,75,.2), 0 8px 18px rgba(60,35,10,.35); }
 .bk-cert-has-portrait .bk-cert-kicker{ top:92px; }
+/* книги покупателей с 01.10: обложка рисуется с крупным лицом по центру на ~45% высоты (COVER_COMPOSITION) — берём лицо */
+.bk-cert-portrait.bk-cert-face{ background-size:300% auto; background-position:50% 43%; }
 .bk-cert-has-portrait .bk-cert-title{ top:120px; }
 .bk-cert-has-portrait .bk-divider{ top:382px; }
 .bk-cert-has-portrait .bk-cert-name{ top:414px; font-size:58px; }

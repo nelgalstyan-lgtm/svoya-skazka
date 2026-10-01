@@ -277,7 +277,14 @@
     if (src) page.appendChild(img(src, 'bk-cover-img', book.title));
     var head = h('div', 'bk-cover-head');
     head.appendChild(h('div', 'bk-cover-kicker', t('Персональная книга', 'A personalized book')));
-    head.appendChild(h('div', 'bk-cover-title', book.title));
+    var titleEl = h('div', 'bk-cover-title', book.title);
+    // если название ложится на лицо героя — у книги можно задать кегль и отступ сверху (coverTitle: { size, top }, px)
+    // длинное название — мельче: меньше строк поверх картинки (у «Амилии» три строки закрывали голову)
+    var len = String(book.title || '').length;
+    if (len > 34) titleEl.style.fontSize = '36px'; else if (len > 22) titleEl.style.fontSize = '42px';
+    if (book.coverTitle && book.coverTitle.size) titleEl.style.fontSize = book.coverTitle.size + 'px';
+    if (book.coverTitle && book.coverTitle.top != null) head.style.top = book.coverTitle.top + 'px';
+    head.appendChild(titleEl);
     page.appendChild(head);
     var name = book.meta && book.meta.heroName;
     if (name) {
@@ -350,11 +357,17 @@
     return p;
   }
 
-  function certificateSheet(root, c, cover) {
+  function certificateSheet(root, c, cover, ownPortrait, faceCrop) {
     var page = newSheet(root, 'bk-cert' + (cover ? ' bk-cert-has-portrait' : ''));
     page.appendChild(h('div', 'bk-cert-kicker', c.kicker));
     page.appendChild(h('div', 'bk-cert-title', c.title));
-    if (cover) page.appendChild(portrait(cover, 'bk-cert-portrait'));
+    if (cover) {
+      var pic = portrait(cover, 'bk-cert-portrait');
+      // готовый портрет (book.portrait — лицо крупно) показываем целиком, без кадрирования обложки
+      if (ownPortrait) { pic.style.backgroundSize = 'cover'; pic.style.backgroundPosition = '50% 50%'; }
+      else if (faceCrop) pic.classList.add('bk-cert-face');
+      page.appendChild(pic);
+    }
     page.appendChild(divider());
     page.appendChild(h('div', 'bk-cert-name', c.name));
     page.appendChild(h('div', 'bk-cert-text', c.text));
@@ -397,6 +410,42 @@
     return last || book.cover || null;
   }
 
+  // Длинная цитата не должна наезжать на арку с иллюстрацией: сначала уменьшаем шрифт, потом сдвигаем арку ниже
+  function fitBackQuote(page) {
+    var quote = page.querySelector('.bk-back-quote');
+    var arch = page.querySelector('.bk-back-arch');
+    if (!quote || !arch || !quote.offsetHeight) return;
+    var gap = 14;
+    var size = parseFloat(getComputedStyle(quote).fontSize) || 27;
+    while (quote.offsetTop + quote.offsetHeight + gap > arch.offsetTop && size > 21) {
+      size -= 1;
+      quote.style.fontSize = size + 'px';
+    }
+    var over = quote.offsetTop + quote.offsetHeight + gap - arch.offsetTop;
+    if (over > 0) {
+      arch.style.top = (arch.offsetTop + over) + 'px';
+      arch.style.height = Math.max(200, arch.offsetHeight - over) + 'px';
+    }
+  }
+
+  // Аннотация не должна заходить под QR-код и знак Героёнка (у «Амилии» QR закрыл конец текста, 01.10)
+  function fitBackBlurb(page) {
+    var text = page.querySelector('.bk-back-text');
+    if (!text || !text.offsetHeight) return;
+    var limit = [page.querySelector('.bk-back-qr'), page.querySelector('.bk-back-foot')]
+      .filter(function (el) { return el && el.offsetHeight; })
+      .reduce(function (min, el) { return Math.min(min, el.getBoundingClientRect().top); }, Infinity);
+    if (limit === Infinity) return;
+    var size = parseFloat(getComputedStyle(text).fontSize) || 17.5;
+    var bottom = function () { return text.getBoundingClientRect().bottom; };
+    var scale = text.getBoundingClientRect().height / text.offsetHeight || 1; // страница может быть уменьшена под экран
+    while (bottom() > limit - 10 * scale && size > 12.5) {
+      size -= 0.5;
+      text.style.fontSize = size + 'px';
+      text.style.lineHeight = Math.round(size * 1.6) + 'px';
+    }
+  }
+
   // Задняя обложка: иллюстрация в арке, аннотация, возраст и знак Героёнка (нужна и для печати в твёрдом переплёте)
   function backCoverSheet(root, book, opts) {
     var page = newSheet(root, 'bk-back');
@@ -419,6 +468,8 @@
     page.appendChild(foot);
     // QR на онлайн-версию книги (в ней «Слушать»): у заказа есть, у образцов без адреса — нет
     if (opts && opts.backQr) { page.classList.add('bk-back-has-qr'); page.appendChild(opts.backQr); }
+    fitBackQuote(page);
+    fitBackBlurb(page);
     return { page: page, folio: null };
   }
 
@@ -595,7 +646,7 @@
         sheets.push({ page: lock, folio: null });
       } else if (!(opts && opts.noFinale)) {
         sheets.push(finaleSheet(root, opts));
-        if (opts && opts.certificate) sheets.push(certificateSheet(root, opts.certificate, book.cover));
+        if (opts && opts.certificate) sheets.push(certificateSheet(root, opts.certificate, book.portrait || book.cover, Boolean(book.portrait), Boolean(opts.onlyGenerated && book.coverFace)));
         if (book.song && book.song.src && book.song.chorus) sheets.push(songSheet(root, book.song));
         (book.coloring || []).forEach(function (src, i) { sheets.push(coloringSheet(root, src, i === 0)); });
       }
