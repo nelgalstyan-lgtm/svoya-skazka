@@ -274,7 +274,17 @@
     var first = null;
     book.chapters.some(function (c) { return c.blocks.some(function (b) { if (b.t === 'image') { first = b; return true; } return false; }); });
     var src = book.cover || (first ? imageSrc(first) : null);
-    if (src) page.appendChild(img(src, 'bk-cover-img', book.title));
+    if (src) {
+      var coverImg = img(src, 'bk-cover-img', book.title);
+      page.appendChild(coverImg);
+      var place = book.coverTitle && book.coverTitle.place;
+      if (place === 'bottom') page.classList.add('bk-title-bottom');
+      else if (place !== 'top') {
+        // сами решаем, где название: там, где на картинке спокойнее (у «Амилии» вверху были голова, аист и колокол)
+        var decide = function () { if (global.SkazkaExtras && global.SkazkaExtras.coverTitlePlace(coverImg) === 'bottom') page.classList.add('bk-title-bottom'); };
+        if (coverImg.complete && coverImg.naturalWidth) decide(); else coverImg.addEventListener('load', decide);
+      }
+    }
     var head = h('div', 'bk-cover-head');
     head.appendChild(h('div', 'bk-cover-kicker', t('Персональная книга', 'A personalized book')));
     var titleEl = h('div', 'bk-cover-title', book.title);

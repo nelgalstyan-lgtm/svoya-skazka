@@ -48,6 +48,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     <button class="btn ghost" id="sequelBtn" type="button" hidden>✨ Заказать продолжение</button>
     <button class="btn" id="pdfBtn" type="button">Скачать PDF</button>
     <button class="btn ghost" id="printBtn" type="button">Для типографии</button>
+    <a class="btn ghost" id="specBtn" href="assets/docs/print-spec-ru.pdf" download="ТЗ для типографии — Героёнок.pdf">📄 ТЗ для типографии</a>
   </div>
 </div>
 <p class="hint no-print">«Скачать PDF» — вся книга одним файлом (154×235 мм), чтобы распечатать дома или в копицентре. «Для типографии» — два файла: страницы и обложка одним листом. <a href="how-it-works.html#print" target="_blank" style="color:inherit;">Как напечатать книгу →</a></p>
@@ -102,6 +103,8 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       if (locked) {
         document.getElementById('pdfBtn').style.display = 'none';
         document.getElementById('printBtn').style.display = 'none';
+    document.getElementById('specBtn').style.display = 'none';
+        document.getElementById('specBtn').style.display = 'none';
         window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
       } else {
         attachActions(book, answers, jobId, status || {});
@@ -118,7 +121,8 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   }
   window.SkazkaExtras.attachPdf(document.getElementById('pdfBtn'), {
     selector: '.bk-page', widthMm: 154, heightMm: 235, scaleVar: '--bk-scale',
-    fileName: function () { return window.SkazkaExtras.pdfName((window.__bookData || {}).title); }
+    fileName: function () { return window.SkazkaExtras.pdfName((window.__bookData || {}).title); },
+    readyUrl: function () { return (window.__bookData || {}).pdfUrl || null; } // готовый файл книги на сервере, если есть
   });
   // «Для типографии»: страницы без обложки + обложка одним листом (задняя, корешок, лицевая)
   window.SkazkaExtras.attachPrintKit(document.getElementById('printBtn'), {
@@ -126,7 +130,8 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     widthMm: 154, heightMm: 235, scaleVar: '--bk-scale', spineColor: '#1c1410', spineFont: "'Lora', Georgia, serif",
     title: function () { return (window.__bookData || {}).title; },
     fileBase: function () { return window.SkazkaExtras.pdfName((window.__bookData || {}).title).replace(/\.pdf$/, ''); },
-    pagesCount: function () { return document.querySelectorAll('.bk-page:not(.bk-cover):not(.bk-back)').length; }
+    pagesCount: function () { return document.querySelectorAll('.bk-page:not(.bk-cover):not(.bk-back)').length; },
+    readyFiles: function () { return (window.__bookData || {}).printFiles || null; } // { pages, cover, spine } — готовые файлы
   });
 
   function listenTexts(book) {
@@ -146,6 +151,8 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     set('listenBtn', '🔊 Listen to the book');
     set('pdfBtn', 'Download PDF');
     set('printBtn', 'For the print shop');
+    var spec = document.getElementById('specBtn');
+    if (spec) { spec.textContent = '📄 Print specification'; spec.href = 'assets/docs/print-spec-en.pdf'; spec.setAttribute('download', 'Print specification — Geroenok.pdf'); }
     ['editBtn', 'sequelBtn', 'songBtn'].forEach(function (id) { var el = document.getElementById(id); if (el) { el.hidden = true; el.style.display = 'none'; } });
     var hint = document.querySelector('.hint.no-print');
     if (hint) hint.textContent = '“Download PDF” saves the whole book as one file (154×235 mm) to print at home. “For the print shop” gives two files — pages and the cover as one sheet — plus the print specification.';

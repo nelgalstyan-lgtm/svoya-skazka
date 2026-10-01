@@ -119,6 +119,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 /* затемнения на всю высоту листа: край слоя посередине обложки html2canvas рисует тёмной линией в PDF */
 .cover.art::before{ content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(rgba(18,16,30,.74), rgba(18,16,30,.35) 27.6%, rgba(18,16,30,0) 46%); }
 .cover-shade{ position:absolute; inset:0; z-index:1; background:linear-gradient(rgba(18,16,30,0) 68%, rgba(18,16,30,.78)); }
+/* название внизу (верх обложки занят — coverTitlePlace в book-extras.js) */
+.cover.art.title-bottom{ justify-content:flex-end; padding-bottom:190px; }
+.cover.art.title-bottom::before{ background:linear-gradient(rgba(18,16,30,.45), rgba(18,16,30,0) 16%); }
+.cover.art.title-bottom .cover-shade{ background:linear-gradient(rgba(18,16,30,0) 42%, rgba(18,16,30,.6) 62%, rgba(18,16,30,.86)); }
 .cover.art .kicker, .cover.art h1, .cover.art .orn, .cover.art .for, .cover.art .brand{ position:relative; z-index:2; }
 .cover.art .kicker{ color:rgba(255,244,222,.85); }
 .cover.art h1{ color:#fff3d6; text-shadow:0 3px 18px rgba(0,0,0,.55); }
@@ -253,6 +257,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     <button class="btn ghost" id="sequelBtn" type="button" hidden>✨ Заказать продолжение</button>
     <button class="btn" id="pdfBtn" type="button">Скачать PDF</button>
     <button class="btn ghost" id="printBtn" type="button">Для типографии</button>
+    <a class="btn ghost" id="specBtn" href="assets/docs/print-spec-ru.pdf" download="ТЗ для типографии — Героёнок.pdf">📄 ТЗ для типографии</a>
   </div>
 </div>
 <p class="hint no-print" id="pdfHint">«Скачать PDF» — вся книга одним файлом A4, чтобы распечатать дома или в копицентре. «Для типографии» — два файла: страницы и обложка одним листом. <a href="how-it-works.html#print" target="_blank" style="color:inherit;">Как напечатать книгу →</a></p>
@@ -479,6 +484,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       art.alt = book.title;
       cover.appendChild(art);
       cover.appendChild(el('div', 'cover-shade'));
+      // название — туда, где на картинке спокойнее: если верх занят (голова, птица…), переносим вниз (как в «Большой истории»)
+      const place = book.coverTitle && book.coverTitle.place;
+      const decide = () => { if (place === 'bottom' || (place !== 'top' && window.SkazkaExtras.coverTitlePlace(art) === 'bottom')) cover.classList.add('title-bottom'); };
+      if (art.complete && art.naturalWidth) decide(); else art.addEventListener('load', decide);
     }
     cover.appendChild(el('div', 'kicker', 'Персональная книга'));
     cover.appendChild(el('h1', '', book.title));
@@ -643,6 +652,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       // в превью — только чтение и прослушивание; правки, продолжение и PDF — после оплаты
       document.getElementById('pdfBtn').style.display = 'none';
       document.getElementById('printBtn').style.display = 'none';
+    document.getElementById('specBtn').style.display = 'none';
+      document.getElementById('specBtn').style.display = 'none';
       document.getElementById('pdfHint').style.display = 'none';
       window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return [book.title].concat(book.pages.map(pageText)); });
       return;
@@ -771,10 +782,11 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     // «Скачать PDF» — файл формата A4 (страницы 794×1123 px); печать — запасной вариант внутри attachPdf
     const pdfBtn = document.getElementById('pdfBtn');
     // образцы — книги детей: полистать и послушать можно, забрать файлом — нет
-    if (params.get('demo')) { pdfBtn.style.display = 'none'; document.getElementById('printBtn').style.display = 'none'; document.getElementById('pdfHint').style.display = 'none'; }
+    if (params.get('demo')) { pdfBtn.style.display = 'none'; document.getElementById('printBtn').style.display = 'none'; document.getElementById('specBtn').style.display = 'none'; document.getElementById('pdfHint').style.display = 'none'; }
     window.SkazkaExtras.attachPdf(pdfBtn, {
       selector: '.sheet', widthMm: 210, heightMm: 297, scaleVar: '--scale',
-      fileName: function () { return window.SkazkaExtras.pdfName(document.title.replace(/ — Героёнок$/, '')); }
+      fileName: function () { return window.SkazkaExtras.pdfName(document.title.replace(/ — Героёнок$/, '')); },
+      readyUrl: function () { return (data.book && data.book.pdfUrl) || null; } // готовый файл книги на сервере, если есть
     });
     // «Для типографии»: страницы без обложки + обложка одним листом (задняя, корешок, лицевая)
     window.SkazkaExtras.attachPrintKit(document.getElementById('printBtn'), {

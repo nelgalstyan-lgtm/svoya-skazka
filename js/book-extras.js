@@ -273,6 +273,37 @@
   }
 
   /** Собирает PDF из страниц (selector) — по странице на лист widthMm×heightMm. */
+  /**
+   * Где ставить название на обложке: 'top' (по умолчанию) или 'bottom'. Сравниваем, сколько мелких деталей в полосе
+   * под названием сверху (6–34% высоты) и снизу (56–84%): лица, птицы и предметы дают много перепадов яркости,
+   * небо — мало. Вниз переносим, только если верх заметно «занятее» низа. Картинку с чужого адреса прочитать
+   * нельзя — тогда оставляем вверху.
+   */
+  function coverTitlePlace(image) {
+    try {
+      var W = 48, H = 72;
+      var c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      var g = c.getContext('2d');
+      g.drawImage(image, 0, 0, W, H);
+      var d = g.getImageData(0, 0, W, H).data;
+      var lum = function (x, y) { var i = (y * W + x) * 4; return 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]; };
+      var busy = function (from, to) {
+        var sum = 0, n = 0;
+        for (var y = Math.round(H * from); y < Math.round(H * to) - 1; y++) {
+          for (var x = 0; x < W - 1; x++) { sum += Math.abs(lum(x + 1, y) - lum(x, y)) + Math.abs(lum(x, y + 1) - lum(x, y)); n++; }
+        }
+        return n ? sum / n : 0;
+      };
+      var top = busy(0.06, 0.34), bottom = busy(0.56, 0.84);
+      // вниз: верх заметно занятее низа — или верх совсем не «небо» (много деталей), а низ не спокойнее.
+      // Замеры 01.10: «Амилия» 45/46 (голова, аист, колокол → вниз), Алекс 23/31 и Макс 10/48 (небо → вверху)
+      return (top > bottom * 1.15 && top > 9) || (top > 30 && top >= bottom * 0.9) ? 'bottom' : 'top';
+    } catch (e) {
+      return 'top';
+    }
+  }
+
   /** Запас под обрез: холст больше на bleed со всех сторон, крайние ряды и столбцы вытянуты наружу. */
   function withBleed(src, bleed) {
     if (!bleed) return src;
@@ -316,7 +347,10 @@
         return snap(pages[i], opts.scale || 2, opts.scaleVar, i % 2 === 0 ? mirrorForBinding : null).then(function (shot) {
           var canvas = withBleed(shot, Math.round(b * shot.width / opts.widthMm));
           if (i > 0) pdf.addPage([w, h], w > h ? 'l' : 'p');
-          pdf.addImage(canvas.toDataURL('image/jpeg', b ? 0.9 : 0.85), 'JPEG', 0, 0, w, h, undefined, 'FAST');
+          pdf.addImage(canvas.toDataURL('image/jpeg', opts.quality || (b ? 0.9 : 0.85)), 'JPEG', 0, 0, w, h, undefined, 'FAST');
+          // освобождаем память холстов сразу (на телефоне иначе к середине книги браузер падает)
+          canvas.width = canvas.height = 0;
+          shot.width = shot.height = 0;
           i += 1;
           return new Promise(function (r) { setTimeout(r, 0); }).then(next);
         });
@@ -326,13 +360,28 @@
       .then(function () { button.textContent = original; }, function (error) { button.textContent = original; throw error; });
   }
 
+  /** Скачать готовый файл по адресу (без сборки в браузере). */
+  function downloadUrl(url, name) {
+    var a = document.createElement('a');
+    a.href = url + (url.indexOf('?') < 0 ? '?' : '&') + 'name=' + encodeURIComponent(name || '');
+    a.download = name || '';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
   function attachPdf(button, opts) {
     if (!button) return;
     var busy = false;
     button.addEventListener('click', function () {
+      // готовый PDF на сервере (book.pdfUrl) — скачиваем сразу: на телефоне сборка 80 страниц не помещается в память
+      var ready = opts.readyUrl && opts.readyUrl();
+      if (ready) { downloadUrl(ready, opts.fileName()); return; }
       if (busy) return;
       busy = true;
-      buildPdf(button, opts)
+      // телефону — облегчённая сборка: меньше пикселей на страницу, иначе браузеру не хватает памяти и он уходит в печать
+      var phone = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent || '');
+      buildPdf(button, phone ? Object.assign({}, opts, { scale: 1.25, quality: 0.8 }) : opts)
         .catch(function (error) {
           console.warn('[pdf]', error);
           hintNear(button, ui('Не получилось собрать PDF в этом браузере. Открываем печать — выберите «Сохранить как PDF».', 'Could not build the PDF in this browser. Opening print — choose “Save as PDF”.'));
@@ -425,6 +474,8 @@
       if (panel) { panel.remove(); panel = null; button.setAttribute('aria-expanded', 'false'); return; }
       // примерная ширина корешка: лист ≈ 0,1 мм (2 страницы) плюс обложка
       var spineDefault = Math.max(5, Math.round(Math.ceil(opts.pagesCount() / 2) * 0.1 + 3));
+      var preset = opts.readyFiles && opts.readyFiles();
+      if (preset && preset.spine) spineDefault = Number(preset.spine);
       panel = document.createElement('div');
       panel.className = 'print-kit';
       panel.setAttribute('role', 'dialog');
@@ -443,6 +494,11 @@
       panel.addEventListener('click', function (e) {
         var b = e.target.closest('.pk-btn');
         if (!b || busy) return;
+        // готовые файлы на сервере (book.printFiles) — скачиваем сразу; обложку собираем заново, только если корешок другой
+        var ready = opts.readyFiles && opts.readyFiles();
+        var spineNow = Math.max(0, Number(panel.querySelector('input').value) || spineDefault);
+        if (ready && b.getAttribute('data-kind') === 'block' && ready.pages) { downloadUrl(ready.pages, opts.fileBase() + ui(' — страницы.pdf', ' — pages.pdf')); return; }
+        if (ready && b.getAttribute('data-kind') === 'cover' && ready.cover && Number(ready.spine) === spineNow) { downloadUrl(ready.cover, opts.fileBase() + ui(' — обложка (корешок ' + spineNow + ' мм).pdf', ' — cover (spine ' + spineNow + ' mm).pdf')); return; }
         busy = true;
         var job = b.getAttribute('data-kind') === 'block'
           ? buildPdf(b, { selector: opts.blockSelector, widthMm: opts.widthMm, heightMm: opts.heightMm, scaleVar: opts.scaleVar, scale: PRINT_SCALE, bleedMm: PRINT_BLEED_MM, evenPages: true, fileName: function () { return opts.fileBase() + ui(' — страницы.pdf', ' — pages.pdf'); } })
@@ -692,6 +748,8 @@
 
   global.SkazkaExtras = {
     setLang: setLang,
+    downloadUrl: downloadUrl,
+    coverTitlePlace: coverTitlePlace,
     payButton: payButton,
     lockedText: lockedText,
     attachEditor: attachEditor,

@@ -298,7 +298,8 @@ export async function unlockBook(env, store, id) {
 
 // Медиа из R2 (media/…): аудиокнига-образец и озвучка книг покупателей. Отдаём кусками (Range → 206) — без этого Safari на iPhone
 // не проигрывает звук, а перемотка не работает; R2 режет файл сам, процессор Worker'а не тратится.
-const MEDIA_RE = /^[a-z0-9-]+\/[a-z0-9-]+\.mp3$/;
+// .pdf — готовый файл книги (book.pdfUrl): «Скачать PDF» отдаёт его сразу, телефону не нужно собирать 80 страниц самому
+const MEDIA_RE = /^[a-z0-9-]+\/[a-z0-9-]+\.(mp3|pdf)$/;
 async function media(request, env, path) {
   if (!MEDIA_RE.test(path)) return new Response('Not found', { status: 404, headers: CORS });
   const obj = await env.BUCKET.get(`media/${path}`, { range: request.headers });
@@ -313,6 +314,11 @@ async function media(request, env, path) {
     return new Response(obj.body, { status: 206, headers });
   }
   headers.set('content-length', String(obj.size));
+  if (/\.pdf$/.test(path)) {
+    headers.set('content-type', 'application/pdf');
+    const name = new URL(request.url).searchParams.get('name') || path.split('/').pop();
+    headers.set('content-disposition', `attachment; filename*=UTF-8''${encodeURIComponent(name.replace(/[\/:*?"<>|]+/g, ''))}`);
+  }
   return new Response(obj.body, { headers });
 }
 

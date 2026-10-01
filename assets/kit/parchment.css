@@ -67,6 +67,11 @@
   text-shadow:0 2px 0 rgba(90,55,20,.55), 0 6px 22px rgba(0,0,0,.55); text-wrap:balance; }
 .bk-cover-hero{ position:absolute; z-index:2; left:0; right:0; bottom:74px; text-align:center; font:30px/1.1 'Marck Script',cursive; color:#fbe6b0; text-shadow:0 2px 10px rgba(0,0,0,.6); }
 .bk-cover-hero small{ display:block; margin-bottom:6px; font:600 13px/1 'Lora',serif; letter-spacing:.28em; text-transform:uppercase; color:#f7ead0; opacity:.85; }
+/* название внизу — когда верх обложки занят (голова героя, птица, колокол…): выбирает coverTitlePlace в book-engine.js */
+.bk-cover.bk-title-bottom::before{ height:16%; }
+.bk-cover.bk-title-bottom::after{ height:50%; background:linear-gradient(transparent, rgba(20,14,8,.58) 38%, rgba(20,14,8,.84)); }
+.bk-cover.bk-title-bottom .bk-cover-head{ top:auto; bottom:150px; }
+.bk-cover.bk-title-bottom .bk-cover-title{ margin-top:12px; }
 .bk-cover-brand{ position:absolute; z-index:2; left:0; right:0; bottom:34px; text-align:center; font:600 16px/1 'Lora',serif; letter-spacing:.2em; text-transform:uppercase; color:#f7ead0; opacity:.75; }
 
 /* ---------- задняя обложка ---------- */
