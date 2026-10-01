@@ -370,6 +370,41 @@
     a.remove();
   }
 
+  /**
+   * «Скачать аудиокнигу»: готовый файл (book.audioFile) — сразу; иначе склеиваем дорожки по порядку в один mp3
+   * прямо в браузере (у озвучки одинаковый формат кусков, плееры читают такой файл подряд).
+   */
+  function attachAudioDownload(button, audio, audioFile, fileName) {
+    if (!button) return;
+    if (!audioFile && !(audio && audio.length)) { button.hidden = true; button.style.display = 'none'; return; }
+    button.hidden = false;
+    var busy = false;
+    button.addEventListener('click', function () {
+      if (audioFile) { downloadUrl(audioFile, fileName()); return; }
+      if (busy) return;
+      busy = true;
+      var original = button.textContent;
+      var parts = [];
+      var i = 0;
+      function next() {
+        if (i >= audio.length) return Promise.resolve();
+        button.textContent = ui('Готовим аудиокнигу: ', 'Preparing audiobook: ') + (i + 1) + ' / ' + audio.length;
+        return fetch(audio[i].src).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+          .then(function (buf) { parts.push(buf); i += 1; return next(); });
+      }
+      next().then(function () {
+        var url = URL.createObjectURL(new Blob(parts, { type: 'audio/mpeg' }));
+        var a = document.createElement('a');
+        a.href = url; a.download = fileName();
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+      }).catch(function (error) {
+        console.warn('[audio]', error);
+        hintNear(button, ui('Не получилось скачать аудиокнигу. Проверьте интернет и попробуйте ещё раз.', 'Could not download the audiobook. Please check your connection and try again.'));
+      }).then(function () { busy = false; button.textContent = original; });
+    });
+  }
+
   function attachPdf(button, opts) {
     if (!button) return;
     var busy = false;
@@ -749,6 +784,7 @@
   global.SkazkaExtras = {
     setLang: setLang,
     downloadUrl: downloadUrl,
+    attachAudioDownload: attachAudioDownload,
     coverTitlePlace: coverTitlePlace,
     payButton: payButton,
     lockedText: lockedText,

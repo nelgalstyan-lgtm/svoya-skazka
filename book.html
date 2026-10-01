@@ -33,6 +33,12 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 }
 .btn.ghost{ background:transparent; color:var(--text-light); border:1px solid rgba(255,255,255,.35); }
 .hint{ text-align:center; color:rgba(244,239,224,.6); font-size:13px; margin:14px 16px 0; }
+/* телефон: кнопки сеткой в 2 колонки, без наложений; панель не прилипает и не закрывает страницы книги */
+@media (max-width: 640px){
+  .toolbar{ position:static; padding:10px 12px; gap:8px; }
+  .toolbar-actions{ display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; }
+  .toolbar .btn{ padding:10px 8px; font-size:14px; text-align:center; line-height:1.25; display:flex; align-items:center; justify-content:center; }
+}
 
 /* ---------- Лист книги (A4, 794×1123 px, масштабируется на экране) ---------- */
 .book{ padding:20px 12px 60px; display:flex; flex-direction:column; align-items:center; gap:26px; }
@@ -252,6 +258,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   <div class="toolbar-actions">
     <a class="btn ghost" href="create.html">← К анкете</a>
     <button class="btn ghost" id="listenBtn" type="button">🔊 Слушать книгу</button>
+    <button class="btn ghost" id="audioDlBtn" type="button" hidden>⬇ Скачать аудиокнигу</button>
     <button class="btn ghost" id="songBtn" type="button" hidden>🎵 Песня</button>
     <button class="btn ghost" id="editBtn" type="button" hidden>✏️ Править книгу</button>
     <button class="btn ghost" id="sequelBtn" type="button" hidden>✨ Заказать продолжение</button>
@@ -652,7 +659,6 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       // в превью — только чтение и прослушивание; правки, продолжение и PDF — после оплаты
       document.getElementById('pdfBtn').style.display = 'none';
       document.getElementById('printBtn').style.display = 'none';
-    document.getElementById('specBtn').style.display = 'none';
       document.getElementById('specBtn').style.display = 'none';
       document.getElementById('pdfHint').style.display = 'none';
       window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return [book.title].concat(book.pages.map(pageText)); });
@@ -662,6 +668,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () {
       return [book.title].concat(book.pages.map(pageText));
     }, book.audio);
+    window.SkazkaExtras.attachAudioDownload(document.getElementById('audioDlBtn'), book.audio, book.audioFile, function () { return window.SkazkaExtras.pdfName(book.title).replace(/\.pdf$/, ' — аудиокнига.mp3'); });
     window.SkazkaExtras.attachSong(document.getElementById('songBtn'), book.song);
     window.SkazkaExtras.attachEditor({
       button: document.getElementById('editBtn'),
@@ -752,6 +759,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   function showEmpty() {
     document.getElementById('pdfBtn').style.display = 'none';
     document.getElementById('printBtn').style.display = 'none';
+    document.getElementById('specBtn').style.display = 'none';
     document.getElementById('pdfHint').style.display = 'none';
     const box = el('div', 'gw-card');
     const art = el('img', 'gw-art'); art.src = 'assets/brand/pose-walking.webp'; art.alt = 'Героёнок идёт с сумкой книг';

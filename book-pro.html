@@ -22,6 +22,14 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
 .btn{ background:var(--gold); color:var(--ink); border:none; cursor:pointer; text-decoration:none; padding:10px 20px; border-radius:12px; font-weight:700; font-size:15px; }
 .btn.ghost{ background:transparent; color:var(--text-light); border:1px solid rgba(255,255,255,.35); }
 .hint{ text-align:center; color:rgba(244,239,224,.6); font-size:13px; margin:14px 16px 0; }
+/* телефон: кнопки сеткой в 2 колонки, без наложений; панель не прилипает и не закрывает страницы книги */
+@media (max-width: 640px){
+  .toolbar{ position:static; padding:10px 12px; gap:8px; }
+  .toolbar > div{ display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; }
+  .toolbar > div > #count{ grid-column:1 / -1; margin:0 !important; text-align:center; }
+  .toolbar .btn{ padding:10px 8px; font-size:14px; text-align:center; line-height:1.25; display:flex; align-items:center; justify-content:center; }
+  .toolbar #pdfBtn, .toolbar #listenBtn{ grid-column:auto; }
+}
 #book{ padding:20px 12px 60px; display:flex; flex-direction:column; align-items:center; gap:24px; }
 .empty{ max-width:520px; margin:80px auto; padding:0 20px; color:var(--text-light); text-align:center; line-height:1.6; }
 @media print{
@@ -43,6 +51,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   <div>
     <span id="count" style="color:rgba(244,239,224,.7); margin-right:12px; font-size:14px;"></span>
     <button class="btn ghost" id="listenBtn" type="button">🔊 Слушать книгу</button>
+    <button class="btn ghost" id="audioDlBtn" type="button" hidden>⬇ Скачать аудиокнигу</button>
     <button class="btn ghost" id="songBtn" type="button" hidden>🎵 Песня</button>
     <button class="btn ghost" id="editBtn" type="button" hidden>✏️ Править книгу</button>
     <button class="btn ghost" id="sequelBtn" type="button" hidden>✨ Заказать продолжение</button>
@@ -103,7 +112,6 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       if (locked) {
         document.getElementById('pdfBtn').style.display = 'none';
         document.getElementById('printBtn').style.display = 'none';
-    document.getElementById('specBtn').style.display = 'none';
         document.getElementById('specBtn').style.display = 'none';
         window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
       } else {
@@ -117,6 +125,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
   if (params.get('demo')) {
     document.getElementById('pdfBtn').style.display = 'none';
     document.getElementById('printBtn').style.display = 'none';
+    document.getElementById('specBtn').style.display = 'none';
     var demoHint = document.querySelector('.hint.no-print'); if (demoHint) demoHint.style.display = 'none';
   }
   window.SkazkaExtras.attachPdf(document.getElementById('pdfBtn'), {
@@ -150,6 +159,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     var set = function (id, text) { var el = document.getElementById(id); if (el) el.textContent = text; };
     set('listenBtn', '🔊 Listen to the book');
     set('pdfBtn', 'Download PDF');
+    set('audioDlBtn', '⬇ Download audiobook');
     set('printBtn', 'For the print shop');
     var spec = document.getElementById('specBtn');
     if (spec) { spec.textContent = '📄 Print specification'; spec.href = 'assets/docs/print-spec-en.pdf'; spec.setAttribute('download', 'Print specification — Geroenok.pdf'); }
@@ -165,6 +175,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     // английская книга: правки текста и «продолжение» пока только на русском — у неё только чтение, озвучка и PDF
     if (book.lang === 'en') {
       window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
+      window.SkazkaExtras.attachAudioDownload(document.getElementById('audioDlBtn'), book.audio, book.audioFile, function () { return window.SkazkaExtras.pdfName(book.title).replace(/\.pdf$/, book.lang === 'en' ? ' — audiobook.mp3' : ' — аудиокнига.mp3'); });
       return;
     }
     window.SkazkaExtras.attachEditor({
@@ -192,6 +203,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     });
 
     window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
+    window.SkazkaExtras.attachAudioDownload(document.getElementById('audioDlBtn'), book.audio, book.audioFile, function () { return window.SkazkaExtras.pdfName(book.title).replace(/\.pdf$/, book.lang === 'en' ? ' — audiobook.mp3' : ' — аудиокнига.mp3'); });
     window.SkazkaExtras.attachSong(document.getElementById('songBtn'), book.song);
     if (answers && answers.name) {
       var btn = document.getElementById('sequelBtn');

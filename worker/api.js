@@ -314,9 +314,11 @@ async function media(request, env, path) {
     return new Response(obj.body, { status: 206, headers });
   }
   headers.set('content-length', String(obj.size));
-  if (/\.pdf$/.test(path)) {
-    headers.set('content-type', 'application/pdf');
-    const name = new URL(request.url).searchParams.get('name') || path.split('/').pop();
+  // ?name=… — скачать файлом (PDF книги, аудиокнига целиком), а не открыть в браузере
+  const askedName = new URL(request.url).searchParams.get('name');
+  if (/\.pdf$/.test(path) || askedName) {
+    if (/\.pdf$/.test(path)) headers.set('content-type', 'application/pdf');
+    const name = askedName || path.split('/').pop();
     headers.set('content-disposition', `attachment; filename*=UTF-8''${encodeURIComponent(name.replace(/[\/:*?"<>|]+/g, ''))}`);
   }
   return new Response(obj.body, { headers });
