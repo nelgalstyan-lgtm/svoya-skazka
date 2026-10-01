@@ -491,10 +491,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       art.alt = book.title;
       cover.appendChild(art);
       cover.appendChild(el('div', 'cover-shade'));
-      // название — туда, где на картинке спокойнее: если верх занят (голова, птица…), переносим вниз (как в «Большой истории»)
-      const place = book.coverTitle && book.coverTitle.place;
-      const decide = () => { if (place === 'bottom' || (place !== 'top' && window.SkazkaExtras.coverTitlePlace(art) === 'bottom')) cover.classList.add('title-bottom'); };
-      if (art.complete && art.naturalWidth) decide(); else art.addEventListener('load', decide);
+      // название внизу, если верх обложки занят (решение сервера: Gemini смотрит на обложку — coverTitlePlace в worker/art.js)
+      if (book.coverTitle && book.coverTitle.place === 'bottom') cover.classList.add('title-bottom');
     }
     cover.appendChild(el('div', 'kicker', 'Персональная книга'));
     cover.appendChild(el('h1', '', book.title));

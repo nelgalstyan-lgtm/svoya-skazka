@@ -624,3 +624,16 @@ test('раскраска — 3 страницы из начала, середи�
   assert.deepEqual(spreadPick([1, 2, 3, 4, 5, 6, 7, 8], 3), [1, 5, 8]);
   assert.deepEqual(spreadPick([1, 2], 3), [1, 2]);
 });
+
+test('название на обложке: вниз, только если вверху лицо, а внизу нет (ответ Gemini)', async () => {
+  const { coverTitlePlace } = await import('../art.js');
+  const real = globalThis.fetch;
+  const answer = (text) => { globalThis.fetch = async () => new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text }] } }] }), { status: 200 }); };
+  const image = { mime: 'image/webp', bytes: new Uint8Array([1, 2, 3]) };
+  try {
+    answer('{"A": true, "B": false}'); assert.equal(await coverTitlePlace({ GEMINI_API_KEY: 'k' }, image), 'bottom');
+    answer('{"A": true, "B": true}'); assert.equal(await coverTitlePlace({ GEMINI_API_KEY: 'k' }, image), 'top');
+    answer('{"A": false, "B": false}'); assert.equal(await coverTitlePlace({ GEMINI_API_KEY: 'k' }, image), 'top');
+    assert.equal(await coverTitlePlace({}, image), 'top', 'без ключа — как раньше');
+  } finally { globalThis.fetch = real; }
+});

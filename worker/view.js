@@ -38,13 +38,13 @@ function previewResult(job) {
     return { kind: 'book', locked: true, price: priceOf(job), book: { ...book, coloring: [], song: null, chapters: book.chapters.slice(0, PREVIEW_CHAPTERS) }, lockedChapters: rest.map((c) => c.title), lockedImages: rest.reduce((n, c) => n + c.blocks.filter((b) => b.t === 'image').length, 0), answers };
   }
   const pages = job.result.pages;
-  return { locked: true, price: priceOf(job), coloringOrdered: Boolean(job.input?.coloring), songOrdered: Boolean(job.input?.song), title: job.result.title, dedication: job.result.dedication || null, pages: pages.slice(0, PREVIEW_PAGES), lockedPages: Math.max(0, pages.length - PREVIEW_PAGES), cover: job.result.cover || null, coverFace: Boolean(job.result.coverFace), coloring: [], answers };
+  return { locked: true, price: priceOf(job), coloringOrdered: Boolean(job.input?.coloring), songOrdered: Boolean(job.input?.song), title: job.result.title, dedication: job.result.dedication || null, pages: pages.slice(0, PREVIEW_PAGES), lockedPages: Math.max(0, pages.length - PREVIEW_PAGES), cover: job.result.cover || null, coverFace: Boolean(job.result.coverFace), coverTitle: job.result.coverTitle || null, coloring: [], answers };
 }
 
 function fullResult(job) {
   return job.result.book
     ? { kind: 'book', book: clientBook(job), answers: jobAnswers(job) }
-    : { title: job.result.title, dedication: job.result.dedication || null, pages: job.result.pages, cover: job.result.cover || null, coverFace: Boolean(job.result.coverFace), blurb: job.result.blurb || null, coloring: job.result.coloring || [], audio: job.result.audio || [], song: job.result.song || null, answers: jobAnswers(job) };
+    : { title: job.result.title, dedication: job.result.dedication || null, pages: job.result.pages, cover: job.result.cover || null, coverFace: Boolean(job.result.coverFace), coverTitle: job.result.coverTitle || null, blurb: job.result.blurb || null, coloring: job.result.coloring || [], audio: job.result.audio || [], song: job.result.song || null, answers: jobAnswers(job) };
 }
 
 export function jobView(job, now = Date.now()) {

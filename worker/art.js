@@ -110,3 +110,37 @@ export async function drawImage(env, { kind = 'scene', refs = [], sheet = null, 
   }
   return null;
 }
+
+/**
+ * Где ставить название на обложке — решает Gemini, посмотрев на картинку (бесплатная модель, один короткий запрос).
+ * Счёт деталей в браузере не отличал голову героя и аиста (закрывать нельзя) от каменной арки (можно) и в Safari
+ * давал другой ответ, чем в Chrome («Амилия», 01.10). Ответ сохраняется в книге: book.coverTitle = { place }.
+ * Любая ошибка — 'top' (как раньше).
+ */
+export async function coverTitlePlace(env, image, { timeoutMs = 20000 } = {}) {
+  if (!env.GEMINI_API_KEY || !image?.bytes) return 'top';
+  // строки названия сверху лежат примерно на 7–24% высоты, снизу — на 60–78%; спрашиваем прямо про лица и головы
+  const prompt = 'Look at this children’s book cover illustration. Answer two questions about two horizontal bands of the image. '
+    + 'Band A: from 7% to 24% of the image height, measured from the top edge. Band B: from 60% to 78% of the image height. '
+    + 'For each band: does it contain any face or head (of a person or an animal, including birds), even partly? '
+    + 'Answer strictly as JSON: {"A": true or false, "B": true or false}.';
+  const models = String(env.GEMINI_VISION_MODELS || 'gemini-3.5-flash-lite,gemini-3.6-flash').split(',').map((m) => m.trim()).filter(Boolean);
+  for (const model of models) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }, { inlineData: { mimeType: image.mime || 'image/webp', data: toBase64(image.bytes) } }] }], generationConfig: { maxOutputTokens: 40, temperature: 0, responseMimeType: 'application/json' } }),
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join(' ').toLowerCase();
+      const a = /"a"\s*:\s*(true|false)/.exec(text), b = /"b"\s*:\s*(true|false)/.exec(text);
+      if (!a || !b) continue;
+      // вниз — только если вверху лицо или голова, а внизу их нет
+      return a[1] === 'true' && b[1] === 'false' ? 'bottom' : 'top';
+    } catch { /* следующая модель */ }
+  }
+  return 'top';
+}

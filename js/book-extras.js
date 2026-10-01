@@ -273,37 +273,6 @@
   }
 
   /** Собирает PDF из страниц (selector) — по странице на лист widthMm×heightMm. */
-  /**
-   * Где ставить название на обложке: 'top' (по умолчанию) или 'bottom'. Сравниваем, сколько мелких деталей в полосе
-   * под названием сверху (6–34% высоты) и снизу (56–84%): лица, птицы и предметы дают много перепадов яркости,
-   * небо — мало. Вниз переносим, только если верх заметно «занятее» низа. Картинку с чужого адреса прочитать
-   * нельзя — тогда оставляем вверху.
-   */
-  function coverTitlePlace(image) {
-    try {
-      var W = 48, H = 72;
-      var c = document.createElement('canvas');
-      c.width = W; c.height = H;
-      var g = c.getContext('2d');
-      g.drawImage(image, 0, 0, W, H);
-      var d = g.getImageData(0, 0, W, H).data;
-      var lum = function (x, y) { var i = (y * W + x) * 4; return 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]; };
-      var busy = function (from, to) {
-        var sum = 0, n = 0;
-        for (var y = Math.round(H * from); y < Math.round(H * to) - 1; y++) {
-          for (var x = 0; x < W - 1; x++) { sum += Math.abs(lum(x + 1, y) - lum(x, y)) + Math.abs(lum(x, y + 1) - lum(x, y)); n++; }
-        }
-        return n ? sum / n : 0;
-      };
-      var top = busy(0.06, 0.34), bottom = busy(0.56, 0.84);
-      // вниз: верх заметно занятее низа — или верх совсем не «небо» (много деталей), а низ не спокойнее.
-      // Замеры 01.10: «Амилия» 45/46 (голова, аист, колокол → вниз), Алекс 23/31 и Макс 10/48 (небо → вверху)
-      return (top > bottom * 1.15 && top > 9) || (top > 30 && top >= bottom * 0.9) ? 'bottom' : 'top';
-    } catch (e) {
-      return 'top';
-    }
-  }
-
   /** Запас под обрез: холст больше на bleed со всех сторон, крайние ряды и столбцы вытянуты наружу. */
   function withBleed(src, bleed) {
     if (!bleed) return src;
@@ -785,7 +754,6 @@
     setLang: setLang,
     downloadUrl: downloadUrl,
     attachAudioDownload: attachAudioDownload,
-    coverTitlePlace: coverTitlePlace,
     payButton: payButton,
     lockedText: lockedText,
     attachEditor: attachEditor,

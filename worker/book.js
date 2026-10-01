@@ -15,7 +15,7 @@ import { writePlan, writeChapter, chapterContext, assembleBigBook, templateBook 
 import { dedicationFor, shortDedication } from '../server/lib/booktext.js';
 import template from '../js/story-template.js';
 import { createStore } from './store.js';
-import { drawImage } from './art.js';
+import { drawImage, coverTitlePlace } from './art.js';
 import { isDrawn, bookImages } from './view.js';
 import { voiceFlow } from './voice.js';
 import { songFlow } from './song.js';
@@ -160,6 +160,7 @@ async function previewFlow(ctx) {
     : text.coverBrief;
   const look = big ? text.plan?.look || '' : text.look;
   const art = await drawBook(ctx, { input, briefs, coverBrief, look, only: [0] });
+  const titlePlace = await coverPlaceStep(ctx, art.cover);
 
   await step.do('finish', QUICK_STEP, async () => {
     let result;
@@ -167,7 +168,7 @@ async function previewFlow(ctx) {
       const book = text.book;
       heroBlocks.forEach((b, i) => { b.hero = true; if (art.scenes[i]) b.src = art.scenes[i]; });
       book.preview = true;
-      if (art.cover) { book.cover = art.cover; book.coverFace = true; } // обложка по COVER_COMPOSITION с 01.10: лицо крупно по центру
+      if (art.cover) { book.cover = art.cover; book.coverFace = true; book.coverTitle = { place: titlePlace }; } // обложка по COVER_COMPOSITION с 01.10: лицо крупно по центру
       if (art.sheet) book.sheet = art.sheet; // для дорисовки после оплаты и бесплатной перерисовки
       const provider = Object.entries(book.meta?.providers || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
       result = { book, source: text.template ? 'template' : book.meta?.source || 'ai', provider, model: null };
@@ -176,7 +177,7 @@ async function previewFlow(ctx) {
       // посвящение есть всегда: своё от родителей или наши тёплые слова (так обещает анкета), с подписью «От кого»
       result.dedication = dedicationFor(input, shortDedication(input));
       art.scenes.forEach((src, i) => { if (src) result.pages[i].heroImage = src; });
-      if (art.cover) { result.cover = art.cover; result.coverFace = true; }
+      if (art.cover) { result.cover = art.cover; result.coverFace = true; result.coverTitle = { place: titlePlace }; }
       if (art.sheet) result.sheet = art.sheet; // нужен для бесплатной перерисовки: фото к тому времени уже удалено
     }
     await store.updateJob(id, (job) => {
@@ -186,6 +187,16 @@ async function previewFlow(ctx) {
       job.finishedAt = Date.now();
       job.progress = '';
     });
+  });
+}
+
+/** Название на обложке — сверху или снизу: смотрит Gemini (см. coverTitlePlace в art.js). Отдельный шаг — свои лимиты CPU. */
+async function coverPlaceStep(ctx, cover) {
+  if (!cover) return 'top';
+  const { env, store, step } = ctx;
+  return step.do('cover-title', QUICK_STEP, async () => {
+    const image = await store.loadImage(cover).catch(() => null);
+    return coverTitlePlace(env, image);
   });
 }
 
@@ -211,13 +222,14 @@ async function completeFlow(ctx) {
   // фото могли уже удалиться (истёк срок) — тогда рисуем по листу персонажа, он держит и лицо, и одежду
   const art = await drawBook(ctx, { input: todo.input, briefs: todo.briefs, coverBrief: todo.coverBrief, look: todo.look, only: todo.missing, sheet: todo.sheet });
   const srcs = todo.srcs.map((src, i) => art.scenes[i] || src);
+  const titlePlace = art.cover ? await coverPlaceStep(ctx, art.cover) : null;
   const coloring = todo.input.coloring ? await drawColoring(ctx, srcs.filter(isDrawn)) : [];
 
   await step.do('complete-finish', QUICK_STEP, async () => {
     await store.updateJob(id, (job) => {
       const target = job.result.book || job.result;
       bookImages(job.result).forEach((im, i) => { if (art.scenes[i]) im.set(art.scenes[i]); });
-      if (art.cover) { target.cover = art.cover; target.coverFace = true; }
+      if (art.cover) { target.cover = art.cover; target.coverFace = true; target.coverTitle = { place: titlePlace || 'top' }; }
       // «Большая история»: иллюстрация так и не получилась — убираем её, фоновых сцен в книге клиента нет
       if (job.result.book) for (const ch of job.result.book.chapters) ch.blocks = ch.blocks.filter((b) => b.t !== 'image' || isDrawn(b.src));
       if (coloring.length) target.coloring = coloring;

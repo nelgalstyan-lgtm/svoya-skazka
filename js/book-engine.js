@@ -277,13 +277,8 @@
     if (src) {
       var coverImg = img(src, 'bk-cover-img', book.title);
       page.appendChild(coverImg);
-      var place = book.coverTitle && book.coverTitle.place;
-      if (place === 'bottom') page.classList.add('bk-title-bottom');
-      else if (place !== 'top') {
-        // сами решаем, где название: там, где на картинке спокойнее (у «Амилии» вверху были голова, аист и колокол)
-        var decide = function () { if (global.SkazkaExtras && global.SkazkaExtras.coverTitlePlace(coverImg) === 'bottom') page.classList.add('bk-title-bottom'); };
-        if (coverImg.complete && coverImg.naturalWidth) decide(); else coverImg.addEventListener('load', decide);
-      }
+      // название внизу, если верх обложки занят (решение сервера: Gemini смотрит на обложку — coverTitlePlace в worker/art.js)
+      if (book.coverTitle && book.coverTitle.place === 'bottom') page.classList.add('bk-title-bottom');
     }
     var head = h('div', 'bk-cover-head');
     head.appendChild(h('div', 'bk-cover-kicker', t('Персональная книга', 'A personalized book')));
