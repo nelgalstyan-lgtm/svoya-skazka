@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Print Specification — Geroenok</title>
+<meta name="description" content="Print specification for the print shop: trim size, files, bleed, color, paper, binding and spine of a personalized Geroenok book.">
+<link rel="canonical" href="https://geroenok.online/print-spec-en">
+<link rel="icon" href="/assets/brand/star.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=PT+Sans:wght@400;700&display=swap">
+<style>
+/* Print specification for print shops (English version of print-spec.html, 01.10). */
+:root{ --paper:#F6F3E7; --card:#FFFCF5; --walnut:#4A3527; --text:#3F2816; --soft:#6B5443; --line:#E2D3B5; --brass:#7E5A26; --btn:#8A5A36; }
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--paper); color:var(--text); font:16px/1.55 'PT Sans', Arial, sans-serif; }
+.doc{ max-width:860px; margin:24px auto 48px; padding:36px 40px; background:var(--card); border:1px solid var(--line); border-radius:16px; }
+.top{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:22px; }
+.brand{ display:flex; align-items:center; gap:10px; font:700 20px 'Lora', Georgia, serif; color:var(--walnut); text-decoration:none; }
+.brand img{ width:34px; height:auto; }
+.btn{ border:0; border-radius:999px; padding:10px 18px; background:var(--btn); color:#fff; font:700 14px 'PT Sans', Arial, sans-serif; cursor:pointer; }
+h1{ font:700 28px/1.2 'Lora', Georgia, serif; color:var(--walnut); margin:0 0 8px; }
+h2{ font:700 19px/1.3 'Lora', Georgia, serif; color:var(--walnut); margin:26px 0 10px; }
+.lead{ background:#F1E7D2; border-left:4px solid var(--brass); padding:12px 16px; border-radius:8px; margin:14px 0 6px; }
+table{ width:100%; border-collapse:collapse; margin:6px 0; }
+th, td{ text-align:left; vertical-align:top; padding:8px 10px; border-bottom:1px solid var(--line); }
+th{ width:34%; color:var(--soft); font-weight:700; }
+ul, ol{ margin:6px 0; padding-left:22px; }
+li{ margin:3px 0; }
+.muted{ color:var(--soft); font-size:14px; }
+@media (max-width:640px){ .doc{ margin:0; padding:22px 16px; border-radius:0; border:0; } th{ width:40%; } h1{ font-size:24px; } }
+@media print{ body{ background:#fff; font-size:12.5px; } .doc{ margin:0; padding:0; border:0; max-width:none; } .btn{ display:none; } h2{ margin-top:16px; break-after:avoid; } tr{ break-inside:avoid; } }
+</style>
+</head>
+<body>
+<main class="doc">
+  <div class="top">
+    <a class="brand" href="/"><img src="assets/brand/logo-mark-alpha.png" alt="">Geroenok</a>
+    <button class="btn" type="button" onclick="window.print()">Print / save as PDF</button>
+  </div>
+
+  <h1>Print Specification</h1>
+  <p class="muted">Personalized children's book by Geroenok · digital printing, run of 1+ copies.</p>
+  <p class="lead"><b>For the customer:</b> give the print shop this document and the two files from the <b>“For the print shop”</b> button in your book (pages and cover). The “Download PDF” file is not suitable for professional printing — it has no bleed.</p>
+
+  <h2>1. Product</h2>
+  <table>
+    <tr><th>Trim size</th><td>“Big Story” — <b>154 × 235 mm</b> (6.06 × 9.25 in)<br>“Fairy Tale” — <b>210 × 297 mm</b> (A4)</td></tr>
+    <tr><th>Colors</th><td>Interior 4/4, cover 4/0</td></tr>
+    <tr><th>Page count</th><td>As in the file: always an even number, page 1 is a right-hand page</td></tr>
+  </table>
+
+  <h2>2. Files</h2>
+  <table>
+    <tr><th>Interior</th><td>PDF, all pages in order.<br>Page size with bleed: <b>160 × 241 mm</b> (“Big Story”) / <b>216 × 303 mm</b> (“Fairy Tale”) — <b>3 mm</b> bleed on every side.</td></tr>
+    <tr><th>Cover</th><td>One-sheet PDF: back + spine + front (front on the right). <b>5 mm</b> bleed on every side. The spine width is in the file name.</td></tr>
+    <tr><th>Image</th><td>Raster, <b>300 dpi</b>, each page is a single image (fonts are already rasterized — no outlining needed). No spot colors, varnish or special finishes.</td></tr>
+    <tr><th>Color</th><td>RGB (sRGB). Convert to CMYK with your standard press profile, no color correction.</td></tr>
+  </table>
+
+  <h2>3. Safe zones</h2>
+  <ul>
+    <li>Text and page numbers are <b>at least 14 mm</b> from the trim line.</li>
+    <li>The thin decorative frame of the “Big Story” is <b>6 mm</b> from the trim: trimming tolerance ±1 mm max.</li>
+    <li>The interior is imposed for binding: on right-hand pages the decoration is at the outer edge and the text is shifted toward the spine. Gutter margin is at least 14 mm.</li>
+    <li>QR codes (last page and back cover) — do not scale down, print at 100%.</li>
+  </ul>
+
+  <h2>4. Materials and binding (recommended)</h2>
+  <table>
+    <tr><th>Interior paper</th><td>Matte coated 130–150 gsm (full-page illustrations, no show-through). The coloring pages at the end work with pencils and markers on this paper.</td></tr>
+    <tr><th>Softcover</th><td>Coated 250–300 gsm, matte lamination 1/0.</td></tr>
+    <tr><th>Binding</th><td>“Big Story” — perfect binding.<br>“Fairy Tale” — saddle stitch (2 staples) or perfect binding.</td></tr>
+    <tr><th>Hardcover (case binding)</th><td>Possible. The cover file has 5 mm bleed; board wrap needs 15–20 mm — extend the background at the edges (the edge background is plain or textured) to your template.</td></tr>
+  </table>
+
+  <h2>5. Spine</h2>
+  <p>The spine width depends on the paper and page count. Tell the customer the exact width: they will enter it in the “Spine width” field and download the cover again — it takes a minute.</p>
+  <p class="muted">Guide: page count ÷ 2 × sheet thickness (matte coated 130 gsm ≈ 0.1 mm) + 1 mm for the cover and glue.</p>
+
+  <h2>6. Pre-press check</h2>
+  <ol>
+    <li>Page count and order in the interior file match the book; page 1 is a right-hand page.</li>
+    <li>Cover: front on the right, spine width matches your calculation.</li>
+    <li>Trim to the trim size; bleed is cut off completely.</li>
+  </ol>
+</main>
+</body>
+</html>

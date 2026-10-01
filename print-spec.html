@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ТЗ на печать книги — Героёнок</title>
+<meta name="description" content="Техническое задание для типографии: формат, файлы, вылеты, цвет, бумага, переплёт и корешок персональной книги Героёнка.">
+<link rel="canonical" href="https://geroenok.online/print-spec">
+<link rel="icon" href="/assets/brand/star.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=PT+Sans:wght@400;700&display=swap">
+<style>
+/* ТЗ для типографии (01.10). Документ: читается с экрана и печатается на A4 кнопкой «Распечатать». */
+:root{ --paper:#F6F3E7; --card:#FFFCF5; --walnut:#4A3527; --text:#3F2816; --soft:#6B5443; --line:#E2D3B5; --brass:#7E5A26; --btn:#8A5A36; }
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--paper); color:var(--text); font:16px/1.55 'PT Sans', Arial, sans-serif; }
+.doc{ max-width:860px; margin:24px auto 48px; padding:36px 40px; background:var(--card); border:1px solid var(--line); border-radius:16px; }
+.top{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:22px; }
+.brand{ display:flex; align-items:center; gap:10px; font:700 20px 'Lora', Georgia, serif; color:var(--walnut); text-decoration:none; }
+.brand img{ width:34px; height:auto; }
+.btn{ border:0; border-radius:999px; padding:10px 18px; background:var(--btn); color:#fff; font:700 14px 'PT Sans', Arial, sans-serif; cursor:pointer; }
+h1{ font:700 28px/1.2 'Lora', Georgia, serif; color:var(--walnut); margin:0 0 8px; }
+h2{ font:700 19px/1.3 'Lora', Georgia, serif; color:var(--walnut); margin:26px 0 10px; }
+.lead{ background:#F1E7D2; border-left:4px solid var(--brass); padding:12px 16px; border-radius:8px; margin:14px 0 6px; }
+table{ width:100%; border-collapse:collapse; margin:6px 0; }
+th, td{ text-align:left; vertical-align:top; padding:8px 10px; border-bottom:1px solid var(--line); }
+th{ width:34%; color:var(--soft); font-weight:700; }
+ul, ol{ margin:6px 0; padding-left:22px; }
+li{ margin:3px 0; }
+.muted{ color:var(--soft); font-size:14px; }
+code{ background:#F1E7D2; padding:1px 5px; border-radius:4px; font-size:14px; }
+@media (max-width:640px){ .doc{ margin:0; padding:22px 16px; border-radius:0; border:0; } th{ width:40%; } h1{ font-size:24px; } }
+@media print{ body{ background:#fff; font-size:12.5px; } .doc{ margin:0; padding:0; border:0; max-width:none; } .btn{ display:none; } h2{ margin-top:16px; break-after:avoid; } tr{ break-inside:avoid; } }
+</style>
+</head>
+<body>
+<main class="doc">
+  <div class="top">
+    <a class="brand" href="/"><img src="assets/brand/logo-mark-alpha.png" alt="">Героёнок</a>
+    <button class="btn" type="button" onclick="window.print()">Распечатать / сохранить PDF</button>
+  </div>
+
+  <h1>Техническое задание на печать книги</h1>
+  <p class="muted">Персональная детская книга «Героёнок» · цифровая печать, тираж от 1 экз.</p>
+  <p class="lead"><b>Клиенту:</b> передайте в типографию этот документ и два файла из кнопки <b>«Для типографии»</b> в вашей книге (страницы и обложка). Файл «Скачать PDF» для типографии не подходит — в нём нет запаса под обрез.</p>
+
+  <h2>1. Изделие</h2>
+  <table>
+    <tr><th>Обрезной формат</th><td>«Большая история» — <b>154 × 235 мм</b><br>«Сказка» — <b>210 × 297 мм</b> (A4)</td></tr>
+    <tr><th>Красочность</th><td>Блок 4+4, обложка 4+0</td></tr>
+    <tr><th>Объём блока</th><td>По файлу: число полос всегда чётное, первая полоса — правая</td></tr>
+  </table>
+
+  <h2>2. Файлы</h2>
+  <table>
+    <tr><th>Блок</th><td>PDF, все полосы по порядку.<br>Размер полосы с вылетами: <b>160 × 241 мм</b> («Большая история») / <b>216 × 303 мм</b> («Сказка») — вылеты <b>3 мм</b> с каждой стороны.</td></tr>
+    <tr><th>Обложка</th><td>PDF одним листом: задняя сторона + корешок + лицевая (лицевая справа). Вылеты <b>5 мм</b> с каждой стороны. Ширина корешка указана в имени файла.</td></tr>
+    <tr><th>Изображение</th><td>Растр <b>300 dpi</b>, полосы целиком изображением (шрифты уже в растре — переводить в кривые не нужно). Плашечных цветов, лака и выборочных эффектов нет.</td></tr>
+    <tr><th>Цвет</th><td>RGB (sRGB). Перевод в CMYK — на стороне типографии по рабочему профилю, без цветокоррекции.</td></tr>
+  </table>
+
+  <h2>3. Безопасные поля</h2>
+  <ul>
+    <li>Текст и номера страниц — <b>не ближе 14 мм</b> к линии реза.</li>
+    <li>Тонкая декоративная рамка «Большой истории» — в <b>6 мм</b> от реза: допуск резки не более ±1 мм.</li>
+    <li>Блок свёрстан под переплёт: на правых полосах оформление у внешнего края, текст смещён к корешку. Поле у корешка — не меньше 14 мм.</li>
+    <li>QR-коды (последняя полоса и задняя сторона обложки) — не уменьшать, печатать в размер.</li>
+  </ul>
+
+  <h2>4. Материалы и переплёт (рекомендация)</h2>
+  <table>
+    <tr><th>Бумага блока</th><td>Мелованная матовая 130–150 г/м² (иллюстрации на всю полосу, без просвечивания). Раскраски в конце блока на этой бумаге рисуются карандашами и фломастерами.</td></tr>
+    <tr><th>Мягкая обложка</th><td>Мелованная 250–300 г/м², матовая ламинация 1+0.</td></tr>
+    <tr><th>Переплёт</th><td>«Большая история» — КБС (клеевое бесшовное скрепление).<br>«Сказка» — скоба (2 скобы) или КБС.</td></tr>
+    <tr><th>Твёрдый переплёт (7БЦ)</th><td>Возможен. В файле обложки вылет 5 мм; для загиба на картон нужно 15–20 мм — дотяните фон по краю (у края фон однотонный или фактурный) по шаблону типографии.</td></tr>
+  </table>
+
+  <h2>5. Корешок</h2>
+  <p>Ширина корешка зависит от бумаги и числа полос. Сообщите клиенту точную ширину: он впишет её в поле «Ширина корешка» и скачает обложку заново — это занимает минуту.</p>
+  <p class="muted">Ориентир: число полос ÷ 2 × толщина листа (мелованная 130 г/м² ≈ 0,1 мм) + 1 мм на обложку и клей.</p>
+
+  <h2>6. Проверка перед печатью</h2>
+  <ol>
+    <li>Число полос и их порядок в файле блока соответствуют книге, первая полоса — правая.</li>
+    <li>Обложка: лицевая сторона справа, ширина корешка совпадает с расчётной.</li>
+    <li>Резка — по обрезному формату, вылеты срезаются полностью.</li>
+  </ol>
+</main>
+</body>
+</html>

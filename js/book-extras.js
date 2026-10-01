@@ -273,21 +273,50 @@
   }
 
   /** Собирает PDF из страниц (selector) — по странице на лист widthMm×heightMm. */
+  /** Запас под обрез: холст больше на bleed со всех сторон, крайние ряды и столбцы вытянуты наружу. */
+  function withBleed(src, bleed) {
+    if (!bleed) return src;
+    var W = src.width + bleed * 2, H = src.height + bleed * 2;
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var g = c.getContext('2d');
+    g.drawImage(src, bleed, bleed);
+    g.drawImage(src, 0, 0, src.width, 1, bleed, 0, src.width, bleed);
+    g.drawImage(src, 0, src.height - 1, src.width, 1, bleed, bleed + src.height, src.width, bleed);
+    g.drawImage(c, bleed, 0, 1, H, 0, 0, bleed, H);
+    g.drawImage(c, bleed + src.width - 1, 0, 1, H, bleed + src.width, 0, bleed, H);
+    return c;
+  }
+
+  // Файлы для типографии: ≥300 dpi (страница 154 или 210 мм шириной снимается в 3,2 раза крупнее экранной)
+  var PRINT_SCALE = 3.2;
+  var PRINT_BLEED_MM = 3;
+
   function buildPdf(button, opts) {
     var original = button.textContent;
     button.textContent = ui('Готовим PDF…', 'Preparing PDF…');
     return libsReady().then(function () {
       var pages = Array.prototype.slice.call(document.querySelectorAll(opts.selector));
-      var w = opts.widthMm, h = opts.heightMm;
+      var b = opts.bleedMm || 0;
+      var w = opts.widthMm + b * 2, h = opts.heightMm + b * 2; // с вылетами — обрезной формат плюс запас с каждой стороны
       var pdf = new global.jspdf.jsPDF({ unit: 'mm', format: [w, h], orientation: w > h ? 'l' : 'p', compress: true });
       var i = 0;
       function next() {
-        if (i >= pages.length) return pdf;
+        if (i >= pages.length) {
+          // в типографии блок — из листов по 2 полосы: нечётное число дополняем пустой белой полосой в конце
+          if (opts.evenPages && pages.length % 2) {
+            pdf.addPage([w, h], w > h ? 'l' : 'p');
+            pdf.setFillColor(255, 255, 255);
+            pdf.rect(0, 0, w, h, 'F');
+          }
+          return pdf;
+        }
         button.textContent = ui('Готовим PDF: ' + (i + 1) + ' из ' + pages.length, 'Preparing PDF: ' + (i + 1) + ' of ' + pages.length);
         // чётный номер в файле (с нуля) — правая страница разворота
-        return snap(pages[i], 2, opts.scaleVar, i % 2 === 0 ? mirrorForBinding : null).then(function (canvas) {
+        return snap(pages[i], opts.scale || 2, opts.scaleVar, i % 2 === 0 ? mirrorForBinding : null).then(function (shot) {
+          var canvas = withBleed(shot, Math.round(b * shot.width / opts.widthMm));
           if (i > 0) pdf.addPage([w, h], w > h ? 'l' : 'p');
-          pdf.addImage(canvas.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, w, h, undefined, 'FAST');
+          pdf.addImage(canvas.toDataURL('image/jpeg', b ? 0.9 : 0.85), 'JPEG', 0, 0, w, h, undefined, 'FAST');
           i += 1;
           return new Promise(function (r) { setTimeout(r, 0); }).then(next);
         });
@@ -320,13 +349,13 @@
   function buildCoverSpread(button, opts, spineMm) {
     var BLEED = 5; // мм под обрез (у твёрдого переплёта типография может попросить больше — это видно в их шаблоне)
     var original = button.textContent;
-    button.textContent = 'Готовим обложку…';
+    button.textContent = ui('Готовим обложку…', 'Preparing the cover…');
     return libsReady().then(function () {
       var front = document.querySelector(opts.frontSelector);
       var back = document.querySelector(opts.backSelector);
       if (!front || !back) throw new Error('no cover pages');
-      return snap(back, 3, opts.scaleVar).then(function (b) {
-        return snap(front, 3, opts.scaleVar).then(function (f) { return [b, f]; });
+      return snap(back, PRINT_SCALE, opts.scaleVar).then(function (b) {
+        return snap(front, PRINT_SCALE, opts.scaleVar).then(function (f) { return [b, f]; });
       });
     }).then(function (pair) {
       var b = pair[0], f = pair[1];
@@ -367,7 +396,7 @@
       var wmm = W / pxmm, hmm = H / pxmm;
       var pdf = new global.jspdf.jsPDF({ unit: 'mm', format: [wmm, hmm], orientation: 'l', compress: true });
       pdf.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, wmm, hmm, undefined, 'FAST');
-      pdf.save(opts.fileBase() + ' — обложка (корешок ' + spineMm + ' мм).pdf');
+      pdf.save(opts.fileBase() + ui(' — обложка (корешок ' + spineMm + ' мм).pdf', ' — cover (spine ' + spineMm + ' mm).pdf'));
     }).then(function () { button.textContent = original; }, function (error) { button.textContent = original; throw error; });
   }
 
@@ -399,12 +428,14 @@
       panel = document.createElement('div');
       panel.className = 'print-kit';
       panel.setAttribute('role', 'dialog');
-      panel.setAttribute('aria-label', 'Файлы для типографии');
-      panel.innerHTML = '<p class="pk-lead">В типографии обложку печатают отдельно от страниц — поэтому файлов два.</p>'
-        + '<div class="pk-row"><div><b>1. Страницы книги</b><span>Все страницы, кроме обложки</span></div><button type="button" class="pk-btn" data-kind="block">Скачать</button></div>'
-        + '<div class="pk-row"><div><b>2. Обложка одним листом</b><span>Задняя сторона, корешок и лицевая — на одном листе, с запасом 5 мм под обрез</span></div><button type="button" class="pk-btn" data-kind="cover">Скачать</button></div>'
-        + '<label class="pk-spine">Ширина корешка, мм <input type="number" min="0" max="60" step="0.5" value="' + spineDefault + '"></label>'
-        + '<p class="pk-note">Точную ширину корешка скажут в типографии: она зависит от бумаги и переплёта. Впишите их число и скачайте обложку заново.</p>';
+      panel.setAttribute('aria-label', ui('Файлы для типографии', 'Files for the print shop'));
+      var dl = ui('Скачать', 'Download');
+      panel.innerHTML = '<p class="pk-lead">' + ui('В типографии обложку печатают отдельно от страниц — поэтому файлов два.', 'Print shops print the cover separately from the pages, so there are two files.') + '</p>'
+        + '<div class="pk-row"><div><b>' + ui('1. Страницы книги', '1. Book pages') + '</b><span>' + ui('Все страницы, кроме обложки, 300 dpi, с запасом 3 мм под обрез', 'All pages except the cover, 300 dpi, with 3 mm bleed') + '</span></div><button type="button" class="pk-btn" data-kind="block">' + dl + '</button></div>'
+        + '<div class="pk-row"><div><b>' + ui('2. Обложка одним листом', '2. Cover as one sheet') + '</b><span>' + ui('Задняя сторона, корешок и лицевая — на одном листе, с запасом 5 мм под обрез', 'Back, spine and front on one sheet, with 5 mm bleed') + '</span></div><button type="button" class="pk-btn" data-kind="cover">' + dl + '</button></div>'
+        + '<label class="pk-spine">' + ui('Ширина корешка, мм', 'Spine width, mm') + ' <input type="number" min="0" max="60" step="0.5" value="' + spineDefault + '"></label>'
+        + '<p class="pk-note">' + ui('Точную ширину корешка скажут в типографии: она зависит от бумаги и переплёта. Впишите их число и скачайте обложку заново.', 'The print shop will tell you the exact spine width: it depends on the paper and binding. Enter their number and download the cover again.') + '</p>'
+        + '<p class="pk-note"><a href="' + ui('print-spec.html', 'print-spec-en.html') + '" target="_blank" style="color:inherit;font-weight:700">' + ui('Техническое задание для типографии →', 'Print specification for the print shop →') + '</a></p>';
       button.parentNode.style.position = 'relative';
       button.parentNode.appendChild(panel);
       button.setAttribute('aria-expanded', 'true');
@@ -414,11 +445,11 @@
         if (!b || busy) return;
         busy = true;
         var job = b.getAttribute('data-kind') === 'block'
-          ? buildPdf(b, { selector: opts.blockSelector, widthMm: opts.widthMm, heightMm: opts.heightMm, scaleVar: opts.scaleVar, fileName: function () { return opts.fileBase() + ' — страницы.pdf'; } })
+          ? buildPdf(b, { selector: opts.blockSelector, widthMm: opts.widthMm, heightMm: opts.heightMm, scaleVar: opts.scaleVar, scale: PRINT_SCALE, bleedMm: PRINT_BLEED_MM, evenPages: true, fileName: function () { return opts.fileBase() + ui(' — страницы.pdf', ' — pages.pdf'); } })
           : buildCoverSpread(b, opts, Math.max(0, Number(panel.querySelector('input').value) || spineDefault));
         job.catch(function (error) {
           console.warn('[print-kit]', error);
-          hintNear(button, 'Не получилось собрать файл в этом браузере. Попробуйте Chrome на компьютере.');
+          hintNear(button, ui('Не получилось собрать файл в этом браузере. Попробуйте Chrome на компьютере.', 'Could not build the file in this browser. Please try Chrome on a computer.'));
         }).then(function () { busy = false; });
       });
     });
