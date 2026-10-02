@@ -722,6 +722,8 @@ section.tight{ padding:56px 0; }
     link.addEventListener('click', function (e) {
       var frame = document.getElementById('flipFrame');
       if (!frame) return; // без листалки — обычный переход по ссылке
+      // на телефоне окно листалки маленькое и под ним легко увидеть не ту книгу — открываем книгу целиком
+      if (window.matchMedia && window.matchMedia('(max-width: 640px)').matches) return;
       e.preventDefault();
       var src = link.getAttribute('data-src');
       if (frame.getAttribute('src') !== src) frame.setAttribute('src', src);

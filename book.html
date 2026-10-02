@@ -244,6 +244,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   .sheet{ transform:none !important; box-shadow:none; }
   * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 }
+[hidden]{ display:none !important; } /* .toolbar .btn{display:flex} на телефоне иначе показывает скрытые кнопки */
 </style>
 <link rel="stylesheet" href="assets/geroenok-states.css">
 <meta name="robots" content="noindex, nofollow">
@@ -788,7 +789,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     // «Скачать PDF» — файл формата A4 (страницы 794×1123 px); печать — запасной вариант внутри attachPdf
     const pdfBtn = document.getElementById('pdfBtn');
     // образцы — книги детей: полистать и послушать можно, забрать файлом — нет
-    if (params.get('demo')) { pdfBtn.style.display = 'none'; document.getElementById('printBtn').style.display = 'none'; document.getElementById('specBtn').style.display = 'none'; document.getElementById('pdfHint').style.display = 'none'; }
+    if (params.get('demo')) { ['audioDlBtn', 'songBtn', 'editBtn', 'sequelBtn'].forEach(function (id) { document.getElementById(id).hidden = true; }); document.querySelector('.toolbar-actions a[href="create.html"]').hidden = true; pdfBtn.style.display = 'none'; document.getElementById('printBtn').style.display = 'none'; document.getElementById('specBtn').style.display = 'none'; document.getElementById('pdfHint').style.display = 'none'; }
     window.SkazkaExtras.attachPdf(pdfBtn, {
       selector: '.sheet', widthMm: 210, heightMm: 297, scaleVar: '--scale',
       fileName: function () { return window.SkazkaExtras.pdfName(document.title.replace(/ — Героёнок$/, '')); },
