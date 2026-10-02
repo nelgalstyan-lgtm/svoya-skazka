@@ -28,7 +28,7 @@ export default {
     const priv = /^\/p\/([A-Za-z0-9_-]{20,64})\/?$/.exec(url.pathname);
     if (priv) {
       const obj = await env.BUCKET.get(`private/${priv[1]}.html`);
-      if (!obj) return env.ASSETS.fetch(new Request(new URL('/404.html', url), request));
+      if (!obj) { const nf = await env.ASSETS.fetch(new Request(new URL('/404', url), request)); return new Response(nf.body, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } }); }
       return new Response(obj.body, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex, nofollow', 'cache-control': 'private, no-store', 'referrer-policy': 'no-referrer' } });
     }
     return env.ASSETS.fetch(request);
