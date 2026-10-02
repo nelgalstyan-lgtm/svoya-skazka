@@ -237,6 +237,43 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .compare thead th.ours{ background:var(--btn); }
 .compare td.ours{ background:#F7EBD6; }
 
+/* сравнение «обычная книга / Большая история» — карточка книги вместо таблицы */
+.vs{ display:grid; grid-template-columns:1.05fr 1fr 1.35fr; max-width:1000px; margin:0 auto; }
+.vs-row{ display:contents; }
+.vs-row > div{ padding:16px 20px; border-bottom:1px dashed var(--line); font-size:16px; line-height:1.45; }
+.vs-row:last-child > div{ border-bottom:none; }
+.vs-label{ display:flex; align-items:center; gap:12px; color:var(--text-soft); font-weight:700; }
+.vs-label img{ width:40px; height:40px; object-fit:contain; flex:none; }
+.vs-them{ color:var(--text-soft); position:relative; padding-left:44px !important; }
+.vs-them::before{ content:"—"; position:absolute; left:18px; color:#b9a88f; }
+.vs-us{ background:var(--card); border-left:2px solid var(--brass); border-right:2px solid var(--brass); color:var(--text); font-weight:700; position:relative; padding-left:48px !important; }
+.vs-us::before{ content:"★"; position:absolute; left:20px; color:var(--brass); }
+.vs-head > div{ border-bottom:none; font-family:var(--font-display); font-size:18px; align-self:end; }
+.vs-head .vs-them{ color:var(--text-soft); padding-bottom:18px; }
+.vs-head .vs-them::before, .vs-head .vs-us::before{ content:none; }
+.vs-head .vs-us{ border-top:2px solid var(--brass); border-radius:18px 18px 0 0; text-align:center; padding:26px 20px 18px !important; background:linear-gradient(180deg,#FBEFD8,var(--card)); }
+.vs-head .vs-us strong{ display:block; font-size:20px; color:var(--text); }
+.vs-hare{ display:block; width:96px; height:auto; margin:-70px auto 6px; }
+.vs-badge{ display:inline-block; font-family:var(--font-script); font-size:20px; color:var(--brass-text); margin-bottom:2px; }
+.vs-row:last-child .vs-us{ border-bottom:2px solid var(--brass); border-radius:0 0 18px 18px; box-shadow:0 22px 30px -26px rgba(74,53,39,.5); }
+.vs-head{ }
+.vs .vs-head + .vs-row > div{ border-top:none; }
+@media (max-width:700px){
+  .vs{ grid-template-columns:1fr 1.25fr; }
+  .vs-label{ grid-column:1 / -1; border-bottom:none !important; padding:18px 4px 6px !important; color:var(--text); }
+  .vs-head .vs-label{ display:none; }
+  .vs-row > div{ font-size:15px; padding:10px 12px; }
+  .vs-them{ padding-left:30px !important; }
+  .vs-them::before{ left:10px; }
+  .vs-us{ padding-left:34px !important; border:1.5px solid var(--brass) !important; border-radius:12px !important; box-shadow:none !important; margin-bottom:6px; }
+  .vs-row > .vs-them{ border-bottom:none; }
+  .vs-head .vs-us{ border-radius:18px !important; margin-bottom:4px; }
+  .vs-head .vs-them{ align-self:center; }
+  .vs-us::before{ left:12px; }
+  .vs-head .vs-us strong{ font-size:17px; }
+  .vs-head .vs-them{ font-size:15px; }
+}
+
 /* формы (анкета) */
 .form-shell{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius-l); box-shadow:var(--shadow-soft); }
 .field input[type="text"], .field input[type="number"], .field input[type="email"], .field input[type="tel"], .field select, .field textarea{

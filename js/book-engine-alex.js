@@ -229,9 +229,9 @@
 
   // Последние страницы: «Конец» (с QR-кодом на онлайн-версию), сертификат героя и раскраска
   function finaleSheet(root, opts) {
-    var page = newSheet(root, 'bk-finale');
+    var page = newSheet(root, 'bk-finale bk-has-hare');
     page.appendChild(h('div', 'bk-finale-title', 'Конец'));
-    page.appendChild(divider());
+    page.appendChild(img(KIT + 'decor/hare-greeting.webp', 'bk-finale-hare', '')); // Героёнок прощается (добавлено 02.10)
     page.appendChild(h('div', 'bk-finale-text', 'Эта книга написана специально для своего героя — с привычками, друзьями и близкими из анкеты. Пусть она возвращается к вам снова и снова.'));
     if (opts && opts.qr) { opts.qr.classList.add('bk-qr'); page.appendChild(opts.qr); }
     page.appendChild(h('div', 'bk-finale-brand', 'Героёнок'));

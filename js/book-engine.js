@@ -343,11 +343,10 @@
 
   // Последние страницы: «Конец» (с QR-кодом на онлайн-версию), сертификат героя и раскраска
   function finaleSheet(root, opts) {
-    var page = newSheet(root, 'bk-finale');
+    var page = newSheet(root, 'bk-finale bk-has-hare');
     page.appendChild(h('div', 'bk-finale-title', t('Конец', 'The End')));
-    // Героёнок, хранитель историй, прощается с читателем
-    if (FRAME === 'brand') page.appendChild(img(KIT + 'decor/hare-greeting.webp', 'bk-finale-hare', ''));
-    else page.appendChild(divider());
+    // Героёнок, хранитель историй, прощается с читателем — в любом оформлении
+    page.appendChild(img(KIT + 'decor/hare-greeting.webp', 'bk-finale-hare', ''));
     page.appendChild(h('div', 'bk-finale-text', t('Эта книга написана специально для своего героя — с привычками, друзьями и близкими из анкеты. Пусть она возвращается к вам снова и снова.', 'This book was written especially for its hero — with their own habits, friends and family. May you come back to it again and again.')));
     if (opts && opts.qr) { opts.qr.classList.add('bk-qr'); page.appendChild(opts.qr); }
     page.appendChild(h('div', 'bk-finale-brand', t('Героёнок', 'Geroenok')));
@@ -567,9 +566,10 @@
   function preloadImages(book) {
     var urls = [book.cover || KIT + 'parchment.jpg', KIT + 'hdr-treasure-l.png', KIT + 'hdr-treasure-r.png', KIT + 'hdr-wild.png', KIT + 'hdr-sea.svg', KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png', KIT + 'frame-cookies.jpg', KIT + 'frame-elves.jpg', KIT + 'hdr-cookies-l.png', KIT + 'hdr-cookies-r.png', KIT + 'hdr-elves-l.png', KIT + 'hdr-elves-r.png', KIT + 'divider-cookies.png', KIT + 'divider-elves.png', KIT + 'frame-pirates.jpg', KIT + 'frame-jungle.jpg', KIT + 'orn-pirates-skull.png'];
     if (ART && /^(pirates|jungle|cookies|elves)$/.test(FRAME)) urls.push(KIT + 'frame-' + FRAME + '-3d.jpg');
+    urls.push(KIT + 'decor/hare-greeting.webp'); // Героёнок на странице «Конец» — во всех оформлениях
     if (FRAME === 'brand') {
       var cfg = DECOR[SET];
-      urls.push(decorItem(cfg.icons[0]), decorItem(cfg.icons[1]), decorItem(cfg.sprig), KIT + 'decor/hare-greeting.webp');
+      urls.push(decorItem(cfg.icons[0]), decorItem(cfg.icons[1]), decorItem(cfg.sprig));
       [].concat(cfg.corners || [], cfg.folio || [], cfg.plate || []).forEach(function (n) { urls.push(decorItem(n)); });
       if (cfg.boy) [].concat(cfg.boy.corners || [], cfg.boy.folio || [], cfg.boy.plate || []).forEach(function (n) { urls.push(decorItem(n)); });
       if (cfg.strip) urls.push(KIT + 'decor/' + SET + '/strip.webp');
@@ -586,12 +586,19 @@
     }));
   }
 
+  // приключение для 11–16 лет без праздничного повода — оформление как у книги Алекса: пергамент, карта, предметы исследователя
+  // (решение владелицы 02.10: фирменные предметы и веточки подросткам слишком «детские»; сказки и праздники — в фирменном)
+  var ADVENTURE_GENRES = { sea: 1, treasure: 1, wild: 1, universal: 1, mystery: 1 };
+  function teenAdventure(book) {
+    return book.ageGroup === '11-16' && !!ADVENTURE_GENRES[book.genre] && book.occasion !== 'birthday' && book.occasion !== 'newyear';
+  }
+
   /** Раскладывает книгу по страницам внутри root. Возвращает { pages, sheets }. */
   function render(book, root, opts) {
     // фирменное оформление у всех книг; прежние рамки — только если их явно просят (?frame=… — для сравнения)
     LANG = book.lang === 'en' ? 'en' : 'ru';
-    FRAME = (opts && opts.frame) || 'brand';
-    FOOTER = FRAME === 'brand' ? 'brand' : (opts && opts.footer) || book.footer || (FRAME === 'vine' ? 'birds' : 'sea');
+    FRAME = (opts && opts.frame) || (teenAdventure(book) ? 'chart' : 'brand');
+    FOOTER = FRAME === 'brand' ? 'brand' : FRAME === 'chart' && !(opts && opts.frame) ? 'treasure' : (opts && opts.footer) || book.footer || (FRAME === 'vine' ? 'birds' : 'sea');
     SET = decorFor(book);
     OCCASION = book.occasion || '';
     BOY = book.meta ? book.meta.heroGirl === false : false;

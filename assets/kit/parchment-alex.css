@@ -495,3 +495,10 @@
   .bk-wrap:last-child{ break-after:auto; page-break-after:auto; }
   .bk-page{ transform:none !important; box-shadow:none; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 }
+
+/* «Конец»: Героёнок прощается с читателем (добавлено 02.10) */
+.bk-finale-hare{ position:absolute; left:50%; top:196px; width:150px; height:auto; transform:translateX(-50%); }
+.bk-has-hare .bk-finale-title{ top:118px; font-size:58px; }
+.bk-has-hare .bk-finale-text{ top:430px; font-size:19px; line-height:31px; }
+.bk-has-hare .bk-qr{ top:580px; }
+.bk-locked .bk-finale-hare{ display:none; }

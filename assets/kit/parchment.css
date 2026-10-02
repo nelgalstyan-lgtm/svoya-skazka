@@ -659,3 +659,10 @@
 .bk-has-strip .bk-brand-frame{ left:104px; }
 .bk-has-strip .bk-corner-tl, .bk-has-strip .bk-corner-bl{ display:none; }
 .bk-teen .bk-strip{ filter:sepia(.3) saturate(.8); }
+
+/* «Конец» в прежних оформлениях (пергамент с картой у приключений 11–16): Героёнок вместо разделителя */
+.bk-has-hare:not(.bk-f-brand) .bk-finale-title{ top:118px; font-size:58px; }
+.bk-has-hare:not(.bk-f-brand) .bk-finale-text{ top:430px; font-size:19px; line-height:31px; }
+.bk-has-hare:not(.bk-f-brand) .bk-qr{ top:580px; }
+.bk-locked .bk-finale-hare{ display:none; }
+.bk-has-hare.bk-locked:not(.bk-f-brand) .bk-finale-text{ top:230px; }
