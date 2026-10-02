@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Geroenok — Gift Certificate</title>
+<!-- Подарочный сертификат для розыгрыша в США (02.10.2026): приз — книга «Big Adventure» («Большая история») в подарок, не скидка (как у Амелии — подруга показывает её печатную копию).
+     Только электронный: PNG и PDF собирает docs/gift-us/render.mjs (локальный сервер из корня репозитория, порт 8080). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;0,700;1,500&family=Caveat:wght@600;700&family=PT+Sans:wght@400;700&display=swap">
+<style>
+:root{
+  --card:#FFFCF5; --cream:#FBF8EF; --paper-2:#F1E7D2; --walnut:#4A3527; --brass:#C99A4B; --brass-text:#7E5A26;
+  --text:#3F2816; --text-soft:#6B5443; --line:#E2D3B5; --sage:#56714F;
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ background:#EFE6D3; }
+.cert{
+  width:1600px; height:1100px; position:relative; overflow:hidden;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.7), transparent 55%),
+    radial-gradient(ellipse at 90% 95%, rgba(201,154,75,.12), transparent 50%),
+    var(--cream);
+  font-family:'PT Sans', Arial, sans-serif; color:var(--text);
+}
+/* двойная рамка, как у страниц книг и сертификата героя */
+.cert::before{ content:""; position:absolute; inset:28px; border:2px solid var(--brass-text); border-radius:10px 30px 30px 10px; }
+.cert::after{ content:""; position:absolute; inset:40px; border:1px solid var(--brass); border-radius:6px 24px 24px 6px; }
+.corner{ position:absolute; width:120px; z-index:2; }
+.corner.tl{ left:50px; top:46px; transform:rotate(-30deg); } .corner.tr{ right:58px; top:46px; transform:scaleX(-1) rotate(-30deg); }
+
+.left{ position:absolute; left:70px; top:70px; bottom:70px; width:560px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.left .arch{ width:500px; height:720px; border-radius:250px 250px 22px 22px; background:linear-gradient(180deg,#FBEFD8,#F4E4C4); border:2px solid var(--brass);
+  display:flex; align-items:flex-end; justify-content:center; overflow:hidden; box-shadow:inset 0 0 0 10px rgba(255,252,245,.65); }
+.left .arch img{ width:auto; height:600px; max-width:470px; margin-bottom:24px; }
+.left .note{ margin-top:22px; font:700 40px/1.15 'Caveat', cursive; color:var(--brass-text); text-align:center; }
+
+.right{ position:absolute; left:680px; right:110px; top:96px; bottom:80px; display:flex; flex-direction:column; }
+.brand{ display:flex; align-items:center; gap:12px; font:700 30px/1 'Lora', serif; color:var(--walnut); }
+.brand img{ width:46px; }
+.brand small{ font:700 15px/1 'PT Sans', sans-serif; letter-spacing:.24em; text-transform:uppercase; color:var(--brass-text); margin-left:10px; }
+.kicker{ margin-top:34px; font:700 34px/1 'Caveat', cursive; color:var(--brass-text); }
+h1{ font:700 76px/1.02 'Lora', serif; color:var(--walnut); margin-top:6px; }
+.vignette{ display:block; width:430px; margin:14px 0 6px -10px; }
+.lead{ font-size:24px; line-height:1.45; color:var(--text-soft); margin-top:4px; max-width:780px; }
+.lead b{ color:var(--text); }
+
+.fields{ display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:26px; margin-top:30px; }
+.field small{ display:block; font:700 13px/1 'PT Sans', sans-serif; letter-spacing:.2em; text-transform:uppercase; color:var(--brass-text); margin-bottom:10px; }
+.field div{ font:600 26px/1.2 'Lora', serif; color:var(--walnut); border-bottom:1.5px solid var(--brass); padding-bottom:8px; min-height:42px; }
+.field .blank{ color:transparent; }
+
+.redeem{ margin-top:32px; display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.step{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:0 10px 22px -18px rgba(74,53,39,.5); }
+.step b{ display:block; font:700 18px/1.25 'Lora', serif; color:var(--walnut); margin-bottom:6px; }
+.step b i{ font-style:normal; color:var(--brass-text); margin-right:6px; }
+.step span{ font-size:16px; line-height:1.4; color:var(--text-soft); }
+.contact{ margin-top:22px; font-size:19px; color:var(--text); }
+.contact b{ color:var(--brass-text); }
+.fine{ margin-top:auto; font-size:13.5px; line-height:1.5; color:var(--text-soft); }
+</style>
+</head>
+<body>
+<div class="cert">
+
+  <div class="left">
+    <div class="arch"><img src="hare-letter.png" alt="Geroenok the rabbit holding a letter"></div>
+    <p class="note">Every child deserves<br>their own story</p>
+  </div>
+
+  <div class="right">
+    <div class="brand"><img src="../../assets/brand/logo-mark-alpha.png" alt="">Geroenok<small>Personalized storybooks</small></div>
+    <p class="kicker">A gift for a little hero</p>
+    <h1>Gift Certificate</h1>
+    <img class="vignette" src="../../assets/kit/decor/tajny/vignette.webp" alt="">
+    <p class="lead">This certificate is a gift of <b>one personalized Big Adventure</b> — a real storybook with six chapters, written just for your child, who appears on every illustration, drawn from your photos. It comes with a narrated audiobook, coloring pages of your child, a hero certificate, a PDF and print-ready files for a paper copy.</p>
+
+    <div class="fields">
+      <div class="field"><small>Presented to</small><div id="to">__TO__</div></div>
+      <div class="field"><small>Certificate No.</small><div id="no">__NO__</div></div>
+      <div class="field"><small>Valid until</small><div id="until">__UNTIL__</div></div>
+    </div>
+
+    <div class="redeem">
+      <div class="step"><b><i>1</i>Email us</b><span>Write to support@geroenok.online with your certificate number.</span></div>
+      <div class="step"><b><i>2</i>Tell us about your child</b><span>Name, age, what they love — and 1–3 clear photos.</span></div>
+      <div class="step"><b><i>3</i>Get your book</b><span>Read it online, listen to the audiobook, download the PDF — or print it at any local print shop.</span></div>
+    </div>
+    <p class="contact">Questions? Email <b>support@geroenok.online</b> or call / text <b>+1 (916) 833-5230</b></p>
+
+    <p class="fine">This certificate is a free gift — not a discount; no purchase necessary. One book per certificate, not exchangeable for cash. The book is digital (online, audiobook and PDF); we don’t print or ship. Photos are used only to draw the book and are deleted once it’s ready.</p>
+  </div>
+</div>
+<script>
+// данные сертификата — из адреса: ?to=…&no=…&until=…
+var q = new URLSearchParams(location.search);
+[['to', ''], ['no', 'GRN-US-0001'], ['until', '']].forEach(function (f) {
+  var el = document.getElementById(f[0]); var v = q.get(f[0]) || f[1];
+  el.textContent = v || ' '; if (!v) el.classList.add('blank');
+});
+</script>
+</body>
+</html>
