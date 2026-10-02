@@ -40,3 +40,4 @@ dist/
 .wrangler/
 yc-key.json
 assets/kit/amelia/
+en.html
