@@ -253,7 +253,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .vs-head .vs-them::before, .vs-head .vs-us::before{ content:none; }
 .vs-head .vs-us{ border-top:2px solid var(--brass); border-radius:18px 18px 0 0; text-align:center; padding:26px 20px 18px !important; background:linear-gradient(180deg,#FBEFD8,var(--card)); }
 .vs-head .vs-us strong{ display:block; font-size:20px; color:var(--text); }
-.vs-hare{ display:block; width:96px; height:auto; margin:-70px auto 6px; }
+.vs-hare{ display:block; width:84px; height:auto; margin:0 auto 6px; }
 .vs-badge{ display:inline-block; font-family:var(--font-script); font-size:20px; color:var(--brass-text); margin-bottom:2px; }
 .vs-row:last-child .vs-us{ border-bottom:2px solid var(--brass); border-radius:0 0 18px 18px; box-shadow:0 22px 30px -26px rgba(74,53,39,.5); }
 .vs-head{ }
