@@ -24,6 +24,13 @@ export default {
         return Response.json({ ok: false, error: 'Что-то пошло не так. Попробуйте ещё раз через минуту.' }, { status: 500 });
       }
     }
+    // закрытые страницы только по ссылке: /p/<длинный код> → R2 private/<код>.html (в репозитории их нет — он открытый)
+    const priv = /^\/p\/([A-Za-z0-9_-]{20,64})\/?$/.exec(url.pathname);
+    if (priv) {
+      const obj = await env.BUCKET.get(`private/${priv[1]}.html`);
+      if (!obj) return env.ASSETS.fetch(new Request(new URL('/404.html', url), request));
+      return new Response(obj.body, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex, nofollow', 'cache-control': 'private, no-store', 'referrer-policy': 'no-referrer' } });
+    }
     return env.ASSETS.fetch(request);
   },
 
