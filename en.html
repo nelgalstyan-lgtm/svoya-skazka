@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geroenok — a storybook where your child is the hero</title>
+<meta name="description" content="A personalized digital storybook: your child is drawn from your photo on every illustration, with their name, friends and family in the story.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://geroenok.online/en">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Caveat:wght@600&family=PT+Sans:wght@400;700&display=swap">
+<link rel="icon" href="/assets/brand/star.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+<style>
+/* Страница для гостей из США (01.10, выложена 02.10). Заказ — письмом на support@ (кнопка mailto с вопросами),
+   оплата — инструкция по Zelle в ответном письме (деньги принимает подруга владелицы в США). Палитра — как в assets/geroenok.css. */
+:root{
+  --paper:#F6F3E7; --paper-2:#F1E7D2; --cream:#FBF8EF; --card:#FFFCF5;
+  --walnut:#4A3527; --brass:#C99A4B; --brass-text:#7E5A26; --blue-deep:#4F6E75; --sage:#56714F;
+  --text:#3F2816; --text-soft:#6B5443; --text-light:#FBF3E3; --line:#E2D3B5;
+  --btn:#8A5A36; --btn-hover:#7A4E2E;
+  --display:'Lora', Georgia, serif; --script:'Caveat', cursive; --body:'PT Sans', Arial, sans-serif;
+  --shadow:0 18px 36px -22px rgba(74,53,39,.38);
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{ margin:0; font-family:var(--body); font-size:17px; line-height:1.6; color:var(--text); background:var(--paper); -webkit-font-smoothing:antialiased; }
+img{ max-width:100%; display:block; }
+h1,h2,h3{ font-family:var(--display); line-height:1.2; margin:0 0 .5em; color:var(--walnut); }
+h1{ font-size:clamp(30px, 5vw, 46px); }
+h2{ font-size:clamp(25px, 3.6vw, 34px); text-align:center; }
+h3{ font-size:20px; }
+p{ margin:0 0 1em; }
+.wrap{ max-width:1080px; margin:0 auto; padding:0 16px; }
+section{ padding:64px 0; }
+.alt{ background:var(--paper-2); }
+.sub{ text-align:center; color:var(--text-soft); max-width:620px; margin:-6px auto 34px; }
+
+/* шапка */
+header{ padding:14px 0; border-bottom:1px solid var(--line); background:var(--cream); }
+header .wrap{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.logo{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--walnut); font-family:var(--display); font-weight:700; font-size:22px; }
+.logo img{ width:40px; height:auto; mix-blend-mode:multiply; }
+
+.btn{ display:inline-block; background:var(--btn); color:#fff; text-decoration:none; font-weight:700; padding:14px 26px; border-radius:999px; border:0; font:inherit; font-weight:700; cursor:pointer; box-shadow:var(--shadow); }
+.btn:hover{ background:var(--btn-hover); }
+.btn-small{ padding:9px 18px; font-size:15px; box-shadow:none; }
+
+/* первый экран */
+.hero{ padding:48px 0 56px; background:var(--cream); }
+.hero .wrap{ display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:center; }
+.kicker{ font-family:var(--script); font-size:26px; color:var(--brass-text); display:block; margin-bottom:4px; }
+.lead{ font-size:19px; color:var(--text-soft); }
+.party{ display:inline-block; margin-top:18px; padding:10px 16px; border:2px dashed var(--brass); border-radius:12px; background:var(--card); font-weight:700; color:var(--brass-text); }
+.pair{ display:grid; grid-template-columns:1fr 1.5fr; gap:12px; align-items:end; }
+.pair figure{ margin:0; }
+.pair img{ border-radius:14px; box-shadow:var(--shadow); width:100%; }
+.pair figcaption{ font-family:var(--script); font-size:21px; text-align:center; color:var(--text-soft); margin-top:4px; }
+
+/* шаги */
+.steps{ display:grid; grid-template-columns:repeat(4, 1fr); gap:18px; }
+.step{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px 18px; }
+.step b{ display:flex; width:36px; height:36px; border-radius:50%; background:var(--brass); color:#fff; align-items:center; justify-content:center; font-family:var(--display); margin-bottom:10px; }
+.step p{ margin:0; color:var(--text-soft); font-size:16px; }
+
+/* галерея */
+.gallery{ display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; }
+.gallery img{ border-radius:14px; aspect-ratio:2/3; object-fit:cover; width:100%; box-shadow:var(--shadow); }
+.note{ text-align:center; font-size:15px; color:var(--text-soft); margin-top:16px; }
+
+/* цены */
+.plans{ display:grid; grid-template-columns:1fr 1fr; gap:22px; max-width:820px; margin:0 auto; }
+.plan{ background:var(--card); border:1px solid var(--line); border-radius:20px; padding:28px 26px; display:flex; flex-direction:column; }
+.plan.best{ border:2px solid var(--brass); }
+.plan .price{ font-family:var(--display); font-size:38px; color:var(--walnut); font-weight:700; line-height:1; }
+.plan .party-price{ color:var(--brass-text); font-weight:700; margin:6px 0 14px; }
+.plan ul{ padding-left:20px; margin:0 0 20px; color:var(--text-soft); }
+.plan .btn{ margin-top:auto; text-align:center; }
+.tag{ align-self:flex-start; font-size:13px; font-weight:700; background:var(--brass); color:#fff; padding:3px 10px; border-radius:999px; margin-bottom:10px; }
+
+/* форма */
+form{ max-width:640px; margin:0 auto; background:var(--card); border:1px solid var(--line); border-radius:20px; padding:28px 24px; }
+label{ display:block; font-weight:700; margin:16px 0 6px; }
+label small{ font-weight:400; color:var(--text-soft); }
+input, select, textarea{ width:100%; font:inherit; padding:11px 13px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--text); }
+textarea{ min-height:96px; resize:vertical; }
+.row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.choice{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.choice label{ margin:0; font-weight:400; border:1px solid var(--line); border-radius:12px; padding:12px; display:flex; gap:10px; align-items:flex-start; cursor:pointer; background:#fff; }
+.choice input{ width:auto; margin-top:5px; }
+.consent{ display:flex; gap:10px; font-weight:400; font-size:15px; color:var(--text-soft); }
+.consent input{ width:auto; margin-top:5px; }
+form .btn{ width:100%; margin-top:22px; }
+.order-card{ max-width:720px; margin:0 auto; background:var(--card); border:2px solid var(--brass); border-radius:20px; padding:28px 30px; text-align:center; box-shadow:var(--shadow); }
+.order-steps{ text-align:left; margin:0 0 22px; padding-left:22px; line-height:1.55; }
+.order-steps li{ margin-bottom:10px; }
+.order-card .btn{ font-size:19px; padding:16px 30px; }
+.order-alt{ margin-top:16px; font-size:15px; color:var(--text-soft); }
+.order-note{ margin-top:8px; font-size:14px; color:var(--text-soft); }
+.order-alt a, .legal a{ color:var(--brass-text); font-weight:700; }
+.thanks{ display:none; max-width:640px; margin:0 auto; text-align:center; background:var(--card); border:2px solid var(--sage); border-radius:20px; padding:30px 24px; }
+.thanks img{ width:120px; margin:0 auto 10px; mix-blend-mode:multiply; }
+
+/* вопросы */
+details{ max-width:760px; margin:0 auto 10px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 18px; }
+summary{ font-weight:700; cursor:pointer; }
+details p{ margin:10px 0 0; color:var(--text-soft); }
+
+/* преимущества и сравнение */
+.perks{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+.perk{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 18px; }
+.perk .ic{ font-size:26px; line-height:1; margin-bottom:8px; }
+.perk h3{ font-size:18px; margin-bottom:6px; }
+.perk p{ margin:0; color:var(--text-soft); font-size:15.5px; }
+.compare{ max-width:820px; margin:30px auto 0; background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+.compare table{ width:100%; border-collapse:collapse; font-size:15.5px; }
+.compare th, .compare td{ padding:11px 14px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+.compare thead th{ background:var(--paper-2); font-family:var(--display); color:var(--walnut); }
+.compare td.yes{ color:var(--sage); font-weight:700; }
+.compare td.no{ color:var(--text-soft); }
+.compare tr:last-child td{ border-bottom:0; }
+.facts{ margin:14px 0 0; color:var(--text-soft); font-size:15px; }
+footer{ background:var(--walnut); color:var(--text-light); padding:30px 0; text-align:center; font-size:15px; }
+footer a{ color:var(--text-light); }
+.legal p{ font-size:15px; line-height:1.6; color:var(--text-soft); margin:0 0 12px; max-width:860px; }
+.legal b{ color:var(--text); }
+
+@media (max-width: 860px){
+  .perks{ grid-template-columns:1fr 1fr; }
+  .hero .wrap{ grid-template-columns:1fr; gap:28px; }
+  .steps{ grid-template-columns:1fr 1fr; }
+  .gallery{ grid-template-columns:1fr 1fr; }
+  .plans{ grid-template-columns:1fr; }
+}
+@media (max-width: 520px){
+  section{ padding:48px 0; }
+  .steps, .row, .choice, .perks{ grid-template-columns:1fr; }
+  .compare th, .compare td{ padding:9px 10px; font-size:14px; }
+  header .btn-small{ display:none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="#top"><img src="assets/brand/logo-mark-96.webp" width="40" height="41" alt="">Geroenok</a>
+    <a class="btn btn-small" href="#order">Order a book</a>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <span class="kicker">Every child deserves their own story</span>
+      <h1>A storybook where your child is the real hero</h1>
+      <p class="lead">Send us a photo — and your child appears on every illustration of a story written just for them: with their name, their friends, their family and the little things that make them who they are.</p>
+      <a class="btn" href="#order">Create my child's book</a>
+      <div class="party">🎁 Have a gift certificate? <a href="#order" style="color:inherit;">Email us your certificate number</a></div>
+      <p class="facts">A digital book · written for one child only · drawn from your photo · narrated audiobook · checked by a real person</p>
+    </div>
+    <div class="pair">
+      <figure>
+        <img src="assets/examples/alex-3d/photo.webp" width="241" height="321" alt="Photo of a boy">
+        <figcaption>your photo…</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/examples/alex-3d/ill-1-360.webp" width="360" height="540" alt="The same boy as the hero of a book illustration">
+        <figcaption>…becomes the hero</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="why">
+  <div class="wrap">
+    <h2>Why parents choose Geroenok</h2>
+    <p class="sub">Most “personalized” books change only the name. Ours is written and drawn for one child — yours.</p>
+    <div class="perks">
+      <div class="perk"><div class="ic">✍️</div><h3>A story about your child, not a template</h3><p>We write a new story from what you tell us: your child’s character, hobbies, favorite toys, pets, friends and family. No two books are the same.</p></div>
+      <div class="perk"><div class="ic">📷</div><h3>Drawn from your photo on every page</h3><p>Your child is on the cover and on every illustration — recognizable face, same hair, same outfit from the first page to the last. Choose a 3D cartoon or a classic watercolor style.</p></div>
+      <div class="perk"><div class="ic">🎧</div><h3>A narrated audiobook</h3><p>Every book comes with an audiobook read by a warm professional voice — for bedtime, car rides, or whenever your child wants to hear it again.</p></div>
+      <div class="perk"><div class="ic">🖍️</div><h3>Coloring pages of themselves</h3><p>The Big Adventure ends with 3 coloring pages made from your child’s own illustrations — they get to color themselves as the hero.</p></div>
+      <div class="perk"><div class="ic">🏅</div><h3>A hero certificate</h3><p>A certificate with your child’s portrait from the cover: proof that they bravely passed all the trials of their book.</p></div>
+      <div class="perk"><div class="ic">🖨️</div><h3>Want it on paper? Print it yourself</h3><p>We don’t print or ship — your book is digital. But it comes with print-shop files (300 dpi, with bleed) and a print specification, so any local print shop can make a paper copy if you’d like one.</p></div>
+      <div class="perk"><div class="ic">💛</div><h3>Checked by a real person</h3><p>Every book is reviewed by us before you get it. Want to change something? Just reply to our email — corrections are free.</p></div>
+      <div class="perk"><div class="ic">💌</div><h3>A dedication from you</h3><p>The book opens with your own words — or we write warm words on your behalf, signed with your names.</p></div>
+      <div class="perk"><div class="ic">🔒</div><h3>Private and safe</h3><p>Your book opens only by its private link. Photos are used only to draw the book and are deleted once it’s ready.</p></div>
+    </div>
+
+    <div class="compare">
+      <table>
+        <thead><tr><th></th><th>Typical personalized book</th><th>Geroenok</th></tr></thead>
+        <tbody>
+          <tr><td>The story</td><td class="no">The same story for everyone, with a name inserted</td><td class="yes">Written for your child: their friends, family, hobbies</td></tr>
+          <tr><td>The hero</td><td class="no">A cartoon “look-alike” built from a few options</td><td class="yes">Drawn from your photo on every illustration</td></tr>
+          <tr><td>Audiobook</td><td class="no">Usually not included</td><td class="yes">Included, professional narration</td></tr>
+          <tr><td>Coloring pages</td><td class="no">Rarely</td><td class="yes">From your child’s own illustrations (Big Adventure)</td></tr>
+          <tr><td>Paper copy</td><td class="no">Only from them, at their price and shipping time</td><td class="yes">Optional: print-ready files + specification for any local print shop</td></tr>
+          <tr><td>Changes</td><td class="no">What you get is what you get</td><td class="yes">Free corrections, reviewed by a person</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="sub">No apps, no accounts. It takes about five minutes to tell us about your child.</p>
+    <div class="steps">
+      <div class="step"><b>1</b><h3>Tell us about your child</h3><p>Name, age, what they love, who their best friends are.</p></div>
+      <div class="step"><b>2</b><h3>Add 1–3 photos</h3><p>Ordinary phone photos with the face clearly visible.</p></div>
+      <div class="step"><b>3</b><h3>We create the book</h3><p>A unique story and illustrations where your child looks like themselves.</p></div>
+      <div class="step"><b>4</b><h3>Read it together</h3><p>Online on any device, with an audiobook and a PDF to download.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2>Inside the books</h2>
+    <p class="sub">Real pages from books we made — every child is drawn from their own photo, wearing the same clothes from the first page to the last. Family and friends from your form appear in the story.</p>
+    <div class="gallery">
+      <img src="assets/examples/max-3d/ill-3-360.webp" alt="A little boy with a pelican at a seaside hotel" loading="lazy">
+      <img src="assets/examples/alex-3d/ill-4-360.webp" alt="A boy on an adventure" loading="lazy">
+      <img src="assets/examples/max-3d/ill-6-360.webp" alt="A little boy in the snowy mountains" loading="lazy">
+      <img src="assets/examples/max-3d/coloring-3-360.webp" alt="A coloring page made from the same illustration" loading="lazy">
+    </div>
+    <p class="note">The last one is a coloring page made from the child's own illustration.</p>
+  </div>
+</section>
+
+<section id="prices">
+  <div class="wrap">
+    <h2>Choose a book</h2>
+    <p class="sub">A digital book: read it online, listen to it and download it as a PDF. We don’t print or ship — print-shop files are included if you want a paper copy.</p>
+    <div class="plans">
+      <div class="plan">
+        <h3>Bedtime Story</h3>
+        <div class="price">$29</div>
+        <ul>
+          <li>A short story for one evening, written for your child</li>
+          <li>8 illustrations drawn from your photo</li>
+          <li>Narrated audiobook</li>
+          <li>Your dedication and a hero certificate</li>
+          <li>Online book and PDF (+ print-shop files)</li>
+          <li>Free corrections</li>
+        </ul>
+        <a class="btn" href="#order" data-plan="story">Choose</a>
+      </div>
+      <div class="plan best">
+        <span class="tag">Best gift</span>
+        <h3>Big Adventure</h3>
+        <div class="price">$49</div>
+        <ul>
+          <li>A real book with 6 chapters, written for your child</li>
+          <li>8–10 illustrations drawn from your photo</li>
+          <li>Narrated audiobook, chapter by chapter</li>
+          <li>3 coloring pages from your child’s illustrations</li>
+          <li>Your dedication and a hero certificate</li>
+          <li>Online book and PDF (+ print-shop files)</li>
+          <li>Free corrections</li>
+        </ul>
+        <a class="btn" href="#order" data-plan="big">Choose</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="order">
+  <div class="wrap">
+    <h2>Order your book</h2>
+    <p class="sub">Ordering is simple: send us one email with a few answers about your child and 1–3 photos. We reply within 24 hours with payment instructions and the date your book will be ready.</p>
+    <div class="order-card">
+      <ol class="order-steps">
+        <li><b>Email us</b> — the button opens a ready-made email with all the questions. Just fill in the answers and attach 1–3 photos.</li>
+        <li><b>Pay</b> — we reply with the price and payment instructions (Zelle, US).</li>
+        <li><b>Get your book</b> — usually within 3–5 days after payment: a private link to read online, the audiobook, a PDF and print-ready files.</li>
+      </ol>
+      <a class="btn" href="mailto:support@geroenok.online?subject=Book%20order&body=Hi%20Geroenok%21%20I%27d%20like%20to%20order%20a%20book.%0A%0ABook%3A%20Big%20Adventure%20%28%2449%29%20/%20Bedtime%20Story%20%28%2429%29%0AGift%20certificate%20number%20%28if%20you%20have%20one%29%3A%0A%0AABOUT%20MY%20CHILD%0A1.%20Name%3A%0A2.%20Age%3A%0A3.%20Boy%20or%20girl%3A%0A4.%20Eye%20color%20and%20hair%3A%0A5.%20Character%2C%20hobbies%2C%20favorite%20things%2C%20funny%20habits%20or%20words%3A%0A6.%20Best%20friends%20and%20pets%20for%20the%20story%3A%0A7.%20Family%20members%20to%20include%3A%0A%0AABOUT%20THE%20BOOK%0A8.%20Adventure%20or%20fairy%20tale%3A%0A9.%20Occasion%20%28birthday%2C%20holiday%2C%20none%29%3A%0A10.%20Something%20the%20story%20could%20gently%20help%20with%20%28optional%29%3A%0A11.%20Style%3A%203D%20cartoon%20or%20watercolor%3A%0A12.%20Dedication%20%28your%20words%20and%20who%20it%27s%20from%2C%20or%20%22please%20write%20it%20for%20us%22%29%3A%0A%0AI%27m%20attaching%201-3%20photos%20of%20my%20child%20%28face%20clearly%20visible%29.%0AI%20am%20the%20child%27s%20parent%20or%20guardian%20and%20agree%20that%20the%20photos%20are%20used%20only%20to%20create%20this%20book.%0A">✉️ Order by email</a>
+      <p class="order-alt">Button not working? Write to <a href="mailto:support@geroenok.online">support@geroenok.online</a> · Questions: call or text <a href="tel:+19168335230">+1 (916) 833-5230</a></p>
+      <p class="order-note">Photos are used only to draw your child’s book and are deleted once it’s ready. Gift certificate? Just add its number to your email.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Questions</h2>
+    <details><summary>Is it a printed book?</summary><p>No — it’s a digital book. We don’t print or ship books. You read and listen to it online on any phone, tablet or computer and download it as a PDF. If you’d like a paper copy, the book includes print-shop files and a print specification: take them to any local print shop.</p></details>
+    <details><summary>Can I change something after I see the book?</summary><p>Yes. Just reply to our email with what you’d like to change — a name, a detail in the story, an illustration. Corrections are free.</p></details>
+    <details><summary>Is there an audiobook?</summary><p>Yes, every book comes with an audiobook read by a professional narrator. It plays right in the online book, and the QR code in the printed copy opens it too.</p></details>
+    <details><summary>How long does it take?</summary><p>Usually 3–5 days after payment. We will tell you the exact date by email.</p></details>
+    <details><summary>Will my child really look like themselves?</summary><p>Yes — every illustration is drawn from your photos, in a 3D cartoon or watercolor style. The clearer the face in the photo, the better the likeness.</p></details>
+    <details><summary>What happens to the photos?</summary><p>They are used only to draw your child's book and are deleted once the book is ready. We never publish them.</p></details>
+    <details><summary>How do I pay?</summary><p>After you email us, we reply with the price and payment instructions (Zelle, US). We start your book as soon as the payment arrives. If you have a gift certificate, the book is free — just send us its number.</p></details>
+  </div>
+</section>
+
+<section id="terms">
+  <div class="wrap legal">
+    <h2>Terms &amp; privacy</h2>
+    <p><b>Seller.</b> Individual entrepreneur Nelli Galstyan, Republic of Armenia. Tax ID (UNN) 20368453, registration No. 286.1602388. Address: 36 Vardanants St., apt. 68, Vanadzor, Republic of Armenia. Email: <a href="mailto:support@geroenok.online">support@geroenok.online</a>. US phone / text: +1 (916) 833-5230.</p>
+    <p><b>What you buy.</b> A personalized digital storybook (Bedtime Story — $29, Big Adventure — $49): read online by a private link, a narrated audiobook, a PDF and print-ready files. We don’t print or ship. The link works for one year; the PDF is yours to keep.</p>
+    <p><b>Payment and delivery.</b> Full prepayment by the instructions we email you. The book is usually ready within 3–5 days after payment; we tell you the exact date by email.</p>
+    <p><b>Changes and refunds.</b> Corrections to the text and illustrations are free — just reply to our email. Because every book is made for one child, we don’t refund a finished book, except when it doesn’t match the details you sent us through our fault.</p>
+    <p><b>Gift certificates.</b> A gift certificate is a free gift, not a discount: one book per certificate, within its validity date, not exchangeable for cash.</p>
+    <p><b>Privacy.</b> We use your answers and photos only to create your child’s book. Photos are passed only to the service that draws the illustrations and are deleted once the book is ready; we never publish them or use them for advertising. The book itself (without photos) is stored for one year so you can open it by its link, or deleted earlier on your request. Your email is used only to talk to you about your order.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Geroenok — personalized storybooks · <a href="mailto:support@geroenok.online">support@geroenok.online</a> · <a href="#terms">Terms &amp; privacy</a></p>
+  </div>
+</footer>
+
+
+</body>
+</html>
