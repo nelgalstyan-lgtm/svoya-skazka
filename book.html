@@ -158,8 +158,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 .sk-strip-right .story{ padding-left:68px; padding-right:128px; }
 .sk-strip-right .page-item, .sk-strip-right .pageno{ padding-left:0; padding-right:60px; }
 /* малышам: лист с текстом нарисован целиком (kidsSheet), текст — в пустой середине, номер — под текстом */
-.kids-page .story{ position:absolute; top:var(--kt); right:var(--kr); bottom:calc(var(--kb) + 40px); left:var(--kl); padding:0; line-height:1.55; }
-.kids-page .pageno{ top:calc(100% - var(--kb) - 36px); bottom:auto; left:var(--kl); right:var(--kr); }
+.kids-page .story{ position:absolute; padding:0; display:block; line-height:1.5; }
+.kids-page .pageno{ bottom:auto; }
 .kids-page .pageno img{ display:none; }
 .pic-page .hero{ position:absolute; inset:0; float:none; width:auto; height:auto; margin:0; border-radius:0; box-shadow:none; }
 .qr-block{ display:flex; align-items:center; gap:18px; margin:26px 110px 0; text-align:left; }
@@ -371,30 +371,72 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   const DECOR = { tajny: { sprig: 9, folio: [6, 3], strip: true }, korolevstvo: { sprig: 9, boyFolio: [7, 6], strip: true }, 'novyj-god': { sprig: 10, strip: true }, 'den-rozhdeniya': { sprig: 9, compose: [9, 1, 10], strip: true } };
   const DECOR_BY_THEME = { adventure: 'tajny', fairytale: 'korolevstvo', newyear: 'novyj-god', birthday: 'den-rozhdeniya' };
   // Малышам (до 7 лет) — листы с текстом целиком нарисованы: Героёнок в образе темы по краям, середина для текста
-  // (assets/kit/decor/<набор>/kids-1|2.webp, два вида чередуются). Поля текста — отступы от краёв листа в %:
-  // [сверху, справа, снизу, слева], подобраны по картинкам, чтобы текст не заходил на рисунок
+  // (assets/kit/decor/<набор>/kids-1|2.webp, два вида чередуются; такая же таблица — в js/book-engine.js)
   const KIDS_AGE = 7;
+  // [сверху, справа, снизу, слева, вырезы] — поле текста в % от краёв листа; вырезы — рисунок внутри поля (Героёнок, предметы в углах),
+  // текст их обтекает: tl/bl — [правый край, низ|верх], tr/br — [левый край, низ|верх] в % листа. Подобраны по рисунку автоматически
+  // (не ближе ~2% к рисунку и 6% к краю листа) — подбор — scripts/kids_layout.py
   const KIDS = {
-    tajny: [[16, 12, 33, 16], [22, 13, 32, 17]],
-    more: [[10, 13, 44, 13], [24, 17, 32, 13]],
-    poxod: [[16, 12, 36, 12], [14, 12, 33, 24]],
-    korolevstvo: [[10, 20, 25, 22], [20, 16, 36, 16]],
-    les: [[15, 14, 38, 14], [19, 14, 36, 14]],
-    podvodnoe: [[8, 13, 36, 24], [22, 14, 33, 14]],
-    'novyj-god': [[13, 12, 32, 14], [24, 20, 24, 13]],
-    'den-rozhdeniya': [[14, 13, 40, 13], [24, 13, 40, 13]]
+    tajny: [[14, 10, 15, 15, { tl: [24.5, 20], tr: [86, 17.5], bl: [21, 78.5], br: [74.5, 69] }], [12, 11, 12, 15, { tr: [70.5, 27], bl: [26, 82.5], br: [69, 67] }]],
+    more: [[16.5, 10, 12, 12, { bl: [19, 82], br: [67.5, 62] }], [10, 15.5, 19, 9.5, { tl: [26, 28], bl: [18, 76], br: [64, 71.5] }]],
+    poxod: [[18, 8.5, 22, 12, { tl: [16.5, 21], bl: [36, 68], br: [80.5, 69.5] }], [13, 11, 25, 19, { tl: [31.5, 17], br: [84, 66.5] }]],
+    korolevstvo: [[16, 16, 11, 21, { bl: [23, 85.5], br: [76, 72.5] }], [8, 6.5, 18, 6, { tl: [38, 33.5], bl: [32.5, 67], br: [88, 74] }]],
+    les: [[19, 9, 23, 13, { tl: [17.5, 28], bl: [28, 60], br: [80.5, 69.5] }], [11, 9, 27.5, 16, { tl: [30.5, 19.5], bl: [45.5, 62.5] }]],
+    podvodnoe: [[8.5, 10.5, 22.5, 26, { tl: [27.5, 19], br: [79.5, 65] }], [9.5, 13.5, 19, 9.5, { tl: [22.5, 21], tr: [78.5, 19], bl: [29.5, 58], br: [70, 70.5] }]],
+    'novyj-god': [[16, 9.5, 16, 22, { br: [74, 67] }], [19, 9.5, 16, 10.5, { tl: [20.5, 29], tr: [81.5, 33], bl: [20, 79], br: [77.5, 75] }]],
+    'den-rozhdeniya': [[15.5, 13.5, 19, 16, { br: [63.5, 65] }], [15, 10.5, 17, 12.5, { tr: [78, 26], bl: [56, 80], br: [56, 54.5] }]]
   };
-  const KIDS_SPLIT = 450; // больше знаков на лист не ставим — делим текст страницы на несколько листов (иначе шрифт для малышей мелкий)
+  const KIDS_SPLIT = 650; // больше знаков на лист не ставим — делим текст страницы на несколько листов (иначе шрифт для малышей мелкий)
   let KIDS_ON = false;
   let KIDS_SET = 'tajny'; // набор листов малышей: как SET, но у книги ко дню рождения — именинные листы
   let kidsCount = 0;
   function kidsSheet(s) {
     s.setAttribute('data-kids-no', String(kidsCount + 1)); // номер листа с текстом (страница сказки может занять несколько)
     const n = kidsCount++ % 2;
-    const box = KIDS[KIDS_SET][n];
     s.classList.add('text-page', 'kids-page');
     s.style.background = 'url("assets/kit/decor/' + KIDS_SET + '/kids-' + (n + 1) + '.webp") center/100% 100% no-repeat #f6efdf';
-    ['--kt', '--kr', '--kb', '--kl'].forEach(function (v, i) { s.style.setProperty(v, box[i] + '%'); });
+    s.kidsLayout = KIDS[KIDS_SET][n];
+  }
+  // текст — в поле листа, номер — под ним; вырезы с рисунком текст обтекает
+  function kidsPlace(s) {
+    const W = SHEET_W, H = 1123, k = s.kidsLayout, cuts = k[4] || {};
+    const area = { top: k[0] * H / 100, right: W - k[1] * W / 100, bottom: H - k[2] * H / 100 - 40, left: k[3] * W / 100 };
+    const story = s.querySelector('.story');
+    story.style.cssText += ';top:' + area.top + 'px;left:' + area.left + 'px;width:' + (area.right - area.left) + 'px;height:' + (area.bottom - area.top) + 'px';
+    const px = {};
+    Object.keys(cuts).forEach(function (c) { px[c] = { x: cuts[c][0] * W / 100, y: cuts[c][1] * H / 100 }; });
+    kidsCuts(story, area, px);
+    const no = s.querySelector('.pageno');
+    if (no) no.style.cssText += ';top:' + (area.bottom + 4) + 'px;left:' + area.left + 'px;right:' + (W - area.right) + 'px';
+  }
+  // Вырезы в поле текста — пустые «плавающие» блоки в углах, текст их обтекает. Нижние ставятся через распорку нулевой ширины
+  // (float не умеет прижиматься к низу). area и cuts — в px листа: tl/tr — {x: край выреза, y: его низ}, bl/br — {x, y: его верх}
+  function kidsCuts(story, area, cuts) {
+    const floats = [], spacers = [], late = [];
+    function f(side, w, h, clear) {
+      const d = document.createElement('div');
+      d.className = 'kids-cut';
+      d.style.cssText = 'float:' + side + ';width:' + Math.max(0, w) + 'px;height:' + Math.max(0, h) + 'px' + (clear ? ';clear:' + side : '');
+      return d;
+    }
+    if (cuts.tl && cuts.tl.y > area.top && cuts.tl.x > area.left) floats.push(f('left', cuts.tl.x - area.left, cuts.tl.y - area.top));
+    if (cuts.tr && cuts.tr.y > area.top && cuts.tr.x < area.right) floats.push(f('right', area.right - cuts.tr.x, cuts.tr.y - area.top));
+    [['bl', 'left'], ['br', 'right']].forEach(function (c) {
+      const cut = cuts[c[0]];
+      if (!cut || cut.y >= area.bottom) return;
+      const w = c[1] === 'left' ? cut.x - area.left : area.right - cut.x;
+      if (w <= 0) return;
+      spacers.push(f(c[1], 0, cut.y - area.top));
+      late.push({ y: cut.y, node: f(c[1], w, area.bottom - Math.max(cut.y, area.top) - 3, true) }); // −3px: доли пикселя не дают «переполнения»
+    });
+    // распорки — первыми (иначе встают правее верхнего выреза и сужают текст на всю высоту), за ними верхние вырезы;
+    // нижние — по порядку сверху вниз и после буквицы: float не встаёт выше предыдущего, и буквица после нижнего выреза уехала бы вниз
+    const lateNodes = late.sort(function (a, b) { return a.y - b.y; }).map(function (l) { return l.node; });
+    const anchor = story.firstChild;
+    spacers.concat(floats).forEach(function (d) { story.insertBefore(d, anchor); });
+    const drop = story.querySelector('.dropcap');
+    const ref = drop ? drop.nextSibling : anchor;
+    lateNodes.forEach(function (d) { (drop ? drop.parentNode : story).insertBefore(d, ref); });
   }
   // делим абзацы на n листов примерно поровну по длине (абзац не рвём)
   function splitParagraphs(paras, n) {
@@ -633,6 +675,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
           }
           addStory(sh, part, k > 0);
           sh.appendChild(pageNumber(Number(sh.getAttribute('data-kids-no')), true));
+          kidsPlace(sh);
         });
         return;
       } else if (useHero) {
@@ -802,7 +845,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   function fitText() {
     document.querySelectorAll('.story').forEach(function (story) {
       // лист только с текстом — крупный шрифт для чтения вслух малышам; подросткам — как раньше
-      let size = story.closest('.text-page') && !document.body.classList.contains('teen') ? 26 : 19.5;
+      let size = story.closest('.kids-page') ? 28 : story.closest('.text-page') && !document.body.classList.contains('teen') ? 26 : 19.5;
       story.style.setProperty('--fs', size + 'px');
       // предмет над текстом (160 px) — на каждой странице; если шрифт выходит мельче 21px, предмет уменьшается до 90 px
       const item = story.parentNode.querySelector('.page-item');

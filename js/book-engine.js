@@ -83,18 +83,19 @@
   function decorFor(book) { return DECOR_BY_GENRE[book.genre] || DECOR_BY_FOOTER[book.footer] || 'tajny'; }
   // Малышам (до 7 лет) листы с текстом целиком нарисованы: Героёнок в образе темы по краям, середина для текста
   // (decor/<набор>/kids-1|2-pro.webp — те же листы, что в «Сказке» (book.html, KIDS), сужены под 582×888 через пустую середину).
-  // Поля текста — как в book.html, % от краёв [сверху, справа, снизу, слева]; боковые поля здесь шире в KIDS_SIDE раз
+  // [сверху, справа, снизу, слева, вырезы] — поле текста в % листа; вырезы (Героёнок, предметы в углах) текст обтекает:
+  // tl/bl — [правый край, низ|верх], tr/br — [левый край, низ|верх]. Подобраны по рисунку автоматически (scripts/kids_layout.py)
   var KIDS = {
-    tajny: [[16, 12, 33, 16], [22, 13, 32, 17]],
-    more: [[10, 13, 44, 13], [24, 17, 32, 13]],
-    poxod: [[16, 12, 36, 12], [14, 12, 33, 24]],
-    korolevstvo: [[10, 20, 25, 22], [20, 16, 36, 16]],
-    les: [[15, 14, 38, 14], [19, 14, 36, 14]],
-    podvodnoe: [[8, 13, 36, 24], [22, 14, 33, 14]],
-    'novyj-god': [[13, 12, 32, 17], [28, 20, 24, 13]], // в узком листе гирлянда и Героёнок на ёлке ближе к тексту — поля больше, чем в book.html
-    'den-rozhdeniya': [[14, 13, 40, 13], [24, 13, 40, 13]]
+    tajny: [[15, 10.5, 15, 16, { tl: [22.5, 20], tr: [86.5, 17.5], bl: [22.5, 79], br: [73, 69] }], [16, 12, 16, 15, { tr: [70.5, 27], bl: [19, 82], br: [67.5, 67] }]],
+    more: [[14, 13.5, 16, 14, { br: [65.5, 66] }], [10, 16.5, 22.5, 6, { tl: [28, 29], bl: [18, 76], br: [66, 71.5] }]],
+    poxod: [[20, 7, 26, 13, { bl: [30, 68.5], br: [85, 69.5] }], [17, 10.5, 23.5, 20.5, { br: [82, 67] }]],
+    korolevstvo: [[17, 20, 15, 21, { br: [76, 74.5] }], [8.5, 6.5, 21.5, 6, { tl: [41, 33.5], bl: [32.5, 67], br: [88.5, 74] }]],
+    les: [[15, 12.5, 27, 14.5, { tl: [21.5, 28], bl: [28, 63], br: [86.5, 71] }], [14.5, 10, 32, 17, { tl: [30.5, 19.5], bl: [41, 62.5] }]],
+    podvodnoe: [[8.5, 11, 22.5, 29.5, { br: [78.5, 65] }], [13.5, 14.5, 26.5, 10, { tl: [23, 21.5], tr: [82, 19], bl: [26, 58.5], br: [74, 70.5] }]],
+    'novyj-god': [[18, 9.5, 17, 21.5, { br: [74, 67] }], [20.5, 10, 20, 9, { tl: [20.5, 30], tr: [80, 33], br: [77, 75] }]],
+    'den-rozhdeniya': [[15, 13.5, 23, 16, { br: [65.5, 65] }], [17, 11.5, 21, 12.5, { tr: [77, 25.5], br: [58.5, 54.5] }]]
   };
-  var KIDS_AGE = 7, KIDS_SIDE = 1256 / 1164, PAGE_W = 582, PAGE_H = 888;
+  var KIDS_AGE = 7, PAGE_W = 582, PAGE_H = 888;
   var KIDS_SET = null; // набор листов малышей (null — обычное оформление); у книги ко дню рождения — именинные листы
   var kidsCount = 0;
   function kidsSetFor(book) {
@@ -103,15 +104,47 @@
     var set = book.occasion === 'birthday' ? 'den-rozhdeniya' : SET;
     return KIDS[set] ? set : null;
   }
-  // фон листа и границы текста (px), номер страницы — под текстом
+  // фон листа и поле текста (px листа); номер страницы — под текстом
   function kidsBox(page) {
-    var n = kidsCount++ % 2, b = KIDS[KIDS_SET][n];
+    var n = kidsCount++ % 2, k = KIDS[KIDS_SET][n], cuts = {};
     page.style.background = 'url("' + KIT + 'decor/' + KIDS_SET + '/kids-' + (n + 1) + '-pro.webp") center/100% 100% no-repeat #f6efdf';
-    var l = b[3] * KIDS_SIDE * PAGE_W / 100, r = b[1] * KIDS_SIDE * PAGE_W / 100;
+    var l = k[3] * PAGE_W / 100, r = PAGE_W - k[1] * PAGE_W / 100;
     page.style.setProperty('--l', l + 'px');
-    page.style.setProperty('--w', (PAGE_W - l - r) + 'px');
-    return { top: b[0] * PAGE_H / 100, bottom: PAGE_H - b[2] * PAGE_H / 100 };
+    page.style.setProperty('--w', (r - l) + 'px');
+    Object.keys(k[4] || {}).forEach(function (c) { cuts[c] = { x: k[4][c][0] * PAGE_W / 100, y: k[4][c][1] * PAGE_H / 100 }; });
+    return { top: k[0] * PAGE_H / 100, bottom: PAGE_H - k[2] * PAGE_H / 100, left: l, right: r, cuts: cuts };
   }
+  // Вырезы — пустые «плавающие» блоки в углах поля, текст их обтекает (как kidsCuts в book.html). Нижние ставятся через распорку
+  // нулевой ширины (float не прижимается к низу); распорки — первыми, иначе встают правее верхнего выреза и сужают текст на всю высоту.
+  // Нижние вырезы возвращаются отдельно: их ставим после буквицы (placeLateCuts) — float не встаёт выше предыдущего
+  function kidsCuts(content, area, cuts) {
+    var spacers = [], floats = [], late = [];
+    function f(side, w, ht, clear) {
+      var d = h('div', 'kids-cut');
+      d.style.cssText = 'float:' + side + ';width:' + Math.max(0, w) + 'px;height:' + Math.max(0, ht) + 'px' + (clear ? ';clear:' + side : '');
+      return d;
+    }
+    if (cuts.tl && cuts.tl.y > area.top && cuts.tl.x > area.left) floats.push(f('left', cuts.tl.x - area.left, cuts.tl.y - area.top));
+    if (cuts.tr && cuts.tr.y > area.top && cuts.tr.x < area.right) floats.push(f('right', area.right - cuts.tr.x, cuts.tr.y - area.top));
+    [['bl', 'left'], ['br', 'right']].forEach(function (c) {
+      var cut = cuts[c[0]];
+      if (!cut || cut.y >= area.bottom) return;
+      var w = c[1] === 'left' ? cut.x - area.left : area.right - cut.x;
+      if (w <= 0) return;
+      spacers.push(f(c[1], 0, cut.y - area.top));
+      late.push({ y: cut.y, node: f(c[1], w, area.bottom - Math.max(cut.y, area.top) - 3, true) }); // −3px: без «переполнения» из-за долей пикселя
+    });
+    spacers.concat(floats).forEach(function (d) { content.appendChild(d); });
+    return late.sort(function (a, b) { return a.y - b.y; }).map(function (l) { return l.node; });
+  }
+  // нижние вырезы — после буквицы первого абзаца на листе (или перед ним, если буквицы нет)
+  function placeLateCuts(sheet, node) {
+    var drop = node.querySelector && node.querySelector('.bk-dropcap');
+    var ref = drop ? drop.nextSibling : node;
+    sheet.lateCuts.forEach(function (d) { (drop ? drop.parentNode : sheet.content).insertBefore(d, ref); });
+    sheet.lateIn = drop ? node : null;
+  }
+
   var BOY = false; // герой — мальчик: у некоторых наборов свои украшения (DECOR[set].boy)
   function decorCfg() { var c = DECOR[SET]; return BOY && c.boy ? Object.assign({}, c, c.boy) : c; }
   function decorItem(n, set) { return KIT + 'decor/' + (set || SET) + '/item-' + n + '.webp'; }
@@ -261,18 +294,26 @@
     }
     page.appendChild(folio);
 
+    var lateCuts = null;
     if (KIDS_SET) {
-      // текст — в пустой середине рисунка; у открытия главы сверху «Глава N» и название, без шапки страницы
-      var box = kidsBox(page);
+      // текст — в поле рисунка; у открытия главы сверху «Глава N» и название (между верхними вырезами), без шапки страницы
+      var box = kidsBox(page), cuts = box.cuts;
       var head2 = page.querySelector('.bk-opener-head');
       var top2 = box.top;
-      if (head2) { head2.style.top = box.top + 'px'; top2 = box.top + head2.offsetHeight + 18; }
+      if (head2) {
+        var hl = cuts.tl && cuts.tl.y > box.top ? Math.max(box.left, cuts.tl.x) : box.left;
+        var hr = cuts.tr && cuts.tr.y > box.top ? Math.min(box.right, cuts.tr.x) : box.right;
+        head2.style.cssText += ';top:' + box.top + 'px;left:' + hl + 'px;width:' + (hr - hl) + 'px';
+        top2 = box.top + head2.offsetHeight + 18;
+      }
+      var area = { top: top2, bottom: box.bottom - 40, left: box.left, right: box.right };
       content.style.top = top2 + 'px';
-      content.style.height = (box.bottom - 40 - top2) + 'px';
+      content.style.height = (area.bottom - top2) + 'px';
       folio.style.top = (box.bottom - 34) + 'px';
+      lateCuts = kidsCuts(content, area, cuts);
     }
 
-    return { page: page, content: content, folio: folio.querySelector('.bk-no') };
+    return { page: page, content: content, folio: folio.querySelector('.bk-no'), lateCuts: lateCuts };
   }
 
   function illustrationSheet(root, block, imageIndex) {
@@ -678,13 +719,17 @@
           var node = renderBlock(block, isFirst ? { initial: initial, dropcap: !initial } : null);
           if (isFirst) first = false;
           cur.content.appendChild(node);
+          if (cur.lateCuts) { placeLateCuts(cur, node); cur.lateCuts = null; }
 
           if (overflows(cur.content)) {
+            // нижние вырезы листа, если стояли внутри этого абзаца, остаются на листе
+            if (cur.lateIn === node) Array.prototype.slice.call(node.querySelectorAll('.kids-cut')).forEach(function (d) { cur.content.appendChild(d); });
             cur.content.removeChild(node);
             cur = textSheet(root, chapter, false);
             sheets.push(cur);
             node = renderBlock(block, null);
             cur.content.appendChild(node);
+            if (cur.lateCuts) { placeLateCuts(cur, node); cur.lateCuts = null; }
           }
           // адрес абзаца в книге — для правки текста прямо на странице
           if (block.t === 'p') { node.setAttribute('data-ch', String(ci)); node.setAttribute('data-bi', String(bi)); }
