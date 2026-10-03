@@ -110,10 +110,12 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       document.getElementById('count').textContent = res.pages + (book.lang === 'en' ? ' pages' : ' стр.');
       window.__bookReady = res;
       window.__bookData = book;
-      if (locked) {
+      // book.sample — образец для показа покупателям (копия готовой книги): только чтение и «Слушать», без скачивания
+      if (locked || book.sample) {
         document.getElementById('pdfBtn').style.display = 'none';
         document.getElementById('printBtn').style.display = 'none';
         document.getElementById('specBtn').style.display = 'none';
+        if (book.sample) { var sampleHint = document.querySelector('.hint.no-print'); if (sampleHint) sampleHint.style.display = 'none'; }
         window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
       } else {
         attachActions(book, answers, jobId, status || {});
