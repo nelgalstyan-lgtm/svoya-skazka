@@ -440,6 +440,26 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   }
 
   // Задняя обложка: book.backImage или последняя иллюстрация с ребёнком (или обложка), текст о герое и знак Героёнка
+  // Английская книга (book.lang === 'en', заказы из США): надписи на листах — T(рус, англ)
+  let LANG = 'ru';
+  function T(ru, en) { return LANG === 'en' ? en : ru; }
+
+  // Кнопки и подсказка на английском, без анкеты и правки текста (как englishChrome в book-pro.html)
+  function englishChrome(book) {
+    document.documentElement.lang = 'en';
+    window.SkazkaExtras.setLang('en');
+    const set = function (id, text) { const b = document.getElementById(id); if (b) b.textContent = text; };
+    set('listenBtn', '🔊 Listen to the book');
+    set('pdfBtn', 'Download PDF');
+    set('audioDlBtn', '⬇ Download audiobook');
+    set('printBtn', 'For the print shop');
+    ['editBtn', 'sequelBtn', 'songBtn'].forEach(function (id) { const b = document.getElementById(id); if (b) { b.hidden = true; b.style.display = 'none'; } });
+    const back = document.querySelector('.toolbar-actions a[href="create.html"]'); if (back) back.hidden = true;
+    const logo = document.querySelector('.toolbar .logo'); if (logo) logo.remove(); // логотип ведёт на русский сайт
+    // голос устройства читает по-русски — без английской озвучки кнопку «Слушать» не показываем
+    if (!book.audio || !book.audio.length) document.getElementById('listenBtn').style.display = 'none';
+  }
+
   function backCover(book, name, girl, jobId) {
     const back = sheet('back');
     let src = book.cover || '';
@@ -451,14 +471,14 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       arch.appendChild(pic);
       back.appendChild(arch);
     } else back.classList.add('no-art');
-    back.appendChild(el('p', 'back-text', book.blurb || (name
+    back.appendChild(el('p', 'back-text', book.blurb || T('', 'This story was written for one reader only. Its hero is a real child, drawn from a photo.') || (name
       ? (girl ? 'Главная героиня' : 'Главный герой') + ' этой сказки — ' + name + '. Не выдуманный персонаж, а настоящий ребёнок: ' + (girl ? 'она нарисована' : 'он нарисован')
         + ' по фото на обложке и на иллюстрациях, а история написана специально для ' + (girl ? 'неё' : 'него')
         + ' — с ' + (girl ? 'её' : 'его') + ' привычками, друзьями и любимыми игрушками.'
       : 'Эта сказка написана для одного-единственного читателя. Её герой — настоящий ребёнок, нарисованный по фото.')));
     const foot = el('div', 'back-foot');
     const seal = el('img', 'back-seal'); seal.src = 'assets/brand/logo-mark-alpha.png'; seal.alt = '';
-    const brand = el('div', 'back-brand', 'Героёнок');
+    const brand = el('div', 'back-brand', T('Героёнок', 'Geroenok'));
     brand.appendChild(el('small', '', 'geroenok.online'));
     foot.append(seal, brand, el('div', 'back-age', '0+'));
     back.appendChild(foot);
@@ -466,12 +486,14 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     // у образца нет заказа — свой QR из book.backQr { label, url } (как у «Большой истории»)
     const qr = book.backQr
       ? window.SkazkaExtras.qrBlock('', null, 'back-qr', book.backQr.label, book.backQr.url)
-      : window.SkazkaExtras.qrBlock('book.html', jobId, 'back-qr', 'Читать и слушать');
+      : window.SkazkaExtras.qrBlock('book.html', jobId, 'back-qr', T('Читать и слушать', 'Read & listen'));
     if (qr) { back.classList.add('has-qr'); back.appendChild(qr); }
   }
 
   function render(data) {
     const book = data.book;
+    LANG = book.lang === 'en' ? 'en' : 'ru';
+    if (LANG === 'en') englishChrome(book);
     const name = (data.answers && data.answers.name) || '';
     const demoHeroSrc = HERO_IMAGES[name.trim().toLowerCase()];
     const scenes = coverAndFinaleScenes(data.answers);
@@ -481,7 +503,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     if (answers.age >= 11) document.body.classList.add('teen'); // подросткам предметы спокойнее
     BOY = !answers.girl;
     const birthday = answers.kind !== 'holiday' && window.SkazkaTemplate.occasionKind(answers.occasion) === 'birthday';
-    document.title = book.title + ' — Героёнок';
+    document.title = book.title + T(' — Героёнок', ' — Geroenok');
 
     // Обложка: с иллюстрацией ребёнка — картинка на весь лист; без неё — фон темы в рамке
     const cover = sheet(book.cover ? 'cover art' : 'cover');
@@ -495,25 +517,25 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       // название внизу, если верх обложки занят (решение сервера: Gemini смотрит на обложку — coverTitlePlace в worker/art.js)
       if (book.coverTitle && book.coverTitle.place === 'bottom') cover.classList.add('title-bottom');
     }
-    cover.appendChild(el('div', 'kicker', 'Персональная книга'));
+    cover.appendChild(el('div', 'kicker', T('Персональная книга', 'A personalized book')));
     cover.appendChild(el('h1', '', book.title));
     cover.appendChild(book.cover ? el('div', 'orn', '✦ ✦ ✦') : vignetteEl());
     if (!book.cover && SCENES) cover.appendChild(sceneBlock(scenes.cover, 'Обложка'));
     if (name) {
       const who = el('div', 'for');
-      who.appendChild(el('small', '', 'Главный герой'));
+      who.appendChild(el('small', '', T('Главный герой', 'Starring')));
       who.appendChild(document.createTextNode(name));
       cover.appendChild(who);
     }
     const brand = el('div', 'brand');
-    brand.append('Героёнок');
+    brand.append(T('Героёнок', 'Geroenok'));
     cover.appendChild(brand);
 
     // посвящение от того, кто дарит (есть, только если родители подписали книгу или написали своё)
     if (book.dedication) {
       const d = book.dedication;
       const ded = sheet('dedication');
-      ded.appendChild(el('div', 'ded-title', d.title || 'Посвящается'));
+      ded.appendChild(el('div', 'ded-title', d.title || T('Посвящается', 'Dedicated to')));
       ded.appendChild(vignetteEl(birthday ? 'den-rozhdeniya' : SET));
       if (d.lead) ded.appendChild(el('p', 'ded-lead', d.lead));
       (d.paragraphs || []).forEach(function (t) { ded.appendChild(el('p', 'ded-text', t)); });
@@ -571,15 +593,16 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     // Финал
     const end = sheet('finale');
     if (SCENES) end.appendChild(sceneBlock(scenes.finale));
-    end.appendChild(el('h2', '', 'Конец'));
+    end.appendChild(el('h2', '', T('Конец', 'The End')));
     // Героёнок, хранитель историй, прощается с читателем (прозрачный фон — переживает сборку PDF)
     // (у образца сверху сцена — Героёнку там не хватит места)
     if (!SCENES) end.appendChild(decorImg('assets/kit/decor/hare-greeting.webp', 'finale-hare'));
-    end.appendChild(el('p', '', 'Эта книга написана по вашей анкете — со всеми привычками, друзьями и близкими героя. Пусть она возвращается к вам снова и снова.'));
+    end.appendChild(el('p', '', T('Эта книга написана по вашей анкете — со всеми привычками, друзьями и близкими героя. Пусть она возвращается к вам снова и снова.',
+      'This book was written especially for its hero — with their own habits, friends and family. May you come back to it again and again.')));
     const qr = window.SkazkaExtras.qrBlock('book.html', data.jobId);
     if (qr) end.appendChild(qr); else end.appendChild(vignetteEl());
     const brand2 = el('div', 'brand');
-    brand2.append('Героёнок');
+    brand2.append(T('Героёнок', 'Geroenok'));
     end.appendChild(brand2);
 
     // Превью: вместо финала — закрытая страница с тем, что ещё будет в книге, и кнопкой оплаты
@@ -602,7 +625,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     // Сертификат героя — для имени из анкеты
     if (name) {
       const girl = window.SkazkaTemplate.normalizeInput(data.answers || {}).girl;
-      const c = window.SkazkaExtras.certificate(name, book.title, girl);
+      const c = window.SkazkaExtras.certificate(name, book.title, girl, LANG);
       const cert = sheet('cert');
       cert.appendChild(el('div', 'cert-kicker', c.kicker));
       cert.appendChild(el('div', 'cert-title', c.title));
@@ -619,12 +642,12 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       cert.appendChild(el('div', 'cert-name', c.name));
       cert.appendChild(el('p', 'cert-text', c.text));
       const foot = el('div', 'cert-foot');
-      const d = el('div', '', c.date); d.appendChild(el('b', '', 'дата'));
+      const d = el('div', '', c.date); d.appendChild(el('b', '', T('дата', 'date')));
       // подпись: печать с Героёнком и росчерк «Героёнок» (PNG с прозрачностью — переживает сборку PDF)
       const sgn = el('div', 'cert-sign');
       const seal = el('img', 'cert-seal'); seal.src = 'assets/brand/logo-mark-alpha.png'; seal.alt = 'Печать Героёнка';
       const hand = el('div', 'cert-hand');
-      hand.append(el('span', 'cert-signature', 'Героёнок'), el('b', '', 'хранитель историй'));
+      hand.append(el('span', 'cert-signature', T('Героёнок', 'Geroenok')), el('b', '', T('хранитель историй', 'keeper of stories')));
       sgn.append(seal, hand);
       foot.append(d, sgn);
       cert.appendChild(foot);
@@ -642,7 +665,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     // Раскраска из иллюстраций книги
     (book.coloring || []).forEach(function (src, i) {
       const page = sheet('coloring');
-      page.appendChild(el('div', 'coloring-title', i === 0 ? 'Раскрась свою сказку' : 'Раскраска'));
+      page.appendChild(el('div', 'coloring-title', i === 0 ? T('Раскрась свою сказку', 'Color your own story') : T('Раскраска', 'Coloring page')));
       const pic = document.createElement('img');
       pic.src = src;
       pic.alt = 'Раскраска ' + (i + 1);
@@ -667,7 +690,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () {
       return [book.title].concat(book.pages.map(pageText));
     }, book.audio);
-    window.SkazkaExtras.attachAudioDownload(document.getElementById('audioDlBtn'), book.audio, book.audioFile, function () { return window.SkazkaExtras.pdfName(book.title).replace(/\.pdf$/, ' — аудиокнига.mp3'); });
+    window.SkazkaExtras.attachAudioDownload(document.getElementById('audioDlBtn'), book.audio, book.audioFile, function () { return window.SkazkaExtras.pdfName(book.title).replace(/\.pdf$/, '' + T(' — аудиокнига.mp3', ' — audiobook.mp3')); });
     window.SkazkaExtras.attachSong(document.getElementById('songBtn'), book.song);
     window.SkazkaExtras.attachEditor({
       button: document.getElementById('editBtn'),
@@ -792,15 +815,15 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     if (params.get('demo')) { ['audioDlBtn', 'songBtn', 'editBtn', 'sequelBtn'].forEach(function (id) { document.getElementById(id).hidden = true; }); document.querySelector('.toolbar-actions a[href="create.html"]').hidden = true; pdfBtn.style.display = 'none'; document.getElementById('printBtn').style.display = 'none'; document.getElementById('specBtn').style.display = 'none'; document.getElementById('pdfHint').style.display = 'none'; }
     window.SkazkaExtras.attachPdf(pdfBtn, {
       selector: '.sheet', widthMm: 210, heightMm: 297, scaleVar: '--scale',
-      fileName: function () { return window.SkazkaExtras.pdfName(document.title.replace(/ — Героёнок$/, '')); },
+      fileName: function () { return window.SkazkaExtras.pdfName(document.title.replace(/ — (Героёнок|Geroenok)$/, '')); },
       readyUrl: function () { return (data.book && data.book.pdfUrl) || null; } // готовый файл книги на сервере, если есть
     });
     // «Для типографии»: страницы без обложки + обложка одним листом (задняя, корешок, лицевая)
     window.SkazkaExtras.attachPrintKit(document.getElementById('printBtn'), {
       blockSelector: '.sheet:not(.cover):not(.back)', frontSelector: '.sheet.cover', backSelector: '.sheet.back',
       widthMm: 210, heightMm: 297, scaleVar: '--scale', spineColor: '#1c1a24', spineFont: "'Lora', Georgia, serif",
-      title: function () { return document.title.replace(/ — Героёнок$/, ''); },
-      fileBase: function () { return window.SkazkaExtras.pdfName(document.title.replace(/ — Героёнок$/, '')).replace(/\.pdf$/, ''); },
+      title: function () { return document.title.replace(/ — (Героёнок|Geroenok)$/, ''); },
+      fileBase: function () { return window.SkazkaExtras.pdfName(document.title.replace(/ — (Героёнок|Geroenok)$/, '')).replace(/\.pdf$/, ''); },
       pagesCount: function () { return document.querySelectorAll('.sheet:not(.cover):not(.back)').length; }
     });
     // ссылка «Скачать PDF» из анкеты (?print=1) — сразу собираем файл, когда книга и картинки готовы
@@ -814,7 +837,14 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
   const saved = params.get('demo') ? null : loadBook();
   const jobId = params.get('job') || (saved && saved.jobId);
-  if (params.get('demo') === 'max3d') {
+  if (params.get('demo') === 'max3d-en') {
+    // образец Bedtime Story на английском — книга Макса в переводе (для английской страницы)
+    const se = document.createElement('script');
+    se.src = 'assets/examples/max-3d/book-en.js';
+    se.onload = function () { show(window.SKAZKA_MAX3D_EN_BOOK); };
+    se.onerror = function () { show(null); };
+    document.body.appendChild(se);
+  } else if (params.get('demo') === 'max3d') {
     // образец «Сказки» в 3D: книга Макса (иллюстрации — assets/examples/max-3d)
     const sm = document.createElement('script');
     sm.src = 'assets/examples/max-3d/book.js';
