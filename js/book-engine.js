@@ -68,14 +68,14 @@
   // corners — углы рамки [лв, пв, лн, пн], folio — по бокам номера страницы, plate — по бокам подписи к иллюстрации.
   var DECOR = {
     tajny: { icons: [2, 7], sprig: 9, corners: [1, 4, 5, 8], folio: [6, 3], plate: [1, 4], strip: true }, // карта, лупа, перо, дневник; часы, сундучок; боковая полоса-карта
-    more: { icons: [2, 8], sprig: 9, corners: [6, 7, 3, 1], plate: [6, 5] }, // ракушка, подзорная труба, канат, кораблик; у номера — морская трава
-    poxod: { icons: [3, 4], sprig: 10 },
+    more: { icons: [2, 8], sprig: 9, corners: [6, 7, 3, 1], plate: [6, 5], strip: true }, // ракушка, подзорная труба, канат, кораблик; у номера — морская трава
+    poxod: { icons: [3, 4], sprig: 10, strip: true },
     // розы — героиням; героям вместо роз корона, башня, свиток, ключ, кубок, арфа
-    korolevstvo: { icons: [1, 4], sprig: 9, boy: { corners: [1, 2, 5, 4], folio: [7, 6], plate: [2, 5] } },
-    les: { icons: [1, 3], sprig: 5 },
-    podvodnoe: { icons: [1, 4], sprig: 9 },
-    'novyj-god': { icons: [2, 3], sprig: 10 },
-    'den-rozhdeniya': { icons: [3, 2], sprig: 9, compose: [9, 1, 10] } // своей заставки нет: торт между веточками
+    korolevstvo: { icons: [1, 4], sprig: 9, boy: { corners: [1, 2, 5, 4], folio: [7, 6], plate: [2, 5] }, strip: true },
+    les: { icons: [1, 3], sprig: 5, strip: true },
+    podvodnoe: { icons: [1, 4], sprig: 9, strip: true },
+    'novyj-god': { icons: [2, 3], sprig: 10, strip: true },
+    'den-rozhdeniya': { icons: [3, 2], sprig: 9, compose: [9, 1, 10], strip: true } // своей заставки нет: торт между веточками
   };
   // набор по жанру книги; у старых книг без жанра — по прежнему колонтитулу
   var DECOR_BY_GENRE = { sea: 'more', treasure: 'tajny', universal: 'tajny', wild: 'poxod', kingdom: 'korolevstvo', forest: 'les', underwater: 'podvodnoe', newyear: 'novyj-god', newyear_elves: 'novyj-god', birthday: 'den-rozhdeniya' };

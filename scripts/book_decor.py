@@ -133,6 +133,41 @@ def strips(src):
         im = im.resize((round(right * 1200 / rgb.shape[0]), 1200), Image.LANCZOS)  # высота 1200 px — запас для печати
         im.save(os.path.join(folder, 'strip.webp'), 'WEBP', quality=88, method=6)
         print(f'{theme}: полоса {right}px из {rgb.shape[1]}')
+    # несколько полос на одной картинке (03.10 — экономия лимитов ChatGPT): polosy-<буква>.png, темы слева направо
+    for path in sorted(glob.glob(os.path.join(src, 'polosy-*.png*'))):
+        key = re.match(r'polosy-(.+?)\.png', os.path.basename(path)).group(1)
+        themes = STRIP_SHEETS[key]
+        rgb = np.array(Image.open(path).convert('RGB'))
+        paper = paper_color(rgb)
+        mask = object_mask(rgb, paper)
+        filled = mask.mean(axis=0) > 0.08
+        # группы закрашенных столбцов; промежутки уже 30 px — внутри одной полосы
+        runs, start = [], None
+        for x, on in enumerate(filled):
+            if on and start is None: start = x
+            if not on and start is not None: runs.append([start, x]); start = None
+        if start is not None: runs.append([start, len(filled)])
+        merged = []
+        for r in runs:
+            if merged and r[0] - merged[-1][1] < 30: merged[-1][1] = r[1]
+            else: merged.append(r)
+        merged = [r for r in merged if r[1] - r[0] > 40]
+        assert len(merged) == len(themes), f'{path}: найдено полос {len(merged)}, ожидалось {len(themes)}'
+        for theme, (x0, x1) in zip(themes, merged):
+            x0, x1 = max(0, x0 - 8), min(rgb.shape[1], x1 + 8)
+            folder = os.path.join(OUT, theme)
+            os.makedirs(folder, exist_ok=True)
+            im = Image.fromarray(to_rgba(rgb[:, x0:x1], paper), 'RGBA')
+            im = im.resize((round((x1 - x0) * 1200 / rgb.shape[0]), 1200), Image.LANCZOS)
+            im.save(os.path.join(folder, 'strip.webp'), 'WEBP', quality=88, method=6)
+            print(f'{theme}: полоса {x1 - x0}px из {rgb.shape[1]} ({os.path.basename(path)})')
+
+
+# какие темы на общих картинках полос, слева направо
+STRIP_SHEETS = {
+    'A': ['more', 'poxod', 'korolevstvo', 'les'],
+    'B': ['podvodnoe', 'novyj-god', 'den-rozhdeniya'],
+}
 
 
 def hare():
