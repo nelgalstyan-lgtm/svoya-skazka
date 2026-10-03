@@ -162,6 +162,7 @@ test('5–10 лет: путешествие оформлено яркими ра
     const r = await generateBigBook(INPUT, { providers, health: createHealth(), log: quiet }); // INPUT: 7 лет
     close();
     assert.equal(r.book.ageGroup, '5-10');
+    assert.equal(r.book.age, 7); // точный возраст — для оформления малышей
     assert.equal(r.book.frame, frame, genre);
     assert.equal(r.book.footer, frame, genre);
   }

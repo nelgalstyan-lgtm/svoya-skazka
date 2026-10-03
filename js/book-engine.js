@@ -81,6 +81,37 @@
   var DECOR_BY_GENRE = { sea: 'more', treasure: 'tajny', universal: 'tajny', wild: 'poxod', kingdom: 'korolevstvo', forest: 'les', underwater: 'podvodnoe', newyear: 'novyj-god', newyear_elves: 'novyj-god', birthday: 'den-rozhdeniya' };
   var DECOR_BY_FOOTER = { sea: 'more', treasure: 'tajny', pirates: 'tajny', wild: 'poxod', jungle: 'poxod', kingdom: 'korolevstvo', forest: 'les', underwater: 'podvodnoe', cookies: 'novyj-god', elves: 'novyj-god', birthday: 'den-rozhdeniya' };
   function decorFor(book) { return DECOR_BY_GENRE[book.genre] || DECOR_BY_FOOTER[book.footer] || 'tajny'; }
+  // Малышам (до 7 лет) листы с текстом целиком нарисованы: Героёнок в образе темы по краям, середина для текста
+  // (decor/<набор>/kids-1|2-pro.webp — те же листы, что в «Сказке» (book.html, KIDS), сужены под 582×888 через пустую середину).
+  // Поля текста — как в book.html, % от краёв [сверху, справа, снизу, слева]; боковые поля здесь шире в KIDS_SIDE раз
+  var KIDS = {
+    tajny: [[16, 12, 33, 16], [22, 13, 32, 17]],
+    more: [[10, 13, 44, 13], [24, 17, 32, 13]],
+    poxod: [[16, 12, 36, 12], [14, 12, 33, 24]],
+    korolevstvo: [[10, 20, 25, 22], [20, 16, 36, 16]],
+    les: [[15, 14, 38, 14], [19, 14, 36, 14]],
+    podvodnoe: [[8, 13, 36, 24], [22, 14, 33, 14]],
+    'novyj-god': [[13, 12, 32, 17], [28, 20, 24, 13]], // в узком листе гирлянда и Героёнок на ёлке ближе к тексту — поля больше, чем в book.html
+    'den-rozhdeniya': [[14, 13, 40, 13], [24, 13, 40, 13]]
+  };
+  var KIDS_AGE = 7, KIDS_SIDE = 1256 / 1164, PAGE_W = 582, PAGE_H = 888;
+  var KIDS_SET = null; // набор листов малышей (null — обычное оформление); у книги ко дню рождения — именинные листы
+  var kidsCount = 0;
+  function kidsSetFor(book) {
+    var little = book.age ? Number(book.age) <= KIDS_AGE : book.ageGroup === '0-4'; // у старых книг точного возраста нет
+    if (!little || FRAME !== 'brand') return null;
+    var set = book.occasion === 'birthday' ? 'den-rozhdeniya' : SET;
+    return KIDS[set] ? set : null;
+  }
+  // фон листа и границы текста (px), номер страницы — под текстом
+  function kidsBox(page) {
+    var n = kidsCount++ % 2, b = KIDS[KIDS_SET][n];
+    page.style.background = 'url("' + KIT + 'decor/' + KIDS_SET + '/kids-' + (n + 1) + '-pro.webp") center/100% 100% no-repeat #f6efdf';
+    var l = b[3] * KIDS_SIDE * PAGE_W / 100, r = b[1] * KIDS_SIDE * PAGE_W / 100;
+    page.style.setProperty('--l', l + 'px');
+    page.style.setProperty('--w', (PAGE_W - l - r) + 'px');
+    return { top: b[0] * PAGE_H / 100, bottom: PAGE_H - b[2] * PAGE_H / 100 };
+  }
   var BOY = false; // герой — мальчик: у некоторых наборов свои украшения (DECOR[set].boy)
   function decorCfg() { var c = DECOR[SET]; return BOY && c.boy ? Object.assign({}, c, c.boy) : c; }
   function decorItem(n, set) { return KIT + 'decor/' + (set || SET) + '/item-' + n + '.webp'; }
@@ -166,10 +197,11 @@
 
   function newSheet(root, kind) {
     var wrap = h('div', 'bk-wrap');
-    var strip = FRAME === 'brand' && DECOR[SET].strip && /bk-text/.test(kind); // полоса во всю высоту у левого края — как карта у Алекса
-    var page = h('div', 'bk-page bk-f-' + FRAME + ' bk-footer-' + FOOTER + ART + EXTRA + (strip ? ' bk-has-strip' : '') + ' ' + kind);
+    var kids = KIDS_SET && /bk-text/.test(kind);
+    var strip = !kids && FRAME === 'brand' && DECOR[SET].strip && /bk-text/.test(kind); // полоса во всю высоту у левого края — как карта у Алекса
+    var page = h('div', 'bk-page bk-f-' + FRAME + ' bk-footer-' + FOOTER + ART + EXTRA + (strip ? ' bk-has-strip' : '') + (kids ? ' bk-kids' : '') + ' ' + kind);
     // фирменная рамка страницы: двойная линия по краю и веточки темы в углах (не на обложках, иллюстрациях и раскраске)
-    if (FRAME === 'brand' && /bk-(text|ded|finale|song)/.test(kind)) {
+    if (FRAME === 'brand' && !kids && /bk-(text|ded|finale|song)/.test(kind)) {
       var frame = h('div', 'bk-brand-frame');
       var corners = decorCfg().corners;
       ['tl', 'tr', 'bl', 'br'].forEach(function (c, i) {
@@ -195,7 +227,7 @@
       head.appendChild(h('div', 'bk-chapter-title', chapter.title));
       page.appendChild(head);
       if (LAYOUT[FOOTER] && LAYOUT[FOOTER].banner) addRun(page, chapter.title);
-    } else {
+    } else if (!KIDS_SET) {
       addRun(page, chapter.title);
     }
 
@@ -228,6 +260,17 @@
       folio.appendChild(h('span', 'bk-no', ''));
     }
     page.appendChild(folio);
+
+    if (KIDS_SET) {
+      // текст — в пустой середине рисунка; у открытия главы сверху «Глава N» и название, без шапки страницы
+      var box = kidsBox(page);
+      var head2 = page.querySelector('.bk-opener-head');
+      var top2 = box.top;
+      if (head2) { head2.style.top = box.top + 'px'; top2 = box.top + head2.offsetHeight + 18; }
+      content.style.top = top2 + 'px';
+      content.style.height = (box.bottom - 40 - top2) + 'px';
+      folio.style.top = (box.bottom - 34) + 'px';
+    }
 
     return { page: page, content: content, folio: folio.querySelector('.bk-no') };
   }
@@ -601,6 +644,8 @@
     FOOTER = FRAME === 'brand' ? 'brand' : FRAME === 'chart' && !(opts && opts.frame) ? 'treasure' : (opts && opts.footer) || book.footer || (FRAME === 'vine' ? 'birds' : 'sea');
     SET = decorFor(book);
     OCCASION = book.occasion || '';
+    KIDS_SET = kidsSetFor(book);
+    kidsCount = 0;
     BOY = book.meta ? book.meta.heroGirl === false : false;
     EXTRA = FRAME === 'brand' ? ' bk-set-' + SET + (book.ageGroup === '11-16' ? ' bk-teen' : '') : '';
     // книга в стиле «3D-мультфильм»: рисованные рамки берутся в 3D-варианте (parchment.css, .bk-art-3d)

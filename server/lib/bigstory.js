@@ -502,6 +502,7 @@ export function templateBook(input) {
     title: story.title,
     theme: 'parchment',
     ageGroup,
+    ...(c.age ? { age: c.age } : {}), // точный возраст: малышам (до 7) — листы с Героёнком (js/book-engine.js, KIDS)
     ...(occasionOf(c) ? { occasion: occasionOf(c) } : {}),
     genre: style ? styleKey : undefined,
     frame: style ? style.frame : undefined,
@@ -528,6 +529,7 @@ function assemble(input, plan, chapters, meta, library) {
     ...(plan.blurb ? { blurb: plan.blurb } : {}), // аннотация на задней обложке
     theme: 'parchment',
     ageGroup, // возрастная группа задаёт оформление (для путешествия: 5–10 — яркие рамки, 11–16 — «Пергамент»)
+    ...(c.age ? { age: c.age } : {}), // точный возраст: малышам (до 7) — листы с Героёнком (js/book-engine.js, KIDS)
     // путешествие — жанр от ИИ (море/канат, поиски/карта, дикая природа/лоза), праздник — сам повод;
     // если жанр не назван (старая книга без него), оформление определяется по тексту в normalizeBook
     genre: plan.genre || undefined,

@@ -1,7 +1,8 @@
 """Листы с текстом для малышей (2–7 лет) из проб владелицы: proba-<тема>.png — 3 страницы на одной картинке 3:2.
 Режет страницы, расширяет до A4 через пустую середину (seam carving, предметы защищены маской),
 увеличивает до 1588x2246 (2x листа 794x1123): половина Lanczos + половина Real-ESRGAN x4plus (если есть up/<имя>.png),
-сохраняет в assets/kit/decor/<набор>/kids-1|2.webp. Поля текста для каждого листа — KIDS в book.html (подобраны вручную).
+сохраняет в assets/kit/decor/<набор>/kids-1|2.webp; для «Большой истории» (лист 582x888) — kids-N-pro.webp 1164x1776:
+готовый лист по высоте 1776, лишняя ширина убирается из пустой середины (seam carving). Поля текста для каждого листа — KIDS в book.html (подобраны вручную).
 Запуск: python scripts/kids_pages.py  (pip install seam-carving scipy; Real-ESRGAN: realesrgan-ncnn-vulkan -n realesrgan-x4plus wide/X.png -o up/X.png)
 """
 import sys, numpy as np, seam_carving
@@ -57,3 +58,14 @@ if __name__ == "__main__":
                 a = Image.blend(a, Image.open(f"up/{name}.png").convert("RGB").resize((W, H), Image.LANCZOS), 0.5)
             a.save(f"{DST}{t}/kids-{n}.webp", quality=84, method=6)
             print(name)
+
+    # «Большая история»: сужаем готовые листы под 582x888
+    import seam_carving as sc
+    PW, PH = 1164, 1776
+    for t, ids in PICK.items():
+        for n in (1, 2):
+            a = Image.open(f"{DST}{t}/kids-{n}.webp").convert("RGB")
+            a = np.asarray(a.resize((round(a.width * PH / a.height), PH), Image.LANCZOS))
+            out = sc.resize(a, (PW, PH), energy_mode='forward', order='width-first', keep_mask=objmask(a))
+            Image.fromarray(out).save(f"{DST}{t}/kids-{n}-pro.webp", quality=84, method=6)
+            print(t, n, "pro")

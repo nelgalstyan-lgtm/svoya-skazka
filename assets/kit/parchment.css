@@ -666,3 +666,8 @@
 .bk-has-hare:not(.bk-f-brand) .bk-qr{ top:580px; }
 .bk-locked .bk-finale-hare{ display:none; }
 .bk-has-hare.bk-locked:not(.bk-f-brand) .bk-finale-text{ top:230px; }
+
+/* ---------- малышам (до 7 лет): лист с текстом нарисован целиком — Героёнок в образе темы по краям (book-engine.js, KIDS) ---------- */
+.bk-kids .bk-opener-head .bk-vignette, .bk-kids .bk-folio-brand img{ display:none; }
+.bk-kids .bk-chapter-title{ margin-top:8px; }
+.bk-kids .bk-content{ font-size:21px; line-height:34px; }
