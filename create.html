@@ -427,6 +427,8 @@ section.tight{ padding:56px 0; }
   display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
 }
 .form-actions .price{ font-family:var(--font-display); font-size:20px; }
+.form-consent{ flex-basis:100%; margin:4px 0 0; font-size:13px; line-height:1.45; color:var(--text-soft); }
+.form-consent a{ color:inherit; }
 .form-actions .price small{ display:block; font-family:var(--font-body); font-size:13px; color:var(--text-soft); font-weight:400; }
 
 .sequel-banner{ margin:24px 48px 0; padding:18px 20px; border-radius:14px; background:#FBF2DF; border:1px solid var(--gold); display:grid; gap:6px; font-size:14.5px; color:var(--text-soft); }
@@ -825,6 +827,7 @@ section.tight{ padding:56px 0; }
       <div class="form-actions">
         <div class="price" id="orderPrice">690 ₽ <small>превью — бесплатно, оплата только если книга понравилась</small></div>
         <button type="button" class="btn btn-primary" id="generatePreviewBtn">Показать бесплатное превью</button>
+        <p class="form-consent">Нажимая кнопку, вы подтверждаете, что вы родитель или законный представитель ребёнка, и принимаете условия <a href="offer.html" target="_blank" rel="noopener">публичной оферты</a> и <a href="privacy.html" target="_blank" rel="noopener">политики конфиденциальности</a>.</p>
       </div>
 
       <div id="generationStatus" class="story-status" style="display:none;">

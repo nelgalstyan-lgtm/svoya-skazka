@@ -616,7 +616,8 @@
       '.sk-redraw[disabled]{opacity:.6;cursor:wait}' +
       '.sk-pay{border:none;border-radius:999px;padding:16px 30px;background:#D79A3A;color:#232C4D;font:700 18px Arial,sans-serif;cursor:pointer;box-shadow:0 10px 24px -10px rgba(120,70,10,.6)}' +
       '.sk-pay[disabled]{opacity:.7;cursor:wait}' +
-      '@media print{.sk-redraw,.sk-toast,.sk-pay{display:none!important}}';
+      '.sk-pay-note{display:block;margin-top:10px;font:13px/1.4 Arial,sans-serif;opacity:.8}.sk-pay-note a{color:inherit}' +
+      '@media print{.sk-redraw,.sk-toast,.sk-pay,.sk-pay-note{display:none!important}}';
     document.head.appendChild(css);
   }
 
@@ -720,7 +721,14 @@
       if (admin) { unlock(opts, admin, btn); return; }
       toast('Онлайн-оплата появится совсем скоро. Сохраните ссылку на эту страницу — книга будет ждать вас.');
     });
-    return btn;
+    // под кнопкой — согласие с офертой (оплата = акцепт, п. 1 оферты)
+    var note = document.createElement('small');
+    note.className = 'sk-pay-note';
+    note.innerHTML = 'Оплачивая, вы принимаете условия <a href="offer.html" target="_blank" rel="noopener">публичной оферты</a>.';
+    var frag = document.createDocumentFragment();
+    frag.appendChild(btn);
+    frag.appendChild(note);
+    return frag;
   }
 
   function unlock(opts, key, btn) {
