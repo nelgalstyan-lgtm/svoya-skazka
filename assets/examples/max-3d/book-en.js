@@ -1,6 +1,6 @@
 // Английская версия образца «Сказки» (Bedtime Story) «Max and the Traveling Suitcase» — для book.html?demo=max3d-en.
 // Перевод книги Макса (assets/examples/max-3d/book.js) 03.10 для английской страницы; иллюстрации те же.
-// Раскраски нет — в Bedtime Story на английской странице она не входит. Озвучка на английском — когда будет (audio).
+// Раскраски нет — в Bedtime Story на английской странице она не входит. Озвучка — владелица в ElevenLabs (03.10), R2 media/max-audio-en/.
 window.SKAZKA_MAX3D_EN_BOOK = {
  "answers": {
   "name": "Max",
@@ -13,6 +13,7 @@ window.SKAZKA_MAX3D_EN_BOOK = {
  "book": {
   "lang": "en",
   "dedication": {"title": "Dedicated to", "lead": "Max — the hero of this story.", "paragraphs": ["This story was written just for you. May it be full of wonder, laughter and warmth.", "Come back to it again and again — it will always be waiting for you."], "signature": "With love,\nMom", "date": "September 30, 2026"},
+  "audio": [{"title": "Dedication", "src": "/api/media/max-audio-en/dedication.mp3"}, {"title": "Max and the Traveling Suitcase", "src": "/api/media/max-audio-en/story.mp3"}],
   "title": "Max and the Traveling Suitcase",
   "cover": "assets/examples/max-3d/cover.webp",
   "backImage": "assets/examples/max-3d/ill-7.webp",
