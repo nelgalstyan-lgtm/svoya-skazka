@@ -42,7 +42,7 @@ def widen(img, ratio=794/1123):
         cur = seam_carving.resize(cur, (cur.shape[1]+step, h), energy_mode='forward', order='width-first', keep_mask=objmask(cur))
     return cur
 
-PICK = {'tajny':(1,3),'more':(1,3),'poxod':(1,2),'korolevstvo':(1,3),'les':(1,2),'podvodnoe':(1,3),'novyj-god':(1,3),'den-rozhdeniya':(1,3)}
+PICK = {'tajny':(1,3),'more':(1,3),'poxod':(1,2),'korolevstvo':(1,2),'les':(1,2),'podvodnoe':(1,3),'novyj-god':(1,3),'den-rozhdeniya':(1,3)}
 DST = "assets/kit/decor/"
 if __name__ == "__main__":
     import os
