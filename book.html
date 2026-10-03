@@ -157,6 +157,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 .sk-strip-right .sk-strip{ left:auto; right:0; transform:scaleX(-1); }
 .sk-strip-right .story{ padding-left:68px; padding-right:128px; }
 .sk-strip-right .page-item, .sk-strip-right .pageno{ padding-left:0; padding-right:60px; }
+/* малышам: лист с текстом нарисован целиком (kidsSheet), текст — в пустой середине, номер — под текстом */
+.kids-page .story{ position:absolute; top:var(--kt); right:var(--kr); bottom:calc(var(--kb) + 40px); left:var(--kl); padding:0; line-height:1.55; }
+.kids-page .pageno{ top:calc(100% - var(--kb) - 36px); bottom:auto; left:var(--kl); right:var(--kr); }
+.kids-page .pageno img{ display:none; }
 .pic-page .hero{ position:absolute; inset:0; float:none; width:auto; height:auto; margin:0; border-radius:0; box-shadow:none; }
 .qr-block{ display:flex; align-items:center; gap:18px; margin:26px 110px 0; text-align:left; }
 .qr-code{ width:104px; height:104px; flex:none; padding:8px; background:#fff; border-radius:8px; box-shadow:0 4px 12px rgba(60,40,10,.18); }
@@ -366,6 +370,45 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   // strip — боковая полоса на листах с текстом (assets/kit/decor/<набор>/strip.webp; все 8 полос нарисованы к 03.10)
   const DECOR = { tajny: { sprig: 9, folio: [6, 3], strip: true }, korolevstvo: { sprig: 9, boyFolio: [7, 6], strip: true }, 'novyj-god': { sprig: 10, strip: true }, 'den-rozhdeniya': { sprig: 9, compose: [9, 1, 10], strip: true } };
   const DECOR_BY_THEME = { adventure: 'tajny', fairytale: 'korolevstvo', newyear: 'novyj-god', birthday: 'den-rozhdeniya' };
+  // Малышам (до 7 лет) — листы с текстом целиком нарисованы: Героёнок в образе темы по краям, середина для текста
+  // (assets/kit/decor/<набор>/kids-1|2.webp, два вида чередуются). Поля текста — отступы от краёв листа в %:
+  // [сверху, справа, снизу, слева], подобраны по картинкам, чтобы текст не заходил на рисунок
+  const KIDS_AGE = 7;
+  const KIDS = {
+    tajny: [[16, 12, 33, 16], [22, 13, 32, 17]],
+    more: [[10, 13, 44, 13], [24, 17, 32, 13]],
+    poxod: [[16, 12, 36, 12], [14, 12, 33, 24]],
+    korolevstvo: [[10, 20, 25, 22], [20, 16, 36, 16]],
+    les: [[15, 14, 38, 14], [19, 14, 36, 14]],
+    podvodnoe: [[8, 13, 36, 24], [22, 14, 33, 14]],
+    'novyj-god': [[13, 12, 32, 14], [24, 20, 24, 13]],
+    'den-rozhdeniya': [[14, 13, 40, 13], [24, 13, 40, 13]]
+  };
+  const KIDS_SPLIT = 450; // больше знаков на лист не ставим — делим текст страницы на несколько листов (иначе шрифт для малышей мелкий)
+  let KIDS_ON = false;
+  let KIDS_SET = 'tajny'; // набор листов малышей: как SET, но у книги ко дню рождения — именинные листы
+  let kidsCount = 0;
+  function kidsSheet(s) {
+    s.setAttribute('data-kids-no', String(kidsCount + 1)); // номер листа с текстом (страница сказки может занять несколько)
+    const n = kidsCount++ % 2;
+    const box = KIDS[KIDS_SET][n];
+    s.classList.add('text-page', 'kids-page');
+    s.style.background = 'url("assets/kit/decor/' + KIDS_SET + '/kids-' + (n + 1) + '.webp") center/100% 100% no-repeat #f6efdf';
+    ['--kt', '--kr', '--kb', '--kl'].forEach(function (v, i) { s.style.setProperty(v, box[i] + '%'); });
+  }
+  // делим абзацы на n листов примерно поровну по длине (абзац не рвём)
+  function splitParagraphs(paras, n) {
+    const total = paras.reduce(function (a, p) { return a + p.length; }, 0);
+    const out = [[]];
+    let acc = 0;
+    paras.forEach(function (p, i) {
+      const left = paras.length - i;
+      if (out[out.length - 1].length && out.length < n && (acc >= total * out.length / n || left < n - out.length + 1)) out.push([]);
+      out[out.length - 1].push(p);
+      acc += p.length;
+    });
+    return out;
+  }
   let SET = 'tajny';
   let BOY = false;
   const decorSrc = (n, set) => 'assets/kit/decor/' + (set || SET) + '/item-' + n + '.webp';
@@ -405,11 +448,12 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     return box;
   }
 
-  function addStory(parent, text) {
+  // text — строка или готовые абзацы; cont — продолжение текста страницы на следующем листе (без буквицы)
+  function addStory(parent, text, cont) {
     const story = el('div', 'story');
-    toParagraphs(text).forEach(function (para, i) {
+    (Array.isArray(text) ? text : toParagraphs(text)).forEach(function (para, i) {
       const p = el('p');
-      if (i === 0) {
+      if (i === 0 && !cont) {
         p.appendChild(el('span', 'dropcap', para.charAt(0)));
         p.appendChild(document.createTextNode(para.slice(1)));
       } else {
@@ -501,6 +545,9 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     SET = DECOR_BY_THEME[themeOf(data.answers)] || 'tajny';
     const answers = window.SkazkaTemplate.normalizeInput(data.answers || {});
     if (answers.age >= 11) document.body.classList.add('teen'); // подросткам предметы спокойнее
+    KIDS_SET = window.SkazkaTemplate.occasionKind(answers.occasion) === 'birthday' ? 'den-rozhdeniya' : SET;
+    KIDS_ON = Boolean(answers.age && answers.age <= KIDS_AGE && KIDS[KIDS_SET]); // 8–10 — боковые полосы, как раньше
+    kidsCount = 0;
     BOY = !answers.girl;
     const birthday = answers.kind !== 'holiday' && window.SkazkaTemplate.occasionKind(answers.occasion) === 'birthday';
     document.title = book.title + T(' — Героёнок', ' — Geroenok');
@@ -567,7 +614,28 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       s.setAttribute('data-page', String(index));
       const scene = page.scene || 'forest_path';
 
-      if (useHero) {
+      if (useHero && KIDS_ON) {
+        kidsSheet(s);
+        const paras = toParagraphs(page.text);
+        const len = function (part) { return part.join(' ').length; };
+        let parts;
+        for (let n = Math.ceil(pageText(page).length / KIDS_SPLIT); ; n++) {
+          parts = splitParagraphs(paras, Math.min(n, paras.length));
+          if (n >= paras.length || parts.every(function (part) { return len(part) <= KIDS_SPLIT * 1.1; })) break;
+        }
+        parts.forEach(function (part, k) {
+          let sh = s;
+          if (k) {
+            // продолжение — следующий лист с другим рисунком; data-page-cont — чтобы «Править» собрал страницу целиком
+            sh = sheet('');
+            sh.setAttribute('data-page-cont', String(index));
+            kidsSheet(sh);
+          }
+          addStory(sh, part, k > 0);
+          sh.appendChild(pageNumber(Number(sh.getAttribute('data-kids-no')), true));
+        });
+        return;
+      } else if (useHero) {
         s.classList.add('text-page', 'has-item');
         if (DECOR[SET].strip) {
           s.classList.add('has-strip');
@@ -698,11 +766,12 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       jobId: data.jobId,
       canRedraw: data.canRedraw,
       redrawsLeft: data.redrawsLeft,
-      editable: function () { return Array.prototype.slice.call(document.querySelectorAll('.sheet[data-page] .story p')); },
+      editable: function () { return Array.prototype.slice.call(document.querySelectorAll('.sheet[data-page] .story p, .sheet[data-page-cont] .story p')); },
       collectEdits: function () {
         return Array.prototype.map.call(document.querySelectorAll('.sheet[data-page]'), function (s) {
           const i = Number(s.getAttribute('data-page'));
-          const text = Array.prototype.map.call(s.querySelectorAll('.story p'), window.SkazkaExtras.paragraphText).filter(Boolean).join('\n');
+          const ps = document.querySelectorAll('.sheet[data-page="' + i + '"] .story p, .sheet[data-page-cont="' + i + '"] .story p');
+          const text = Array.prototype.map.call(ps, window.SkazkaExtras.paragraphText).filter(Boolean).join('\n');
           return { page: i, text: text };
         }).filter(function (e) { return e.text && e.text.replace(/\s+/g, ' ') !== pageText(book.pages[e.page]).replace(/\s+/g, ' '); });
       },
