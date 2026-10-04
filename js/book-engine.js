@@ -185,7 +185,7 @@
       return full;
     }
     var d = h('div', 'bk-divider');
-    var icons = HEADER_ICONS[FOOTER];
+    var icons = TEEN_SET ? teenIcons() : HEADER_ICONS[FOOTER];
     d.appendChild(h('i'));
     d.appendChild(img(KIT + (icons ? icons[1] : 'trefoil.png'), '', ''));
     d.appendChild(h('i'));
@@ -198,6 +198,8 @@
   var SET = 'tajny'; // набор фирменного оформления (DECOR)
   var EXTRA = ''; // классы страницы: набор, возраст (подросткам предметы мельче и приглушённее)
   var OCCASION = ''; // повод книги: у дня рождения — своя заставка посвящения
+  var TEEN_SET = ''; // подростковая сказка в оформлении Алекса: полоса и значки-гравюры своей темы (decor/<набор>/teen-*, scripts/teen_decor.py)
+  function teenIcons() { return ['decor/' + TEEN_SET + '/teen-icon-1.webp', 'decor/' + TEEN_SET + '/teen-icon-2.webp', false]; }
 
   // название главы в узкой шапке: сжимаем шрифт, пока не влезет (в одну строку или в высоту блока); совсем длинное — многоточие
   function fitRunTitle(span, run, multiline) {
@@ -217,7 +219,7 @@
   // верхняя строка страницы: название главы (со значками и линией — или просто на баннере рамки)
   function addRun(page, title) {
     var lay = LAYOUT[FOOTER] || {};
-    var icons = FRAME === 'brand' ? ['decor/' + SET + '/item-' + DECOR[SET].icons[0] + '.webp', 'decor/' + SET + '/item-' + DECOR[SET].icons[1] + '.webp', false] : HEADER_ICONS[FOOTER];
+    var icons = FRAME === 'brand' ? ['decor/' + SET + '/item-' + DECOR[SET].icons[0] + '.webp', 'decor/' + SET + '/item-' + DECOR[SET].icons[1] + '.webp', false] : TEEN_SET ? teenIcons() : HEADER_ICONS[FOOTER];
     var run = h('div', 'bk-run');
     if (!lay.banner) run.appendChild(img(KIT + (icons ? icons[0] : 'fleuron-l.png'), '', ''));
     var span = h('span', '', title);
@@ -251,6 +253,7 @@
     var page = newSheet(root, 'bk-text' + (opener ? ' bk-opener' : ''));
     var stripEl = h('div', 'bk-strip');
     if (FRAME === 'brand' && DECOR[SET].strip) stripEl.style.backgroundImage = 'url("' + KIT + 'decor/' + SET + '/strip.webp")';
+    if (TEEN_SET) stripEl.style.backgroundImage = 'url("' + KIT + 'decor/' + TEEN_SET + '/teen-strip.webp")';
     page.appendChild(stripEl);
 
     if (opener) {
@@ -290,6 +293,7 @@
       folio.appendChild(img(KIT + 'bird-r.png', '', ''));
     } else {
       folio = h('div', 'bk-folio bk-fo bk-fo-' + FOOTER);
+      if (TEEN_SET) { folio.style.backgroundImage = 'url("' + KIT + 'decor/' + TEEN_SET + '/teen-footer.webp")'; folio.style.setProperty('--nx', '47.7%'); }
       folio.appendChild(h('span', 'bk-no', ''));
     }
     page.appendChild(folio);
@@ -651,6 +655,7 @@
     var urls = [book.cover || KIT + 'parchment.jpg', KIT + 'hdr-treasure-l.png', KIT + 'hdr-treasure-r.png', KIT + 'hdr-wild.png', KIT + 'hdr-sea.svg', KIT + 'footer-treasure.png', KIT + 'footer-wild.png', KIT + 'footer-sea.png', KIT + 'medallion.png', KIT + 'parchment.jpg', KIT + 'strip.png', KIT + 'bird-l.png', KIT + 'bird-r.png', KIT + 'fleuron-l.png', KIT + 'fleuron-r.png', KIT + 'trefoil.png', KIT + 'rosette.png', KIT + 'plate-band.png', KIT + 'frame-cookies.jpg', KIT + 'frame-elves.jpg', KIT + 'hdr-cookies-l.png', KIT + 'hdr-cookies-r.png', KIT + 'hdr-elves-l.png', KIT + 'hdr-elves-r.png', KIT + 'divider-cookies.png', KIT + 'divider-elves.png', KIT + 'frame-pirates.jpg', KIT + 'frame-jungle.jpg', KIT + 'orn-pirates-skull.png'];
     if (ART && /^(pirates|jungle|cookies|elves)$/.test(FRAME)) urls.push(KIT + 'frame-' + FRAME + '-3d.jpg');
     urls.push(KIT + 'decor/hare-greeting.webp'); // Героёнок на странице «Конец» — во всех оформлениях
+    if (TEEN_SET) ['teen-strip', 'teen-footer', 'teen-icon-1', 'teen-icon-2'].forEach(function (n) { urls.push(KIT + 'decor/' + TEEN_SET + '/' + n + '.webp'); });
     if (FRAME === 'brand') {
       var cfg = DECOR[SET];
       urls.push(decorItem(cfg.icons[0]), decorItem(cfg.icons[1]), decorItem(cfg.sprig));
@@ -671,10 +676,12 @@
   }
 
   // приключение для 11–16 лет без праздничного повода — оформление как у книги Алекса: пергамент, карта, предметы исследователя
-  // (решение владелицы 02.10: фирменные предметы и веточки подросткам слишком «детские»; сказки и праздники — в фирменном)
+  // (решение владелицы 02.10: фирменные предметы и веточки подросткам слишком «детские»; праздники — в фирменном).
+  // С 04.10 так же и сказки, но полоса и значки — своей темы (TEEN_GENRES → decor/<набор>/teen-*)
   var ADVENTURE_GENRES = { sea: 1, treasure: 1, wild: 1, universal: 1, mystery: 1 };
+  var TEEN_GENRES = { kingdom: 'korolevstvo', forest: 'les', underwater: 'podvodnoe' };
   function teenAdventure(book) {
-    return book.ageGroup === '11-16' && !!ADVENTURE_GENRES[book.genre] && book.occasion !== 'birthday' && book.occasion !== 'newyear';
+    return book.ageGroup === '11-16' && !!(ADVENTURE_GENRES[book.genre] || TEEN_GENRES[book.genre]) && book.occasion !== 'birthday' && book.occasion !== 'newyear';
   }
 
   /** Раскладывает книгу по страницам внутри root. Возвращает { pages, sheets }. */
@@ -682,6 +689,7 @@
     // фирменное оформление у всех книг; прежние рамки — только если их явно просят (?frame=… — для сравнения)
     LANG = book.lang === 'en' ? 'en' : 'ru';
     FRAME = (opts && opts.frame) || (teenAdventure(book) ? 'chart' : 'brand');
+    TEEN_SET = FRAME === 'chart' && !(opts && opts.frame) && teenAdventure(book) ? TEEN_GENRES[book.genre] || '' : '';
     FOOTER = FRAME === 'brand' ? 'brand' : FRAME === 'chart' && !(opts && opts.frame) ? 'treasure' : (opts && opts.footer) || book.footer || (FRAME === 'vine' ? 'birds' : 'sea');
     SET = decorFor(book);
     OCCASION = book.occasion || '';

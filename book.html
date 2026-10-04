@@ -163,9 +163,9 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 .sk-alex .sk-strip{ width:130px; background-size:130px 100%; }
 .sk-alex .has-strip .story{ padding-left:170px; padding-bottom:140px; }
 .sk-alex .sk-strip-right .story{ padding-left:68px; padding-right:170px; }
-.pageno.sk-fo{ left:170px; right:68px; bottom:44px; height:71px; padding:0; display:block; background:url(assets/kit/footer-treasure.png) center/100% 100% no-repeat; }
+.pageno.sk-fo{ left:170px; right:68px; bottom:44px; height:71px; padding:0; display:block; background:center/100% 100% no-repeat; }
 .sk-strip-right .pageno.sk-fo{ left:68px; right:170px; padding:0; }
-.sk-fo span{ position:absolute; left:48%; top:42.9%; transform:translate(-50%,-50%); font:700 21px/1 var(--font-book); letter-spacing:.04em; color:#4a3323; }
+.sk-fo span{ position:absolute; left:var(--nx, 48%); top:42.9%; transform:translate(-50%,-50%); font:700 21px/1 var(--font-book); letter-spacing:.04em; color:#4a3323; }
 /* малышам: лист с текстом нарисован целиком (kidsSheet), текст — в пустой середине, номер — под текстом */
 .kids-page .story{ position:absolute; padding:0; display:block; line-height:1.5; }
 .kids-page .pageno{ bottom:auto; }
@@ -400,7 +400,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   const KIDS_FS = [28, 27, 26, 25, 24.5, 24, 23.5, 23];
   let kidsFs = 27;
   let KIDS_ON = false;
-  let ALEX = false; // подросток с приключением — оформление книги Алекса
+  let ALEX = false; // подросток с приключением или сказкой — оформление книги Алекса
+  let ALEX_ART = null; // полоса и ряд значков: { strip, footer, nx }
   let KIDS_SET = 'tajny'; // набор листов малышей: как SET, но у книги ко дню рождения — именинные листы
   let kidsCount = 0;
   // рисунок листа (два вида по очереди), поле текста и номер; story — пустое, текст набирает kidsFlow
@@ -571,6 +572,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   // подросткам с приключением (ALEX) — ряд значков-гравюр, номер в промежутке (как footer-treasure в «Большой истории»)
   function alexFolio(n) {
     const box = el('div', 'pageno sk-fo');
+    box.style.backgroundImage = 'url("' + ALEX_ART.footer + '")';
+    box.style.setProperty('--nx', ALEX_ART.nx);
     box.appendChild(el('span', '', String(n)));
     return box;
   }
@@ -692,8 +695,13 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     if (answers.age >= 11) document.body.classList.add('teen'); // подросткам предметы спокойнее
     KIDS_SET = window.SkazkaTemplate.occasionKind(answers.occasion) === 'birthday' ? 'den-rozhdeniya' : SET;
     KIDS_ON = Boolean(answers.age && answers.age <= KIDS_AGE && KIDS[KIDS_SET]); // 8–10 — боковые полосы, как раньше
-    // 11–16, приключение без повода ДР/НГ — оформление Алекса (решение владелицы 04.10: как в «Большой истории»)
-    ALEX = answers.age >= 11 && themeOf(data.answers) === 'adventure' && KIDS_SET !== 'den-rozhdeniya';
+    // 11–16, приключение или сказка без повода ДР/НГ — оформление Алекса (решение владелицы 04.10: как в «Большой истории»);
+    // у сказки полоса и значки своей темы (decor/korolevstvo/teen-*, scripts/teen_decor.py)
+    const teenKind = themeOf(data.answers);
+    ALEX = answers.age >= 11 && (teenKind === 'adventure' || teenKind === 'fairytale') && KIDS_SET !== 'den-rozhdeniya';
+    ALEX_ART = teenKind === 'fairytale'
+      ? { strip: 'assets/kit/decor/korolevstvo/teen-strip.webp', footer: 'assets/kit/decor/korolevstvo/teen-footer.webp', nx: '47.7%' }
+      : { strip: 'assets/kit/strip-map.png', footer: 'assets/kit/footer-treasure.png', nx: '48%' };
     document.body.classList.toggle('sk-alex', ALEX);
     kidsCount = 0;
     BOY = !answers.girl;
@@ -770,7 +778,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       } else if (useHero && ALEX) {
         s.classList.add('text-page', 'has-strip');
         const strip = el('div', 'sk-strip');
-        strip.style.backgroundImage = 'url("assets/kit/strip-map.png")';
+        strip.style.backgroundImage = 'url("' + ALEX_ART.strip + '")';
         s.appendChild(strip);
         addStory(s, page.text);
         s.appendChild(alexFolio(index + 1));
