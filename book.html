@@ -386,28 +386,127 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     'novyj-god': [[16, 9.5, 16, 22, { br: [74, 67] }], [19, 9.5, 16, 10.5, { tl: [20.5, 29], tr: [81.5, 33], bl: [20, 79], br: [77.5, 75] }]],
     'den-rozhdeniya': [[15.5, 13.5, 19, 16, { br: [63.5, 65] }], [15, 10.5, 17, 12.5, { tr: [78, 26], bl: [56, 80], br: [56, 54.5] }]]
   };
-  const KIDS_SPLIT = 650; // больше знаков на лист не ставим — делим текст страницы на несколько листов (иначе шрифт для малышей мелкий)
+  // шрифт листов малышей — один на всю книгу: самый крупный из KIDS_FS, при котором нет почти пустых листов-«хвостов»
+  // (что не поместилось на лист, переносится на следующий; см. kidsLayout)
+  const KIDS_FS = [28, 27, 26, 25, 24.5, 24, 23.5, 23];
+  let kidsFs = 27;
   let KIDS_ON = false;
   let KIDS_SET = 'tajny'; // набор листов малышей: как SET, но у книги ко дню рождения — именинные листы
   let kidsCount = 0;
+  // рисунок листа (два вида по очереди), поле текста и номер; story — пустое, текст набирает kidsFlow
   function kidsSheet(s) {
-    s.setAttribute('data-kids-no', String(kidsCount + 1)); // номер листа с текстом (страница сказки может занять несколько)
     const n = kidsCount++ % 2;
+    s.textContent = '';
     s.classList.add('text-page', 'kids-page');
     s.style.background = 'url("assets/kit/decor/' + KIDS_SET + '/kids-' + (n + 1) + '.webp") center/100% 100% no-repeat #f6efdf';
-    s.kidsLayout = KIDS[KIDS_SET][n];
-  }
-  // текст — в поле листа, номер — под ним; вырезы с рисунком текст обтекает
-  function kidsPlace(s) {
-    const W = SHEET_W, H = 1123, k = s.kidsLayout, cuts = k[4] || {};
+    const W = SHEET_W, H = 1123, k = KIDS[KIDS_SET][n];
     const area = { top: k[0] * H / 100, right: W - k[1] * W / 100, bottom: H - k[2] * H / 100 - 40, left: k[3] * W / 100 };
-    const story = s.querySelector('.story');
-    story.style.cssText += ';top:' + area.top + 'px;left:' + area.left + 'px;width:' + (area.right - area.left) + 'px;height:' + (area.bottom - area.top) + 'px';
+    const story = el('div', 'story');
+    story.style.cssText = 'top:' + area.top + 'px;left:' + area.left + 'px;width:' + (area.right - area.left) + 'px;height:' + (area.bottom - area.top) + 'px;--fs:' + kidsFs + 'px';
+    s.appendChild(story);
+    const no = pageNumber(kidsCount, true);
+    no.style.cssText = 'top:' + (area.bottom + 4) + 'px;left:' + area.left + 'px;right:' + (W - area.right) + 'px';
+    s.appendChild(no);
     const px = {};
-    Object.keys(cuts).forEach(function (c) { px[c] = { x: cuts[c][0] * W / 100, y: cuts[c][1] * H / 100 }; });
-    kidsCuts(story, area, px);
-    const no = s.querySelector('.pageno');
-    if (no) no.style.cssText += ';top:' + (area.bottom + 4) + 'px;left:' + area.left + 'px;right:' + (W - area.right) + 'px';
+    Object.keys(k[4] || {}).forEach(function (c) { px[c] = { x: k[4][c][0] * W / 100, y: k[4][c][1] * H / 100 }; });
+    return { story: story, area: area, cuts: px };
+  }
+  // lim < 1 — текст занимает не больше этой доли поля (так делим страницу между листами поровну)
+  function overfull(story, lim) {
+    if (story.scrollHeight > story.clientHeight + 1) return true;
+    const last = lim < 1 && story.querySelector('p:last-of-type');
+    return !!last && last.offsetTop + last.offsetHeight > story.clientHeight * lim;
+  }
+  // Набор текста на листы малышей (после загрузки шрифтов, из fitText): абзацы по очереди; не влезающий абзац — по предложениям,
+  // остаток — на новый лист с другим рисунком (data-page-cont — «Править» соберёт страницу целиком, data-joined — продолжение абзаца)
+  function kidsLayout() {
+    let best = null;
+    KIDS_FS.some(function (fs) {
+      const tails = kidsFlow(fs, false);
+      if (!best || tails < best.tails) best = { fs: fs, tails: tails };
+      return tails === 0;
+    });
+    kidsFlow(best.fs, true);
+  }
+  // раскладка всей книги при шрифте fs; возвращает, сколько последних листов страницы заполнено меньше чем наполовину.
+  // balance — текст страницы, занявшей несколько листов, делится между ними поровну (а не полный лист + почти пустой «хвост»)
+  function kidsFlow(fs, balance) {
+    kidsFs = fs;
+    let tails = 0, no = 0;
+    document.querySelectorAll('.sheet[data-page-cont]').forEach(function (s) { s.parentNode.remove(); });
+    document.querySelectorAll('.sheet.kids-page[data-page]').forEach(function (first) {
+      let r = kidsFlowPage(first, no, 1);
+      if (balance && r.sheets > 1) {
+        // самая низкая граница текста, при которой листов столько же
+        let lo = 0.35, hi = 1;
+        for (let i = 0; i < 7; i++) {
+          const mid = (lo + hi) / 2;
+          if (kidsFlowPage(first, no, mid).sheets > r.sheets) lo = mid; else hi = mid;
+        }
+        r = kidsFlowPage(first, no, hi);
+      }
+      no += r.sheets;
+      if (r.tail) tails++;
+    });
+    kidsCount = no;
+    return tails;
+  }
+  // одна страница сказки с листа first; no — сколько листов малыша до неё (номер и рисунок), lim — см. overfull
+  function kidsFlowPage(first, no, lim) {
+    const pageNo = first.getAttribute('data-page');
+    document.querySelectorAll('.sheet[data-page-cont="' + pageNo + '"]').forEach(function (s) { s.parentNode.remove(); });
+    kidsCount = no;
+    const queue = first.kidsParas.map(function (t) { return { text: t, joined: false }; });
+    let sh = first, lay = kidsSheet(sh), placed = 0, cutsDone = false, firstPara = true, sheets = 1;
+    function cutsOnce() { if (!cutsDone) { kidsCuts(lay.story, lay.area, lay.cuts); cutsDone = true; } }
+    function para(text, joined, dropcap) {
+      const p = el('p');
+      if (dropcap) { p.appendChild(el('span', 'dropcap', text.charAt(0))); p.appendChild(document.createTextNode(text.slice(1))); }
+      else p.textContent = text;
+      if (joined) p.setAttribute('data-joined', '1');
+      return p;
+    }
+    while (queue.length) {
+      const item = queue.shift(), drop = firstPara;
+      firstPara = false;
+      let p = para(item.text, item.joined, drop);
+      lay.story.appendChild(p);
+      cutsOnce(); // вырезы — после буквицы первого абзаца (см. kidsCuts)
+      if (!overfull(lay.story, lim)) { placed++; continue; }
+      // не влез: оставляем столько предложений, сколько помещается, остальное — на следующий лист
+      const sentences = item.text.split(/(?<=[.!?…»])\s+/);
+      let fit = 0;
+      for (let i = 1; i < sentences.length; i++) {
+        const q = para(sentences.slice(0, i).join(' '), item.joined, drop);
+        lay.story.replaceChild(q, p);
+        p = q;
+        if (overfull(lay.story, lim)) break;
+        fit = i;
+      }
+      if (fit) {
+        const q = para(sentences.slice(0, fit).join(' '), item.joined, drop);
+        lay.story.replaceChild(q, p);
+        queue.unshift({ text: sentences.slice(fit).join(' '), joined: true });
+      } else if (!placed) {
+        const q = para(item.text, item.joined, drop); // на пустой лист не влезло и одно предложение — оставляем как есть
+        lay.story.replaceChild(q, p);
+        placed++;
+        continue;
+      } else {
+        lay.story.removeChild(p);
+        queue.unshift(item);
+      }
+      // новый лист сразу за текущим
+      const wrap = el('div', 'sheet-wrap');
+      const next = el('div', 'sheet');
+      next.setAttribute('data-page-cont', pageNo);
+      wrap.appendChild(next);
+      sh.parentNode.after(wrap);
+      sh = next; lay = kidsSheet(sh); placed = 0; cutsDone = false; sheets++;
+    }
+    cutsOnce();
+    const last = lay.story.lastElementChild;
+    return { sheets: sheets, tail: sh !== first && !!last && (last.offsetTop + last.offsetHeight) / lay.story.clientHeight < 0.5 };
   }
   // Вырезы в поле текста — пустые «плавающие» блоки в углах, текст их обтекает. Нижние ставятся через распорку нулевой ширины
   // (float не умеет прижиматься к низу). area и cuts — в px листа: tl/tr — {x: край выреза, y: его низ}, bl/br — {x, y: его верх}
@@ -438,19 +537,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     const ref = drop ? drop.nextSibling : anchor;
     lateNodes.forEach(function (d) { (drop ? drop.parentNode : story).insertBefore(d, ref); });
   }
-  // делим абзацы на n листов примерно поровну по длине (абзац не рвём)
-  function splitParagraphs(paras, n) {
-    const total = paras.reduce(function (a, p) { return a + p.length; }, 0);
-    const out = [[]];
-    let acc = 0;
-    paras.forEach(function (p, i) {
-      const left = paras.length - i;
-      if (out[out.length - 1].length && out.length < n && (acc >= total * out.length / n || left < n - out.length + 1)) out.push([]);
-      out[out.length - 1].push(p);
-      acc += p.length;
-    });
-    return out;
-  }
+
   let SET = 'tajny';
   let BOY = false;
   const decorSrc = (n, set) => 'assets/kit/decor/' + (set || SET) + '/item-' + n + '.webp';
@@ -657,26 +744,9 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       const scene = page.scene || 'forest_path';
 
       if (useHero && KIDS_ON) {
-        kidsSheet(s);
-        const paras = toParagraphs(page.text);
-        const len = function (part) { return part.join(' ').length; };
-        let parts;
-        for (let n = Math.ceil(pageText(page).length / KIDS_SPLIT); ; n++) {
-          parts = splitParagraphs(paras, Math.min(n, paras.length));
-          if (n >= paras.length || parts.every(function (part) { return len(part) <= KIDS_SPLIT * 1.1; })) break;
-        }
-        parts.forEach(function (part, k) {
-          let sh = s;
-          if (k) {
-            // продолжение — следующий лист с другим рисунком; data-page-cont — чтобы «Править» собрал страницу целиком
-            sh = sheet('');
-            sh.setAttribute('data-page-cont', String(index));
-            kidsSheet(sh);
-          }
-          addStory(sh, part, k > 0);
-          sh.appendChild(pageNumber(Number(sh.getAttribute('data-kids-no')), true));
-          kidsPlace(sh);
-        });
+        // лист малыша: рисунок и текст раскладывает kidsFlow (после загрузки шрифтов), здесь — только абзацы страницы
+        s.classList.add('text-page', 'kids-page');
+        s.kidsParas = toParagraphs(page.text);
         return;
       } else if (useHero) {
         s.classList.add('text-page', 'has-item');
@@ -814,7 +884,11 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
         return Array.prototype.map.call(document.querySelectorAll('.sheet[data-page]'), function (s) {
           const i = Number(s.getAttribute('data-page'));
           const ps = document.querySelectorAll('.sheet[data-page="' + i + '"] .story p, .sheet[data-page-cont="' + i + '"] .story p');
-          const text = Array.prototype.map.call(ps, window.SkazkaExtras.paragraphText).filter(Boolean).join('\n');
+          // продолжение абзаца на следующем листе (data-joined) — через пробел, а не новым абзацем
+          const text = Array.prototype.reduce.call(ps, function (acc, p) {
+            const t = window.SkazkaExtras.paragraphText(p);
+            return !t ? acc : !acc ? t : acc + (p.getAttribute('data-joined') ? ' ' : '\n') + t;
+          }, '');
           return { page: i, text: text };
         }).filter(function (e) { return e.text && e.text.replace(/\s+/g, ' ') !== pageText(book.pages[e.page]).replace(/\s+/g, ' '); });
       },
@@ -843,9 +917,11 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
   // Подгоняем размер шрифта, чтобы текст целиком помещался на листе (и на экране, и в PDF)
   function fitText() {
+    if (KIDS_ON) kidsLayout();
     document.querySelectorAll('.story').forEach(function (story) {
+      if (story.closest('.kids-page')) return; // у малышей шрифт один на всю книгу (kidsLayout)
       // лист только с текстом — крупный шрифт для чтения вслух малышам; подросткам — как раньше
-      let size = story.closest('.kids-page') ? 28 : story.closest('.text-page') && !document.body.classList.contains('teen') ? 26 : 19.5;
+      let size = story.closest('.text-page') && !document.body.classList.contains('teen') ? 26 : 19.5;
       story.style.setProperty('--fs', size + 'px');
       // предмет над текстом (160 px) — на каждой странице; если шрифт выходит мельче 21px, предмет уменьшается до 90 px
       const item = story.parentNode.querySelector('.page-item');
