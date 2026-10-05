@@ -393,7 +393,8 @@ section.tight{ padding:56px 0; }
 /* стиль иллюстраций: две большие карточки с образцом */
 .style-cards{ grid-template-columns:1fr 1fr; }
 .style-card{ padding:12px 12px 16px; }
-.style-sample{ display:block; width:100%; height:240px; object-fit:cover; object-position:center 30%; border-radius:10px; margin-bottom:12px; background:linear-gradient(160deg,#f3c98b,#8fb3d9 55%,#5a4b8f); }
+/* окошко с образцом — квадратное и небольшое: ребёнок помещается целиком, без растягивания и размытых краёв (05.10) */
+.style-sample{ display:block; width:min(100%, 280px); height:auto; aspect-ratio:1 / 1; margin:0 auto 12px; object-fit:cover; object-position:center 30%; border-radius:10px; background:linear-gradient(160deg,#f3c98b,#8fb3d9 55%,#5a4b8f); }
 .style-sample.is-3d{ display:flex; align-items:center; justify-content:center; font-size:64px; }
 .choice-card .desc{ display:block; margin-top:6px; font-size:13px; color:var(--text-soft); font-weight:400; line-height:1.45; }
 
@@ -697,7 +698,7 @@ section.tight{ padding:56px 0; }
             <span class="desc">Фирменный стиль Героёнка: живая бумага, мягкие краски, как в настоящей книжке с полки</span>
           </div>
           <div class="choice-card style-card" data-choice-group="style" data-value="animated3d">
-            <img class="style-sample" style="object-position:center 85%;" src="assets/examples/alex-3d/style-3d-960.webp" alt="Пример иллюстрации в стиле 3D-мультфильм: Алекс со старинной книгой у древних ворот" loading="lazy">
+            <img class="style-sample" style="object-position:center 62%;" src="assets/examples/alex-3d/cover-480.webp" alt="Пример иллюстрации в стиле 3D-мультфильм: Алекс со старинной книгой у древних ворот" loading="lazy">
             <span class="name">3D-мультфильм</span>
             <span class="desc">Объёмные герои и кинематографичный свет — как кадр из полнометражного мультфильма</span>
           </div>
