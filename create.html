@@ -1233,7 +1233,7 @@ section.tight{ padding:56px 0; }
       return 'Добавляем последние штрихи…';
     }
 
-    // Анкета + фото файлами (multipart): сервер разбирает их встроенными средствами, почти не тратя процессор
+    // Фото из data:URL → файл (Blob), чтобы отправить его кусками
     function dataUrlToBlob(src) {
       const comma = src.indexOf(',');
       const mime = (/^data:([^;,]+)/.exec(src) || [])[1] || 'image/jpeg';
@@ -1257,11 +1257,62 @@ section.tight{ padding:56px 0; }
       }
     }
 
-    function orderForm(answers, photos) {
+    // Шлюз Яндекса, через который открывается сайт, обрывает запросы тяжелее ~30 КБ. Поэтому фото уходят кусками
+    // по UPLOAD_CHUNK_BYTES (несколько запросов сразу, каждый с повтором), а в анкете — только номер загрузки.
+    const UPLOAD_CHUNK_BYTES = 16 * 1024;
+    const UPLOAD_PARALLEL = 4;
+    const UPLOAD_TRIES = 4;
+
+    function uploadId() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      const b = crypto.getRandomValues(new Uint8Array(16));
+      b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+      const h = Array.prototype.map.call(b, function (x) { return (x + 256).toString(16).slice(1); }).join('');
+      return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
+    }
+
+    async function uploadPhotos(photos, onProgress) {
+      const upload = uploadId();
+      const blobs = photos.map(dataUrlToBlob);
+      const tasks = [];
+      blobs.forEach(function (blob, p) {
+        for (let c = 0; c * UPLOAD_CHUNK_BYTES < blob.size; c++) tasks.push({ p: p, c: c, part: blob.slice(c * UPLOAD_CHUNK_BYTES, (c + 1) * UPLOAD_CHUNK_BYTES) });
+      });
+      let next = 0, done = 0;
+      async function send(task) {
+        for (let attempt = 1; ; attempt++) {
+          try {
+            await fetchJson(API_BASE + '/api/upload/' + upload + '/' + task.p + '/' + task.c,
+              { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: task.part }, 20000);
+            return;
+          } catch (error) {
+            if (error.status === 429 || error.status === 400 || attempt >= UPLOAD_TRIES) throw error;
+            await new Promise(function (resolve) { setTimeout(resolve, 1000 * attempt); });
+          }
+        }
+      }
+      async function worker() {
+        while (next < tasks.length) {
+          const task = tasks[next++];
+          await send(task);
+          onProgress(++done / tasks.length);
+        }
+      }
+      const workers = [];
+      for (let i = 0; i < UPLOAD_PARALLEL; i++) workers.push(worker());
+      await Promise.all(workers);
+      return {
+        upload: upload,
+        parts: blobs.map(function (blob) { return { type: blob.type, n: Math.ceil(blob.size / UPLOAD_CHUNK_BYTES) }; })
+      };
+    }
+
+    function orderForm(answers, uploaded) {
       const form = new FormData();
       form.append('answers', JSON.stringify(answers));
       form.append('device', deviceId());
-      photos.forEach(function (src, i) { form.append('photo', dataUrlToBlob(src), 'photo-' + (i + 1)); });
+      form.append('upload', uploaded.upload);
+      form.append('photoParts', JSON.stringify(uploaded.parts));
       return form;
     }
 
@@ -1396,20 +1447,22 @@ section.tight{ padding:56px 0; }
         return;
       }
 
-      // Фото уходят на сервер файлами вместе с анкетой, но не попадают в то, что сохраняется в localStorage (answers)
-      const payload = orderForm(answers, selectedPhotos);
-
       const myRun = ++runId;
       const startedAt = Date.now();
 
       generateBtn.disabled = true;
       generateBtn.textContent = 'Создаём книгу…';
       previewBox.style.display = 'none';
-      setStatus('Начинаем писать вашу сказку…');
+      setStatus('Отправляем фото…');
 
       try {
-        // до минуты: на мобильном интернете фото загружаются не сразу
-        const data = await fetchJson(API_BASE + '/api/book/generate', { method: 'POST', body: payload }, 60000);
+        // Фото уходят на сервер отдельно от анкеты и не попадают в то, что сохраняется в localStorage (answers)
+        const uploaded = await uploadPhotos(selectedPhotos, function (share) {
+          if (myRun === runId) setStatus('Отправляем фото… ' + Math.round(share * 100) + '%');
+        });
+        if (myRun !== runId) return;
+        setStatus('Начинаем писать вашу сказку…');
+        const data = await fetchJson(API_BASE + '/api/book/generate', { method: 'POST', body: orderForm(answers, uploaded) }, 60000);
 
         if (!data.jobId) throw new Error('нет jobId');
         if (answers.tariff === 'big') { location.href = 'book-pro.html?job=' + encodeURIComponent(data.jobId); return; }

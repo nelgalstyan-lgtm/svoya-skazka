@@ -3,7 +3,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleApi, PREVIEW_LIMITS } from '../api.js';
+import { handleApi, PREVIEW_LIMITS, UPLOAD_CHUNK_BYTES } from '../api.js';
 import { runBook, spreadPick } from '../book.js';
 import { jsonStringField } from '../bytes.js';
 import { queueHandler } from '../queue.js';
@@ -152,6 +152,37 @@ test('новая анкета: фото файлами (multipart)', async () =>
     const empty = new FormData();
     empty.append('answers', JSON.stringify(FORM));
     assert.equal((await handleApi(new Request('https://geroenok.online/api/book/generate', { method: 'POST', body: empty }), env)).status, 400);
+  } finally { ai.restore(); }
+});
+
+test('анкета: фото кусками (шлюз Яндекса не пропускает тяжёлые запросы)', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  try {
+    const upload = '0f8b7c1e-2a3d-4e5f-8a9b-0c1d2e3f4a5b';
+    const photo = Buffer.alloc(UPLOAD_CHUNK_BYTES * 2 + 100, 7);
+    const put = (p, c, bytes) => handleApi(new Request(`https://geroenok.online/api/upload/${upload}/${p}/${c}`, { method: 'POST', body: bytes }), env);
+    for (let c = 0; c < 3; c++) assert.equal((await put(0, c, photo.subarray(c * UPLOAD_CHUNK_BYTES, (c + 1) * UPLOAD_CHUNK_BYTES))).status, 200);
+    assert.equal((await put(0, 4, Buffer.alloc(UPLOAD_CHUNK_BYTES + 1))).status, 400, 'кусок больше лимита');
+    assert.equal((await put(9, 0, Buffer.from('x'))).status, 404, 'номер фото вне лимита');
+    assert.equal((await handleApi(new Request(`https://geroenok.online/api/upload/../0/0`, { method: 'POST', body: 'x' }), env)).status, 404);
+
+    const orderWith = (parts) => {
+      const form = new FormData();
+      form.append('answers', JSON.stringify(FORM));
+      form.append('upload', upload);
+      form.append('photoParts', JSON.stringify(parts));
+      return handleApi(new Request('https://geroenok.online/api/book/generate', { method: 'POST', body: form }), env);
+    };
+    const missing = await orderWith([{ type: 'image/jpeg', n: 4 }]);
+    assert.equal(missing.status, 400, 'не хватает куска');
+    assert.match((await missing.json()).error, /не догрузились/);
+
+    const res = await orderWith([{ type: 'image/jpeg', n: 3 }]);
+    const data = await res.json();
+    assert.equal(res.status, 200, JSON.stringify(data));
+    assert.deepEqual(Buffer.from(env.BUCKET.items.get(`photos/${data.jobId}/0`).bytes), photo);
+    assert.deepEqual(env.BUCKET.keys(`photos/up-${upload}/`), [], 'куски удалены после заказа');
   } finally { ai.restore(); }
 });
 

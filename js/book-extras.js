@@ -682,13 +682,29 @@
       toast(opts.canRedraw ? 'Нажмите на текст, чтобы исправить его. На иллюстрациях — кнопка «Перерисовать».' : 'Нажмите на текст, чтобы исправить его.');
     }
 
+    // шлюз Яндекса обрывает запросы тяжелее ~30 КБ — много правок отправляем несколькими запросами
+    var EDIT_BATCH_BYTES = 12000;
+    function editBatches(edits) {
+      var batches = [[]], size = 0;
+      edits.forEach(function (e) {
+        var bytes = new Blob([JSON.stringify(e)]).size;
+        if (size && size + bytes > EDIT_BATCH_BYTES) { batches.push([]); size = 0; }
+        batches[batches.length - 1].push(e);
+        size += bytes;
+      });
+      return batches;
+    }
+
     function leave() {
-      var edits = opts.collectEdits();
+      var batches = editBatches(opts.collectEdits());
       button.disabled = true;
-      fetch(opts.apiBase + '/api/book/' + encodeURIComponent(opts.jobId) + '/edit', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ edits: edits })
-      }).then(function (r) {
-        if (!r.ok) throw new Error('Не удалось сохранить правки. Попробуйте ещё раз.');
+      batches.reduce(function (prev, edits, i) {
+        return prev.then(function () {
+          return fetch(opts.apiBase + '/api/book/' + encodeURIComponent(opts.jobId) + '/edit', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ edits: edits, more: i < batches.length - 1 })
+          }).then(function (r) { if (!r.ok) throw new Error('Не удалось сохранить правки. Попробуйте ещё раз.'); });
+        });
+      }, Promise.resolve()).then(function () {
         // страницы перераскладываются заново: исправленный текст может занять больше места
         location.reload();
       }).catch(function (e) {

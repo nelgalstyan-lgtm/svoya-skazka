@@ -10,6 +10,14 @@ import { fromBase64 } from './bytes.js';
 import { jobView, bookImages, REDRAW_LIMIT } from './view.js';
 
 const PHOTO_MAX_BYTES = 8 * 1024 * 1024;
+// Шлюз Яндекса (через него идёт сайт, см. clientIp) обрывает запросы к Cloudflare тяжелее ~30 КБ: 503 через 50 с.
+// Поэтому анкета шлёт фото кусками до UPLOAD_CHUNK_BYTES (POST /api/upload/<загрузка>/<фото>/<кусок>),
+// а в /api/book/generate — только номер загрузки и сколько кусков у каждого фото. Куски лежат в photos/up-<загрузка>/:
+// после заказа удаляются, а брошенные стирает правило жизненного цикла R2 для photos/ (2 суток).
+export const UPLOAD_CHUNK_BYTES = 16 * 1024;
+const UPLOAD_MAX_CHUNKS = Math.ceil(PHOTO_MAX_BYTES / UPLOAD_CHUNK_BYTES);
+const PHOTO_MIME_RE = /^image\/(jpeg|png|webp)$/;
+const chunkKey = (upload, photo, chunk) => `photos/up-${upload}/${photo}-${chunk}`;
 const BODY_MAX_BYTES = 30 * 1024 * 1024;
 const EDIT_TEXT_MAX = 3000;
 // Если Workflow так и не закончил книгу (сбой Cloudflare) — клиент всё равно получает книгу из шаблона
@@ -45,19 +53,56 @@ function parsePhotos(body) {
  * разбирает встроенными средствами. Старая (закэшированная в браузере) — JSON с фото в data:URL: разбор такого
  * JSON на мегабайт с лишним съедает весь лимит процессора (10 мс), поэтому он оставлен только для совместимости.
  */
-async function readOrder(request) {
+async function readOrder(request, env) {
   if (Number(request.headers.get('content-length') || 0) > BODY_MAX_BYTES) return null;
   if (/multipart\/form-data/i.test(request.headers.get('content-type') || '')) {
     const form = await request.formData().catch(() => null);
     if (!form) return null;
     let body;
     try { body = JSON.parse(String(form.get('answers') || '{}')); } catch { return null; }
-    const files = form.getAll('photo').filter((f) => typeof f === 'object' && f && /^image\/(jpeg|png|webp)$/.test(f.type) && f.size > 0 && f.size <= PHOTO_MAX_BYTES);
+    const device = String(form.get('device') || '');
+    if (form.get('upload')) return { body, device, ...(await readUpload(env, String(form.get('upload')), String(form.get('photoParts') || ''))) };
+    const files = form.getAll('photo').filter((f) => typeof f === 'object' && f && PHOTO_MIME_RE.test(f.type) && f.size > 0 && f.size <= PHOTO_MAX_BYTES);
     const photos = await Promise.all(files.slice(0, MAX_PHOTOS).map(async (f) => ({ mime: f.type, bytes: new Uint8Array(await f.arrayBuffer()) })));
-    return { body, photos, device: String(form.get('device') || '') };
+    return { body, photos, device };
   }
   const body = await readJson(request);
   return body && { body, photos: parsePhotos(body), device: String(body.device || '') };
+}
+
+/** Фото, присланные кусками: parts — JSON [{ type, n }] по каждому фото. Не хватает куска — broken (просим нажать ещё раз). */
+async function readUpload(env, upload, partsJson) {
+  let parts;
+  try { parts = JSON.parse(partsJson); } catch { parts = null; }
+  const valid = isJobId(upload) && Array.isArray(parts) && parts.length > 0 && parts.length <= MAX_PHOTOS
+    && parts.every((p) => PHOTO_MIME_RE.test(p?.type) && Number.isInteger(p.n) && p.n > 0 && p.n <= UPLOAD_MAX_CHUNKS);
+  if (!valid) return { photos: [], broken: true, chunkKeys: [] };
+  const chunkKeys = parts.flatMap((p, i) => Array.from({ length: p.n }, (_, c) => chunkKey(upload, i, c)));
+  const chunks = new Map(await Promise.all(chunkKeys.map(async (key) => {
+    const obj = await env.BUCKET.get(key);
+    return [key, obj ? new Uint8Array(await obj.arrayBuffer()) : null];
+  })));
+  if ([...chunks.values()].some((c) => !c)) return { photos: [], broken: true, chunkKeys };
+  const photos = parts.map((p, i) => {
+    const pieces = Array.from({ length: p.n }, (_, c) => chunks.get(chunkKey(upload, i, c)));
+    const bytes = new Uint8Array(pieces.reduce((n, b) => n + b.length, 0));
+    let at = 0;
+    for (const b of pieces) { bytes.set(b, at); at += b.length; }
+    return { mime: p.type, bytes };
+  });
+  return { photos, broken: false, chunkKeys };
+}
+
+async function uploadChunk(request, env, upload, photo, chunk) {
+  const p = /^\d{1,3}$/.test(photo) ? Number(photo) : -1;
+  const c = /^\d{1,4}$/.test(chunk) ? Number(chunk) : -1;
+  if (!isJobId(upload) || p < 0 || p >= MAX_PHOTOS || c < 0 || c >= UPLOAD_MAX_CHUNKS) return fail(404, 'Not found');
+  if (await limited(env.UPLOAD_LIMITER, clientIp(request, env))) return fail(429, 'Слишком много запросов подряд. Подождите пару минут и попробуйте снова.');
+  if (Number(request.headers.get('content-length') || 0) > UPLOAD_CHUNK_BYTES) return fail(400, 'Слишком большой кусок фото.');
+  const bytes = new Uint8Array(await request.arrayBuffer());
+  if (!bytes.length || bytes.length > UPLOAD_CHUNK_BYTES) return fail(400, 'Слишком большой кусок фото.');
+  await env.BUCKET.put(chunkKey(upload, p, c), bytes);
+  return json({ ok: true });
 }
 
 async function readJson(request) {
@@ -116,8 +161,9 @@ const LIMIT_MESSAGES = {
 // ---------------------------------------------------------------- маршруты
 
 async function generate(request, env, store) {
-  const order = await readOrder(request);
+  const order = await readOrder(request, env);
   if (!order) return fail(400, 'Не получилось прочитать анкету. Попробуйте ещё раз.');
+  if (order.broken) return fail(400, 'Фото не догрузились — проверьте интернет и нажмите кнопку ещё раз.');
   const { body, photos } = order;
   const big = body.tariff === 'big';
   const ip = clientIp(request, env);
@@ -151,6 +197,7 @@ async function generate(request, env, store) {
   const job = { id, status: 'queued', createdAt: Date.now(), startedAt: null, finishedAt: null, input, progress: 'Готовимся…', result: null };
   // фото — отдельно от книги: понадобятся, чтобы дорисовать книгу после оплаты, и удалятся не позже чем через 48 ч
   await store.savePhotos(id, photos);
+  if (order.chunkKeys?.length) await env.BUCKET.delete(order.chunkKeys);
   await store.saveJob(job);
   await startBook(env, id, 'preview');
   await counters?.count();
@@ -243,7 +290,8 @@ async function edit(request, env, store, id) {
       if (page) { page.text = text; applied += 1; }
     }
   }
-  const revoice = applied && env.YANDEX_API_KEY && (job.voiceRuns || 0) < VOICE_RUNS_MAX;
+  // more: правки пришли несколькими запросами (шлюз не пропускает тяжёлые) — озвучку запускаем по последнему
+  const revoice = applied && !body?.more && env.YANDEX_API_KEY && (job.voiceRuns || 0) < VOICE_RUNS_MAX;
   if (revoice) job.voiceRuns = (job.voiceRuns || 0) + 1;
   if (applied) await store.saveJob(job);
   if (revoice) await startBook(env, id, 'voice', job.voiceRuns); // озвучка догонит правку через пару минут
@@ -358,6 +406,7 @@ export async function handleApi(request, env) {
   }
   if (parts[1] === 'img' && parts.length === 4 && method === 'GET') return image(store, parts[2], parts[3]);
   if (parts[1] === 'media' && parts.length === 4 && method === 'GET') return media(request, env, `${parts[2]}/${parts[3]}`);
+  if (parts[1] === 'upload' && parts.length === 5 && method === 'POST') return uploadChunk(request, env, parts[2], parts[3], parts[4]);
   if (parts[1] === 'book') {
     if (parts[2] === 'generate' && parts.length === 3 && method === 'POST') return generate(request, env, store);
     const id = parts[2];

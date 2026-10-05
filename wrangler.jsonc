@@ -15,7 +15,8 @@
   "ratelimits": [
     { "name": "GEN_LIMITER", "namespace_id": "1001", "simple": { "limit": 3, "period": 60 } },
     { "name": "BIG_LIMITER", "namespace_id": "1002", "simple": { "limit": 1, "period": 60 } },
-    { "name": "EDIT_LIMITER", "namespace_id": "1003", "simple": { "limit": 20, "period": 60 } }
+    { "name": "EDIT_LIMITER", "namespace_id": "1003", "simple": { "limit": 20, "period": 60 } },
+    { "name": "UPLOAD_LIMITER", "namespace_id": "1004", "simple": { "limit": 400, "period": 60 } }
   ],
   // Книги запускаются через очередь, а не прямо из запроса покупателя: иначе OpenAI видит страну покупателя
   // и отказывает заказам из РФ (403 unsupported_country_region_territory). Проверено 26.09.
