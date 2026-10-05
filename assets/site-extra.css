@@ -51,6 +51,11 @@
 }
 .book3d.is-back{ transform:rotateY(-180deg) rotateX(2deg) !important; }
 .book3d-item{ display:flex; flex-direction:column; align-items:center; }
+/* три книги на полке — в один ряд на компьютере (05.10: добавилась «Аэлита») */
+.book-shelf .book3d-item{ flex:1 1 300px; max-width:360px; }
+/* длинное название (три строки закрывали лицо героини) — мельче, в две строки */
+.book3d-title.is-long{ font-size:20px; top:20px; left:14px; right:14px; }
+@media (max-width:520px){ .book3d-title.is-long{ font-size:16.5px; top:16px; left:10px; right:10px; } }
 .book3d-turn{ cursor:pointer; border-radius:16px; -webkit-tap-highlight-color:transparent; }
 .book3d-turn:focus-visible{ outline:3px solid var(--btn, #8a5a36); outline-offset:4px; }
 .book3d-turn:hover .book3d:not(.is-spinning){ transform:rotateY(-12deg) rotateX(2deg); }

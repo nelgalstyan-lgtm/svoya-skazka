@@ -133,6 +133,9 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 .cover.art .kicker{ color:rgba(255,244,222,.85); }
 .cover.art h1{ color:#fff3d6; text-shadow:0 3px 18px rgba(0,0,0,.55); }
 .cover.art .orn{ color:var(--gold); }
+/* название сверху на картинке: чуть выше и без звёздочек под ним — у «Аэлиты» (05.10) они легли на лоб героини */
+.cover.art .kicker{ margin-top:66px; }
+.cover.art:not(.title-bottom) .orn{ display:none; }
 .cover.art .for{ position:absolute; bottom:96px; left:0; right:0; margin:0; color:#ffd98f; text-shadow:0 2px 10px rgba(0,0,0,.6); }
 .cover.art .for small{ color:rgba(255,244,222,.85); }
 .cover.art .brand{ position:absolute; color:rgba(255,244,222,.8); }
@@ -1095,6 +1098,13 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     sm.onload = function () { show(window.SKAZKA_MAX3D_BOOK); };
     sm.onerror = function () { show(null); };
     document.body.appendChild(sm);
+  } else if (params.get('demo') === 'aelita') {
+    // образец «Сказки» в акварели для малышей: книга Аэлиты, 2 года (иллюстрации — assets/examples/aelita)
+    const sa = document.createElement('script');
+    sa.src = 'assets/examples/aelita/book.js';
+    sa.onload = function () { show(window.SKAZKA_AELITA_BOOK); };
+    sa.onerror = function () { show(null); };
+    document.body.appendChild(sa);
   } else if (jobId) {
     loadFromServer(jobId).then(show, function () { show(params.get('demo') ? loadBook() : saved); });
   } else {
