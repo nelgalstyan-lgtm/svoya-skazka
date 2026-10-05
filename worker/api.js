@@ -277,6 +277,7 @@ async function edit(request, env, store, id) {
   const job = await store.getJob(id);
   if (!job || job.status !== 'completed') return fail(404, 'Книга не найдена');
   if (!job.paid || job.finishing) return fail(402, 'Правка текста доступна после оплаты книги.');
+  if (job.noEdit) return fail(403, 'Эту книгу править нельзя.');
   if (await limited(env.EDIT_LIMITER, `${clientIp(request, env)}:edit`)) return fail(429, 'Слишком много запросов подряд. Подождите пару минут.');
 
   const body = await readJson(request);

@@ -925,7 +925,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     }, book.audio);
     window.SkazkaExtras.attachAudioDownload(document.getElementById('audioDlBtn'), book.audio, book.audioFile, function () { return window.SkazkaExtras.pdfName(book.title).replace(/\.pdf$/, '' + T(' — аудиокнига.mp3', ' — audiobook.mp3')); });
     window.SkazkaExtras.attachSong(document.getElementById('songBtn'), book.song);
-    window.SkazkaExtras.attachEditor({
+    // noEdit — готовая книга-подарок без правок (книга Аэлиты для мамы, 05.10); у покупателей правки есть
+    if (!book.noEdit) window.SkazkaExtras.attachEditor({
       button: document.getElementById('editBtn'),
       apiBase: API_BASE,
       jobId: data.jobId,
