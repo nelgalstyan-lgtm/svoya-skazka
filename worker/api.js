@@ -231,7 +231,7 @@ async function generate(request, env, store) {
   if (big || body.coloring === true) input.coloring = true;
   // песня по книге — так же: входит в «Большую историю», к «Сказке» — отдельно
   if (big || body.song === true) input.song = true;
-  // согласие показать книгу в примерах (необязательно; перед публикацией владелица всё равно спрашивает)
+  // заказчик сам отметил, что книгу можно показать в примерах на сайте (необязательно)
   if (body.showcase === true) input.showcase = true;
   // родные по фото: рисуются после оплаты, в превью — только ребёнок
   const family = familyFromOrder(body, order.familyPhotos || []);

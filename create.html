@@ -861,12 +861,12 @@ section.tight{ padding:56px 0; }
           </div>
         </div>
 
-        <!-- Согласие показать книгу в примерах (05.10): по желанию, по умолчанию выключено; перед публикацией пишем заказчику -->
+        <!-- Согласие показать книгу в примерах (05.10): по желанию заказчика, по умолчанию выключено -->
         <div class="upsell-row" style="margin-top:22px;">
           <input type="checkbox" id="showcase">
           <div>
-            <label for="showcase" style="display:block; cursor:pointer;"><strong>Можно показать книгу в примерах на сайте</strong></label>
-            <span style="color:var(--text-soft); font-size:14.5px;">Необязательно. Если книга получится особенно красивой, мы напишем вам перед публикацией — без вашего «да» ничего не покажем. Без галочки книга видна только по вашей личной ссылке.</span>
+            <label for="showcase" style="display:block; cursor:pointer;"><strong>Хочу, чтобы книга появилась в примерах на сайте</strong></label>
+            <span style="color:var(--text-soft); font-size:14.5px;">Необязательно, только по вашему желанию: отметьте, если хотите, чтобы книга вашего ребёнка могла оказаться на полке примеров. Без галочки книга видна только по вашей личной ссылке.</span>
           </div>
         </div>
       </div>
@@ -1278,7 +1278,7 @@ section.tight{ padding:56px 0; }
         familyPhotos: familyOn(),
         family: familyOn() ? familyReady().map(function (p) { return { who: p.who === 'другой' ? p.whoOther.trim() : p.who, name: p.who === 'другой' ? '' : p.name.trim() }; }) : [],
         familyConsent: familyOn() && document.getElementById('familyConsent').checked,
-        // можно ли показать книгу в примерах (перед публикацией всё равно спрашиваем)
+        // заказчик сам хочет, чтобы книга могла попасть в примеры на сайте
         showcase: document.getElementById('showcase').checked
       };
     }
