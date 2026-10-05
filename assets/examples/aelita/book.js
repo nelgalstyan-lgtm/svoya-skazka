@@ -32,6 +32,7 @@ window.SKAZKA_AELITA_BOOK = {
   ],
   "title": "Аэлита и кнопка для лунного торта",
   "cover": "assets/examples/aelita/cover.webp",
+  "coverTitle": {"place": "bottom"},
   "backImage": "assets/examples/aelita/ill-8.webp",
   "backQr": {
    "label": "Аудиокнига",
