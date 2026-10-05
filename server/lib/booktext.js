@@ -52,6 +52,19 @@ export function isDuplicate(a, b) {
  *  — дефис/короткое тире в начале реплики → «— »;
  *  — слова автора отдельным абзацем («— засмеялась Вера.») присоединяются к реплике перед ними.
  */
+// Модели иногда пишут русское слово латинскими буквами-двойниками: «Nеля», «Lusеchka» (Groq, 05.10). В русском слове
+// латиница меняется на кириллицу; слова целиком на латинице не трогаем (их отсекают проверки текста).
+const LAT_TO_CYR = { A: 'А', B: 'В', C: 'С', E: 'Е', H: 'Н', K: 'К', M: 'М', N: 'Н', O: 'О', P: 'Р', T: 'Т', X: 'Х', Y: 'У',
+  a: 'а', c: 'с', e: 'е', o: 'о', p: 'р', x: 'х', y: 'у', k: 'к', m: 'м' };
+export function fixMixedScript(text) {
+  return String(text ?? '').replace(/[A-Za-zА-Яа-яЁё]+/g, (word) => {
+    const cyr = (word.match(/[А-Яа-яЁё]/g) || []).length;
+    const lat = word.length - cyr;
+    if (!cyr || !lat || cyr < lat) return word; // по-английски (в описаниях картинок) — не наше дело
+    return word.replace(/[A-Za-z]/g, (ch) => LAT_TO_CYR[ch] || ch);
+  });
+}
+
 export function fixDialogue(blocks) {
   const out = [];
   for (const b of blocks) {

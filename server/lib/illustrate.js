@@ -22,9 +22,9 @@ const COMPOSITION_BLOCK = 'Composition: a single vertical book page illustration
 // Обложка: название книги накладывается поверх картинки вёрсткой (кириллицу модель рисует с ошибками), поэтому верх — спокойный
 // «Амилия» (01.10): голова героини оказалась под названием, а в сертификате (портрет вырезается из обложки) лицо вышло крошечным.
 // Поэтому: верхняя треть — пустая (ни головы, ни крыльев), лицо крупное и по центру, на уровне ~45% высоты.
-const COVER_COMPOSITION = 'Composition: the front cover illustration of a children’s book, portrait aspect ratio approximately 3:4. The child is the clear hero, standing in the horizontal center, in a confident, inviting pose that hints at the adventure, shown from about the knees up so that the face is large and clearly visible; the child’s head is at about 40–50% of the image height — never in the upper third. The upper third is a calm, softly detailed area of sky or background with no heads, faces, wings or important objects, because the book title will be typeset over it later. The illustration itself must contain no text, letters or words.';
+const COVER_COMPOSITION = 'Composition: the front cover illustration of a children’s book, portrait aspect ratio approximately 3:4. The child is the only character on the cover — no other people and no animals, even if the scene description mentions them — standing in the horizontal center, in a confident, inviting pose that hints at the adventure, shown from about the knees up so that the face is large and clearly visible; the child’s head is at about 40–50% of the image height — never in the upper third. The upper third is a calm, softly detailed area of sky or background with no heads, faces, wings or important objects, because the book title will be typeset over it later. The illustration itself must contain no text, letters or words.';
 
-const SHEET_COMPOSITION = 'Composition: a character reference sheet on a plain warm off-white background — the child shown in full figure from the front, and a second smaller three-quarter view beside, standing in a relaxed natural pose, evenly lit. Any companion described below stands next to the child in full view. No scenery, no text, no labels.';
+const SHEET_COMPOSITION = 'Composition: a character reference sheet on a plain warm off-white background — the child shown in full figure from the front, and a second smaller three-quarter view beside, standing in a relaxed natural pose, evenly lit. Only the child — no other people; a pet or toy appears next to the child only if it is listed below under pets and toys. No scenery, no text, no labels.';
 
 const AVOID_BLOCK = 'Avoid: photorealistic rendering, extra or malformed fingers, blurry or distorted anatomy, watermarks, signatures, logos, brand names, characters from existing cartoons, films or games, and any text or lettering.';
 
@@ -44,7 +44,10 @@ export function pickStyleKey(styleLabel) {
   return 'watercolor';
 }
 
-const lookLine = (look) => (String(look || '').trim() ? `The child's outfit and companions for the whole book: ${String(look).trim()}` : '');
+// Одежда — с фото ребёнка (как у Макса): придуманный ИИ-писателем наряд уводил от фото («Люсечка», 05.10 — бирюзовый свитер
+// вместо одежды со снимка). look теперь описывает только питомцев и игрушки из анкеты.
+const OUTFIT_FROM_PHOTO = 'The child wears exactly the same clothes and shoes as in the reference photo throughout the whole book (same garments, colors and prints), changed only when a scene explicitly requires it.';
+const lookLine = (look) => [OUTFIT_FROM_PHOTO, String(look || '').trim() ? `Pets and toys from the story, the same on every page: ${String(look).trim()}` : ''].filter(Boolean).join(' ');
 
 /** Собирает полный английский image_prompt по правилам из docs/story-prompt-template.md. */
 export function buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount = 1, withSheet = false, kind = 'scene' } = {}) {

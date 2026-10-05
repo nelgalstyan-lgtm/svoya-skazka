@@ -17,7 +17,7 @@
 
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
-import { fixDialogue, normalizeChapterBlocks, genitiveName, dativeName, normalizeGenre, ageGroupFor, styleFor, dedicationFor, ageVoiceRule, occasionRule } from './booktext.js';
+import { fixDialogue, normalizeChapterBlocks, genitiveName, dativeName, normalizeGenre, ageGroupFor, styleFor, dedicationFor, ageVoiceRule, occasionRule, fixMixedScript } from './booktext.js';
 import { ORIGINALITY_RULE, BLURB_RULE, brandMentions, cleanBlurb } from './story.js';
 
 const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind, holidayKind } = template;
@@ -193,8 +193,10 @@ export function buildPlanPrompt(input) {
 — motifs: 2–3 сквозных мотива (предмет, фраза, привычка), которые вернутся в разных главах.
 — В каждой главе: goal (что происходит и зачем, 1–2 предложения), beats (6–8 коротких пунктов-сцен по порядку: каждая сцена — отдельный эпизод со своим действием и репликами), hook (чем глава заканчивается), note (фраза «Из записей» героя — короткая, до 12 слов, как вывод главы).
 — Иллюстрации: всего ${IMAGES_MIN}–${IMAGES_MAX} на книгу, 1–2 на главу, в последней главе не больше 1. На КАЖДОЙ иллюстрации ребёнок в главной сцене. Для каждой: after_beat (номер пункта-сцены, после которого встаёт картинка, с 1), scene — один из тегов [${sceneListFor(library)}] (запасной фон), brief — описание сцены по-английски (1–2 предложения: что делает ребёнок, кто рядом (если рядом другие люди — кто они и сколько им лет, например «her 4-year-old cousin», «his baby brother»), место, свет; без лица и эмоций, без текста на картинке; без одежды и аксессуаров вроде шапок и панамок — одежда одна на всю книгу и задаётся в look, кроме случаев, когда сюжет требует переодеться; соседние сцены заметно различаются позой, планом и местом), caption — подпись под картинкой по-русски, до 10 слов.${genreLine}
-— look — по-английски, 1–2 предложения: во что одет ребёнок во всей книге (одежда, цвета, обувь — под тему) и как выглядят спутники из анкеты (питомцы, игрушки).
-— cover_brief — по-английски, 1 предложение: сцена для обложки, ребёнок в центре на фоне главного места истории.
+— look — по-английски, 1 предложение: как выглядят питомцы и игрушки, которые есть в анкете; одежду ребёнка НЕ описывай — она берётся с его фото. Нет питомцев и игрушек — пустая строка.
+— cover_brief — по-английски, 1 предложение: сцена для обложки — ребёнок ОДИН в центре на фоне главного места истории, без других людей и животных.
+— Все, кто назван в анкете по имени, — люди, если там прямо не сказано, что это питомец или игрушка: не превращай их в животных и не придумывай питомцев, которых нет в анкете.
+— Первая глава решает, захотят ли читать дальше: необычное событие в первых сценах, а не описание героя; hook первой главы — сильная интрига.
 — blurb — ${BLURB_RULE}
 — dedication: lead — одна тёплая фраза-посвящение ребёнку без выдуманных фактов; paragraphs — 2 коротких тёплых абзаца (по 1–2 предложения) от того, кто дарит книгу, без выдуманных фактов.
 
@@ -346,7 +348,7 @@ function splitLong(text) {
   return out;
 }
 
-const tidy = (s) => strip(s).replace(/^[-–]\s+/, '— ').replace(/\s+—\s*—\s+/g, ' — ');
+const tidy = (s) => fixMixedScript(strip(s)).replace(/^[-–]\s+/, '— ').replace(/\s+—\s*—\s+/g, ' — ');
 
 const STOP_NAMES = new Set();
 /** Имена из анкеты: слова с заглавной буквы в имени, друзьях и близких — их повторы не считаем «повтором фразы». */

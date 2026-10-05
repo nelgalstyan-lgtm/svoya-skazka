@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { genitiveName, fixDialogue, cleanNoteText, normalizeChapterBlocks, normalizeBook, ageVoiceRule, signatureName, dedicationFor } from '../lib/booktext.js';
+import { genitiveName, fixDialogue, cleanNoteText, normalizeChapterBlocks, normalizeBook, ageVoiceRule, signatureName, dedicationFor, fixMixedScript } from '../lib/booktext.js';
 import { buildPrompt } from '../lib/story.js';
 import { buildPlanPrompt, buildChapterPrompt } from '../lib/bigstory.js';
 
@@ -168,4 +168,10 @@ test('подпись посвящения: «от кого» в именител
   const d = dedicationFor({ from: 'Дяди', dedication: 'С любовью, Вазген' }, { lead: 'Неле', paragraphs: [] });
   assert.equal(d.signature, 'С любовью,\nДядя Вазген');
   assert.equal(d.lead, 'Неле', 'подпись в поле посвящения не становится текстом посвящения');
+});
+
+test('латинские буквы-двойники в русских словах меняются на кириллицу, английский текст не трогаем', () => {
+  assert.equal(fixMixedScript('Nеля держала руку'), 'Неля держала руку');
+  assert.equal(fixMixedScript('Lusеchka stands by a window'), 'Lusеchka stands by a window');
+  assert.equal(fixMixedScript('кoфе и шоколад'), 'кофе и шоколад');
 });
