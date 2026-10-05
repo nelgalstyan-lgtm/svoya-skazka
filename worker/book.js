@@ -20,6 +20,7 @@ import { drawImage, coverTitlePlace, artOff, ART_OFF_MESSAGE } from './art.js';
 import { isDrawn, bookImages } from './view.js';
 import { voiceFlow } from './voice.js';
 import { proofreadAnswers } from './proofread.js';
+import { describeFace } from './face.js';
 import { songFlow } from './song.js';
 
 const { normalizeInput } = template;
@@ -54,9 +55,9 @@ export async function runBook(env, { id, mode }, step, { log = console.warn } = 
  * Иллюстрации книги по шагам: лист персонажа (если его ещё нет), потом обложка и сцены по три одновременно,
  * вторая попытка для не получившихся. Возвращает адреса: { sheet, cover, scenes: [src|null] }.
  */
-async function drawBook(ctx, { input, briefs, coverBrief, look, only = null, sheet = null, familySheet = null }) {
+async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only = null, sheet = null, familySheet = null }) {
   const { env, store, id, step, log, progress } = ctx;
-  const style = { styleLabel: input.style, eyes: normalizeInput(input).eyes, look };
+  const style = { styleLabel: input.style, eyes: normalizeInput(input).eyes, look, face };
   // родные по фото: их лист прикладывается к сценам (к листу ребёнка и обложке — нет: на обложке только ребёнок)
   const family = familySheet ? input.family || [] : [];
   const wanted = briefs.map((_, i) => !only || only.includes(i));
@@ -215,7 +216,9 @@ async function previewFlow(ctx) {
     ? text.plan?.coverBrief || `The child at the heart of the story "${text.plan?.logline || text.book.title}", looking ahead with excitement.`
     : text.coverBrief;
   const look = big ? text.plan?.look || '' : text.look;
-  const art = await drawBook(ctx, { input, briefs, coverBrief, look, only: [0] });
+  // приметы ребёнка по фото — до первого рисунка (правило владелицы: главное — чтобы герой был похож)
+  const face = await step.do('face', QUICK_STEP, async () => describeFace(ctx.env, await store.loadPhotos(id), { log }));
+  const art = await drawBook(ctx, { input, briefs, coverBrief, look, face, only: [0] });
   const titlePlace = await coverPlaceStep(ctx, art.cover);
 
   // ни одной картинки, потому что в OpenAI кончились деньги: книга без ребёнка — не наш продукт, отдаём сообщение
@@ -241,6 +244,7 @@ async function previewFlow(ctx) {
       book.preview = true;
       if (art.cover) { book.cover = art.cover; book.coverFace = true; book.coverTitle = { place: titlePlace }; } // обложка по COVER_COMPOSITION с 01.10: лицо крупно по центру
       if (art.sheet) book.sheet = art.sheet; // для дорисовки после оплаты и бесплатной перерисовки
+      if (face) book.face = face;
       const provider = Object.entries(book.meta?.providers || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
       result = { book, source: text.template ? 'template' : book.meta?.source || 'ai', provider, model: null };
       if (text.draft && text.draft.chapters.length < text.draft.plan.chapters.length) result.bigDraft = text.draft; // главы 2–6 — после оплаты
@@ -251,6 +255,7 @@ async function previewFlow(ctx) {
       art.scenes.forEach((src, i) => { if (src) result.pages[i].heroImage = src; });
       if (art.cover) { result.cover = art.cover; result.coverFace = true; result.coverTitle = { place: titlePlace }; }
       if (art.sheet) result.sheet = art.sheet; // нужен для бесплатной перерисовки: фото к тому времени уже удалено
+      if (face) result.face = face;
     }
     await store.updateJob(id, (job) => {
       if (job.status === 'completed') return; // уже отдали запасную книгу (см. api.js) — не подменяем её
@@ -315,6 +320,7 @@ async function completeFlow(ctx) {
       missing: images.map((im, i) => (isDrawn(im.src) ? -1 : i)).filter((i) => i >= 0),
       coverBrief: target.cover ? '' : target.coverBrief || `The child at the heart of the story "${target.title}", looking ahead with excitement.`,
       look: target.look || '',
+      face: target.face || '',
       sheet: target.sheet || null,
       familySheet: target.familySheet || null
     };
@@ -327,7 +333,7 @@ async function completeFlow(ctx) {
   const only = familySheet && !todo.familySheet ? todo.briefs.map((_, i) => i) : todo.missing;
 
   // фото могли уже удалиться (истёк срок) — тогда рисуем по листу персонажа, он держит и лицо, и одежду
-  const art = await drawBook(ctx, { input: todo.input, briefs: todo.briefs, coverBrief: todo.coverBrief, look: todo.look, only, sheet: todo.sheet, familySheet });
+  const art = await drawBook(ctx, { input: todo.input, briefs: todo.briefs, coverBrief: todo.coverBrief, look: todo.look, face: todo.face, only, sheet: todo.sheet, familySheet });
   const srcs = todo.srcs.map((src, i) => art.scenes[i] || src);
   const titlePlace = art.cover ? await coverPlaceStep(ctx, art.cover) : null;
   const coloring = todo.input.coloring ? await drawColoring(ctx, srcs.filter(isDrawn)) : [];

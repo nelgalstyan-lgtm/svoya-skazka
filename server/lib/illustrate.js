@@ -56,7 +56,10 @@ const OUTFIT_FROM_PHOTO = 'The child wears exactly the same clothes and shoes as
 const lookLine = (look) => [OUTFIT_FROM_PHOTO, String(look || '').trim() ? `Pets and toys from the story, the same on every page: ${String(look).trim()}` : ''].filter(Boolean).join(' ');
 
 /** Собирает полный английский image_prompt по правилам из docs/story-prompt-template.md. */
-export function buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount = 1, withSheet = false, kind = 'scene', people = ONLY_CHILD } = {}) {
+// face — приметы ребёнка словами (worker/face.js): идут в каждый рисунок, чтобы модель не «додумывала» типовое лицо
+const faceLine = (face) => (String(face || '').trim() ? `The child's exact appearance, observed from the photos — follow it precisely: ${String(face).trim()}` : '');
+
+export function buildHeroPrompt({ styleLabel, eyes, brief, look, face, photoCount = 1, withSheet = false, kind = 'scene', people = ONLY_CHILD } = {}) {
   const styleKey = pickStyleKey(styleLabel);
   const scene = String(brief || '').trim()
     || 'The child stands confidently at the story’s key moment, caught in an active, dynamic pose that fits the scene, surrounded by details from the adventure around them.';
@@ -64,6 +67,7 @@ export function buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount = 1,
 
   return [
     IDENTITY_BLOCK(eyes, photoCount),
+    faceLine(face),
     withSheet && kind !== 'sheet' ? SHEET_BLOCK : '',
     kind === 'sheet' ? 'Facial expression: a friendly open smile, bright engaged eyes.' : EMOTION_BLOCK,
     kind === 'sheet' ? '' : scene,
@@ -135,7 +139,7 @@ const FAMILY_PEOPLE = (family, last) => `People: the ${last ? 'last' : 'second-t
  * refs — фото ребёнка (у 'family' — фото родного), sheet — лист персонажа, source — картинка для раскраски;
  * family — родной из анкеты [{ who, name }], familySheet — его лист. Формат картинок любой ({ mime, data } или { mime, bytes }).
  */
-export function imageRequest({ refs = [], sheet = null, source = null, kind = 'scene', styleLabel, eyes, brief, look, family = [], familySheet = null } = {}) {
+export function imageRequest({ refs = [], sheet = null, source = null, kind = 'scene', styleLabel, eyes, brief, look, face, family = [], familySheet = null } = {}) {
   if (kind === 'coloring') return source ? { images: [source], prompt: buildColoringPrompt() } : null;
   if (kind === 'family') return refs.length && family.length ? { images: refs.slice(0, MAX_FAMILY), prompt: buildFamilySheetPrompt({ family: family.slice(0, refs.length), styleLabel }) } : null;
   // перерисовка после генерации: фото ребёнка уже удалено, лицо и одежду держит лист персонажа
@@ -145,7 +149,7 @@ export function imageRequest({ refs = [], sheet = null, source = null, kind = 's
   const images = [...refs, ...(withFamily ? [familySheet] : []), ...(withSheet ? [sheet] : [])];
   const people = withFamily ? FAMILY_PEOPLE(family, !withSheet) : ONLY_CHILD;
   const prompt = refs.length
-    ? buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount: refs.length, withSheet, kind, people })
-    : buildHeroPrompt({ styleLabel, eyes, brief, look, withSheet: true, kind, people }).replace(/reference photo/g, 'character reference sheet');
+    ? buildHeroPrompt({ styleLabel, eyes, brief, look, face, photoCount: refs.length, withSheet, kind, people })
+    : buildHeroPrompt({ styleLabel, eyes, brief, look, face, withSheet: true, kind, people }).replace(/reference photo/g, 'character reference sheet');
   return { images, prompt };
 }

@@ -308,6 +308,7 @@ async function redraw(request, env, store, id) {
     styleLabel: job.input?.style,
     eyes: job.input?.eyes,
     look: result.look || result.book?.look,
+    face: result.face || result.book?.face || '',
     // пожелание родителя идёт как данные о сцене, а не как инструкция
     brief: wish ? `${images[index].brief} Parent's note about what to change (in Russian): «${wish}».` : images[index].brief
   });

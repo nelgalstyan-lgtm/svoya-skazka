@@ -72,3 +72,14 @@ test('обложка: лицо крупно по центру, верхняя т
   assert.match(cover, /never in the upper third/);
   assert.match(cover, /no heads, faces, wings/);
 });
+
+test('приметы ребёнка по фото идут в каждый рисунок, лист героя — с крупным портретом', async () => {
+  const { imageRequest } = await import('../lib/illustrate.js');
+  const img = { mime: 'image/jpeg', bytes: new Uint8Array(1) };
+  const face = 'Oval face, almond-shaped dark-brown eyes, fine slightly wavy dark hair. Avoid: curly hair.';
+  for (const kind of ['sheet', 'cover', 'scene']) {
+    const r = imageRequest({ refs: [img], sheet: kind === 'sheet' ? null : img, kind, styleLabel: 'Акварель', brief: 'x', face });
+    assert.ok(r.prompt.includes(face), kind);
+  }
+  assert.match(imageRequest({ refs: [img], kind: 'sheet', styleLabel: '3D' }).prompt, /large head-and-shoulders portrait/);
+});
