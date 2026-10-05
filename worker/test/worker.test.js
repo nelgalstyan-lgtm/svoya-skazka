@@ -715,3 +715,62 @@ test('возраст в анкете — от 2 до 16', async () => {
     assert.match((await res.json()).error, /от 2 до 16/);
   }
 });
+
+test('родные по фото: только «Большая история», в превью — только ребёнок, после оплаты лист родных и все сцены по нему; 2-й и 3-й — +290 ₽', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  try {
+    const send = (answers, familyFiles = 1) => {
+      const form = new FormData();
+      form.append('answers', JSON.stringify(answers));
+      form.append('photo', new Blob([Buffer.from('child')], { type: 'image/jpeg' }), 'p');
+      for (let i = 0; i < familyFiles; i++) form.append('family', new Blob([Buffer.from(`relative-${i}`)], { type: 'image/jpeg' }), `f${i}`);
+      return handleApi(new Request('https://geroenok.online/api/book/generate', { method: 'POST', body: form }), env);
+    };
+    const mom = [{ who: 'мама', name: 'Лена' }];
+    // без согласия — не принимаем; в «Сказке» опции нет (родные просто не сохраняются)
+    assert.equal((await send({ ...FORM, tariff: 'big', familyPhotos: true, family: mom })).status, 400);
+    const short = await (await send({ ...FORM, familyPhotos: true, family: mom, familyConsent: true })).json();
+    assert.deepEqual(env.BUCKET.keys(`photos/${short.jobId}/f`), [], 'в «Сказке» фото родных не храним');
+
+    const { jobId } = await (await send({ ...FORM, tariff: 'big', familyPhotos: true, family: mom, familyConsent: true })).json();
+    assert.deepEqual(env.BUCKET.keys(`photos/${jobId}/f`), [`photos/${jobId}/f0`]);
+    let st = await status(env, jobId);
+    assert.equal(st.result.price, 1490, 'один родной — бесплатно');
+    assert.ok(ai.calls.every((c) => !/family reference sheet/.test(c.prompt)), 'в превью родных не рисуем');
+    assert.ok(ai.calls.filter((c) => c.kind === 'scene').every((c) => /only human in the picture/.test(c.prompt)));
+
+    const before = ai.calls.length;
+    assert.equal((await api(env, `/api/book/${jobId}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } })).status, 200);
+    const after = ai.calls.slice(before);
+    assert.ok(after.some((c) => /from the child's family/.test(c.prompt)), 'после оплаты — лист родных');
+    const scenes = after.filter((c) => /family reference sheet/.test(c.prompt));
+    const total = (await status(env, jobId)).result.book.chapters.flatMap((ch) => ch.blocks.filter((b) => b.t === 'image')).length;
+    assert.equal(scenes.length, total, 'все сцены — по листу родных, и та, что была в превью');
+    assert.ok(scenes.every((c) => c.images === 3), 'фото ребёнка + лист родных + лист ребёнка');
+
+    const two = await (await send({ ...FORM, tariff: 'big', familyPhotos: true, family: [...mom, { who: 'папа' }], familyConsent: true }, 2)).json();
+    assert.equal((await status(env, two.jobId)).result.price, 1780, 'второй и третий — +290 ₽');
+  } finally { ai.restore(); }
+});
+
+test('родные по фото приходят кусками (номер после фото ребёнка)', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  try {
+    const upload = '1f8b7c1e-2a3d-4e5f-8a9b-0c1d2e3f4a5c';
+    const put = (p, c, bytes) => handleApi(new Request(`https://geroenok.online/api/upload/${upload}/${p}/${c}`, { method: 'POST', body: bytes }), env);
+    assert.equal((await put(0, 0, Buffer.from('child'))).status, 200);
+    assert.equal((await put(3, 0, Buffer.from('mom'))).status, 200, 'номер 3 — первый родной');
+    assert.equal((await put(6, 0, Buffer.from('x'))).status, 404, 'больше трёх родных нельзя');
+    const form = new FormData();
+    form.append('answers', JSON.stringify({ ...FORM, tariff: 'big', familyPhotos: true, family: [{ who: 'мама' }], familyConsent: true }));
+    form.append('upload', upload);
+    form.append('photoParts', JSON.stringify([{ type: 'image/jpeg', n: 1 }]));
+    form.append('familyParts', JSON.stringify([{ type: 'image/jpeg', n: 1 }]));
+    const data = await (await handleApi(new Request('https://geroenok.online/api/book/generate', { method: 'POST', body: form }), env)).json();
+    assert.ok(data.jobId, JSON.stringify(data));
+    assert.equal(new TextDecoder().decode(env.BUCKET.items.get(`photos/${data.jobId}/0`).bytes), 'child');
+    assert.equal(new TextDecoder().decode(env.BUCKET.items.get(`photos/${data.jobId}/f0`).bytes), 'mom');
+  } finally { ai.restore(); }
+});

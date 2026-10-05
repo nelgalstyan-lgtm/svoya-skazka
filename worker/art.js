@@ -7,7 +7,7 @@
 import { imageRequest } from '../server/lib/illustrate.js';
 import { fromBase64, toBase64, jsonStringField } from './bytes.js';
 
-const OPENAI_SIZE = { scene: '1024x1536', cover: '1024x1536', coloring: '1024x1536', sheet: '1536x1024' };
+const OPENAI_SIZE = { scene: '1024x1536', cover: '1024x1536', coloring: '1024x1536', sheet: '1536x1024', family: '1536x1024' };
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function errorMessage(bytes, status) {
@@ -98,8 +98,8 @@ function providers(env) {
  * Одна иллюстрация → { mime, bytes } или null. НИКОГДА не бросает: не нарисовалась — книга обойдётся без неё.
  * kind: 'sheet' | 'cover' | 'scene' | 'coloring'; refs — фото ребёнка, sheet — лист персонажа, source — картинка для раскраски.
  */
-export async function drawImage(env, { kind = 'scene', refs = [], sheet = null, source = null, styleLabel, eyes, brief, look, log = console.warn } = {}) {
-  const request = imageRequest({ refs, sheet, source, kind, styleLabel, eyes, brief, look });
+export async function drawImage(env, { kind = 'scene', refs = [], sheet = null, source = null, styleLabel, eyes, brief, look, family = [], familySheet = null, log = console.warn } = {}) {
+  const request = imageRequest({ refs, sheet, source, kind, styleLabel, eyes, brief, look, family, familySheet });
   if (!request) return null;
   const timeoutMs = Number(env.IMAGE_TIMEOUT_MS || 180_000);
   for (const provider of providers(env)) {

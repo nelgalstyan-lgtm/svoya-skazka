@@ -423,6 +423,22 @@ section.tight{ padding:56px 0; }
   padding:2px 9px; border-radius:999px; margin-left:8px; vertical-align:middle;
 }
 
+.upsell-row[hidden], .family-box[hidden]{ display:none; }
+/* Родные по фото («Большая история»): карточка на человека — фото, кто это, имя */
+.family-box{ margin-top:10px; padding:18px 22px 20px; border:1px dashed var(--line); border-radius:var(--radius-m); background:#fff; }
+.family-list{ display:grid; gap:14px; }
+.family-person{ display:grid; grid-template-columns:76px 1fr 1fr auto; gap:12px; align-items:center; }
+@media (max-width:640px){ .family-person{ grid-template-columns:76px 1fr auto; } .family-person .family-name{ grid-column:2 / 3; } }
+.family-photo{ width:76px; height:76px; border-radius:50%; border:2px dashed var(--line); background:var(--paper-2) center/cover no-repeat; color:var(--text-soft); font:inherit; font-size:13px; cursor:pointer; padding:0; }
+.family-photo.has-photo{ border-style:solid; color:transparent; }
+.family-person select, .family-person input[type=text]{ width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--card, #fff); font:inherit; font-size:15.5px; color:var(--text); }
+.family-person select:focus, .family-person input[type=text]:focus{ border-color:var(--brass-text); box-shadow:0 0 0 3px rgba(201,154,75,.25); outline:none; }
+.family-remove{ width:32px; height:32px; border-radius:50%; border:none; background:#B87F27; color:#fff; cursor:pointer; font-size:14px; }
+.family-add{ margin-top:14px; background:none; border:1px solid var(--line); border-radius:999px; padding:8px 16px; font:inherit; font-size:14.5px; cursor:pointer; color:var(--text); }
+.family-add[hidden]{ display:none; }
+.family-consent{ font-weight:400; display:flex; gap:10px; align-items:flex-start; margin-top:16px; font-size:14.5px; color:var(--text-soft); cursor:pointer; }
+.family-consent input{ margin-top:3px; width:18px; height:18px; flex:none; }
+
 .form-actions{
   padding:36px 48px 48px;
   display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
@@ -816,6 +832,21 @@ section.tight{ padding:56px 0; }
           </div>
         </div>
 
+        <!-- Родные по фото — только «Большая история» (решение владелицы 05.10): первый бесплатно, второй и третий — +290 ₽ -->
+        <div class="upsell-row" id="familyRow" style="margin-top:18px;" hidden>
+          <input type="checkbox" id="familyPhotos">
+          <div>
+            <label for="familyPhotos" style="display:block; cursor:pointer;"><strong>Нарисовать родных по фото <span class="tag">1 — бесплатно</span></strong></label>
+            <span style="color:var(--text-soft); font-size:14.5px;">Мама, папа, бабушка, брат — рядом с ребёнком на иллюстрациях, похожие на себя. Один человек входит в «Большую историю», второй и третий — +290 ₽ за обоих. По одному фото на человека. В бесплатном превью — только ребёнок, родных дорисуем после оплаты.</span>
+          </div>
+        </div>
+        <div class="family-box" id="familyBox" hidden>
+          <div class="family-list" id="familyList"></div>
+          <button type="button" class="family-add" id="familyAdd">+ Добавить человека (второй и третий — +290 ₽)</button>
+          <label class="family-consent"><input type="checkbox" id="familyConsent"> <span>Люди на фото согласны, чтобы их нарисовали в книге. Фото храним не дольше 48 часов и удаляем после того, как книга дорисована.</span></label>
+          <input type="file" id="familyInput" accept="image/jpeg,image/png,image/webp" hidden>
+        </div>
+
         <div class="dedication-block">
           <h3>Посвящение <span class="hint" style="display:inline; font-weight:400;">— необязательно</span></h3>
           <p class="help">В начале книги будет страница «Посвящается» — с вашей подписью и датой, как в настоящей подарочной книге.</p>
@@ -1052,6 +1083,115 @@ section.tight{ padding:56px 0; }
       });
     }
 
+    // Родные по фото (только «Большая история»): до 3 человек, у каждого одно фото, «кто это» и имя; первый — бесплатно,
+    // второй и третий — +290 ₽. Как и фото ребёнка, живут только в памяти вкладки. FAMILY_ON — включается после ручной пробы.
+    const FAMILY_ON = new URLSearchParams(location.search).get('family') === '1'; // пока скрыто: открыть — create.html?family=1
+    const FAMILY_EXTRA_PRICE = 290;
+    const MAX_FAMILY = 3;
+    const FAMILY_WHO = ['мама', 'папа', 'брат', 'сестра', 'бабушка', 'дедушка', 'другой'];
+    let familyPeople = [];
+    function familyOn() { return FAMILY_ON && isBig() && document.getElementById('familyPhotos').checked; }
+    function familyReady() { return familyPeople.filter(function (p) { return p.photo; }); }
+    function familyExtra() { return familyOn() && familyReady().length > 1 ? FAMILY_EXTRA_PRICE : 0; }
+
+    function checkFamily() {
+      if (!familyOn()) return '';
+      const ready = familyReady();
+      if (!ready.length) return 'Вы выбрали «Нарисовать родных по фото» — загрузите фото хотя бы одного человека или снимите галочку.';
+      if (familyPeople.some(function (p) { return !p.photo && (p.who || p.name.trim() || p.whoOther.trim()); })) return 'У одного из родных нет фото — добавьте его или уберите этого человека.';
+      if (ready.some(function (p) { return !p.who || (p.who === 'другой' && !p.whoOther.trim()); })) return 'Укажите, кто на каждом фото: мама, папа, бабушка…';
+      if (!document.getElementById('familyConsent').checked) return 'Отметьте, что люди на фото согласны, чтобы их нарисовали в книге.';
+      return '';
+    }
+
+    function attachFamily() {
+      const toggle = document.getElementById('familyPhotos');
+      const box = document.getElementById('familyBox');
+      const list = document.getElementById('familyList');
+      const add = document.getElementById('familyAdd');
+      const input = document.getElementById('familyInput');
+      let target = null; // чьё фото выбираем
+
+      function blank() { return { photo: '', who: '', whoOther: '', name: '' }; }
+
+      function render() {
+        list.textContent = '';
+        familyPeople.forEach(function (p, i) {
+          const row = document.createElement('div');
+          row.className = 'family-person';
+
+          const photo = document.createElement('button');
+          photo.type = 'button';
+          photo.className = 'family-photo' + (p.photo ? ' has-photo' : '');
+          photo.textContent = p.photo ? 'Заменить' : '+ Фото';
+          photo.setAttribute('aria-label', p.photo ? 'Заменить фото человека ' + (i + 1) : 'Загрузить фото человека ' + (i + 1));
+          if (p.photo) photo.style.backgroundImage = 'url("' + p.photo + '")';
+          photo.addEventListener('click', function () { target = p; input.click(); });
+
+          const who = document.createElement('select');
+          who.setAttribute('aria-label', 'Кто это');
+          [''].concat(FAMILY_WHO).forEach(function (w) {
+            const o = document.createElement('option');
+            o.value = w;
+            o.textContent = w ? w[0].toUpperCase() + w.slice(1) : 'Кто это?';
+            who.appendChild(o);
+          });
+          who.value = p.who;
+          who.addEventListener('change', function () { p.who = who.value; render(); });
+
+          const name = document.createElement('input');
+          name.type = 'text';
+          name.className = 'family-name';
+          name.maxLength = 40;
+          name.placeholder = p.who === 'другой' ? 'Кто это: «крёстная Аня», «няня»' : 'Имя — необязательно';
+          name.setAttribute('aria-label', p.who === 'другой' ? 'Кто это' : 'Имя');
+          name.value = p.who === 'другой' ? p.whoOther : p.name;
+          name.addEventListener('input', function () { if (p.who === 'другой') p.whoOther = name.value; else p.name = name.value; });
+
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'family-remove';
+          remove.textContent = '✕';
+          remove.setAttribute('aria-label', 'Убрать человека ' + (i + 1));
+          remove.addEventListener('click', function () { familyPeople.splice(i, 1); if (!familyPeople.length) familyPeople.push(blank()); render(); updateTariff(); });
+
+          row.append(photo, who, name, remove);
+          list.appendChild(row);
+        });
+        add.hidden = familyPeople.length >= MAX_FAMILY;
+      }
+
+      toggle.addEventListener('change', function () {
+        box.hidden = !toggle.checked;
+        if (toggle.checked && !familyPeople.length) { familyPeople.push(blank()); render(); }
+        updateTariff();
+      });
+      add.addEventListener('click', function () { if (familyPeople.length < MAX_FAMILY) { familyPeople.push(blank()); render(); } });
+      input.addEventListener('change', function () {
+        const file = input.files && input.files[0];
+        input.value = '';
+        if (!file || !target) return;
+        if (['image/jpeg', 'image/png', 'image/webp'].indexOf(file.type) < 0) { setStatus('Нужен файл в формате JPEG, PNG или WEBP.', 'error'); return; }
+        if (file.size > PHOTO_MAX_BYTES) { setStatus('Фото слишком большое (максимум 25 МБ) — выберите файл поменьше.', 'error'); return; }
+        const person = target;
+        const reader = new FileReader();
+        reader.onload = function () {
+          const probe = new Image();
+          probe.onload = function () {
+            person.photo = shrinkPhoto(probe, String(reader.result));
+            render();
+            updateTariff();
+            if (Math.min(probe.naturalWidth, probe.naturalHeight) < MIN_PHOTO_SIDE) {
+              setStatus('Это фото маленькое (' + probe.naturalWidth + '×' + probe.naturalHeight + ' пикселей) — лучше загрузить оригинал из галереи, иначе человек выйдет не очень похожим.', 'error');
+            }
+          };
+          probe.onerror = function () { setStatus('Не получилось открыть это фото. Попробуйте другое (JPEG или PNG).', 'error'); };
+          probe.src = String(reader.result);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     // Полоса прогресса: закрашено столько страниц анкеты, сколько уже пройдено (по прокрутке).
     // «Оформление» (только для Нового года) считается частью третьей страницы.
     function attachProgress() {
@@ -1124,7 +1264,11 @@ section.tight{ padding:56px 0; }
         from: readInput('from'),
         dedication: readInput('dedication'),
         tariff: readChoiceValue('tariff') === 'big' ? 'big' : '',
-        coloring: readChoiceValue('tariff') !== 'big' && document.getElementById('coloring').checked
+        coloring: readChoiceValue('tariff') !== 'big' && document.getElementById('coloring').checked,
+        // родные по фото: в ответах только кто и имя, сами фото уходят отдельно (uploadPhotos)
+        familyPhotos: familyOn(),
+        family: familyOn() ? familyReady().map(function (p) { return { who: p.who === 'другой' ? p.whoOther.trim() : p.who, name: p.who === 'другой' ? '' : p.name.trim() }; }) : [],
+        familyConsent: familyOn() && document.getElementById('familyConsent').checked
       };
     }
 
@@ -1282,13 +1426,17 @@ section.tight{ padding:56px 0; }
       return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
     }
 
-    async function uploadPhotos(photos, onProgress) {
+    // family — фото родных («Большая история»): на сервере идут под номерами MAX_PHOTOS, MAX_PHOTOS + 1…
+    async function uploadPhotos(photos, onProgress, family) {
       const upload = uploadId();
       const blobs = photos.map(dataUrlToBlob);
+      const familyBlobs = (family || []).map(dataUrlToBlob);
       const tasks = [];
-      blobs.forEach(function (blob, p) {
+      function cut(blob, p) {
         for (let c = 0; c * UPLOAD_CHUNK_BYTES < blob.size; c++) tasks.push({ p: p, c: c, part: blob.slice(c * UPLOAD_CHUNK_BYTES, (c + 1) * UPLOAD_CHUNK_BYTES) });
-      });
+      }
+      blobs.forEach(cut);
+      familyBlobs.forEach(function (blob, i) { cut(blob, MAX_PHOTOS + i); });
       let next = 0, done = 0;
       async function send(task) {
         for (let attempt = 1; ; attempt++) {
@@ -1314,7 +1462,8 @@ section.tight{ padding:56px 0; }
       await Promise.all(workers);
       return {
         upload: upload,
-        parts: blobs.map(function (blob) { return { type: blob.type, n: Math.ceil(blob.size / UPLOAD_CHUNK_BYTES) }; })
+        parts: blobs.map(function (blob) { return { type: blob.type, n: Math.ceil(blob.size / UPLOAD_CHUNK_BYTES) }; }),
+        familyParts: familyBlobs.map(function (blob) { return { type: blob.type, n: Math.ceil(blob.size / UPLOAD_CHUNK_BYTES) }; })
       };
     }
 
@@ -1324,6 +1473,7 @@ section.tight{ padding:56px 0; }
       form.append('device', deviceId());
       form.append('upload', uploaded.upload);
       form.append('photoParts', JSON.stringify(uploaded.parts));
+      if (uploaded.familyParts.length) form.append('familyParts', JSON.stringify(uploaded.familyParts));
       return form;
     }
 
@@ -1380,6 +1530,7 @@ section.tight{ padding:56px 0; }
     attachChoiceSelection();
     attachProgress();
     attachPhotoUpload();
+    attachFamily();
 
     // ?sequel=1 — продолжение прошлой книги: анкета заполняется по ней, в запрос уходит краткое содержание первой книги
     let sequel = new URLSearchParams(location.search).get('sequel') === '1' && window.SkazkaExtras ? window.SkazkaExtras.readSequel() : null;
@@ -1422,7 +1573,9 @@ section.tight{ padding:56px 0; }
       const card = document.querySelector('.choice-card[data-choice-group="tariff"].is-selected');
       const coloringRow = document.getElementById('coloringRow');
       coloringRow.style.display = isBig() ? 'none' : 'flex';
-      const total = Number(card.getAttribute('data-price')) + (!isBig() && document.getElementById('coloring').checked ? 190 : 0);
+      document.getElementById('familyRow').hidden = !(FAMILY_ON && isBig());
+      document.getElementById('familyBox').hidden = !(FAMILY_ON && isBig() && document.getElementById('familyPhotos').checked);
+      const total = Number(card.getAttribute('data-price')) + (!isBig() && document.getElementById('coloring').checked ? 190 : 0) + familyExtra();
       const price = document.getElementById('orderPrice');
       price.textContent = formatRub(total) + ' ';
       price.appendChild(document.createElement('small')).textContent = 'превью — бесплатно, оплата только если книга понравилась';
@@ -1494,6 +1647,12 @@ section.tight{ padding:56px 0; }
         document.getElementById('age').focus();
         return;
       }
+      const familyProblem = checkFamily();
+      if (familyProblem) {
+        setStatus(familyProblem, 'error');
+        document.getElementById('familyBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
       if (!selectedPhotos.length) {
         setStatus('Загрузите хотя бы одно фото ребёнка — по нему мы рисуем его на обложке и на каждой иллюстрации.', 'error');
         document.getElementById('photoDrop').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1519,7 +1678,7 @@ section.tight{ padding:56px 0; }
         // Фото уходят на сервер отдельно от анкеты и не попадают в то, что сохраняется в localStorage (answers)
         const uploaded = await uploadPhotos(selectedPhotos, function (share) {
           if (myRun === runId) setStatus('Отправляем фото… ' + Math.round(share * 100) + '%');
-        });
+        }, answers.familyPhotos ? familyReady().map(function (p) { return p.photo; }) : []);
         if (myRun !== runId) return;
         setStatus('Начинаем писать вашу сказку…');
         const data = await fetchJson(API_BASE + '/api/book/generate', { method: 'POST', body: orderForm(answers, uploaded) }, 60000);

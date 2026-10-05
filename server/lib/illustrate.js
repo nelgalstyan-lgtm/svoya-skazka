@@ -52,7 +52,7 @@ const OUTFIT_FROM_PHOTO = 'The child wears exactly the same clothes and shoes as
 const lookLine = (look) => [OUTFIT_FROM_PHOTO, String(look || '').trim() ? `Pets and toys from the story, the same on every page: ${String(look).trim()}` : ''].filter(Boolean).join(' ');
 
 /** Собирает полный английский image_prompt по правилам из docs/story-prompt-template.md. */
-export function buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount = 1, withSheet = false, kind = 'scene' } = {}) {
+export function buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount = 1, withSheet = false, kind = 'scene', people = ONLY_CHILD } = {}) {
   const styleKey = pickStyleKey(styleLabel);
   const scene = String(brief || '').trim()
     || 'The child stands confidently at the story’s key moment, caught in an active, dynamic pose that fits the scene, surrounded by details from the adventure around them.';
@@ -65,7 +65,7 @@ export function buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount = 1,
     kind === 'sheet' ? '' : scene,
     lookLine(look),
     kind === 'sheet' ? '' : OUTFIT_BLOCK,
-    ONLY_CHILD,
+    kind === 'sheet' ? ONLY_CHILD : people,
     `Art style and rendering technique: ${STYLE_TECHNIQUE[styleKey]}.`,
     composition,
     AVOID_BLOCK
@@ -85,13 +85,60 @@ export const MAX_PHOTOS = 3;
  * Что передать модели: образцы и промпт. null — рисовать не по чему.
  * refs — фото ребёнка, sheet — лист персонажа, source — картинка для раскраски; формат картинок любой ({ mime, data } или { mime, bytes }).
  */
-export function imageRequest({ refs = [], sheet = null, source = null, kind = 'scene', styleLabel, eyes, brief, look } = {}) {
+// ---------------------------------------------------------------- родные по фото (только «Большая история»)
+// Решение владелицы 05.10: один родной по одному фото — бесплатно, второй и третий — доплата 290 ₽ (за обоих).
+// Рисуются только после оплаты: сначала общий лист родных по их фото, потом по нему (и по листу ребёнка) — все сцены.
+// В превью — только ребёнок.
+
+export const MAX_FAMILY = 3;
+// «Кто это» из анкеты → по-английски для модели. Своё («крёстная», «няня») — как есть, в кавычках, как данные.
+const WHO_EN = { мама: 'the mother', папа: 'the father', брат: 'the brother', сестра: 'the sister', бабушка: 'the grandmother', дедушка: 'the grandfather' };
+const clipText = (t, n) => String(t || '').replace(/["«»]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+
+/** «мама Лена» → «the mother (named "Лена")»; своё — «a person the child calls "няня"». */
+export function familyLabel(person = {}) {
+  const who = clipText(person.who, 40).toLowerCase();
+  const name = clipText(person.name, 40);
+  const role = WHO_EN[who] || (who ? `a person the child calls "${who}"` : 'a family member');
+  return name ? `${role} (named "${name}")` : role;
+}
+
+/** Лист родных: все по их фото, по порядку слева направо — по нему потом рисуются все сцены. */
+export function buildFamilySheetPrompt({ family = [], styleLabel } = {}) {
+  const n = family.length;
+  const list = family.map((p, i) => `photo ${i + 1} shows ${familyLabel(p)}`).join('; ');
+  return [
+    `The ${n} attached photo${n > 1 ? 's show ' + n + ' different real people' : ' shows a real person'} from the child's family: ${list}.`,
+    `Draw a character reference sheet of ${n > 1 ? 'these people standing side by side in full figure, in exactly this order from left to right' : 'this person in full figure'}, facing the viewer, relaxed friendly pose, gentle smile.`,
+    "Preserve each person's exact identity from their own photo: face structure and proportions, eye shape and eye color, nose, lips, hairstyle and hair color, facial hair, glasses, age and body build. Every person must stay instantly recognizable; never merge, average or swap features between people, and do not make them look alike. Adults stay adults of their real age; do not beautify or idealize. Each person's height and body proportions match their real age.",
+    // «Амилия» (01.10): по фото ChatGPT рисовал взрослых почти фотографиями — среди мультяшных детей это выглядит чужим
+    'Everyone, the adults too, is a stylized cartoon character in exactly the same art style as the child in this book — never photorealistic, never like a photo: simplified smooth sculpted features and smooth stylized hair; only the likeness comes from the photos, not the realism.',
+    'Clothing: the everyday outfit from their photo, simplified into clean shapes.',
+    `Art style and rendering technique: ${STYLE_TECHNIQUE[pickStyleKey(styleLabel)]}.`,
+    'Composition: plain warm off-white background, evenly lit, no scenery. No text, no names, no labels.',
+    AVOID_BLOCK
+  ].join(' ');
+}
+
+// К сцене: лист родного идёт перед листом ребёнка (тот — всегда последний, см. SHEET_BLOCK)
+const FAMILY_PEOPLE = (family, last) => `People: the ${last ? 'last' : 'second-to-last'} attached image is the family reference sheet: it shows, from left to right, ${family.map(familyLabel).join(', ')}. Whenever any of these people appear in the scene, draw them exactly as on that sheet — the same face, hairstyle, build and look, the height and proportions of their real age — and keep them clearly different people from each other and from the child. Do not add them unless the scene description includes them. No other humans besides the child and these family members: no friends, other children or passers-by; pets, animals, toys and magical creatures are fine.`;
+
+/**
+ * Что передать модели: образцы и промпт. null — рисовать не по чему.
+ * refs — фото ребёнка (у 'family' — фото родного), sheet — лист персонажа, source — картинка для раскраски;
+ * family — родной из анкеты [{ who, name }], familySheet — его лист. Формат картинок любой ({ mime, data } или { mime, bytes }).
+ */
+export function imageRequest({ refs = [], sheet = null, source = null, kind = 'scene', styleLabel, eyes, brief, look, family = [], familySheet = null } = {}) {
   if (kind === 'coloring') return source ? { images: [source], prompt: buildColoringPrompt() } : null;
+  if (kind === 'family') return refs.length && family.length ? { images: refs.slice(0, MAX_FAMILY), prompt: buildFamilySheetPrompt({ family: family.slice(0, refs.length), styleLabel }) } : null;
   // перерисовка после генерации: фото ребёнка уже удалено, лицо и одежду держит лист персонажа
   if (!refs.length && !sheet) return null;
-  const images = sheet && kind !== 'sheet' ? [...refs, sheet] : refs;
+  const withFamily = Boolean(familySheet && family.length) && kind !== 'sheet';
+  const withSheet = Boolean(sheet) && kind !== 'sheet';
+  const images = [...refs, ...(withFamily ? [familySheet] : []), ...(withSheet ? [sheet] : [])];
+  const people = withFamily ? FAMILY_PEOPLE(family, !withSheet) : ONLY_CHILD;
   const prompt = refs.length
-    ? buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount: refs.length, withSheet: Boolean(sheet) && kind !== 'sheet', kind })
-    : buildHeroPrompt({ styleLabel, eyes, brief, look, withSheet: true, kind }).replace(/reference photo/g, 'character reference sheet');
+    ? buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount: refs.length, withSheet, kind, people })
+    : buildHeroPrompt({ styleLabel, eyes, brief, look, withSheet: true, kind, people }).replace(/reference photo/g, 'character reference sheet');
   return { images, prompt };
 }

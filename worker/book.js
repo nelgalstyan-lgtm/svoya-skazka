@@ -54,9 +54,11 @@ export async function runBook(env, { id, mode }, step, { log = console.warn } = 
  * Иллюстрации книги по шагам: лист персонажа (если его ещё нет), потом обложка и сцены по три одновременно,
  * вторая попытка для не получившихся. Возвращает адреса: { sheet, cover, scenes: [src|null] }.
  */
-async function drawBook(ctx, { input, briefs, coverBrief, look, only = null, sheet = null }) {
+async function drawBook(ctx, { input, briefs, coverBrief, look, only = null, sheet = null, familySheet = null }) {
   const { env, store, id, step, log, progress } = ctx;
   const style = { styleLabel: input.style, eyes: normalizeInput(input).eyes, look };
+  // родные по фото: их лист прикладывается к сценам (к листу ребёнка и обложке — нет: на обложке только ребёнок)
+  const family = familySheet ? input.family || [] : [];
   const wanted = briefs.map((_, i) => !only || only.includes(i));
   const total = wanted.filter(Boolean).length + (coverBrief ? 1 : 0) + (sheet ? 0 : 1);
   let started = 0;
@@ -66,8 +68,13 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, only = null, she
     // в превью всего 3 картинки (лист героя, обложка, первая иллюстрация) — называем, что именно рисуем, чтобы «из 3» не путало
     const what = kind === 'sheet' ? 'лист героя по фото' : kind === 'cover' ? 'обложку' : 'иллюстрацию с вашим ребёнком';
     await progress(`Рисуем ${what} (картинка ${Math.min(started, total)} из ${total})…`);
-    const [refs, sheetImage] = await Promise.all([store.loadPhotos(id), kind === 'sheet' ? null : store.loadImage(sheet)]);
-    const image = await drawImage(env, { kind, refs, sheet: sheetImage, brief, ...style, log });
+    const withFamily = kind === 'scene' && family.length > 0;
+    const [refs, sheetImage, familyImage] = await Promise.all([
+      store.loadPhotos(id),
+      kind === 'sheet' ? null : store.loadImage(sheet),
+      withFamily ? store.loadImage(familySheet) : null
+    ]);
+    const image = await drawImage(env, { kind, refs, sheet: sheetImage, family: familyImage ? family : [], familySheet: familyImage, brief, ...style, log });
     return image ? store.putImage(id, name, image) : null;
   });
 
@@ -98,6 +105,22 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, only = null, she
     cover: results.get('cover') || null,
     scenes: briefs.map((_, i) => results.get(`scene-${i}`) || null)
   };
+}
+
+/**
+ * Лист родных (только «Большая история»): все родные по их фото, в стиле книги. Рисуется один раз, после оплаты.
+ * null — фото родных уже нет (истёк срок) или не нарисовалось: тогда на картинках остаётся только ребёнок.
+ */
+async function drawFamilySheet(ctx, input) {
+  const { env, store, id, step, log, progress } = ctx;
+  const run = (name) => step.do(name, IMAGE_STEP, async () => {
+    await progress('Рисуем родных по фото…');
+    const refs = await store.loadPhotos(id, { family: true });
+    if (!refs.length) return null;
+    const image = await drawImage(env, { kind: 'family', refs, family: input.family, styleLabel: input.style, log });
+    return image ? store.putImage(id, name, image) : null;
+  });
+  return (await run('family-sheet')) || run('family-sheet-retry');
 }
 
 /** Раскраска: контурные версии готовых иллюстраций — MAX_COLORING штук из начала, середины и конца книги. */
@@ -292,12 +315,19 @@ async function completeFlow(ctx) {
       missing: images.map((im, i) => (isDrawn(im.src) ? -1 : i)).filter((i) => i >= 0),
       coverBrief: target.cover ? '' : target.coverBrief || `The child at the heart of the story "${target.title}", looking ahead with excitement.`,
       look: target.look || '',
-      sheet: target.sheet || null
+      sheet: target.sheet || null,
+      familySheet: target.familySheet || null
     };
   });
 
+  // родные по фото: сначала их лист, потом ВСЕ сцены по нему — и те, что были в превью (там из людей был только ребёнок).
+  // Обложку не трогаем: на ней только ребёнок.
+  let familySheet = todo.familySheet;
+  if (todo.input.family?.length && !familySheet) familySheet = await drawFamilySheet(ctx, todo.input);
+  const only = familySheet && !todo.familySheet ? todo.briefs.map((_, i) => i) : todo.missing;
+
   // фото могли уже удалиться (истёк срок) — тогда рисуем по листу персонажа, он держит и лицо, и одежду
-  const art = await drawBook(ctx, { input: todo.input, briefs: todo.briefs, coverBrief: todo.coverBrief, look: todo.look, only: todo.missing, sheet: todo.sheet });
+  const art = await drawBook(ctx, { input: todo.input, briefs: todo.briefs, coverBrief: todo.coverBrief, look: todo.look, only, sheet: todo.sheet, familySheet });
   const srcs = todo.srcs.map((src, i) => art.scenes[i] || src);
   const titlePlace = art.cover ? await coverPlaceStep(ctx, art.cover) : null;
   const coloring = todo.input.coloring ? await drawColoring(ctx, srcs.filter(isDrawn)) : [];
@@ -306,6 +336,7 @@ async function completeFlow(ctx) {
     await store.updateJob(id, (job) => {
       const target = job.result.book || job.result;
       bookImages(job.result).forEach((im, i) => { if (art.scenes[i]) im.set(art.scenes[i]); });
+      if (familySheet) target.familySheet = familySheet; // для бесплатной перерисовки: фото родных к тому времени удалены
       if (art.cover) { target.cover = art.cover; target.coverFace = true; target.coverTitle = { place: titlePlace || 'top' }; }
       // «Большая история»: иллюстрация так и не получилась — убираем её, фоновых сцен в книге клиента нет
       if (job.result.book) for (const ch of job.result.book.chapters) ch.blocks = ch.blocks.filter((b) => b.t !== 'image' || isDrawn(b.src));

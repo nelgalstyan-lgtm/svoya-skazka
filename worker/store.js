@@ -80,14 +80,18 @@ export function createStore(bucket, { photoTtlMs = 48 * 60 * 60_000 } = {}) {
     return job;
   }
 
-  async function savePhotos(id, photos) {
-    await Promise.all(photos.map((p, i) => bucket.put(`photos/${id}/${i}`, p.bytes, { httpMetadata: { contentType: p.mime } })));
+  // Фото родного («Большая история», 1 родной по фото) — там же, photos/<id>/f<n>: тот же срок, то же удаление и правило R2
+  async function savePhotos(id, photos, { family = false } = {}) {
+    await Promise.all(photos.map((p, i) => bucket.put(`photos/${id}/${family ? 'f' : ''}${i}`, p.bytes, { httpMetadata: { contentType: p.mime } })));
   }
 
-  /** Фото заказа: [{ mime, bytes }] или [] — если уже удалены или истёк срок хранения. */
-  async function loadPhotos(id) {
+  /** Фото заказа: [{ mime, bytes }] или [] — если уже удалены или истёк срок хранения. family: true — фото родного. */
+  async function loadPhotos(id, { family = false } = {}) {
     const list = await bucket.list({ prefix: `photos/${id}/` });
-    const fresh = list.objects.filter((o) => Date.now() - new Date(o.uploaded).getTime() <= photoTtlMs);
+    const mine = family ? /\/f(\d+)$/ : /\/(\d+)$/;
+    const fresh = list.objects
+      .filter((o) => mine.test(o.key) && Date.now() - new Date(o.uploaded).getTime() <= photoTtlMs)
+      .sort((a, b) => Number(mine.exec(a.key)[1]) - Number(mine.exec(b.key)[1]));
     const photos = await Promise.all(fresh.map(async (o) => {
       const obj = await bucket.get(o.key);
       return obj && { mime: obj.httpMetadata?.contentType || 'image/jpeg', bytes: new Uint8Array(await obj.arrayBuffer()) };

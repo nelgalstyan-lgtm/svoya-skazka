@@ -3,7 +3,7 @@
 
 import { buildTemplateStory, describeProviders } from '../server/lib/story.js';
 import { templateBook } from '../server/lib/bigstory.js';
-import { MAX_PHOTOS } from '../server/lib/illustrate.js';
+import { MAX_PHOTOS, MAX_FAMILY } from '../server/lib/illustrate.js';
 import { createStore, isJobId } from './store.js';
 import { drawImage, artOff, ART_OFF_MESSAGE } from './art.js';
 import { fromBase64 } from './bytes.js';
@@ -18,6 +18,8 @@ export const UPLOAD_CHUNK_BYTES = 16 * 1024;
 const UPLOAD_MAX_CHUNKS = Math.ceil(PHOTO_MAX_BYTES / UPLOAD_CHUNK_BYTES);
 const PHOTO_MIME_RE = /^image\/(jpeg|png|webp)$/;
 const chunkKey = (upload, photo, chunk) => `photos/up-${upload}/${photo}-${chunk}`;
+// фото родных в загрузке идут под номерами MAX_PHOTOS… (после фото ребёнка 0…MAX_PHOTOS-1)
+const FAMILY_SLOT = MAX_PHOTOS;
 const BODY_MAX_BYTES = 30 * 1024 * 1024;
 const EDIT_TEXT_MAX = 3000;
 // Если Workflow так и не закончил книгу (сбой Cloudflare) — клиент всё равно получает книгу из шаблона
@@ -61,42 +63,49 @@ async function readOrder(request, env) {
     let body;
     try { body = JSON.parse(String(form.get('answers') || '{}')); } catch { return null; }
     const device = String(form.get('device') || '');
-    if (form.get('upload')) return { body, device, ...(await readUpload(env, String(form.get('upload')), String(form.get('photoParts') || ''))) };
+    if (form.get('upload')) return { body, device, ...(await readUpload(env, String(form.get('upload')), String(form.get('photoParts') || ''), String(form.get('familyParts') || ''))) };
     const files = form.getAll('photo').filter((f) => typeof f === 'object' && f && PHOTO_MIME_RE.test(f.type) && f.size > 0 && f.size <= PHOTO_MAX_BYTES);
     const photos = await Promise.all(files.slice(0, MAX_PHOTOS).map(async (f) => ({ mime: f.type, bytes: new Uint8Array(await f.arrayBuffer()) })));
-    return { body, photos, device };
+    const familyFiles = form.getAll('family').filter((f) => typeof f === 'object' && f && PHOTO_MIME_RE.test(f.type) && f.size > 0 && f.size <= PHOTO_MAX_BYTES);
+    const familyPhotos = await Promise.all(familyFiles.slice(0, MAX_FAMILY).map(async (f) => ({ mime: f.type, bytes: new Uint8Array(await f.arrayBuffer()) })));
+    return { body, photos, familyPhotos, device };
   }
   const body = await readJson(request);
   return body && { body, photos: parsePhotos(body), device: String(body.device || '') };
 }
 
-/** Фото, присланные кусками: parts — JSON [{ type, n }] по каждому фото. Не хватает куска — broken (просим нажать ещё раз). */
-async function readUpload(env, upload, partsJson) {
-  let parts;
-  try { parts = JSON.parse(partsJson); } catch { parts = null; }
-  const valid = isJobId(upload) && Array.isArray(parts) && parts.length > 0 && parts.length <= MAX_PHOTOS
-    && parts.every((p) => PHOTO_MIME_RE.test(p?.type) && Number.isInteger(p.n) && p.n > 0 && p.n <= UPLOAD_MAX_CHUNKS);
-  if (!valid) return { photos: [], broken: true, chunkKeys: [] };
-  const chunkKeys = parts.flatMap((p, i) => Array.from({ length: p.n }, (_, c) => chunkKey(upload, i, c)));
+/**
+ * Фото, присланные кусками: parts — JSON [{ type, n }] по каждому фото ребёнка, familyParts — то же для фото родного
+ * (номер FAMILY_SLOT). Не хватает куска — broken (просим нажать ещё раз).
+ */
+async function readUpload(env, upload, partsJson, familyJson = '') {
+  const parse = (j) => { try { return j ? JSON.parse(j) : []; } catch { return null; } };
+  const parts = parse(partsJson), fam = parse(familyJson);
+  const okPart = (p) => PHOTO_MIME_RE.test(p?.type) && Number.isInteger(p.n) && p.n > 0 && p.n <= UPLOAD_MAX_CHUNKS;
+  const valid = isJobId(upload) && Array.isArray(parts) && parts.length > 0 && parts.length <= MAX_PHOTOS && parts.every(okPart)
+    && Array.isArray(fam) && fam.length <= MAX_FAMILY && fam.every(okPart);
+  if (!valid) return { photos: [], familyPhotos: [], broken: true, chunkKeys: [] };
+  const slots = [...parts.map((p, i) => ({ ...p, slot: i })), ...fam.map((p, i) => ({ ...p, slot: FAMILY_SLOT + i, family: true }))];
+  const chunkKeys = slots.flatMap((p) => Array.from({ length: p.n }, (_, c) => chunkKey(upload, p.slot, c)));
   const chunks = new Map(await Promise.all(chunkKeys.map(async (key) => {
     const obj = await env.BUCKET.get(key);
     return [key, obj ? new Uint8Array(await obj.arrayBuffer()) : null];
   })));
-  if ([...chunks.values()].some((c) => !c)) return { photos: [], broken: true, chunkKeys };
-  const photos = parts.map((p, i) => {
-    const pieces = Array.from({ length: p.n }, (_, c) => chunks.get(chunkKey(upload, i, c)));
+  if ([...chunks.values()].some((c) => !c)) return { photos: [], familyPhotos: [], broken: true, chunkKeys };
+  const glue = (p) => {
+    const pieces = Array.from({ length: p.n }, (_, c) => chunks.get(chunkKey(upload, p.slot, c)));
     const bytes = new Uint8Array(pieces.reduce((n, b) => n + b.length, 0));
     let at = 0;
     for (const b of pieces) { bytes.set(b, at); at += b.length; }
     return { mime: p.type, bytes };
-  });
-  return { photos, broken: false, chunkKeys };
+  };
+  return { photos: slots.filter((p) => !p.family).map(glue), familyPhotos: slots.filter((p) => p.family).map(glue), broken: false, chunkKeys };
 }
 
 async function uploadChunk(request, env, upload, photo, chunk) {
   const p = /^\d{1,3}$/.test(photo) ? Number(photo) : -1;
   const c = /^\d{1,4}$/.test(chunk) ? Number(chunk) : -1;
-  if (!isJobId(upload) || p < 0 || p >= MAX_PHOTOS || c < 0 || c >= UPLOAD_MAX_CHUNKS) return fail(404, 'Not found');
+  if (!isJobId(upload) || p < 0 || p >= FAMILY_SLOT + MAX_FAMILY || c < 0 || c >= UPLOAD_MAX_CHUNKS) return fail(404, 'Not found');
   if (await limited(env.UPLOAD_LIMITER, clientIp(request, env))) return fail(429, 'Слишком много запросов подряд. Подождите пару минут и попробуйте снова.');
   if (Number(request.headers.get('content-length') || 0) > UPLOAD_CHUNK_BYTES) return fail(400, 'Слишком большой кусок фото.');
   const bytes = new Uint8Array(await request.arrayBuffer());
@@ -158,6 +167,31 @@ const LIMIT_MESSAGES = {
   ip: 'Из вашей сети сегодня сделано много бесплатных превью. Попробуйте завтра или напишите нам — поможем.'
 };
 
+/**
+ * Родные по фото (только «Большая история»; первый бесплатно, второй и третий — +290 ₽, решение владелицы 05.10):
+ * answers.familyPhotos === true, answers.family [{ who, name }] и по одному фото на человека, по порядку. → { list } (только с фото) или { error } — если выбрали, но не заполнили.
+ */
+export function familyFromOrder(body, files = [], big = false) {
+  if (body?.familyPhotos !== true || !big) return { list: [] };
+  const people = Array.isArray(body.family) ? body.family.slice(0, MAX_FAMILY) : [];
+  const text = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '');
+  const list = people.map((p) => ({ name: text(p?.name, 40), who: text(p?.who, 40) })).slice(0, files.length);
+  if (!list.length) return { error: 'Вы выбрали «Родные по фото» — загрузите фото хотя бы одного человека или снимите галочку.' };
+  if (list.some((p) => !p.who)) return { error: 'Укажите, кто на каждом фото: мама, папа, бабушка…' };
+  // рисуем настоящего человека: без его согласия заказ не принимаем (политика конфиденциальности)
+  if (body.familyConsent !== true) return { error: 'Подтвердите, что люди на фото согласны, чтобы их нарисовали в книге.' };
+  return { list };
+}
+
+/** Родные по фото должны попасть и в сюжет: дописываем в «Кого ещё включить» тех, кого там ещё нет. */
+export function castWithFamily(cast = '', family = []) {
+  const low = String(cast).toLowerCase();
+  const extra = family
+    .filter((p) => !(p.name && low.includes(p.name.toLowerCase())) && !(!p.name && low.includes(p.who.toLowerCase())))
+    .map((p) => [p.who, p.name].filter(Boolean).join(' '));
+  return [String(cast).trim(), ...extra].filter(Boolean).join(', ').slice(0, 500);
+}
+
 // ---------------------------------------------------------------- маршруты
 
 async function generate(request, env, store) {
@@ -196,11 +230,19 @@ async function generate(request, env, store) {
   if (big || body.coloring === true) input.coloring = true;
   // песня по книге — так же: входит в «Большую историю», к «Сказке» — отдельно
   if (big || body.song === true) input.song = true;
+  // родные по фото — только «Большая история»: рисуются после оплаты, в превью — только ребёнок
+  const family = familyFromOrder(body, order.familyPhotos || [], big);
+  if (family.error) return fail(400, family.error);
+  if (family.list.length) {
+    input.family = family.list;
+    input.cast = castWithFamily(input.cast, family.list);
+  }
 
   const id = crypto.randomUUID();
   const job = { id, status: 'queued', createdAt: Date.now(), startedAt: null, finishedAt: null, input, progress: 'Готовимся…', result: null };
   // фото — отдельно от книги: понадобятся, чтобы дорисовать книгу после оплаты, и удалятся не позже чем через 48 ч
   await store.savePhotos(id, photos);
+  if (input.family) await store.savePhotos(id, order.familyPhotos.slice(0, input.family.length), { family: true });
   if (order.chunkKeys?.length) await env.BUCKET.delete(order.chunkKeys);
   await store.saveJob(job);
   await startBook(env, id, 'preview');
@@ -252,9 +294,13 @@ async function redraw(request, env, store, id) {
   const wish = typeof body?.wish === 'string' ? body.wish.slice(0, 300).trim() : '';
   if (!Number.isInteger(index) || index < 0 || index >= images.length) return fail(400, 'Нет такой иллюстрации');
 
+  // родной по фото: его лист (фото к этому времени удалено) — чтобы и на перерисованной картинке он был похож
+  const familySheet = (result.book || result).familySheet ? await store.loadImage((result.book || result).familySheet) : null;
   const image = await drawImage(env, {
     kind: 'scene',
     sheet,
+    family: familySheet ? job.input?.family || [] : [],
+    familySheet,
     styleLabel: job.input?.style,
     eyes: job.input?.eyes,
     look: result.look || result.book?.look,
