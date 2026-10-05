@@ -3,10 +3,11 @@
 // Идея: ни один сервис не должен быть единственной точкой отказа.
 // Пробуем провайдеров по порядку; упавшего (лимит, перегрузка, таймаут,
 // неверный ключ) на время «остужаем» и сразу идём к следующему.
-// Всё бесплатное: Gemini, Groq, OpenRouter (модели :free), Cerebras.
-// Платный OpenAI подключается только если явно задан OPENAI_API_KEY.
+// С 05.10 основной автор — платный OpenAI GPT-5.5 (решение владелицы: бесплатные пишут заметно слабее; проба по анкете
+// «Люсечки» — GPT-5.5 ≈ $0,10 за «Сказку»), бесплатные Gemini, Groq, OpenRouter, Cerebras — запасные.
+// Без OPENAI_API_KEY цепочка та же, только без OpenAI.
 
-const DEFAULT_ORDER = ['gemini', 'groq', 'openrouter', 'cerebras', 'openai'];
+const DEFAULT_ORDER = ['openai', 'gemini', 'groq', 'openrouter', 'cerebras'];
 
 const CATALOG = {
   gemini: {
@@ -44,7 +45,8 @@ const CATALOG = {
     type: 'openai',
     keyEnv: 'OPENAI_API_KEY',
     modelsEnv: 'OPENAI_MODELS',
-    defaultModels: ['gpt-4o-mini'],
+    // gpt-5.4-mini — запасная: втрое дешевле и быстрее, если 5.5 не успел (проба 05.10: 5.5 — 51 с, mini — 21 с)
+    defaultModels: ['gpt-5.5', 'gpt-5.4-mini'],
     baseUrl: 'https://api.openai.com/v1'
   }
 };
@@ -120,7 +122,17 @@ function openAiCaller({ name, apiKey, baseUrl }) {
       {
         headers: { authorization: `Bearer ${apiKey}`, 'x-title': 'Geroenok' },
         signal,
-        body: {
+        // модели GPT-5 не принимают temperature и max_tokens: у них max_completion_tokens и «сколько думать» (low — хватает)
+        body: /^(gpt-5|o\d)/.test(model) ? {
+          model,
+          max_completion_tokens: 16000,
+          reasoning_effort: 'low',
+          ...(/json/i.test(system + user) ? { response_format: { type: 'json_object' } } : {}),
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user }
+          ]
+        } : {
           model,
           temperature: 0.9,
           max_tokens: 9000,

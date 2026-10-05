@@ -140,13 +140,14 @@ test('shortDedication: посвящение «Сказки» по поводу �
   // лист «Посвящается» — имя в дательном падеже
   assert.match(shortDedication({ name: 'Макс', gender: 'Мальчик' }).lead, /^Максу — главному герою этой сказки, с любовью\.$/);
   assert.match(shortDedication({ name: 'Аня', gender: 'Девочка', occasion: 'день рождения' }).lead, /^Ане — имениннице/);
-  assert.equal(shortDedication({ name: 'Аня', gender: 'Девочка', occasion: 'Новый год' }).lead, 'Ане, нашей волшебнице, — с Новым годом!');
+  assert.equal(shortDedication({ name: 'Аня', gender: 'Девочка', occasion: 'Новый год' }).lead, 'Ане — главной героине этой новогодней сказки, с любовью.');
   const d = dedicationFor({ name: 'Макс', from: 'мама' }, shortDedication({ name: 'Макс', gender: 'Мальчик', from: 'мама' }));
   assert.equal(d.signature, 'С любовью,\nмама');
   assert.equal(d.lead, 'Максу — главному герою этой сказки.', 'с подписью «С любовью» не повторяем');
   assert.equal(d.paragraphs.length, 2);
-  const own = dedicationFor({ dedication: 'Наше слово' }, shortDedication({ name: 'Макс' }));
-  assert.equal(own.lead, 'Наше слово');
+  const own = dedicationFor({ name: 'Макс', gender: 'Мальчик', dedication: 'Наше слово' }, shortDedication({ name: 'Макс', gender: 'Мальчик' }));
+  assert.equal(own.lead, 'Максу — главному герою этой сказки, с любовью.');
+  assert.deepEqual(own.paragraphs, ['Наше слово.']);
 });
 
 test('имя в дательном падеже: «Посвящается Максу», а не «Макс»', async () => {
@@ -174,4 +175,14 @@ test('латинские буквы-двойники в русских слов�
   assert.equal(fixMixedScript('Nеля держала руку'), 'Неля держала руку');
   assert.equal(fixMixedScript('Lusеchka stands by a window'), 'Lusеchka stands by a window');
   assert.equal(fixMixedScript('кoфе и шоколад'), 'кофе и шоколад');
+});
+
+test('посвящение: пожелание родителей без имени идёт после строки «кому», а не вместо неё', () => {
+  const input = { name: 'Люсечка', gender: 'Девочка', from: 'от Макса', dedication: 'Будь всегда такой красивой' };
+  const d = dedicationFor(input, { lead: 'Люсечке — главной героине этой сказки.', paragraphs: ['общие слова'] });
+  assert.equal(d.lead, 'Люсечке — главной героине этой сказки.');
+  assert.deepEqual(d.paragraphs, ['Будь всегда такой красивой.']);
+  assert.equal(d.signature, 'С любовью,\nМакс');
+  const own = dedicationFor({ ...input, dedication: 'Люсечке, нашему солнышку' }, { lead: 'x', paragraphs: [] });
+  assert.equal(own.lead, 'Люсечке, нашему солнышку.');
 });

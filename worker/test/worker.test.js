@@ -410,7 +410,7 @@ test('медиа из R2: целиком и кусками (Range → 206), чу
   assert.equal((await api(env, '/api/media/alex-audio/ch1.json')).status, 404);
 });
 
-test('посвящение: подпись «С любовью, …» и дата от родителей; своё посвящение заменяет текст; без полей у «Сказки» — наши тёплые слова', async () => {
+test('посвящение: подпись «С любовью, …» и дата от родителей; своё посвящение — после строки «кому»; без полей у «Сказки» — наши тёплые слова', async () => {
   const env = fakeEnv();
   const ai = stubOpenAI();
   try {
@@ -423,8 +423,8 @@ test('посвящение: подпись «С любовью, …» и дат�
     const d = (await status(env, short)).result.dedication;
     assert.equal(d.signature, 'С любовью,\nмама и папа');
     assert.match(d.date, /^\d{2}\.\d{2}\.\d{4}$/);
-    assert.equal(d.lead, 'С днём рождения!');
-    assert.deepEqual(d.paragraphs, ['Мы тебя любим.']);
+    assert.match(d.lead, /^Милене — /, 'первая строка «Посвящается» — кому; слова родителей без имени — после неё');
+    assert.deepEqual(d.paragraphs, ['С днём рождения!', 'Мы тебя любим.']);
 
     const big = await order(env, { tariff: 'big', from: 'твоя Неля' });
     const bd = (await status(env, big)).result.book.dedication;

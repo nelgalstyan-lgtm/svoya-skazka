@@ -200,7 +200,15 @@ export function dedicationFor(input = {}, base = null, date = new Date()) {
   const own = parts.own.split(/\n\s*\n|\r?\n/).map((s) => s.trim()).filter(Boolean).slice(0, 6);
   if (!base && !from && !own.length) return null;
   const d = { title: 'Посвящается', lead: base?.lead || '', paragraphs: base?.paragraphs || [] };
-  if (own.length) { d.lead = own[0]; d.paragraphs = own.slice(1); }
+  if (own.length) {
+    // лист называется «Посвящается» — первой строкой должно быть, кому («Люсечке — главной героине…»). Если родители
+    // написали пожелание без имени («Будь всегда такой красивой»), оно идёт после этой строки, а не вместо неё (05.10)
+    const c = template.normalizeInput(input);
+    const named = c.name && own[0].toLowerCase().includes(dativeName(c.name, c.girl).toLowerCase()); // уже «Люсечке …»
+    const sentence = (t) => (/[.!?…»)]$/.test(t) ? t : `${t}.`);
+    const mine = own.map(sentence);
+    if (named || !base?.lead) { d.lead = mine[0]; d.paragraphs = mine.slice(1); } else { d.lead = base.lead; d.paragraphs = mine; }
+  }
   if (from) { d.signature = `С любовью,\n${from}`; d.date = dedicationDate(date); }
   return d;
 }
@@ -217,7 +225,7 @@ export function shortDedication(input = {}) {
   const occ = c.kind === 'holiday' ? template.holidayKind(c.occasion) : template.occasionKind(c.occasion);
   const love = dedicationParts(input).from ? '.' : ', с любовью.'; // с подписью «С любовью, …» не повторяем
   const lead = occ === 'birthday' ? `${name} — ${c.girl ? 'имениннице' : 'имениннику'} в день рождения${love}`
-    : occ === 'newyear' ? `${name}, ${c.girl ? 'нашей волшебнице' : 'нашему волшебнику'}, — с Новым годом!`
+    : occ === 'newyear' ? `${name} — ${c.girl ? 'главной героине' : 'главному герою'} этой новогодней сказки${love}`
     : `${name} — ${c.girl ? 'главной героине' : 'главному герою'} этой сказки${love}`;
   return { lead, paragraphs: ['Эта сказка написана специально для тебя. Пусть в ней будет много чудес, смеха и тепла.', 'Возвращайся к ней снова и снова — она всегда будет тебя ждать.'] };
 }

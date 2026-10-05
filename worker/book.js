@@ -23,6 +23,9 @@ import { songFlow } from './song.js';
 
 const { normalizeInput } = template;
 
+// время на текст: шаг Workflow — до 10 минут (TEXT_STEP), GPT-5.5 на главу — до пары минут
+const STORY_TIME = { deadlineMs: 240_000, attemptTimeoutMs: 120_000 };
+const BIG_TIME = { stepDeadlineMs: 270_000, attemptTimeoutMs: 150_000 };
 const TEXT_STEP = { retries: { limit: 1, delay: '10 seconds', backoff: 'constant' }, timeout: '10 minutes' };
 const IMAGE_STEP = { retries: { limit: 1, delay: '10 seconds', backoff: 'constant' }, timeout: '15 minutes' };
 const QUICK_STEP = { retries: { limit: 3, delay: '5 seconds', backoff: 'exponential' }, timeout: '1 minute' };
@@ -125,19 +128,20 @@ async function previewFlow(ctx) {
   if (!big) {
     text = await step.do('story', TEXT_STEP, async () => {
       await progress('Пишем историю…');
-      // в Workflow нет 55-секундного предела старого сервера: до шаблона даём ИИ до 2,5 минут (шаг — до 10 минут)
-      const story = await generateStory(input, { log, deadlineMs: 150_000 }); // текст + описания иллюстраций (heroBrief, coverBrief)
+      // в Workflow нет 55-секундного предела старого сервера: до шаблона даём ИИ до 4 минут (шаг — до 10 минут);
+      // GPT-5.5 пишет «Сказку» ≈ 50 с, поэтому на одну попытку — до 2 минут
+      const story = await generateStory(input, { log, ...STORY_TIME }); // текст + описания иллюстраций (heroBrief, coverBrief)
       if (story.source !== 'template' || !describeProviders().length) return story;
       // все сервисы были заняты (05.10 так вышло у Gemini) — шаблон читается как пересказ анкеты, поэтому ещё одна попытка
       // через 20 с, с чистой памятью о сбоях (иначе все модели ещё «в паузе» и сразу снова шаблон)
       log(`[book] ${id}: текст из шаблона — пробуем ИИ ещё раз`);
       await new Promise((resolve) => setTimeout(resolve, 20_000));
-      return generateStory(input, { log, deadlineMs: 150_000, health: createHealth() });
+      return generateStory(input, { log, ...STORY_TIME, health: createHealth() });
     });
   } else {
     const planned = await step.do('plan', TEXT_STEP, async () => {
       await progress('Придумываем сюжет и героев книги…');
-      return writePlan(input, { log });
+      return writePlan(input, { log, ...BIG_TIME });
     });
     if (!planned) {
       text = await step.do('assemble', QUICK_STEP, async () => ({ template: true, book: templateBook(input) }));
@@ -149,7 +153,7 @@ async function previewFlow(ctx) {
         const r = await step.do(`chapter-${i + 1}`, TEXT_STEP, async () => {
           await progress(`Пишем главу ${i + 1} из ${plan.chapters.length}: «${plan.chapters[i].title}»`);
           const { summaries, tail } = chapterContext(plan, chapters);
-          return writeChapter(input, plan, i, summaries, tail, { log });
+          return writeChapter(input, plan, i, summaries, tail, { log, ...BIG_TIME });
         });
         if (r.provider) meta.providers[r.provider] = (meta.providers[r.provider] || 0) + 1;
         if (r.kind === 'soft') meta.softChapters.push(i + 1);
