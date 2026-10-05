@@ -765,7 +765,7 @@ section.tight{ padding:56px 0; }
         <div class="field">
           <label for="cast">Кого ещё включить в сюжет</label>
           <textarea id="cast" placeholder="Мама, папа, бабушка, домашний питомец — с именами, если хотите, и парой слов о каждом"></textarea>
-          <span class="hint">Например: «мама Лена — она обычно всех успокаивает», «кот Барсик, важный, как король». Близкие и друзья будут в тексте истории, а на иллюстрациях — только ваш ребёнок (и питомцы, игрушки). В «Большой истории» родных можно нарисовать по фото — на последнем шаге анкеты.</span>
+          <span class="hint">Например: «мама Лена — она обычно всех успокаивает», «кот Барсик, важный, как король». Близкие и друзья будут в тексте истории, а на иллюстрациях — только ваш ребёнок (и питомцы, игрушки). Родных можно нарисовать по фото — на последнем шаге анкеты.</span>
         </div>
 
         <div class="field">
@@ -832,17 +832,17 @@ section.tight{ padding:56px 0; }
           </div>
         </div>
 
-        <!-- Родные по фото — только «Большая история» (решение владелицы 05.10): первый бесплатно, второй и третий — +290 ₽ -->
+        <!-- Родные по фото (решения владелицы 05.10): «Большая история» — первый бесплатно, второй и третий +290 ₽; «Сказка» — +290 ₽ за всех -->
         <div class="upsell-row" id="familyRow" style="margin-top:18px;" hidden>
           <input type="checkbox" id="familyPhotos">
           <div>
-            <label for="familyPhotos" style="display:block; cursor:pointer;"><strong>Нарисовать родных по фото <span class="tag">1 — бесплатно</span></strong></label>
-            <span style="color:var(--text-soft); font-size:14.5px;">Мама, папа, бабушка, брат — рядом с ребёнком на иллюстрациях, похожие на себя. Один человек входит в «Большую историю», второй и третий — +290 ₽ за обоих. По одному фото на человека. В бесплатном превью — только ребёнок, родных дорисуем после оплаты.</span>
+            <label for="familyPhotos" style="display:block; cursor:pointer;"><strong>Нарисовать родных по фото <span class="tag" id="familyTag">1 — бесплатно</span></strong></label>
+            <span style="color:var(--text-soft); font-size:14.5px;"><span id="familyTerms">Один человек входит в «Большую историю», второй и третий — +290 ₽ за обоих.</span> Мама, папа, бабушка, брат — рядом с ребёнком на иллюстрациях, похожие на себя, до 3 человек, по одному фото на каждого. В бесплатном превью — только ребёнок, родных дорисуем после оплаты.</span>
           </div>
         </div>
         <div class="family-box" id="familyBox" hidden>
           <div class="family-list" id="familyList"></div>
-          <button type="button" class="family-add" id="familyAdd">+ Добавить человека (второй и третий — +290 ₽)</button>
+          <button type="button" class="family-add" id="familyAdd">+ Добавить человека</button>
           <label class="family-consent"><input type="checkbox" id="familyConsent"> <span>Люди на фото согласны, чтобы их нарисовали в книге. Фото храним не дольше 48 часов и удаляем после того, как книга дорисована.</span></label>
           <input type="file" id="familyInput" accept="image/jpeg,image/png,image/webp" hidden>
         </div>
@@ -1083,16 +1083,16 @@ section.tight{ padding:56px 0; }
       });
     }
 
-    // Родные по фото (только «Большая история»): до 3 человек, у каждого одно фото, «кто это» и имя; первый — бесплатно,
-    // второй и третий — +290 ₽. Как и фото ребёнка, живут только в памяти вкладки.
+    // Родные по фото: до 3 человек, у каждого одно фото, «кто это» и имя. «Большая история» — первый бесплатно,
+    // второй и третий +290 ₽; «Сказка» — +290 ₽ за всех. Как и фото ребёнка, живут только в памяти вкладки.
     const FAMILY_ON = true; // включено 05.10 (владелица: «мы уже это пробовали — включай»)
     const FAMILY_EXTRA_PRICE = 290;
     const MAX_FAMILY = 3;
     const FAMILY_WHO = ['мама', 'папа', 'брат', 'сестра', 'бабушка', 'дедушка', 'другой'];
     let familyPeople = [];
-    function familyOn() { return FAMILY_ON && isBig() && document.getElementById('familyPhotos').checked; }
+    function familyOn() { return FAMILY_ON && document.getElementById('familyPhotos').checked; }
     function familyReady() { return familyPeople.filter(function (p) { return p.photo; }); }
-    function familyExtra() { return familyOn() && familyReady().length > 1 ? FAMILY_EXTRA_PRICE : 0; }
+    function familyExtra() { return familyOn() && familyReady().length > (isBig() ? 1 : 0) ? FAMILY_EXTRA_PRICE : 0; }
 
     function checkFamily() {
       if (!familyOn()) return '';
@@ -1166,7 +1166,7 @@ section.tight{ padding:56px 0; }
         if (toggle.checked && !familyPeople.length) { familyPeople.push(blank()); render(); }
         updateTariff();
       });
-      add.addEventListener('click', function () { if (familyPeople.length < MAX_FAMILY) { familyPeople.push(blank()); render(); } });
+      add.addEventListener('click', function () { if (familyPeople.length < MAX_FAMILY) { familyPeople.push(blank()); render(); updateTariff(); } });
       input.addEventListener('change', function () {
         const file = input.files && input.files[0];
         input.value = '';
@@ -1573,8 +1573,11 @@ section.tight{ padding:56px 0; }
       const card = document.querySelector('.choice-card[data-choice-group="tariff"].is-selected');
       const coloringRow = document.getElementById('coloringRow');
       coloringRow.style.display = isBig() ? 'none' : 'flex';
-      document.getElementById('familyRow').hidden = !(FAMILY_ON && isBig());
-      document.getElementById('familyBox').hidden = !(FAMILY_ON && isBig() && document.getElementById('familyPhotos').checked);
+      document.getElementById('familyRow').hidden = !FAMILY_ON;
+      document.getElementById('familyBox').hidden = !(FAMILY_ON && document.getElementById('familyPhotos').checked);
+      document.getElementById('familyTag').textContent = isBig() ? '1 — бесплатно' : '+290 ₽';
+      document.getElementById('familyTerms').textContent = isBig() ? 'Один человек входит в «Большую историю», второй и третий — +290 ₽ за обоих.' : 'К «Сказке» — +290 ₽ за всех родных.';
+      document.getElementById('familyAdd').textContent = isBig() && familyPeople.length === 1 ? '+ Добавить человека (второй и третий — +290 ₽)' : '+ Добавить человека';
       const total = Number(card.getAttribute('data-price')) + (!isBig() && document.getElementById('coloring').checked ? 190 : 0) + familyExtra();
       const price = document.getElementById('orderPrice');
       price.textContent = formatRub(total) + ' ';

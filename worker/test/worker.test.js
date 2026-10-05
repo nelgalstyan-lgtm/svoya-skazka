@@ -716,7 +716,7 @@ test('возраст в анкете — от 2 до 16', async () => {
   }
 });
 
-test('родные по фото: только «Большая история», в превью — только ребёнок, после оплаты лист родных и все сцены по нему; 2-й и 3-й — +290 ₽', async () => {
+test('родные по фото: в превью — только ребёнок, после оплаты лист родных и все сцены по нему; 2-й и 3-й — +290 ₽', async () => {
   const env = fakeEnv();
   const ai = stubOpenAI();
   try {
@@ -728,17 +728,23 @@ test('родные по фото: только «Большая история»
       return handleApi(new Request('https://geroenok.online/api/book/generate', { method: 'POST', body: form }), env);
     };
     const mom = [{ who: 'мама', name: 'Лена' }];
-    // без согласия — не принимаем; в «Сказке» опции нет (родные просто не сохраняются)
+    // без согласия — не принимаем; в «Сказке» родные — +290 ₽ за всех
     assert.equal((await send({ ...FORM, tariff: 'big', familyPhotos: true, family: mom })).status, 400);
     const short = await (await send({ ...FORM, familyPhotos: true, family: mom, familyConsent: true })).json();
-    assert.deepEqual(env.BUCKET.keys(`photos/${short.jobId}/f`), [], 'в «Сказке» фото родных не храним');
+    assert.deepEqual(env.BUCKET.keys(`photos/${short.jobId}/f`), [`photos/${short.jobId}/f0`]);
+    assert.equal((await status(env, short.jobId)).result.price, 980, '«Сказка» + родные = 690 + 290');
+    const mark = ai.calls.length;
+    assert.equal((await api(env, `/api/book/${short.jobId}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } })).status, 200);
+    const shortPages = (await status(env, short.jobId)).result.pages.filter((p) => p.hero).length;
+    assert.equal(ai.calls.slice(mark).filter((c) => /family reference sheet/.test(c.prompt)).length, shortPages, '«Сказка»: после оплаты все страницы — по листу родных');
 
+    const bigMark = ai.calls.length;
     const { jobId } = await (await send({ ...FORM, tariff: 'big', familyPhotos: true, family: mom, familyConsent: true })).json();
     assert.deepEqual(env.BUCKET.keys(`photos/${jobId}/f`), [`photos/${jobId}/f0`]);
     let st = await status(env, jobId);
     assert.equal(st.result.price, 1490, 'один родной — бесплатно');
-    assert.ok(ai.calls.every((c) => !/family reference sheet/.test(c.prompt)), 'в превью родных не рисуем');
-    assert.ok(ai.calls.filter((c) => c.kind === 'scene').every((c) => /only human in the picture/.test(c.prompt)));
+    assert.ok(ai.calls.slice(bigMark).every((c) => !/family reference sheet/.test(c.prompt)), 'в превью родных не рисуем');
+    assert.ok(ai.calls.slice(bigMark).filter((c) => c.kind === 'scene').every((c) => /only human in the picture/.test(c.prompt)));
 
     const before = ai.calls.length;
     assert.equal((await api(env, `/api/book/${jobId}/unlock`, { method: 'POST', headers: { 'x-admin-key': 'admin' } })).status, 200);

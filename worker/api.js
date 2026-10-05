@@ -168,11 +168,11 @@ const LIMIT_MESSAGES = {
 };
 
 /**
- * Родные по фото (только «Большая история»; первый бесплатно, второй и третий — +290 ₽, решение владелицы 05.10):
+ * Родные по фото (решения владелицы 05.10): в «Большой истории» первый бесплатно, второй и третий — +290 ₽; в «Сказке» — +290 ₽ за всех (до 3):
  * answers.familyPhotos === true, answers.family [{ who, name }] и по одному фото на человека, по порядку. → { list } (только с фото) или { error } — если выбрали, но не заполнили.
  */
-export function familyFromOrder(body, files = [], big = false) {
-  if (body?.familyPhotos !== true || !big) return { list: [] };
+export function familyFromOrder(body, files = []) {
+  if (body?.familyPhotos !== true) return { list: [] };
   const people = Array.isArray(body.family) ? body.family.slice(0, MAX_FAMILY) : [];
   const text = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '');
   const list = people.map((p) => ({ name: text(p?.name, 40), who: text(p?.who, 40) })).slice(0, files.length);
@@ -230,8 +230,8 @@ async function generate(request, env, store) {
   if (big || body.coloring === true) input.coloring = true;
   // песня по книге — так же: входит в «Большую историю», к «Сказке» — отдельно
   if (big || body.song === true) input.song = true;
-  // родные по фото — только «Большая история»: рисуются после оплаты, в превью — только ребёнок
-  const family = familyFromOrder(body, order.familyPhotos || [], big);
+  // родные по фото: рисуются после оплаты, в превью — только ребёнок
+  const family = familyFromOrder(body, order.familyPhotos || []);
   if (family.error) return fail(400, family.error);
   if (family.list.length) {
     input.family = family.list;

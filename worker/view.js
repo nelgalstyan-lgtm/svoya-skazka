@@ -27,11 +27,13 @@ function clientBook(job) {
 const PREVIEW_PAGES = 2;
 const PREVIEW_CHAPTERS = 1;
 // Цены (₽) — показываются на закрытой странице превью; меняются здесь и на pricing.html / create.html
-// familyExtra — родные по фото в «Большой истории»: первый бесплатно, второй и третий — одна доплата (решение владелицы 05.10)
+// familyExtra — родные по фото (решения владелицы 05.10): в «Большой истории» первый бесплатно, второй и третий — одна доплата;
+// в «Сказке» — та же доплата за всех (до 3)
 export const PRICES = { short: 690, big: 1490, coloring: 190, song: 290, familyExtra: 290 };
+const familyCount = (job) => job.input?.family?.length || 0;
 export const priceOf = (job) => (job.input?.tariff === 'big'
-  ? PRICES.big + ((job.input?.family?.length || 0) > 1 ? PRICES.familyExtra : 0)
-  : PRICES.short + (job.input?.coloring ? PRICES.coloring : 0) + (job.input?.song ? PRICES.song : 0));
+  ? PRICES.big + (familyCount(job) > 1 ? PRICES.familyExtra : 0)
+  : PRICES.short + (job.input?.coloring ? PRICES.coloring : 0) + (job.input?.song ? PRICES.song : 0) + (familyCount(job) > 0 ? PRICES.familyExtra : 0));
 
 function previewResult(job) {
   const answers = jobAnswers(job);

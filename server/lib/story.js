@@ -1,6 +1,6 @@
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
-import { ageVoiceRule, occasionRule, fixMixedScript } from './booktext.js';
+import { ageVoiceRule, occasionRule, fixMixedScript, illustrationPeopleRule } from './booktext.js';
 
 const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind } = template;
 
@@ -38,7 +38,7 @@ export function cleanBlurb(value, name) {
   return text;
 }
 
-function buildSystemPrompt(library) {
+function buildSystemPrompt(library, rawInput = {}) {
   const tags = Object.keys(library.scenes);
   return `Ты — опытный детский писатель. Пишешь по-русски настоящую историю с сюжетом, а не пересказ анкеты.
 
@@ -62,7 +62,7 @@ function buildSystemPrompt(library) {
 К каждой странице добавь "scene" — тег фона, который лучше всего подходит месту действия (он нужен, если иллюстрацию не удастся нарисовать). Разрешённые теги:
 ${tags.map((tag) => `- ${tag}: ${library.scenes[tag]}`).join('\n')}
 Не повторяй один и тот же тег на соседних страницах.
-К КАЖДОЙ странице добавь "heroBrief" — описание иллюстрации на английском языке (1–2 предложения): что делает ребёнок в этот момент, окружение, освещение. Из людей на иллюстрации — только сам ребёнок: родителей, братьев и сестёр, друзей и других людей на картинках не рисуем, даже если они есть в этой сцене текста (в тексте они остаются); рядом с ребёнком могут быть питомцы, животные, игрушки и сказочные существа. Сцены на соседних страницах должны заметно различаться по позе, плану и месту. Без описания лица и эмоций — это добавится отдельно. Одежду и аксессуары (шапки, панамки, очки, сумки) в описании сцены не упоминай — одежда одна на всю книгу и задаётся в "look"; исключение — когда сюжет требует переодеться (пижама перед сном, куртка в снегу).
+К КАЖДОЙ странице добавь "heroBrief" — описание иллюстрации на английском языке (1–2 предложения): что делает ребёнок в этот момент, окружение, освещение. Кто на иллюстрации: ${illustrationPeopleRule(rawInput)}. Сцены на соседних страницах должны заметно различаться по позе, плану и месту. Без описания лица и эмоций — это добавится отдельно. Одежду и аксессуары (шапки, панамки, очки, сумки) в описании сцены не упоминай — одежда одна на всю книгу и задаётся в "look"; исключение — когда сюжет требует переодеться (пижама перед сном, куртка в снегу).
 "look" — на английском, 1 предложение: как выглядят питомцы и игрушки, которые есть в анкете (одинаково на всех страницах); одежду ребёнка НЕ описывай — она берётся с его фото. Нет питомцев и игрушек — пустая строка.
 "coverBrief" — на английском, 1 предложение: сцена для обложки — ребёнок ОДИН в центре на фоне главного места истории, без других людей и животных.
 "blurb" — ${BLURB_RULE}
@@ -93,7 +93,7 @@ export function buildPrompt(rawInput, library = sceneLibraryFor(normalizeInput(r
     'Напиши историю и верни JSON.'
   ].join('\n');
 
-  return { system: buildSystemPrompt(library), user };
+  return { system: buildSystemPrompt(library, rawInput), user };
 }
 
 function cyrillicShare(text) {
