@@ -617,7 +617,7 @@ section.tight{ padding:56px 0; }
           </div>
           <div class="field">
             <label for="age">Возраст</label>
-            <input type="number" id="age" min="1" max="16" step="1" inputmode="numeric" placeholder="Например, 7">
+            <select id="age"><option value="">Выберите возраст</option><option value="2">2 года</option><option value="3">3 года</option><option value="4">4 года</option><option value="5">5 лет</option><option value="6">6 лет</option><option value="7">7 лет</option><option value="8">8 лет</option><option value="9">9 лет</option><option value="10">10 лет</option><option value="11">11 лет</option><option value="12">12 лет</option><option value="13">13 лет</option><option value="14">14 лет</option><option value="15">15 лет</option><option value="16">16 лет</option></select>
           </div>
         </div>
 
@@ -1445,7 +1445,7 @@ section.tight{ padding:56px 0; }
     }
     document.querySelectorAll('.choice-card[data-choice-group="tariff"]').forEach(function (card) { card.addEventListener('click', updateTariff); });
     document.getElementById('coloring').addEventListener('change', updateTariff);
-    document.getElementById('age').addEventListener('input', updateTariffTip);
+    document.getElementById('age').addEventListener('change', updateTariffTip);
     document.querySelectorAll('.choice-card[data-choice-group="occasion"]').forEach(function (card) { card.addEventListener('click', updateDesignStep); });
     updateTariff();
 
@@ -1485,10 +1485,10 @@ section.tight{ padding:56px 0; }
         document.getElementById('name').focus();
         return;
       }
-      // книги — для детей и подростков: возраст от 1 до 16 (по нему пишется текст и выбирается оформление)
+      // книги — для детей и подростков: возраст от 2 до 16 (выбирается из списка) (по нему пишется текст и выбирается оформление)
       const ageNum = Number(answers.age);
-      if (answers.age && !(Number.isInteger(ageNum) && ageNum >= 1 && ageNum <= 16)) {
-        setStatus('Возраст ребёнка — от 1 до 16 лет.', 'error');
+      if (answers.age && !(Number.isInteger(ageNum) && ageNum >= 2 && ageNum <= 16)) {
+        setStatus('Возраст ребёнка — от 2 до 16 лет.', 'error');
         document.getElementById('age').focus();
         return;
       }
