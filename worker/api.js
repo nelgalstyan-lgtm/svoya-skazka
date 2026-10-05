@@ -231,6 +231,8 @@ async function generate(request, env, store) {
   if (big || body.coloring === true) input.coloring = true;
   // песня по книге — так же: входит в «Большую историю», к «Сказке» — отдельно
   if (big || body.song === true) input.song = true;
+  // согласие показать книгу в примерах (необязательно; перед публикацией владелица всё равно спрашивает)
+  if (body.showcase === true) input.showcase = true;
   // родные по фото: рисуются после оплаты, в превью — только ребёнок
   const family = familyFromOrder(body, order.familyPhotos || []);
   if (family.error) return fail(400, family.error);
@@ -460,6 +462,12 @@ export async function handleApi(request, env) {
   }
   if (parts[1] === 'img' && parts.length === 4 && method === 'GET') return image(store, parts[2], parts[3]);
   if (parts[1] === 'media' && parts.length === 4 && method === 'GET') return media(request, env, `${parts[2]}/${parts[3]}`);
+  // проверка писем владелице: одно тестовое письмо, только с ключом хозяйки
+  if (parts[1] === 'admin' && parts[2] === 'notify-test' && method === 'POST') {
+    if (!env.ADMIN_KEY || request.headers.get('x-admin-key') !== env.ADMIN_KEY) return fail(403, 'Нет доступа');
+    const sent = await notifyOwner(env, { id: '00000000-0000-4000-8000-000000000000', input: { name: 'Проверка', age: '5', gender: 'Девочка', theme: 'Сказка', style: 'Акварель' } }, 'new', console.log);
+    return json({ ok: sent });
+  }
   if (parts[1] === 'upload' && parts.length === 5 && method === 'POST') return uploadChunk(request, env, parts[2], parts[3], parts[4]);
   if (parts[1] === 'book') {
     if (parts[2] === 'generate' && parts.length === 3 && method === 'POST') return generate(request, env, store);

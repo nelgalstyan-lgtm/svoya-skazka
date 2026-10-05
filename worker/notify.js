@@ -30,6 +30,7 @@ export function orderSummary(job, event) {
     `Тема: ${i.theme || '—'}${i.occasion ? ` · повод: ${i.occasion}` : ''} · стиль: ${i.style || '—'}`,
     ...(family ? [`Родные по фото: ${family}`] : []),
     ...(i.coloring && !big ? ['Раскраска: да'] : []),
+    `В примеры на сайте: ${i.showcase ? 'можно (перед публикацией спросить)' : 'нет согласия'}`,
     '',
     `Книга: ${link}`
   ];

@@ -860,6 +860,15 @@ section.tight{ padding:56px 0; }
             <textarea id="dedication" maxlength="1200" style="min-height:100px;" placeholder="Если оставить пустым, тёплые слова напишем мы — от вашего имени"></textarea>
           </div>
         </div>
+
+        <!-- Согласие показать книгу в примерах (05.10): по желанию, по умолчанию выключено; перед публикацией пишем заказчику -->
+        <div class="upsell-row" style="margin-top:22px;">
+          <input type="checkbox" id="showcase">
+          <div>
+            <label for="showcase" style="display:block; cursor:pointer;"><strong>Можно показать книгу в примерах на сайте</strong></label>
+            <span style="color:var(--text-soft); font-size:14.5px;">Необязательно. Если книга получится особенно красивой, мы напишем вам перед публикацией — без вашего «да» ничего не покажем. Без галочки книга видна только по вашей личной ссылке.</span>
+          </div>
+        </div>
       </div>
 
       <div class="form-actions">
@@ -1268,7 +1277,9 @@ section.tight{ padding:56px 0; }
         // родные по фото: в ответах только кто и имя, сами фото уходят отдельно (uploadPhotos)
         familyPhotos: familyOn(),
         family: familyOn() ? familyReady().map(function (p) { return { who: p.who === 'другой' ? p.whoOther.trim() : p.who, name: p.who === 'другой' ? '' : p.name.trim() }; }) : [],
-        familyConsent: familyOn() && document.getElementById('familyConsent').checked
+        familyConsent: familyOn() && document.getElementById('familyConsent').checked,
+        // можно ли показать книгу в примерах (перед публикацией всё равно спрашиваем)
+        showcase: document.getElementById('showcase').checked
       };
     }
 
