@@ -5,6 +5,7 @@ import { WorkflowEntrypoint } from 'cloudflare:workers';
 import { handleApi } from './api.js';
 import { runBook } from './book.js';
 import { queueHandler } from './queue.js';
+import { recheckArt } from './art.js';
 import { removeExpiredBooks } from './cleanup.js';
 
 export class BookWorkflow extends WorkflowEntrypoint {
@@ -40,5 +41,6 @@ export default {
   // раз в час: удалить книги старше года (см. cleanup.js)
   async scheduled(event, env, ctx) {
     ctx.waitUntil(removeExpiredBooks(env));
+    ctx.waitUntil(recheckArt(env).catch((e) => console.warn(`[art] проверка OpenAI: ${e?.message || e}`)));
   }
 };

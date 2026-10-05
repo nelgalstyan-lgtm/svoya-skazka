@@ -5,7 +5,7 @@ import { buildTemplateStory, describeProviders } from '../server/lib/story.js';
 import { templateBook } from '../server/lib/bigstory.js';
 import { MAX_PHOTOS } from '../server/lib/illustrate.js';
 import { createStore, isJobId } from './store.js';
-import { drawImage } from './art.js';
+import { drawImage, artOff, ART_OFF_MESSAGE } from './art.js';
 import { fromBase64 } from './bytes.js';
 import { jobView, bookImages, REDRAW_LIMIT } from './view.js';
 
@@ -176,6 +176,8 @@ async function generate(request, env, store) {
   if (!photos.length) return fail(400, 'Загрузите хотя бы одно фото ребёнка — по нему рисуются все иллюстрации книги.');
 
   const owner = Boolean(env.ADMIN_KEY) && request.headers.get('x-admin-key') === env.ADMIN_KEY;
+  // в OpenAI кончились деньги — превью вышло бы без ребёнка на картинках, поэтому не принимаем (хозяйке — можно, для проверки)
+  if (!owner && await artOff(env)) return fail(503, ART_OFF_MESSAGE);
   const counters = owner ? null : await previewCounters(env, request, order.device);
   if (counters?.exceeded) return fail(429, LIMIT_MESSAGES[counters.exceeded]);
 
@@ -206,7 +208,7 @@ async function generate(request, env, store) {
 
 /** Страховка: книга зависла дольше разумного — отдаём книгу из шаблона (как старый сервер при сбое ИИ). */
 async function rescueStuck(store, job, now = Date.now()) {
-  if (job.status !== 'completed' && now - job.createdAt > (job.input?.tariff === 'big' ? STUCK_MS.big : STUCK_MS.short)) {
+  if (job.status !== 'completed' && job.status !== 'failed' && now - job.createdAt > (job.input?.tariff === 'big' ? STUCK_MS.big : STUCK_MS.short)) {
     return store.updateJob(job.id, (j) => {
       if (j.status === 'completed') return;
       j.status = 'completed';

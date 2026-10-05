@@ -16,7 +16,7 @@ import { writePlan, writeChapter, chapterContext, assembleBigBook, templateBook 
 import { dedicationFor, shortDedication } from '../server/lib/booktext.js';
 import template from '../js/story-template.js';
 import { createStore } from './store.js';
-import { drawImage, coverTitlePlace } from './art.js';
+import { drawImage, coverTitlePlace, artOff, ART_OFF_MESSAGE } from './art.js';
 import { isDrawn, bookImages } from './view.js';
 import { voiceFlow } from './voice.js';
 import { songFlow } from './song.js';
@@ -171,6 +171,21 @@ async function previewFlow(ctx) {
   const look = big ? text.plan?.look || '' : text.look;
   const art = await drawBook(ctx, { input, briefs, coverBrief, look, only: [0] });
   const titlePlace = await coverPlaceStep(ctx, art.cover);
+
+  // ни одной картинки, потому что в OpenAI кончились деньги: книга без ребёнка — не наш продукт, отдаём сообщение
+  const noArt = await step.do('art-check', QUICK_STEP, async () => !art.sheet && !art.cover && !art.scenes.some(Boolean) && Boolean(await artOff(ctx.env)));
+  if (noArt) {
+    await step.do('finish', QUICK_STEP, async () => {
+      await store.updateJob(id, (job) => {
+        if (job.status === 'completed') return;
+        job.status = 'failed';
+        job.error = ART_OFF_MESSAGE;
+        job.finishedAt = Date.now();
+        job.progress = '';
+      });
+    });
+    return;
+  }
 
   await step.do('finish', QUICK_STEP, async () => {
     let result;

@@ -10,6 +10,7 @@ import { queueHandler } from '../queue.js';
 import { splitText, voiceTracks } from '../voice.js';
 import { removeExpiredBooks, KEEP_MS } from '../cleanup.js';
 import { createStore } from '../store.js';
+import { recheckArt, ART_OFF_KEY } from '../art.js';
 
 const worker = { queue: queueHandler };
 
@@ -667,4 +668,33 @@ test('название на обложке: вниз, только если вв
     answer('{"A": false, "B": false}'); assert.equal(await coverTitlePlace({ GEMINI_API_KEY: 'k' }, image), 'top');
     assert.equal(await coverTitlePlace({}, image), 'top', 'без ключа — как раньше');
   } finally { globalThis.fetch = real; }
+});
+
+test('в OpenAI кончились деньги: превью без картинок не отдаём, новые не принимаем, cron включает рисование обратно', async () => {
+  const env = fakeEnv();
+  const original = globalThis.fetch;
+  let money = false;
+  globalThis.fetch = async (url) => {
+    if (String(url).endsWith('/chat/completions')) return new Response(money ? '{"choices":[]}' : '{"error":{"message":"You have no credits remaining."}}', { status: money ? 200 : 429 });
+    return new Response(JSON.stringify({ error: { message: 'You have no credits remaining. Add credits to continue.' } }), { status: 429 });
+  };
+  try {
+    const id = await order(env);
+    const st = await status(env, id);
+    assert.equal(st.status, 'failed');
+    assert.ok(st.failed && /недоступно/.test(st.error), 'вместо книги без картинок — сообщение');
+    assert.ok(env.BUCKET.items.has(ART_OFF_KEY), 'отметка «рисование выключено»');
+
+    const again = await api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, photos: [PHOTO], device: 'device-0000000000000001' } });
+    assert.equal(again.status, 503);
+    assert.match((await again.json()).error, /недоступно/);
+    const owner = await api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, photos: [PHOTO] }, headers: { 'x-admin-key': 'admin' } });
+    assert.equal(owner.status, 200, 'хозяйке можно — для проверки');
+
+    assert.equal(await recheckArt(env, () => {}), false);
+    assert.ok(env.BUCKET.items.has(ART_OFF_KEY));
+    money = true;
+    assert.equal(await recheckArt(env, () => {}), true);
+    assert.ok(!env.BUCKET.items.has(ART_OFF_KEY), 'деньги появились — отметка снята');
+  } finally { globalThis.fetch = original; }
 });

@@ -317,7 +317,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
   // Книга с иллюстрациями не помещается в хранилище браузера — по ссылке ?job= берём её с сервера
   // Книга ещё рисуется (открыли по ссылке раньше времени) — показываем ход работы и ждём
-  function waitNote(text) {
+  function waitNote(text, title) {
     let box = document.getElementById('waitNote');
     if (!box) {
       box = el('div', 'gw-card');
@@ -325,9 +325,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       const art = el('img', 'gw-art'); art.src = 'assets/brand/pose-reading.webp'; art.alt = 'Героёнок читает книгу';
       const book = el('div', 'gw-book'); book.setAttribute('aria-hidden', 'true'); book.innerHTML = '<i></i><i></i><i></i>';
       const p = el('p', ''); p.setAttribute('role', 'status');
-      box.append(art, el('h2', '', 'Героёнок дорисовывает вашу книгу'), book, p);
+      box.append(art, el('h2', '', title || 'Героёнок дорисовывает вашу книгу'), book, p);
       root.appendChild(box);
     }
+    if (title) { box.querySelector('h2').textContent = title; const spin = box.querySelector('.gw-book'); if (spin) spin.remove(); } // ошибка — без «листающейся книжки»
     box.querySelector('p').textContent = text || 'Это займёт несколько минут. Страницу можно не закрывать — книга появится сама.';
   }
 
@@ -335,6 +336,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     const r = await fetch(API_BASE + '/api/book/' + encodeURIComponent(jobId) + '/result');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
+    if (d.failed) { waitNote(d.error || 'Превью не получилось. Сделайте его заново в анкете.', 'Превью не получилось'); return new Promise(function () {}); }
     if (!d.ready || d.finishing) {
       waitNote(d.finishing ? (d.progress || 'Оплата прошла — дорисовываем остальные иллюстрации. Это займёт несколько минут.') : d.progress);
       await new Promise(function (resolve) { setTimeout(resolve, 3000); });

@@ -56,6 +56,7 @@ export function jobView(job, now = Date.now()) {
     ready: done,
     position: 0,
     progress: done && !job.finishing ? '' : job.progress || '',
+    ...(job.status === 'failed' ? { failed: true, error: job.error || '' } : {}),
     paid: Boolean(job.paid),
     finishing: Boolean(job.finishing), // оплачено, дорисовываем иллюстрации
     redrawsLeft: done ? Math.max(0, REDRAW_LIMIT - (job.redraws || 0)) : null,

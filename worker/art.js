@@ -52,8 +52,9 @@ async function callOpenAI(env, { images, prompt, kind, timeoutMs, retries }) {
         const msg = errorMessage(bytes, res.status);
         if (res.status === 400 && fidelity && /input_fidelity/i.test(msg)) { fidelity = false; continue; }
         const error = new Error(`OpenAI ${res.status}: ${msg}`);
-        // «no credits» — не временная ошибка, повторять бессмысленно
-        error.temporary = res.status >= 500 || (res.status === 429 && !/credit|quota|billing/i.test(msg));
+        // «no credits» и жёсткий лимит расходов — не временная ошибка, повторять бессмысленно
+        error.noMoney = res.status === 429 && /credit|quota|billing|spend.?limit/i.test(msg);
+        error.temporary = res.status >= 500 || (res.status === 429 && !error.noMoney);
         throw error;
       }
       const b64 = jsonStringField(bytes, 'b64_json');
@@ -106,9 +107,47 @@ export async function drawImage(env, { kind = 'scene', refs = [], sheet = null, 
       return await provider.call({ ...request, kind, timeoutMs, retries: 1 });
     } catch (error) {
       log(`[art] ${kind} image failed via ${provider.name}: ${error?.message || error}`);
+      if (error?.noMoney) await markArtOff(env, error.message, log);
     }
   }
   return null;
+}
+
+// ---------------------------------------------------------------- защита «в OpenAI кончились деньги»
+// Отметка в R2: пока она стоит, новые превью не принимаются (api.js), а превью, не получившее ни одной картинки,
+// заканчивается сообщением, а не книгой без ребёнка (book.js). Раз в час cron проверяет OpenAI и снимает отметку.
+export const ART_OFF_KEY = 'system/art-off.json';
+export const ART_OFF_MESSAGE = 'Бесплатное превью сейчас недоступно: Героёнок временно не может рисовать иллюстрации. Попробуйте через пару часов — или напишите нам на support@geroenok.online, и мы сделаем превью вручную.';
+
+async function markArtOff(env, reason, log = console.warn) {
+  if (!env.BUCKET) return;
+  if (await env.BUCKET.get(ART_OFF_KEY)) return;
+  await env.BUCKET.put(ART_OFF_KEY, JSON.stringify({ at: Date.now(), reason: String(reason).slice(0, 300) }), { httpMetadata: { contentType: 'application/json' } });
+  log(`[art] рисование выключено: ${reason}`);
+}
+
+/** Отметка { at, reason } или null. */
+export async function artOff(env) {
+  const obj = env.BUCKET ? await env.BUCKET.get(ART_OFF_KEY) : null;
+  return obj ? obj.json() : null;
+}
+
+/** Снова ли есть деньги: самый маленький текстовый запрос (≈ $0,000002). Отказ по деньгам — отметка остаётся. */
+export async function recheckArt(env, log = console.log) {
+  if (!env.OPENAI_API_KEY || !(await artOff(env))) return null;
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'hi' }], max_tokens: 1 }),
+    signal: AbortSignal.timeout(20_000)
+  }).catch(() => null);
+  if (res?.ok) {
+    await env.BUCKET.delete(ART_OFF_KEY);
+    log('[art] деньги в OpenAI снова есть — рисование включено');
+    return true;
+  }
+  log(`[art] рисование по-прежнему выключено: OpenAI ${res ? res.status : 'network error'}`);
+  return false;
 }
 
 /**

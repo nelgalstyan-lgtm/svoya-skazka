@@ -1351,6 +1351,13 @@ section.tight{ padding:56px 0; }
           const data = await fetchJson(API_BASE + '/api/book/' + jobId + '/status', {}, 8000);
           errors = 0;
 
+          if (data.failed) {
+            // книга не получилась (например, рисование временно недоступно) — говорим как есть, анкета остаётся
+            setStatus(data.error || 'Не получилось сделать превью. Попробуйте ещё раз чуть позже.', 'error');
+            generateBtn.disabled = false;
+            generateBtn.textContent = 'Показать бесплатное превью';
+            return;
+          }
           if (data.ready && data.result && Array.isArray(data.result.pages) && data.result.pages.length) {
             return finish(data.result, answers, jobId);
           }
@@ -1512,6 +1519,13 @@ section.tight{ padding:56px 0; }
         if (error.status === 413) {
           // шлюз Яндекса не пропустил слишком большой запрос — повтор не поможет, нужно другое фото
           setStatus('Фото получились слишком тяжёлыми для отправки. Уберите одно фото или выберите другое (обычный снимок с телефона подойдёт) и нажмите ещё раз.', 'error');
+          generateBtn.disabled = false;
+          generateBtn.textContent = 'Показать бесплатное превью';
+          return;
+        }
+        if (error.status === 503 && error.payload && error.payload.error) {
+          // рисование временно недоступно (в OpenAI кончились деньги) — превью не запускаем
+          setStatus(error.payload.error, 'error');
           generateBtn.disabled = false;
           generateBtn.textContent = 'Показать бесплатное превью';
           return;
