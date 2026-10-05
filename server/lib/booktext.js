@@ -151,6 +151,7 @@ const SIGN_WORDS = {
 function nominativeName(tok) {
   if (/[бвгджзклмнпрстфхцчшщ]а$/.test(tok)) return tok.slice(0, -1);
   if (/[аеиоуэюя]я$/.test(tok)) return tok.slice(0, -1) + 'й';
+  if (/[иь]и$/.test(tok)) return tok.slice(0, -1) + 'я'; // Нелии → Нелия, Марии → Мария, Ильи → Илья
   if (/ы$/.test(tok)) return tok.slice(0, -1) + 'а';
   if (/[гкхжшчщ]и$/.test(tok)) return tok.slice(0, -1) + 'а';
   if (/[бвдзлмнпрстф]и$/.test(tok)) return tok.slice(0, -1) + 'я';

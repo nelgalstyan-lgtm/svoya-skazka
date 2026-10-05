@@ -166,6 +166,8 @@ test('подпись посвящения: «от кого» в именител
   assert.equal(signatureName('от брата Андрея'), 'брат Андрей');
   assert.equal(signatureName('мама, папа и Аэлита'), 'мама, папа и Аэлита');
   assert.equal(signatureName('дядя Миша'), 'дядя Миша');
+  assert.equal(signatureName('от тети Нелии'), 'тетя Нелия');
+  assert.equal(signatureName('от бабушки Марии'), 'бабушка Мария');
   const d = dedicationFor({ from: 'Дяди', dedication: 'С любовью, Вазген' }, { lead: 'Неле', paragraphs: [] });
   assert.equal(d.signature, 'С любовью,\nДядя Вазген');
   assert.equal(d.lead, 'Неле', 'подпись в поле посвящения не становится текстом посвящения');
