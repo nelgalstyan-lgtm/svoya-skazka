@@ -667,6 +667,14 @@ test('название на обложке: вниз, только если вв
     answer('{"A": true, "B": true}'); assert.equal(await coverTitlePlace({ GEMINI_API_KEY: 'k' }, image), 'top');
     answer('{"A": false, "B": false}'); assert.equal(await coverTitlePlace({ GEMINI_API_KEY: 'k' }, image), 'top');
     assert.equal(await coverTitlePlace({}, image), 'top', 'без ключа — как раньше');
+    // вторая проверка: Gemini лица вверху не увидел, OpenAI увидел — название вниз
+    globalThis.fetch = async (url) => String(url).includes('openai.com')
+      ? new Response(JSON.stringify({ choices: [{ message: { content: '{"A": true, "B": false}' } }] }), { status: 200 })
+      : new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: '{"A": false, "B": false}' }] } }] }), { status: 200 });
+    assert.equal(await coverTitlePlace({ GEMINI_API_KEY: 'k', OPENAI_API_KEY: 'o' }, image), 'bottom');
+    globalThis.fetch = async (url) => String(url).includes('openai.com') ? new Response('busy', { status: 503 })
+      : new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: '{"A": true, "B": false}' }] } }] }), { status: 200 });
+    assert.equal(await coverTitlePlace({ GEMINI_API_KEY: 'k', OPENAI_API_KEY: 'o' }, image), 'bottom', 'один проверяющий не ответил — решает другой');
   } finally { globalThis.fetch = real; }
 });
 

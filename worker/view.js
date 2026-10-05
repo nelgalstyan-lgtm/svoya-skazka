@@ -34,8 +34,12 @@ function previewResult(job) {
   const answers = jobAnswers(job);
   if (job.result.book) {
     const book = clientBook(job);
+    // главы 2–6 до оплаты ещё не написаны (bigDraft) — названия и число иллюстраций берём из плана
+    const planRest = job.result.bigDraft?.plan.chapters.slice(PREVIEW_CHAPTERS);
     const rest = book.chapters.slice(PREVIEW_CHAPTERS);
-    return { kind: 'book', locked: true, price: priceOf(job), book: { ...book, coloring: [], song: null, chapters: book.chapters.slice(0, PREVIEW_CHAPTERS) }, lockedChapters: rest.map((c) => c.title), lockedImages: rest.reduce((n, c) => n + c.blocks.filter((b) => b.t === 'image').length, 0), answers };
+    const lockedChapters = planRest ? planRest.map((c) => c.title) : rest.map((c) => c.title);
+    const lockedImages = planRest ? planRest.reduce((n, c) => n + (c.images?.length || 0), 0) : rest.reduce((n, c) => n + c.blocks.filter((b) => b.t === 'image').length, 0);
+    return { kind: 'book', locked: true, price: priceOf(job), book: { ...book, coloring: [], song: null, chapters: book.chapters.slice(0, PREVIEW_CHAPTERS) }, lockedChapters, lockedImages, answers };
   }
   const pages = job.result.pages;
   return { locked: true, price: priceOf(job), coloringOrdered: Boolean(job.input?.coloring), songOrdered: Boolean(job.input?.song), title: job.result.title, dedication: job.result.dedication || null, pages: pages.slice(0, PREVIEW_PAGES), lockedPages: Math.max(0, pages.length - PREVIEW_PAGES), cover: job.result.cover || null, coverFace: Boolean(job.result.coverFace), coverTitle: job.result.coverTitle || null, coloring: [], answers };

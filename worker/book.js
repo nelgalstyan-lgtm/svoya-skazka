@@ -19,6 +19,7 @@ import { createStore } from './store.js';
 import { drawImage, coverTitlePlace, artOff, ART_OFF_MESSAGE } from './art.js';
 import { isDrawn, bookImages } from './view.js';
 import { voiceFlow } from './voice.js';
+import { proofreadAnswers } from './proofread.js';
 import { songFlow } from './song.js';
 
 const { normalizeInput } = template;
@@ -118,9 +119,37 @@ async function drawColoring(ctx, sources) {
 
 // ---------------------------------------------------------------- бесплатное превью
 
+// сколько глав «Большой истории» пишется до оплаты (видна в превью тоже одна — PREVIEW_CHAPTERS в view.js)
+const PREVIEW_CHAPTERS_WRITTEN = 1;
+
+/** Главы плана по порядку до upto (не включая), продолжая уже написанные done. Каждая — свой шаг Workflow. */
+async function writeChapters(ctx, input, plan, done, upto, meta) {
+  const { step, log, progress } = ctx;
+  const chapters = [...done];
+  for (let i = chapters.length; i < Math.min(upto, plan.chapters.length); i++) {
+    const r = await step.do(`chapter-${i + 1}`, TEXT_STEP, async () => {
+      await progress(`Пишем главу ${i + 1} из ${plan.chapters.length}: «${plan.chapters[i].title}»`);
+      const { summaries, tail } = chapterContext(plan, chapters);
+      return writeChapter(input, plan, i, summaries, tail, { log, ...BIG_TIME });
+    });
+    if (r.provider) meta.providers[r.provider] = (meta.providers[r.provider] || 0) + 1;
+    if (r.kind === 'soft') meta.softChapters.push(i + 1);
+    if (r.kind === 'fallback') meta.fallbackChapters.push(i + 1);
+    chapters.push(r.chapter);
+  }
+  if (chapters.length === plan.chapters.length && meta.fallbackChapters.length === plan.chapters.length) meta.source = 'template';
+  return chapters;
+}
+
 async function previewFlow(ctx) {
   const { store, id, step, log, progress } = ctx;
-  const input = await step.do('start', QUICK_STEP, async () => (await store.getJob(id)).input);
+  const raw = await step.do('start', QUICK_STEP, async () => (await store.getJob(id)).input);
+  // опечатки родителей — до текста книги: в посвящение и подпись слова попадают дословно (proofread.js)
+  const input = await step.do('proofread', QUICK_STEP, async () => {
+    const fixed = await proofreadAnswers(ctx.env, raw, { log });
+    if (fixed !== raw) await store.updateJob(id, (job) => { job.inputRaw = job.inputRaw || job.input; job.input = fixed; });
+    return fixed;
+  });
   const big = input.tariff === 'big';
 
   // текст: фото в генераторы текста не передаём — картинки рисуются отдельными шагами ниже
@@ -148,21 +177,11 @@ async function previewFlow(ctx) {
     } else {
       const { plan } = planned;
       const meta = { source: 'ai', providers: { [planned.provider]: 1 }, fallbackChapters: [], softChapters: [], tookMs: 0 };
-      const chapters = [];
-      for (let i = 0; i < plan.chapters.length; i++) {
-        const r = await step.do(`chapter-${i + 1}`, TEXT_STEP, async () => {
-          await progress(`Пишем главу ${i + 1} из ${plan.chapters.length}: «${plan.chapters[i].title}»`);
-          const { summaries, tail } = chapterContext(plan, chapters);
-          return writeChapter(input, plan, i, summaries, tail, { log, ...BIG_TIME });
-        });
-        if (r.provider) meta.providers[r.provider] = (meta.providers[r.provider] || 0) + 1;
-        if (r.kind === 'soft') meta.softChapters.push(i + 1);
-        if (r.kind === 'fallback') meta.fallbackChapters.push(i + 1);
-        chapters.push(r.chapter);
-      }
-      if (meta.fallbackChapters.length === plan.chapters.length) meta.source = 'template';
+      // в превью видна только первая глава — остальные пишутся после оплаты (completeFlow): текст GPT-5.5 на всю книгу
+      // ≈ 55 ₽, и платить его за каждое неоплаченное превью незачем (решение владелицы 05.10)
+      const chapters = await writeChapters(ctx, input, plan, [], PREVIEW_CHAPTERS_WRITTEN, meta);
       // отдельным шагом: код между шагами Workflow повторяется при каждом возобновлении, а книга должна быть одна и та же
-      text = await step.do('assemble', QUICK_STEP, async () => ({ plan, book: assembleBigBook(input, plan, chapters, meta) }));
+      text = await step.do('assemble', QUICK_STEP, async () => ({ plan, book: assembleBigBook(input, plan, chapters, meta), draft: { plan, chapters, meta } }));
     }
   }
 
@@ -201,6 +220,7 @@ async function previewFlow(ctx) {
       if (art.sheet) book.sheet = art.sheet; // для дорисовки после оплаты и бесплатной перерисовки
       const provider = Object.entries(book.meta?.providers || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
       result = { book, source: text.template ? 'template' : book.meta?.source || 'ai', provider, model: null };
+      if (text.draft && text.draft.chapters.length < text.draft.plan.chapters.length) result.bigDraft = text.draft; // главы 2–6 — после оплаты
     } else {
       result = { ...text, preview: true };
       // посвящение есть всегда: своё от родителей или наши тёплые слова (так обещает анкета), с подписью «От кого»
@@ -219,6 +239,33 @@ async function previewFlow(ctx) {
   });
 }
 
+/**
+ * «Большая история» после оплаты: дописываем главы 2–6 по плану из превью и собираем книгу целиком. Первая глава
+ * (её текст и иллюстрация), обложка и лист персонажа остаются из превью; новые иллюстрации дорисует completeFlow.
+ */
+async function finishBigText(ctx) {
+  const { store, id, step } = ctx;
+  const draft = await step.do('draft', QUICK_STEP, async () => {
+    const job = await store.getJob(id);
+    return job.result?.bigDraft ? { input: job.input, ...job.result.bigDraft } : null;
+  });
+  if (!draft) return;
+  const meta = { ...draft.meta, providers: { ...draft.meta.providers }, fallbackChapters: [...draft.meta.fallbackChapters], softChapters: [...draft.meta.softChapters] };
+  const chapters = await writeChapters(ctx, draft.input, draft.plan, draft.chapters, draft.plan.chapters.length, meta);
+  await step.do('assemble-full', QUICK_STEP, async () => {
+    const full = assembleBigBook(draft.input, draft.plan, chapters, meta);
+    await store.updateJob(id, (job) => {
+      if (!job.result?.bigDraft) return;
+      const prev = job.result.book;
+      // первая глава — из превью: там уже стоят нарисованные иллюстрации
+      full.chapters[0] = prev.chapters[0];
+      for (const key of ['cover', 'coverFace', 'coverTitle', 'sheet', 'preview']) if (prev[key] !== undefined) full[key] = prev[key];
+      job.result.book = full;
+      delete job.result.bigDraft;
+    });
+  });
+}
+
 /** Название на обложке — сверху или снизу: смотрит Gemini (см. coverTitlePlace в art.js). Отдельный шаг — свои лимиты CPU. */
 async function coverPlaceStep(ctx, cover) {
   if (!cover) return 'top';
@@ -233,6 +280,7 @@ async function coverPlaceStep(ctx, cover) {
 
 async function completeFlow(ctx) {
   const { store, id, step } = ctx;
+  await finishBigText(ctx);
   const todo = await step.do('complete-start', QUICK_STEP, async () => {
     const job = await store.getJob(id);
     const target = job.result.book || job.result;

@@ -157,12 +157,28 @@ export async function recheckArt(env, log = console.log) {
  * Любая ошибка — 'top' (как раньше).
  */
 export async function coverTitlePlace(env, image, { timeoutMs = 20000 } = {}) {
-  if (!env.GEMINI_API_KEY || !image?.bytes) return 'top';
-  // строки названия сверху лежат примерно на 7–24% высоты, снизу — на 60–78%; спрашиваем прямо про лица и головы
+  if (!image?.bytes) return 'top';
+  // строки названия сверху лежат примерно на 7–30% высоты (в две строки — ниже), снизу — на 60–78%; полосы берём с запасом:
+  // у «Люсечки» (05.10) лицо начиналось сразу под полосой 7–24%, а название в две строки задевало голову
   const prompt = 'Look at this children’s book cover illustration. Answer two questions about two horizontal bands of the image. '
-    + 'Band A: from 7% to 24% of the image height, measured from the top edge. Band B: from 60% to 78% of the image height. '
+    + 'Band A: from 5% to 34% of the image height, measured from the top edge. Band B: from 58% to 80% of the image height. '
     + 'For each band: does it contain any face or head (of a person or an animal, including birds), even partly? '
     + 'Answer strictly as JSON: {"A": true or false, "B": true or false}.';
+  // два проверяющих (решение владелицы 05.10: на обложке «Люсечки» название легло на голову героини):
+  // вниз — если лицо вверху видит больше проверяющих, чем внизу (Gemini там «видел» лицо и внизу, OpenAI — нет)
+  const answers = (await Promise.all([askGemini(env, image, prompt, timeoutMs), askOpenAI(env, image, prompt, timeoutMs)])).filter(Boolean);
+  const top = answers.filter((x) => x.a).length, bottom = answers.filter((x) => x.b).length;
+  return top > bottom ? 'bottom' : 'top';
+}
+
+function parseBands(text) {
+  const t = String(text || '').toLowerCase();
+  const a = /"a"\s*:\s*(true|false)/.exec(t), b = /"b"\s*:\s*(true|false)/.exec(t);
+  return a && b ? { a: a[1] === 'true', b: b[1] === 'true' } : null;
+}
+
+async function askGemini(env, image, prompt, timeoutMs) {
+  if (!env.GEMINI_API_KEY) return null;
   const models = String(env.GEMINI_VISION_MODELS || 'gemini-3.5-flash-lite,gemini-3.6-flash').split(',').map((m) => m.trim()).filter(Boolean);
   for (const model of models) {
     try {
@@ -174,12 +190,31 @@ export async function coverTitlePlace(env, image, { timeoutMs = 20000 } = {}) {
       });
       if (!res.ok) continue;
       const data = await res.json();
-      const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join(' ').toLowerCase();
-      const a = /"a"\s*:\s*(true|false)/.exec(text), b = /"b"\s*:\s*(true|false)/.exec(text);
-      if (!a || !b) continue;
-      // вниз — только если вверху лицо или голова, а внизу их нет
-      return a[1] === 'true' && b[1] === 'false' ? 'bottom' : 'top';
+      const bands = parseBands((data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join(' '));
+      if (bands) return bands;
     } catch { /* следующая модель */ }
   }
-  return 'top';
+  return null;
+}
+
+// вторая проверка — GPT-5.4-mini с картинкой (≈ $0,0015 за обложку)
+async function askOpenAI(env, image, prompt, timeoutMs) {
+  if (!env.OPENAI_API_KEY) return null;
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: env.OPENAI_VISION_MODEL || 'gpt-5.4-mini',
+        reasoning_effort: 'low',
+        max_completion_tokens: 600,
+        response_format: { type: 'json_object' },
+        messages: [{ role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${image.mime || 'image/webp'};base64,${toBase64(image.bytes)}`, detail: 'low' } }] }]
+      }),
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return parseBands(data?.choices?.[0]?.message?.content);
+  } catch { return null; }
 }
