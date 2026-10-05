@@ -577,3 +577,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* пара «фото → иллюстрация»: фото из анкеты маленькое — показываем почти в родном размере, без растягивания */
 .before-after{ max-width:500px; }
+
+/* «Электронная книга» — формат заметно с первого взгляда (05.10: «пользователю неочевидно, что это онлайн-книги») */
+.format-strip{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; margin:22px 0 0; padding:14px 18px; background:rgba(255,250,238,.85); border:1px solid var(--line); border-radius:14px; max-width:620px; }
+.format-strip-title{ flex:1 0 100%; margin:0; font-family:'Lora', Georgia, serif; font-weight:700; font-size:17px; color:var(--text); }
+.format-strip-title small{ font-family:var(--font-body, inherit); font-weight:400; font-size:14px; color:var(--text-soft); }
+.format-item{ display:inline-flex; align-items:center; gap:8px; font-size:15px; color:var(--text); }
+.format-item img{ width:30px; height:30px; object-fit:contain; flex:none; }
+.format-pill{ display:block; width:fit-content; margin:0 0 10px; padding:4px 11px; border-radius:999px; background:#EFE3C8; color:#6B4A2B; font-size:12.5px; font-weight:600; letter-spacing:.02em; }
+@media (max-width:640px){ .format-strip{ padding:12px 14px; gap:8px 14px; } .format-item{ font-size:14px; } }
