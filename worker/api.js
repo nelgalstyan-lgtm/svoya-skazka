@@ -8,6 +8,7 @@ import { createStore, isJobId } from './store.js';
 import { drawImage, artOff, ART_OFF_MESSAGE } from './art.js';
 import { fromBase64 } from './bytes.js';
 import { jobView, bookImages, REDRAW_LIMIT } from './view.js';
+import { notifyOwner } from './notify.js';
 
 const PHOTO_MAX_BYTES = 8 * 1024 * 1024;
 // Шлюз Яндекса (через него идёт сайт, см. clientIp) обрывает запросы к Cloudflare тяжелее ~30 КБ: 503 через 50 с.
@@ -247,6 +248,7 @@ async function generate(request, env, store) {
   await store.saveJob(job);
   await startBook(env, id, 'preview');
   await counters?.count();
+  await notifyOwner(env, job, 'new'); // письмо владелице «новый заказ» (notify.js)
   return json({ ok: true, jobId: id, status: job.status, position: 0 });
 }
 
@@ -392,6 +394,7 @@ export async function unlockBook(env, store, id) {
   });
   // дорисовка идёт в фоне: клиент следит за ходом через /status
   await startBook(env, id, 'complete');
+  await notifyOwner(env, job, 'paid'); // письмо владелице «заказ оплачен»
   return { ok: true, paid: true };
 }
 

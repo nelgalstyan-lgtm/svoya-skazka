@@ -1321,6 +1321,12 @@ section.tight{ padding:56px 0; }
       meta.className = 'story-ready-meta';
 
       previewBox.append(art, label, title, meta);
+      if (jobId && window.SkazkaExtras) {
+        const no = document.createElement('p');
+        no.className = 'story-ready-meta';
+        no.textContent = 'Номер заказа: ' + window.SkazkaExtras.orderNo(jobId) + ' — назовите его, если будете писать нам. Ссылку на книгу сохраните — по ней книга откроется с любого устройства.';
+        previewBox.appendChild(no);
+      }
 
       if (saved || jobId) {
         const link = 'book.html' + (jobId ? '?job=' + encodeURIComponent(jobId) : '');

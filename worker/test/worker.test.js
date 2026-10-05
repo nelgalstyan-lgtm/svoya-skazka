@@ -780,3 +780,16 @@ test('родные по фото приходят кусками (номер п�
     assert.equal(new TextDecoder().decode(env.BUCKET.items.get(`photos/${data.jobId}/f0`).bytes), 'mom');
   } finally { ai.restore(); }
 });
+
+test('письмо владелице о заказе: номер, книга, цена, ребёнок, родные, ссылка; без привязки — молча ничего', async () => {
+  const { orderSummary, notifyOwner, orderNo } = await import('../notify.js');
+  const job = { id: '8f7bbd3b-b6d7-47cd-9216-2f3ad81d56d0', input: { name: 'Аэлита', age: '2', gender: 'Девочка', theme: 'Сказка', style: 'Акварель', family: [{ who: 'мама', name: 'Лена' }] } };
+  const m = orderSummary(job, 'new');
+  assert.equal(orderNo(job.id), '8F7BBD3B');
+  assert.match(m.subject, /Новый заказ № 8F7BBD3B — Аэлита/);
+  assert.match(m.text, /Сказка · 980 ₽/);
+  assert.match(m.text, /Родные по фото: мама Лена/);
+  assert.match(m.text, /book\?job=8f7bbd3b/);
+  assert.match(orderSummary({ ...job, input: { ...job.input, tariff: 'big' } }, 'paid').subject, /^Оплачен/);
+  assert.equal(await notifyOwner({}, job, 'new'), false);
+});

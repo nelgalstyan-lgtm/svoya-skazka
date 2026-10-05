@@ -138,4 +138,8 @@
 .book3d-kind strong{ display:inline-block; margin-bottom:6px; padding:5px 16px; border-radius:999px; font-family:var(--font-display, Georgia, serif); font-size:18px; letter-spacing:.02em; color:#fff8e8; }
 .book3d-kind.is-big strong{ background:#6a4b35; }
 .book3d-kind.is-skazka strong{ background:#34305a; }
+/* «Алексу 13 лет · 6 глав · 3D-мультфильм» — заметной плашкой (05.10: владелица — «сделай заметнее») */
+.book3d-kind span:last-child{ margin-top:8px; padding:7px 16px; border-radius:12px; background:#FFF8E8; border:1px solid #E6D3AE; color:var(--text, #3F2816); font-weight:600; font-size:14.5px; box-shadow:0 6px 14px -10px rgba(74,53,39,.45); }
+.book3d-kind.is-big span:last-child{ border-color:#C9A27E; }
+.book3d-kind.is-skazka span:last-child{ border-color:#A9A3CF; }
 .book3d-note{ max-width:300px; margin:10px 0 0; font-size:13px; line-height:1.45; color:var(--text-soft, #6b5a48); text-align:center; }

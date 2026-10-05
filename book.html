@@ -902,6 +902,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
   function attachActions(data) {
     const book = data.book;
+    if (data.jobId && !params.get('demo')) window.SkazkaExtras.showOrderNo(data.jobId);
     // «← К анкете» — анкета этой книги, заполненная (create.html?again=1 берёт ответы из geroenok:formDraft)
     const back = document.querySelector('.toolbar-actions a[href="create.html"]');
     if (back && data.answers && data.answers.name) back.addEventListener('click', function (e) {

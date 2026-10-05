@@ -718,6 +718,24 @@
 
   // ---------------------------------------------------------------- превью и оплата
 
+  // ---------------------------------------------------------------- номер заказа
+  // Короткий номер для поддержки: первые 8 знаков id заказа («8F7BBD3B»). По нему заказ находится в R2 (jobs/<номер…>).
+  function orderNo(jobId) { return String(jobId || '').replace(/[^a-f0-9]/gi, '').slice(0, 8).toUpperCase(); }
+
+  /** «Заказ № …» в панели книги (рядом с логотипом) — чтобы покупатель мог назвать его в письме. */
+  function showOrderNo(jobId) {
+    var no = orderNo(jobId);
+    var bar = document.querySelector('.toolbar');
+    if (!no || !bar || bar.querySelector('.order-no')) return;
+    var span = document.createElement('span');
+    span.className = 'order-no';
+    span.textContent = 'Заказ № ' + no;
+    span.title = 'Назовите этот номер, если будете писать нам';
+    span.style.cssText = 'color:rgba(244,239,224,.75); font-size:13.5px; letter-spacing:.04em; margin:0 auto 0 14px; white-space:nowrap;';
+    var logo = bar.querySelector('.logo');
+    if (logo && logo.nextSibling) bar.insertBefore(span, logo.nextSibling); else bar.insertBefore(span, bar.firstChild);
+  }
+
   // ---------------------------------------------------------------- ожидание
   // Пока книга пишется и рисуется (минуты), под строкой «что сейчас делаем» сменяются тёплые фразы — ожидание
   // становится частью сказки (идея владелицы 05.10). active() — показывать ли сейчас (например, пока идёт ожидание).
@@ -761,7 +779,7 @@
       if (typeof global.SkazkaPay === 'function') { global.SkazkaPay(opts.jobId, opts.price); return; }
       var admin = new URLSearchParams(location.search).get('admin');
       if (admin) { unlock(opts, admin, btn); return; }
-      toast('Онлайн-оплата пока не подключена: мы подключаем оплату картой через ЮKassa. Сохраните ссылку на эту страницу — книга будет ждать вас.');
+      toast('Онлайн-оплата пока подключается.');
     });
     // под кнопкой — согласие с офертой (оплата = акцепт, п. 1 оферты)
     var note = document.createElement('small');
@@ -803,6 +821,8 @@
   global.SkazkaExtras = {
     setLang: setLang,
     waitTales: waitTales,
+    orderNo: orderNo,
+    showOrderNo: showOrderNo,
     downloadUrl: downloadUrl,
     attachAudioDownload: attachAudioDownload,
     payButton: payButton,
