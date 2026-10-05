@@ -718,6 +718,32 @@
 
   // ---------------------------------------------------------------- превью и оплата
 
+  // ---------------------------------------------------------------- ожидание
+  // Пока книга пишется и рисуется (минуты), под строкой «что сейчас делаем» сменяются тёплые фразы — ожидание
+  // становится частью сказки (идея владелицы 05.10). active() — показывать ли сейчас (например, пока идёт ожидание).
+  function waitTales(el, opts) {
+    opts = opts || {};
+    var name = String(opts.name || '').trim();
+    var hero = opts.girl ? 'героиней' : 'героем';
+    var lines = [
+      name ? 'Немного терпения — ' + name + ' становится ' + hero + ' книги.' : 'Немного терпения — ваш ребёнок становится героем книги.',
+      'Сказка уже начинается: где-то тихо открывается первая дверь…',
+      'Героёнок подбирает слова — такие, чтобы их хотелось читать вслух.',
+      'Кисточка за кисточкой: рисуем так, чтобы вы сразу узнали своего ребёнка.',
+      'Такой истории ещё ни у кого не было — она пишется прямо сейчас.',
+      'Ещё чуть-чуть — и можно будет перевернуть первую страницу.'
+    ];
+    var i = 0;
+    el.textContent = lines[0];
+    el.style.transition = 'opacity .6s ease';
+    var timer = setInterval(function () {
+      if (opts.active && !opts.active()) return;
+      el.style.opacity = '0';
+      setTimeout(function () { i = (i + 1) % lines.length; el.textContent = lines[i]; el.style.opacity = '1'; }, 600);
+    }, 7000);
+    return function stop() { clearInterval(timer); };
+  }
+
   function rub(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽'; }
 
   /**
@@ -776,6 +802,7 @@
 
   global.SkazkaExtras = {
     setLang: setLang,
+    waitTales: waitTales,
     downloadUrl: downloadUrl,
     attachAudioDownload: attachAudioDownload,
     payButton: payButton,

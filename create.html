@@ -616,7 +616,7 @@ section.tight{ padding:56px 0; }
           </div>
           <div class="field">
             <label for="age">Возраст</label>
-            <input type="number" id="age" placeholder="Например, 7">
+            <input type="number" id="age" min="1" max="16" step="1" inputmode="numeric" placeholder="Например, 7">
           </div>
         </div>
 
@@ -748,7 +748,7 @@ section.tight{ padding:56px 0; }
         <div class="field">
           <label for="cast">Кого ещё включить в сюжет</label>
           <textarea id="cast" placeholder="Мама, папа, бабушка, домашний питомец — с именами, если хотите, и парой слов о каждом"></textarea>
-          <span class="hint">Например: «мама Лена — она обычно всех успокаивает», «кот Барсик, важный, как король»</span>
+          <span class="hint">Например: «мама Лена — она обычно всех успокаивает», «кот Барсик, важный, как король». Близкие и друзья будут в тексте истории, а на иллюстрациях — только ваш ребёнок (и питомцы, игрушки).</span>
         </div>
 
         <div class="field">
@@ -838,7 +838,10 @@ section.tight{ padding:56px 0; }
         <img class="story-status-art brand-art" src="assets/brand/pose-reading.webp" alt="" width="216" height="235">
         <div class="story-status-body">
           <div class="story-status-book" aria-hidden="true"><i></i><i></i><i></i></div>
-          <p class="story-status-text" role="status" aria-live="polite"></p>
+          <div>
+            <p class="story-status-text" role="status" aria-live="polite"></p>
+            <p class="story-status-tale"></p>
+          </div>
         </div>
       </div>
       <div id="previewResult" class="story-ready" style="display:none;"></div>
@@ -882,6 +885,7 @@ section.tight{ padding:56px 0; }
     // Статус: пока ждём — Героёнок читает и листает книгу; при ошибке — спокойно помогает (не пугается)
     const statusText = statusBox.querySelector('.story-status-text');
     const statusArt = statusBox.querySelector('.story-status-art');
+    let taleStarted = false; // фразы ожидания (SkazkaExtras.waitTales) — запускаются при первом заказе
     function setStatus(message, tone) {
       statusBox.style.display = '';
       statusBox.classList.toggle('is-error', tone === 'error');
@@ -1480,6 +1484,13 @@ section.tight{ padding:56px 0; }
         document.getElementById('name').focus();
         return;
       }
+      // книги — для детей и подростков: возраст от 1 до 16 (по нему пишется текст и выбирается оформление)
+      const ageNum = Number(answers.age);
+      if (answers.age && !(Number.isInteger(ageNum) && ageNum >= 1 && ageNum <= 16)) {
+        setStatus('Возраст ребёнка — от 1 до 16 лет.', 'error');
+        document.getElementById('age').focus();
+        return;
+      }
       if (!selectedPhotos.length) {
         setStatus('Загрузите хотя бы одно фото ребёнка — по нему мы рисуем его на обложке и на каждой иллюстрации.', 'error');
         document.getElementById('photoDrop').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1491,6 +1502,10 @@ section.tight{ padding:56px 0; }
 
       const myRun = ++runId;
       const startedAt = Date.now();
+      if (!taleStarted && window.SkazkaExtras) {
+        taleStarted = true;
+        window.SkazkaExtras.waitTales(statusBox.querySelector('.story-status-tale'), { name: answers.name, girl: answers.gender === 'Девочка', active: function () { return statusBox.classList.contains('is-waiting'); } });
+      }
 
       generateBtn.disabled = true;
       generateBtn.textContent = 'Создаём книгу…';

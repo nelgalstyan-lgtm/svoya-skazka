@@ -706,3 +706,12 @@ test('в OpenAI кончились деньги: превью без карти�
     assert.ok(!env.BUCKET.items.has(ART_OFF_KEY), 'деньги появились — отметка снята');
   } finally { globalThis.fetch = original; }
 });
+
+test('возраст в анкете — от 1 до 16', async () => {
+  const env = fakeEnv();
+  for (const age of ['30', '0', '17', '7.5', 'абв']) {
+    const res = await api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, age, photos: [PHOTO] } });
+    assert.equal(res.status, 400, `возраст ${age}`);
+    assert.match((await res.json()).error, /от 1 до 16/);
+  }
+});

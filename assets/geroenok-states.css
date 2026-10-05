@@ -15,6 +15,7 @@
 .gw-card h2{ font-family:'Lora', Georgia, serif; font-weight:600; font-size:27px; margin:4px 0 10px; color:#3F2816; }
 .gw-card p{ color:#6B5443; font-size:17px; margin:0 0 12px; }
 .gw-card .gw-small{ font-size:14px; }
+.gw-card .gw-tale{ font-family:'Lora', Georgia, serif; font-style:italic; font-size:16px; min-height:2.6em; }
 .gw-card .gw-actions{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
 .gw-card a.gw-btn{
   display:inline-flex; align-items:center; min-height:48px; padding:12px 24px; border-radius:14px;

@@ -7,12 +7,14 @@
 const IDENTITY_BLOCK = (eyes, count = 1) => `Preserve the child's exact identity from the reference photo${count > 1 ? 's (all of them show the same child from different angles)' : ''}: keep the facial structure and proportions, the eye shape and eye color${eyes ? ` (${eyes})` : ''}, the nose shape, the lips and mouth shape, the hairstyle and hair color, the age, and any distinctive features exactly as in the reference photo such as freckles, a gap between the teeth, dimples, moles or birthmarks if present. The child must remain instantly recognizable as the exact same person from the reference photo — do not beautify, idealize, or stylize the face into a generic look, and do not age the character up or down.`;
 
 // Лист персонажа идёт последним изображением в запросе: по нему держим одинаковыми одежду, причёску и спутников во всей книге
-const SHEET_BLOCK = 'The last attached image is the character reference sheet for this book: draw the child with exactly the same outfit, colors, hairstyle and proportions as on that sheet, and draw any companion (pet, toy, friend) shown there exactly the same way. The face must still match the reference photo first of all.';
+const SHEET_BLOCK = 'The last attached image is the character reference sheet for this book: draw the child with exactly the same outfit, colors, hairstyle and proportions as on that sheet, and draw any pet or toy shown there exactly the same way. The face must still match the reference photo first of all.';
 
 // Уроки ручной книги «Амилия» (01.10): модель сама добавляла панамки, а младших детей рисовала одного роста с малышами
 // и с «младенческими» лицами. Одежда меняется только по сюжету (пижама, зимняя куртка) — так было и у Макса.
 const OUTFIT_BLOCK = 'Outfit: keep exactly the same clothes, shoes and hairstyle as described for the whole book in every illustration; do not add hats, caps, sun hats, glasses, bags, jewelry or any other accessories that are not part of that outfit — change clothes only if the scene description explicitly requires it (pajamas at bedtime, a warm coat in the snow, a swimsuit at the sea).';
-const PEOPLE_AGE_BLOCK = 'Other people, if any appear: draw each one with the height, body proportions and face of their real age — a 4-year-old is a preschooler, clearly taller than a 2-year-old toddler and not a baby; younger children are always smaller than older ones; adults are adults. Everyone, adults too, is drawn in exactly the same stylized art style as the child, never photorealistic.';
+// Решение владелицы 05.10 («Аэлита»: кузина Аделина по описанию вышла совсем не похожей — «сразу разочарование»):
+// пока нет «Родных по фото», из людей рисуем только ребёнка; близкие и друзья — только в тексте
+const ONLY_CHILD = 'People: the child is the only human in the picture — do not draw parents, siblings, cousins, friends, other children or any other people, even if the scene description mentions them; pets, animals, toys and magical creatures are fine.';
 
 // Эмоция следует за сценой: на восьми-десяти страницах одно и то же «сосредоточенное» лицо выглядит мёртво
 const EMOTION_BLOCK = 'Facial expression: take it from this exact moment of the story, not from the reference photo — the photo only defines who the child is. Depending on the scene it can be quiet curiosity, calm focus, surprise, wonder, a small smile or open joy; bright engaged eyes.';
@@ -63,7 +65,7 @@ export function buildHeroPrompt({ styleLabel, eyes, brief, look, photoCount = 1,
     kind === 'sheet' ? '' : scene,
     lookLine(look),
     kind === 'sheet' ? '' : OUTFIT_BLOCK,
-    kind === 'sheet' ? '' : PEOPLE_AGE_BLOCK,
+    ONLY_CHILD,
     `Art style and rendering technique: ${STYLE_TECHNIQUE[styleKey]}.`,
     composition,
     AVOID_BLOCK

@@ -174,6 +174,8 @@ async function generate(request, env, store) {
 
   // Главная ценность книги — ребёнок, похожий на себя, на каждой иллюстрации: без фото заказ не принимаем
   if (!photos.length) return fail(400, 'Загрузите хотя бы одно фото ребёнка — по нему рисуются все иллюстрации книги.');
+  const age = String(body.age ?? '').trim();
+  if (age && !/^(?:[1-9]|1[0-6])$/.test(age)) return fail(400, 'Возраст ребёнка — от 1 до 16 лет.');
 
   const owner = Boolean(env.ADMIN_KEY) && request.headers.get('x-admin-key') === env.ADMIN_KEY;
   // в OpenAI кончились деньги — превью вышло бы без ребёнка на картинках, поэтому не принимаем (хозяйке — можно, для проверки)

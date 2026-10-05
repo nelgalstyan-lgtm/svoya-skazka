@@ -448,6 +448,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .story-status-art{ width:108px; height:auto; flex:none; }
 .story-status-body{ display:flex; align-items:center; gap:16px; }
 .story-status-text{ margin:0; font-size:17px; }
+.story-status-tale{ display:none; margin:6px 0 0; font-family:'Lora', Georgia, serif; font-style:italic; font-size:15.5px; color:var(--text-soft); }
+.story-status.is-waiting .story-status-tale{ display:block; }
 .story-status-book{ display:none; position:relative; width:44px; height:30px; flex:none; perspective:160px; }
 .story-status.is-waiting .story-status-book{ display:block; }
 .story-status-book::before{ /* обложка-разворот */

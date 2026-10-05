@@ -325,10 +325,12 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       const art = el('img', 'gw-art'); art.src = 'assets/brand/pose-reading.webp'; art.alt = 'Героёнок читает книгу';
       const book = el('div', 'gw-book'); book.setAttribute('aria-hidden', 'true'); book.innerHTML = '<i></i><i></i><i></i>';
       const p = el('p', ''); p.setAttribute('role', 'status');
-      box.append(art, el('h2', '', title || 'Героёнок дорисовывает вашу книгу'), book, p);
+      const tale = el('p', 'gw-tale');
+      box.append(art, el('h2', '', title || 'Героёнок дорисовывает вашу книгу'), book, p, tale);
       root.appendChild(box);
+      if (!title) window.SkazkaExtras.waitTales(tale, {}); // фразы ожидания — пока дорисовываем (после оплаты)
     }
-    if (title) { box.querySelector('h2').textContent = title; const spin = box.querySelector('.gw-book'); if (spin) spin.remove(); } // ошибка — без «листающейся книжки»
+    if (title) { box.querySelector('h2').textContent = title; ['.gw-book', '.gw-tale'].forEach(function (sel) { const x = box.querySelector(sel); if (x) x.remove(); }); } // ошибка — без «листающейся книжки»
     box.querySelector('p').textContent = text || 'Это займёт несколько минут. Страницу можно не закрывать — книга появится сама.';
   }
 

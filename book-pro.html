@@ -229,9 +229,13 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     box.className = 'gw-card';
     box.innerHTML = '<img class="gw-art" src="assets/brand/pose-reading.webp" alt="Героёнок читает книгу">'
       + '<h2>Героёнок пишет вашу историю</h2><div class="gw-book" aria-hidden="true"><i></i><i></i><i></i></div>'
-      + '<p id="jobText" role="status">Начинаем…</p><p class="gw-small">Большая история пишется глава за главой, это занимает несколько минут. Страницу можно не закрывать.</p>';
+      + '<p id="jobText" role="status">Начинаем…</p><p class="gw-tale"></p><p class="gw-small">Большая история пишется глава за главой, это занимает несколько минут. Страницу можно не закрывать.</p>';
     root.appendChild(box);
     var text = box.querySelector('#jobText');
+    // имя — из анкеты, которую только что отправили (create.html кладёт её в geroenok:formDraft)
+    var draft = null;
+    try { draft = (JSON.parse(localStorage.getItem('geroenok:formDraft') || 'null') || {}).answers; } catch (e) { draft = null; }
+    var stopTales = window.SkazkaExtras.waitTales(box.querySelector('.gw-tale'), { name: draft && draft.name, girl: draft && draft.gender === 'Девочка' });
     var errors = 0;
     var started = Date.now();
     (function poll() {
@@ -240,8 +244,8 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
         return r.json();
       }).then(function (d) {
         errors = 0;
-        if (d.failed) { text.textContent = d.error || 'Превью не получилось. Сделайте его заново в анкете.'; return; }
-        if (d.ready && !d.finishing && d.result && d.result.book) { root.textContent = ''; start(d.result.book, d.result.answers, jobId, d); return; }
+        if (d.failed) { stopTales(); box.querySelector('.gw-tale').remove(); text.textContent = d.error || 'Превью не получилось. Сделайте его заново в анкете.'; return; }
+        if (d.ready && !d.finishing && d.result && d.result.book) { stopTales(); root.textContent = ''; start(d.result.book, d.result.answers, jobId, d); return; }
         text.textContent = d.progress || (d.finishing ? 'Оплата прошла — дорисовываем иллюстрации…' : d.position > 1 ? 'Ваша книга в очереди…' : 'Пишем книгу…');
         setTimeout(poll, 2500);
       }).catch(function () {
