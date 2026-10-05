@@ -55,6 +55,9 @@
 .book-shelf .book3d-item{ flex:1 1 300px; max-width:360px; }
 /* длинное название (три строки закрывали лицо героини) — мельче, в две строки */
 .book3d-title.is-long{ font-size:20px; top:20px; left:14px; right:14px; }
+/* название внизу обложки, если сверху голова героя (Аэлита) */
+.book3d-cover.title-low::before{ inset:45% 0 0 0; background:linear-gradient(transparent, rgba(18,16,30,.85)); }
+.book3d-cover.title-low .book3d-title{ top:auto; bottom:52px; }
 @media (max-width:520px){ .book3d-title.is-long{ font-size:16.5px; top:16px; left:10px; right:10px; } }
 .book3d-turn{ cursor:pointer; border-radius:16px; -webkit-tap-highlight-color:transparent; }
 .book3d-turn:focus-visible{ outline:3px solid var(--btn, #8a5a36); outline-offset:4px; }
