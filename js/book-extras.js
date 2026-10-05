@@ -735,7 +735,7 @@
       if (typeof global.SkazkaPay === 'function') { global.SkazkaPay(opts.jobId, opts.price); return; }
       var admin = new URLSearchParams(location.search).get('admin');
       if (admin) { unlock(opts, admin, btn); return; }
-      toast('Онлайн-оплата появится совсем скоро. Сохраните ссылку на эту страницу — книга будет ждать вас.');
+      toast('Онлайн-оплата пока не подключена: мы подключаем оплату картой через ЮKassa. Сохраните ссылку на эту страницу — книга будет ждать вас.');
     });
     // под кнопкой — согласие с офертой (оплата = акцепт, п. 1 оферты)
     var note = document.createElement('small');

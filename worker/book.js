@@ -10,7 +10,8 @@
 // и песня (song.js).
 // mode 'voice' — переозвучка после правки текста (только изменившиеся главы).
 
-import { generateStory } from '../server/lib/story.js';
+import { generateStory, describeProviders } from '../server/lib/story.js';
+import { createHealth } from '../server/lib/providers.js';
 import { writePlan, writeChapter, chapterContext, assembleBigBook, templateBook } from '../server/lib/bigstory.js';
 import { dedicationFor, shortDedication } from '../server/lib/booktext.js';
 import template from '../js/story-template.js';
@@ -58,7 +59,9 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, only = null, she
 
   const draw = (name, kind, brief) => step.do(name, IMAGE_STEP, async () => {
     started += 1;
-    await progress(`Рисуем иллюстрации с вашим ребёнком (${Math.min(started, total)} из ${total})…`);
+    // в превью всего 3 картинки (лист героя, обложка, первая иллюстрация) — называем, что именно рисуем, чтобы «из 3» не путало
+    const what = kind === 'sheet' ? 'лист героя по фото' : kind === 'cover' ? 'обложку' : 'иллюстрацию с вашим ребёнком';
+    await progress(`Рисуем ${what} (картинка ${Math.min(started, total)} из ${total})…`);
     const [refs, sheetImage] = await Promise.all([store.loadPhotos(id), kind === 'sheet' ? null : store.loadImage(sheet)]);
     const image = await drawImage(env, { kind, refs, sheet: sheetImage, brief, ...style, log });
     return image ? store.putImage(id, name, image) : null;
@@ -122,7 +125,14 @@ async function previewFlow(ctx) {
   if (!big) {
     text = await step.do('story', TEXT_STEP, async () => {
       await progress('Пишем историю…');
-      return generateStory(input, { log }); // текст + описания иллюстраций (heroBrief, coverBrief)
+      // в Workflow нет 55-секундного предела старого сервера: до шаблона даём ИИ до 2,5 минут (шаг — до 10 минут)
+      const story = await generateStory(input, { log, deadlineMs: 150_000 }); // текст + описания иллюстраций (heroBrief, coverBrief)
+      if (story.source !== 'template' || !describeProviders().length) return story;
+      // все сервисы были заняты (05.10 так вышло у Gemini) — шаблон читается как пересказ анкеты, поэтому ещё одна попытка
+      // через 20 с, с чистой памятью о сбоях (иначе все модели ещё «в паузе» и сразу снова шаблон)
+      log(`[book] ${id}: текст из шаблона — пробуем ИИ ещё раз`);
+      await new Promise((resolve) => setTimeout(resolve, 20_000));
+      return generateStory(input, { log, deadlineMs: 150_000, health: createHealth() });
     });
   } else {
     const planned = await step.do('plan', TEXT_STEP, async () => {

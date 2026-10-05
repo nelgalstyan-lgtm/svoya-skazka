@@ -124,6 +124,57 @@ export function dedicationDate(date = new Date()) {
   return `${p(date.getDate())}.${p(date.getMonth() + 1)}.${date.getFullYear()}`;
 }
 
+// «От кого» пишут по-разному: «дядя», «от дяди», «Дяди», «мамы и папы» — подпись всегда «С любовью, дядя / мама и папа»
+const SIGN_WORDS = {
+  дяди: 'дядя', тёти: 'тётя', тети: 'тетя', мамы: 'мама', папы: 'папа', мамочки: 'мамочка', папочки: 'папочка',
+  бабушки: 'бабушка', дедушки: 'дедушка', бабули: 'бабуля', дедули: 'дедуля', деда: 'дед', бабы: 'баба',
+  брата: 'брат', братика: 'братик', сестры: 'сестра', сестрёнки: 'сестрёнка', сестренки: 'сестренка',
+  крёстной: 'крёстная', крестной: 'крестная', крёстного: 'крёстный', крестного: 'крестный',
+  родителей: 'родители', друзей: 'друзья', семьи: 'семья', подруги: 'подруга', друга: 'друг',
+  твоей: 'твоя', твоего: 'твой', твоих: 'твои', вашей: 'ваша', вашего: 'ваш', любящей: 'любящая', любящего: 'любящий', любящих: 'любящие'
+};
+// имена после «от» или после родственника в родительном падеже — тоже в именительный:
+// «от дяди Вазгена» → «дядя Вазген», «Андрея» → «Андрей», «от Аделины и Ани» → «Аделина и Аня», «Ольги» → «Ольга»
+function nominativeName(tok) {
+  if (/[бвгджзклмнпрстфхцчшщ]а$/.test(tok)) return tok.slice(0, -1);
+  if (/[аеиоуэюя]я$/.test(tok)) return tok.slice(0, -1) + 'й';
+  if (/ы$/.test(tok)) return tok.slice(0, -1) + 'а';
+  if (/[гкхжшчщ]и$/.test(tok)) return tok.slice(0, -1) + 'а';
+  if (/[бвдзлмнпрстф]и$/.test(tok)) return tok.slice(0, -1) + 'я';
+  return tok;
+}
+
+function keepCase(src, word) { return src[0] === src[0].toUpperCase() ? word[0].toUpperCase() + word.slice(1) : word; }
+
+export function signatureName(raw) {
+  let text = clip(raw, 80).replace(/^с\s+любовью[,!.\s]*/i, '').replace(/[.!]+$/, '').trim();
+  let genitive = /^от\s+/i.test(text);
+  text = text.replace(/^от\s+/i, '');
+  return text.split(/(\s+|,)/).map((tok) => {
+    const word = SIGN_WORDS[tok.toLowerCase()];
+    if (word) { genitive = true; return keepCase(tok, word); }
+    if (genitive && /^[А-ЯЁ][а-яё]+$/.test(tok)) return nominativeName(tok);
+    return tok;
+  }).join('');
+}
+
+/**
+ * Подпись и своё посвящение из анкеты. Если в «своё посвящение» вписали только подпись («С любовью, Вазген»),
+ * это подпись, а не посвящение: имя добавляется к «От кого» («дядя Вазген»), текст посвящения пишем мы.
+ */
+export function dedicationParts(input = {}) {
+  let from = signatureName(input.from);
+  let own = clip(input.dedication, 1200);
+  const m = /^с\s+любовью[,!.\s]+([^\n.!?]{1,40}?)[.!]?$/i.exec(own.trim());
+  if (m) {
+    const who = signatureName(m[1]);
+    if (!from) from = who;
+    else if (!from.toLowerCase().includes(who.toLowerCase())) from = `${from} ${who}`;
+    own = '';
+  }
+  return { from, own };
+}
+
 /**
  * Посвящение книги с учётом анкеты: input.from — от кого книга («мама и папа», «твоя Неля») — становится подписью
  * «С любовью, …»; input.dedication — своё посвящение родителей (абзацы через пустую строку) заменяет текст ИИ.
@@ -131,8 +182,9 @@ export function dedicationDate(date = new Date()) {
  * Возвращает null, если посвящения нет и родители ничего не написали.
  */
 export function dedicationFor(input = {}, base = null, date = new Date()) {
-  const from = clip(input.from, 80);
-  const own = clip(input.dedication, 1200).split(/\n\s*\n|\r?\n/).map((s) => s.trim()).filter(Boolean).slice(0, 6);
+  const parts = dedicationParts(input);
+  const from = parts.from;
+  const own = parts.own.split(/\n\s*\n|\r?\n/).map((s) => s.trim()).filter(Boolean).slice(0, 6);
   if (!base && !from && !own.length) return null;
   const d = { title: 'Посвящается', lead: base?.lead || '', paragraphs: base?.paragraphs || [] };
   if (own.length) { d.lead = own[0]; d.paragraphs = own.slice(1); }
@@ -150,7 +202,7 @@ export function shortDedication(input = {}) {
   // лист называется «Посвящается» — имя в дательном падеже: «Посвящается Максу — главному герою этой сказки»
   const name = c.name ? dativeName(c.name, c.girl) : 'Тебе';
   const occ = c.kind === 'holiday' ? template.holidayKind(c.occasion) : template.occasionKind(c.occasion);
-  const love = clip(input.from, 80) ? '.' : ', с любовью.'; // с подписью «С любовью, …» не повторяем
+  const love = dedicationParts(input).from ? '.' : ', с любовью.'; // с подписью «С любовью, …» не повторяем
   const lead = occ === 'birthday' ? `${name} — ${c.girl ? 'имениннице' : 'имениннику'} в день рождения${love}`
     : occ === 'newyear' ? `${name}, ${c.girl ? 'нашей волшебнице' : 'нашему волшебнику'}, — с Новым годом!`
     : `${name} — ${c.girl ? 'главной героине' : 'главному герою'} этой сказки${love}`;

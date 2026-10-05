@@ -104,3 +104,18 @@ test('шаблон: мальчик и девочка, все темы, без «
     }
   }
 });
+
+test('модели по кругу между сервисами: после сбоя первой модели — сразу другой сервис, а не вторая модель того же', async () => {
+  let firstCalls = 0;
+  const a = await mock((req, res) => { firstCalls += 1; res.statusCode = 503; res.end('busy'); });
+  const b = await mock(okReply(goodStory));
+  const providers = buildProviders({
+    PROVIDER_ORDER: 'groq,openrouter',
+    GROQ_API_KEY: 'k1', GROQ_BASE_URL: a.url, GROQ_MODELS: 'm1,m1b,m1c',
+    OPENROUTER_API_KEY: 'k2', OPENROUTER_BASE_URL: b.url, OPENROUTER_MODELS: 'm2'
+  });
+  const story = await generateStory(INPUT, { providers, health: createHealth(), log: quiet });
+  a.server.close(); b.server.close();
+  assert.equal(story.provider, 'openrouter');
+  assert.equal(firstCalls, 1);
+});

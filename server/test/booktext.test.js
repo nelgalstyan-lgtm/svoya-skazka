@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { genitiveName, fixDialogue, cleanNoteText, normalizeChapterBlocks, normalizeBook, ageVoiceRule } from '../lib/booktext.js';
+import { genitiveName, fixDialogue, cleanNoteText, normalizeChapterBlocks, normalizeBook, ageVoiceRule, signatureName, dedicationFor } from '../lib/booktext.js';
 import { buildPrompt } from '../lib/story.js';
 import { buildPlanPrompt, buildChapterPrompt } from '../lib/bigstory.js';
 
@@ -155,4 +155,17 @@ test('имя в дательном падеже: «Посвящается Мак
     ['Настя', true, 'Насте'], ['Илья', false, 'Илье'], ['Мария', true, 'Марии'], ['Андрей', false, 'Андрею'], ['Игорь', false, 'Игорю'],
     ['Любовь', true, 'Любови'], ['Маша', true, 'Маше'], ['Ника', true, 'Нике'], ['Нико', false, 'Нико'], ['Эстер', true, 'Эстер']];
   for (const [n, girl, want] of cases) assert.equal(dativeName(n, girl), want, n);
+});
+
+test('подпись посвящения: «от кого» в именительном падеже, подпись из поля посвящения', () => {
+  assert.equal(signatureName('Дяди'), 'Дядя');
+  assert.equal(signatureName('от дяди Вазгена'), 'дядя Вазген');
+  assert.equal(signatureName('мамы и папы'), 'мама и папа');
+  assert.equal(signatureName('от Аделины и Аэлиты'), 'Аделина и Аэлита');
+  assert.equal(signatureName('от брата Андрея'), 'брат Андрей');
+  assert.equal(signatureName('мама, папа и Аэлита'), 'мама, папа и Аэлита');
+  assert.equal(signatureName('дядя Миша'), 'дядя Миша');
+  const d = dedicationFor({ from: 'Дяди', dedication: 'С любовью, Вазген' }, { lead: 'Неле', paragraphs: [] });
+  assert.equal(d.signature, 'С любовью,\nДядя Вазген');
+  assert.equal(d.lead, 'Неле', 'подпись в поле посвящения не становится текстом посвящения');
 });

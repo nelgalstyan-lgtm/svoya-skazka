@@ -594,6 +594,10 @@ section.tight{ padding:56px 0; }
         <span>Анкета уже заполнена по первой книге — те же герой, друзья и близкие. Фото ребёнка добавьте заново: после первой книги мы их удалили. Можно что-то поправить: например, рассказать, что нового у ребёнка с тех пор. Сюжет будет новым и законченным.</span>
         <button type="button" id="sequelCancel">Нет, начать новую книгу</button>
       </div>
+      <div class="sequel-banner" id="againBanner" hidden>
+        <strong>Анкета заполнена, как в прошлый раз</strong>
+        <span>Поправьте, что хотите, и добавьте фото ребёнка заново — в браузере мы их не храним.</span>
+      </div>
       <div class="progress-track" id="progressTrack" role="img" aria-label="Страница 1 из 5">
         <span class="done"></span><span></span><span></span><span></span><span></span>
       </div>
@@ -1433,6 +1437,34 @@ section.tight{ padding:56px 0; }
     document.querySelectorAll('.choice-card[data-choice-group="occasion"]').forEach(function (card) { card.addEventListener('click', updateDesignStep); });
     updateTariff();
 
+    // ?again=1 — «← К анкете» из книги: анкета заполняется ответами этой книги (их кладёт book.html), кроме фото
+    function restoreDraft() {
+      if (new URLSearchParams(location.search).get('again') !== '1' || sequel) return;
+      let a = null;
+      try { a = (JSON.parse(localStorage.getItem('geroenok:formDraft') || 'null') || {}).answers; } catch (e) { a = null; }
+      if (!a || !a.name) return;
+      ['name', 'age', 'eyes', 'habits', 'friends', 'cast', 'lesson', 'from', 'dedication'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el && a[id] != null) el.value = a[id];
+      });
+      selectCard('gender', a.gender);
+      selectCard('style', a.style);
+      selectCard('theme', a.theme);
+      const occ = a.occasion === 'День рождения' ? 'birthday' : a.occasion === 'Новый год' ? 'newyear' : a.occasion ? 'other' : 'none';
+      document.querySelectorAll('.choice-card[data-choice-group="occasion"]').forEach(function (card) {
+        card.classList.toggle('is-selected', card.getAttribute('data-value') === occ);
+      });
+      if (occ === 'other') document.getElementById('occasion').value = a.occasion;
+      const tariff = a.tariff === 'big' ? 'big' : 'short';
+      document.querySelectorAll('.choice-card[data-choice-group="tariff"]').forEach(function (card) {
+        card.classList.toggle('is-selected', card.getAttribute('data-value') === tariff);
+      });
+      document.getElementById('coloring').checked = a.coloring === true;
+      updateTariff();
+      document.getElementById('againBanner').hidden = false;
+    }
+    restoreDraft();
+
     generateBtn.addEventListener('click', async function () {
       const answers = collectAnswers();
 
@@ -1446,6 +1478,9 @@ section.tight{ padding:56px 0; }
         document.getElementById('photoDrop').scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
+
+      // «← К анкете» в книге вернёт сюда заполненную анкету (без фото)
+      try { localStorage.setItem('geroenok:formDraft', JSON.stringify({ answers: answers, savedAt: Date.now() })); } catch (e) { /* хранилище недоступно */ }
 
       const myRun = ++runId;
       const startedAt = Date.now();

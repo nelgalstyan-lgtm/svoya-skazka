@@ -116,7 +116,9 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
         document.getElementById('printBtn').style.display = 'none';
         document.getElementById('specBtn').style.display = 'none';
         if (book.sample) { var sampleHint = document.querySelector('.hint.no-print'); if (sampleHint) sampleHint.style.display = 'none'; }
-        window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
+        // в превью «Слушать» нет: озвучка рассказчиком — после оплаты, а голос устройства звучит неприятно
+        if (locked) document.getElementById('listenBtn').style.display = 'none';
+        else window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
       } else {
         attachActions(book, answers, jobId, status || {});
       }

@@ -228,27 +228,32 @@ export async function generateWithFailover(providers, prompt, {
   const attempts = [];
   const timeLeft = () => deadlineAt - Date.now();
 
+  // Модели по кругу между сервисами: первая модель каждого, потом вторая… Когда перегружен один сервис
+  // (у Gemini 05.10 все модели отвечали 503 и таймаутами), очередь быстро доходит до других, а не тратит всё время на него.
+  const queue = [];
+  for (let i = 0; i < Math.max(0, ...providers.map((p) => p.models.length)); i += 1) {
+    for (const provider of providers) if (provider.models[i]) queue.push({ provider, model: provider.models[i] });
+  }
+
   for (let pass = 0; pass < passes; pass += 1) {
     let tried = 0;
 
-    for (const provider of providers) {
-      for (const model of provider.models) {
-        if (timeLeft() < 2_000) throw new AllProvidersFailed(attempts);
-        if (health.isCoolingDown(provider.name, model)) continue;
+    for (const { provider, model } of queue) {
+      if (timeLeft() < 2_000) throw new AllProvidersFailed(attempts);
+      if (health.isCoolingDown(provider.name, model)) continue;
 
-        tried += 1;
-        const signal = AbortSignal.timeout(Math.min(attemptTimeoutMs, timeLeft()));
-        try {
-          const text = await provider.call(model, prompt, signal);
-          const value = validate(text);
-          health.ok(provider.name, model);
-          return { value, provider: provider.name, model };
-        } catch (error) {
-          const wrapped = error instanceof ProviderError ? error : new ProviderError(error?.message || String(error), { kind: 'invalid' });
-          health.fail(provider.name, model, wrapped);
-          attempts.push({ provider: provider.name, model, kind: wrapped.kind, message: wrapped.message });
-          log(`[ai] ${provider.name}/${model} failed (${wrapped.kind}): ${wrapped.message}`);
-        }
+      tried += 1;
+      const signal = AbortSignal.timeout(Math.min(attemptTimeoutMs, timeLeft()));
+      try {
+        const text = await provider.call(model, prompt, signal);
+        const value = validate(text);
+        health.ok(provider.name, model);
+        return { value, provider: provider.name, model };
+      } catch (error) {
+        const wrapped = error instanceof ProviderError ? error : new ProviderError(error?.message || String(error), { kind: 'invalid' });
+        health.fail(provider.name, model, wrapped);
+        attempts.push({ provider: provider.name, model, kind: wrapped.kind, message: wrapped.message });
+        log(`[ai] ${provider.name}/${model} failed (${wrapped.kind}): ${wrapped.message}`);
       }
     }
 

@@ -9,7 +9,7 @@ export const isDrawn = (src) => /^(data:|\/api\/img\/)/.test(src || '');
 export const REDRAW_LIMIT = 3;
 
 // Ответы анкеты без фото — для продолжения книги и подписи на обложке
-const ANSWER_KEYS = ['name', 'age', 'gender', 'eyes', 'theme', 'occasion', 'habits', 'friends', 'cast', 'style', 'lesson', 'interests', 'special'];
+const ANSWER_KEYS = ['name', 'age', 'gender', 'eyes', 'theme', 'occasion', 'habits', 'friends', 'cast', 'style', 'lesson', 'interests', 'special', 'from', 'dedication', 'tariff', 'coloring'];
 function jobAnswers(job) {
   const out = {};
   for (const key of ANSWER_KEYS) out[key] = job.input?.[key] || '';

@@ -755,6 +755,8 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       // сгенерированная иллюстрация с реальным лицом ребёнка — в приоритете; демо-фото по имени — запасной вариант для примеров
       const heroSrc = page.heroImage || demoHeroSrc;
       const useHero = page.hero && heroSrc;
+      // лист с текстом оформлен и без иллюстрации (в превью дальше первой картинки нет, в книге — если картинка не вышла)
+      const decorated = Boolean(useHero || (page.hero && !SCENES));
       if (useHero) {
         // иллюстрация на весь лист перед текстом (data-pic — для «Перерисовать»)
         const pic = sheet('pic-page');
@@ -770,12 +772,12 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       s.setAttribute('data-page', String(index));
       const scene = page.scene || 'forest_path';
 
-      if (useHero && KIDS_ON) {
+      if (decorated && KIDS_ON) {
         // лист малыша: рисунок и текст раскладывает kidsFlow (после загрузки шрифтов), здесь — только абзацы страницы
         s.classList.add('text-page', 'kids-page');
         s.kidsParas = toParagraphs(page.text);
         return;
-      } else if (useHero && ALEX) {
+      } else if (decorated && ALEX) {
         s.classList.add('text-page', 'has-strip');
         const strip = el('div', 'sk-strip');
         strip.style.backgroundImage = 'url("' + ALEX_ART.strip + '")';
@@ -783,7 +785,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
         addStory(s, page.text);
         s.appendChild(alexFolio(index + 1));
         return;
-      } else if (useHero) {
+      } else if (decorated) {
         s.classList.add('text-page', 'has-item');
         if (DECOR[SET].strip) {
           s.classList.add('has-strip');
@@ -803,7 +805,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
         s.classList.add('text-page');
         addStory(s, page.text);
       }
-      s.appendChild(pageNumber(index + 1, Boolean(useHero)));
+      s.appendChild(pageNumber(index + 1, decorated));
     });
 
     // Финал
@@ -893,13 +895,21 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
   function attachActions(data) {
     const book = data.book;
+    // «← К анкете» — анкета этой книги, заполненная (create.html?again=1 берёт ответы из geroenok:formDraft)
+    const back = document.querySelector('.toolbar-actions a[href="create.html"]');
+    if (back && data.answers && data.answers.name) back.addEventListener('click', function (e) {
+      e.preventDefault();
+      try { localStorage.setItem('geroenok:formDraft', JSON.stringify({ answers: data.answers, savedAt: Date.now() })); } catch (err) { /* хранилище недоступно */ }
+      location.href = 'create.html?again=1';
+    });
     if (data.locked) {
-      // в превью — только чтение и прослушивание; правки, продолжение и PDF — после оплаты
+      // в превью — только чтение; озвучка, правки, продолжение и PDF — после оплаты
       document.getElementById('pdfBtn').style.display = 'none';
       document.getElementById('printBtn').style.display = 'none';
       document.getElementById('specBtn').style.display = 'none';
       document.getElementById('pdfHint').style.display = 'none';
-      window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return [book.title].concat(book.pages.map(pageText)); });
+      // озвучка рассказчиком — после оплаты; голос устройства в превью звучит неприятно, поэтому «Слушать» не показываем
+      document.getElementById('listenBtn').style.display = 'none';
       return;
     }
     // озвучка рассказчиком (если уже готова), иначе — голос устройства
