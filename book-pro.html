@@ -286,6 +286,12 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     s3.src = 'assets/examples/alex-3d/book.js';
     s3.onload = function () { start(window.SKAZKA_ALEX3D_BOOK); };
     document.body.appendChild(s3);
+  } else if (params.get('demo') === 'adelina') {
+    // образец «Большой истории» для малышей: книга Аделины, акварель, Новый год (публикуется с согласия родителей)
+    var sa = document.createElement('script');
+    sa.src = 'assets/examples/adelina/book.js';
+    sa.onload = function () { start(window.SKAZKA_ADELINA_BOOK); };
+    document.body.appendChild(sa);
   } else if (/^[a-z0-9-]+$/.test(params.get('local') || '')) {
     // индивидуальный заказ, собранный вручную (данные только на компьютере, assets/kit/<имя>/ не в git): ?local=amelia
     var sl = document.createElement('script');
