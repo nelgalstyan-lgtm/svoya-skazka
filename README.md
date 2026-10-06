@@ -6,5 +6,5 @@
 
 ## Страницы
 - index.html, create.html, how-it-works.html, pricing.html, examples.html, audiobook.html
-- themes-adventures.html, themes-fairytales.html, themes-holidays.html
+- themes-adventures.html, themes-fairytales.html, themes-new-year.html, themes-birthday.html
 - offer.html, privacy.html, contacts.html — юридические страницы, нужны для подключения ЮKassa

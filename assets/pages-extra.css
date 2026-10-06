@@ -40,3 +40,13 @@
 .audio-included figure img{ width:min(100%, 260px); height:auto; border-radius:10px; box-shadow:0 20px 34px -20px rgba(40,25,10,.7); transform:rotate(2deg); }
 .audio-included figcaption{ margin-top:12px; font-size:13px; color:var(--text-soft); }
 @media (max-width:760px){ .audio-included{ grid-template-columns:1fr; padding:24px 20px; gap:24px; } }
+
+/* вопросы на страницах поводов (Новый год, день рождения) — как на «Ценах» */
+.faq-list{ max-width:760px; }
+.faq-item{ border-bottom:1px solid var(--line); padding:22px 0; }
+.faq-item summary{ font-weight:700; cursor:pointer; font-size:17px; list-style:none; display:flex; justify-content:space-between; gap:16px; }
+.faq-item summary::-webkit-details-marker{ display:none; }
+.faq-item summary::after{ content:"+"; font-family:var(--font-display); font-size:22px; color:var(--gold-dark); }
+.faq-item[open] summary::after{ content:"–"; }
+.faq-item p{ margin-top:12px; color:var(--text-soft); max-width:680px; }
+.faq-item p a{ color:var(--gold-dark); font-weight:700; }

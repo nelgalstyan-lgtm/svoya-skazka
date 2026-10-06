@@ -9,7 +9,7 @@ rm -rf dist
 mkdir -p dist
 cp ./*.html dist/
 cp -r assets js dist/
-cp robots.txt sitemap.xml dist/
+cp robots.txt sitemap.xml _redirects dist/
 node scripts/clean-urls.mjs dist
 
 # Номер версии у скриптов и стилей (?v=…): после выкладки телефоны сразу берут новые файлы, а не старые из кэша

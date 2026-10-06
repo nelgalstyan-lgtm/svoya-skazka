@@ -8,7 +8,8 @@
   <url><loc>https://geroenok.online/audiobook</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://geroenok.online/themes-adventures</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://geroenok.online/themes-fairytales</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://geroenok.online/themes-holidays</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://geroenok.online/themes-new-year</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geroenok.online/themes-birthday</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://geroenok.online/about</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>https://geroenok.online/contacts</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://geroenok.online/offer</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
