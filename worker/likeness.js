@@ -17,6 +17,7 @@ const PROMPT = (who) => 'You are a strict quality checker for a personalised chi
   + '10 — parents would instantly recognise them; 8 — clearly the same person, small differences; 7 — recognisable; '
   + '5 — similar type but could be someone else; 1–3 — a different person. Judge face shape, eyes, eyebrows, nose, mouth, hair '
   + '(colour, texture, length, hairstyle), skin tone and distinctive features; ignore the art style, clothes, pose and background. '
+  + 'Style matters too: if a face looks photorealistic, like a photo pasted into the illustration instead of matching its art style, give that person at most 6 and say in "fix" that the face must be re-rendered in the art style of the illustration while keeping its features. '
   + 'A person who is not in IMAGE 1 gets null. '
   + 'Then write "fix": one or two short sentences in English telling the illustrator exactly what to change in the faces to make them '
   + 'look like the references (empty string if every score is 8 or more). '

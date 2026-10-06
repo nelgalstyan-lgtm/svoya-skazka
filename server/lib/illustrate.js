@@ -32,6 +32,11 @@ const COVER_COMPOSITION = 'Composition: the front cover illustration of a childr
 const FACE_FIRST = 'Likeness is the most important thing on this sheet: the whole book will be drawn from it, so the face must match the reference photo as closely as possible — the exact face shape, eyes and eye color, eyebrows, nose, mouth, hair texture (straight or curly), hair color and hairline, glasses and any distinctive features; never a generic or prettified face.';
 const SHEET_COMPOSITION = 'Composition: a character reference sheet on a plain warm off-white background, in two rows. TOP: a large head-and-shoulders portrait of the child, facing the viewer, so the face is big and detailed. BOTTOM: the same child in full figure from the front and a smaller three-quarter view beside, standing in a relaxed natural pose, evenly lit. The face is identical in all views. Only the child — no other people; a pet or toy appears next to the child only if it is listed below under pets and toys. No scenery, no text, no labels. ' + FACE_FIRST;
 
+// Правило владелицы 07.10 для всех книг на заказ: похожесть И стиль вместе. Обложка Алекса: сначала шаблонное мультяшное
+// лицо (огромные круглые глаза) — непохож; после правки «под фото» — похож, но фотореалистичен, 3D-мультфильм пропал.
+// Поэтому явно: что стиль может менять, а что — никогда.
+export const STYLIZATION_LIMITS = 'Likeness and art style together — both are required: every person is clearly a character of this art style (never a photo-like face) and at the same time instantly recognizable as the real person. The style MAY change only the rendering: smooth skin without pores, hair simplified into sculpted or painted clumps, slightly simplified and softened forms, lighting and colors; the eyes may be at most slightly larger than in life. The style must NEVER change: the shape of the face and chin, the eye shape (almond or round, heavy or open lids) and spacing, the eyebrows, the length and shape of the nose, the mouth and the typical smile, ears that stick out, the hairstyle, hair texture and color, moles, freckles, glasses, and the real age.';
+
 const AVOID_BLOCK = 'Avoid: photorealistic rendering, extra or malformed fingers, blurry or distorted anatomy, watermarks, signatures, logos, brand names, characters from existing cartoons, films or games, and any text or lettering.';
 
 // Два стиля на запуск: фирменная акварель и объёмная 3D-анимация (самый востребованный на рынке)
@@ -68,6 +73,7 @@ export function buildHeroPrompt({ styleLabel, eyes, brief, look, face, photoCoun
   return [
     IDENTITY_BLOCK(eyes, photoCount),
     faceLine(face),
+    STYLIZATION_LIMITS,
     withSheet && kind !== 'sheet' ? SHEET_BLOCK : '',
     kind === 'sheet' ? 'Facial expression: a friendly open smile, bright engaged eyes.' : EMOTION_BLOCK,
     kind === 'sheet' ? '' : scene,
@@ -124,6 +130,7 @@ export function buildFamilySheetPrompt({ family = [], styleLabel } = {}) {
     "Preserve each person's exact identity from their own photo: face structure and proportions, eye shape and eye color, nose, lips, hairstyle and hair color, facial hair, glasses, age and body build. Every person must stay instantly recognizable; never merge, average or swap features between people, and do not make them look alike. Adults stay adults of their real age; do not beautify or idealize. Each person's height and body proportions match their real age.",
     // «Амилия» (01.10): по фото ChatGPT рисовал взрослых почти фотографиями — среди мультяшных детей это выглядит чужим
     'Everyone, the adults too, is a stylized cartoon character in exactly the same art style as the child in this book — never photorealistic, never like a photo: simplified smooth sculpted features and smooth stylized hair; only the likeness comes from the photos, not the realism.',
+    STYLIZATION_LIMITS,
     'Clothing: the everyday outfit from their photo, simplified into clean shapes.',
     `Art style and rendering technique: ${STYLE_TECHNIQUE[pickStyleKey(styleLabel)]}.`,
     'Composition: plain warm off-white background, evenly lit, no scenery. No text, no names, no labels.',
