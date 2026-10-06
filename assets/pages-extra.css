@@ -1,0 +1,42 @@
+/* Тематические страницы и «Аудиокниги» (07.10, владелица — «оформи визуально красиво»):
+   карточки с иконками вместо голых колонок, настоящий разворот книги вместо самодельного, блок «Входит в любую книгу». */
+
+/* карточки «почему» / «когда удобно» */
+.why-cards{ gap:20px; }
+.why-cards > div{ position:relative; padding:24px 22px 22px; background:#FFFBF2; border:1px solid #E6D3AE; border-radius:18px; box-shadow:0 14px 28px -22px rgba(74,53,39,.55); }
+.why-cards h3{ margin:0 0 8px; }
+.why-cards p{ margin:0; }
+.why-icon{ display:grid; place-items:center; width:46px; height:46px; margin-bottom:14px; border-radius:50%; background:#6a4b35; box-shadow:0 0 0 6px #F3E6CF; }
+.why-icon svg{ width:24px; height:24px; fill:none; stroke:#FFF1D6; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+
+/* настоящий разворот книги — снимки страниц из листалки, как их видит семья */
+.real-spread{ max-width:980px; margin:0 auto; }
+.real-spread-book{ position:relative; display:grid; grid-template-columns:1fr 1fr; padding:14px; border-radius:18px; background:linear-gradient(160deg,#7a5940,#4a3527); box-shadow:0 34px 60px -34px rgba(40,25,10,.75); }
+.real-spread-book img{ display:block; width:100%; height:auto; }
+.real-spread-book img:first-child{ border-radius:6px 0 0 6px; }
+.real-spread-book img:last-child{ border-radius:0 6px 6px 0; }
+.real-spread-book::after{ content:""; position:absolute; top:14px; bottom:14px; left:50%; width:70px; transform:translateX(-50%); pointer-events:none; background:linear-gradient(90deg,transparent,rgba(40,25,10,.16) 40%,rgba(40,25,10,.32) 50%,rgba(40,25,10,.16) 60%,transparent); }
+.real-spread-meta{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px 24px; margin-top:22px; padding:18px 22px; background:#FFFBF2; border:1px solid #E6D3AE; border-radius:16px; }
+.real-spread-meta .tags{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px; }
+.real-spread-meta .tags span{ padding:3px 11px; border-radius:999px; background:#F3E6CF; color:#6a4b35; font-size:13px; font-weight:700; }
+.real-spread-meta p{ margin:0; max-width:560px; color:var(--text-soft); font-size:14.5px; line-height:1.5; }
+.real-spread-meta p strong{ color:var(--text); }
+.real-spread-meta .btn{ flex:none; }
+@media (max-width:640px){
+  .real-spread-book{ padding:8px; border-radius:12px; }
+  .real-spread-book::after{ top:8px; bottom:8px; width:36px; }
+  .real-spread-meta{ padding:16px; }
+  .real-spread-meta .btn{ width:100%; text-align:center; }
+}
+
+/* «Входит в любую книгу» на «Аудиокнигах» */
+.audio-included{ display:grid; grid-template-columns:1.4fr 1fr; align-items:center; gap:36px; max-width:920px; margin:0 auto; padding:34px 38px; background:#FFFBF2; border:1px solid #E6D3AE; border-radius:22px; box-shadow:0 24px 44px -32px rgba(74,53,39,.6); }
+.audio-included h2{ margin:0 0 10px; }
+.audio-included > div > p{ margin:0 0 16px; color:var(--text-soft); }
+.audio-included ul{ list-style:none; margin:0 0 22px; padding:0; display:grid; gap:10px; }
+.audio-included li{ position:relative; padding-left:32px; color:var(--text); line-height:1.45; }
+.audio-included li::before{ content:"✓"; position:absolute; left:0; top:0; display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#6a4b35; color:#FFF1D6; font-size:13px; font-weight:700; }
+.audio-included figure{ margin:0; text-align:center; }
+.audio-included figure img{ width:min(100%, 260px); height:auto; border-radius:10px; box-shadow:0 20px 34px -20px rgba(40,25,10,.7); transform:rotate(2deg); }
+.audio-included figcaption{ margin-top:12px; font-size:13px; color:var(--text-soft); }
+@media (max-width:760px){ .audio-included{ grid-template-columns:1fr; padding:24px 20px; gap:24px; } }
