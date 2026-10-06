@@ -102,7 +102,9 @@ export function normalizeChapterBlocks(blocks, { name, girl, planNote } = {}) {
   const rest = fixed.filter((b) => b.t !== 'note');
   if (noteIndex === -1) return rest;
 
-  const label = `Из записей ${genitiveName(name, girl)}`.trim();
+  // «Из альбома …» — своя подпись у книг малышей, собранных вручную (Аделина, 06.10): её не трогаем
+  const own = String(fixed[noteIndex].label || '');
+  const label = /^Из альбома /.test(own) ? own : `Из записей ${genitiveName(name, girl)}`.trim();
   let text = cleanNoteText(fixed[noteIndex].text);
   const recent = rest.filter((b) => b.t === 'p').slice(-5).map((b) => b.text);
   const dup = (t) => !t || recent.some((p) => isDuplicate(t, p));

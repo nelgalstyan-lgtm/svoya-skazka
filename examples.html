@@ -482,6 +482,7 @@ section.tight{ padding:56px 0; }
 <link rel="icon" href="/assets/brand/star.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
 <meta name="theme-color" content="#F6F3E7">
+<style>.book-shelf.shelf-2x2{ display:grid; grid-template-columns:repeat(2, minmax(0, 360px)); justify-content:center; column-gap:80px; row-gap:56px; } @media (max-width:760px){ .book-shelf.shelf-2x2{ grid-template-columns:minmax(0, 360px); } }</style>
 </head>
 <body>
 
@@ -519,7 +520,7 @@ section.tight{ padding:56px 0; }
 
 <section class="tight">
   <div class="container">
-    <div class="book-shelf">
+    <div class="book-shelf shelf-2x2">
       <div class="book3d-item">
         <p class="book3d-kind is-big"><strong>Большая история</strong><span>Приключение · книга с главами на несколько вечеров</span><span>Алексу 13 лет · 6 глав · 3D-мультфильм</span></p>
         <div class="book3d-turn" role="button" tabindex="0" aria-label="Повернуть книгу «Алекс и тайна Ани» и посмотреть заднюю обложку">
@@ -531,16 +532,6 @@ section.tight{ padding:56px 0; }
         <p class="book3d-note">Так оформляются приключения для детей от 11 лет: пергамент, карта и предметы исследователя. Малышам и сказкам — фирменное оформление, как у Макса и Аэлиты. Брат Макс и мама нарисованы по фото — это опция «Родные по фото»: в «Большой истории» один родной входит бесплатно, второй и третий — +290&nbsp;₽.</p>
       </div>
       <div class="book3d-item">
-        <p class="book3d-kind is-big"><strong>Большая история</strong><span>Новый год · книга с главами на несколько вечеров</span><span>Аделине 4 года · 6 глав · акварель</span></p>
-        <div class="book3d-turn" role="button" tabindex="0" aria-label="Повернуть книгу «Аделина и волшебные качели» и посмотреть заднюю обложку">
-          <div class="book3d-stage"><div class="book3d"><div class="book3d-back"><img src="assets/examples/adelina/back-480.webp" alt="" loading="lazy"></div><div class="book3d-pages"></div><div class="book3d-spine"><span>Аделина и волшебные качели</span><img src="assets/brand/logo-mark-alpha.png" alt=""></div>
-            <div class="book3d-cover title-low"><img src="assets/examples/adelina/cover-480.webp" alt="" loading="lazy"><div class="book3d-title is-long"><small>Большая история · акварель</small>Аделина и волшебные качели</div><div class="book3d-hero">Аделина</div></div></div></div>
-        </div>
-        <p class="book3d-tip">Нажмите на книгу — она повернётся, и вы увидите заднюю обложку</p>
-        <a class="book3d-link book3d-open" href="book-pro.html?demo=adelina" data-src="book-pro.html?demo=adelina">Открыть книгу ↓</a>
-        <p class="book3d-note">Так выглядит «Большая история» для малышей до 7 лет: крупный шрифт, мало текста на листе и праздничное оформление. Мама, папа и сестрёнка нарисованы по фото — это опция «Родные по фото»: в «Большой истории» один родной входит бесплатно, второй и третий — +290&nbsp;₽.</p>
-      </div>
-      <div class="book3d-item">
         <p class="book3d-kind is-skazka"><strong>Сказка</strong><span>Сказка · история на один вечер</span><span>Аэлите 2 года · 8 иллюстраций · акварель</span></p>
         <div class="book3d-turn" role="button" tabindex="0" aria-label="Повернуть книгу «Аэлита и кнопка для лунного торта» и посмотреть заднюю обложку">
           <div class="book3d-stage"><div class="book3d is-skazka"><div class="book3d-back"><img src="assets/examples/aelita/back-480.webp" alt="" loading="lazy"></div><div class="book3d-pages"></div><div class="book3d-spine"><span>Аэлита и лунный торт</span><img src="assets/brand/logo-mark-alpha.png" alt=""></div>
@@ -549,6 +540,16 @@ section.tight{ padding:56px 0; }
         <p class="book3d-tip">Нажмите на книгу — она повернётся, и вы увидите заднюю обложку</p>
         <a class="book3d-link book3d-open" href="book.html?demo=aelita" data-src="book.html?demo=aelita">Открыть книгу ↓</a>
         <p class="book3d-note">Так выглядит книга для малышей до 7 лет: крупный шрифт и яркие листы с Героёнком. Как в заказе: на иллюстрациях из людей — только героиня, а сестра, мама и папа — в тексте истории.</p>
+      </div>
+      <div class="book3d-item">
+        <p class="book3d-kind is-big"><strong>Большая история</strong><span>Новый год · книга с главами на несколько вечеров</span><span>Аделине 4 года · 6 глав · акварель</span></p>
+        <div class="book3d-turn" role="button" tabindex="0" aria-label="Повернуть книгу «Аделина и волшебные качели» и посмотреть заднюю обложку">
+          <div class="book3d-stage"><div class="book3d"><div class="book3d-back"><img src="assets/examples/adelina/back-480.webp" alt="" loading="lazy"></div><div class="book3d-pages"></div><div class="book3d-spine"><span>Аделина и волшебные качели</span><img src="assets/brand/logo-mark-alpha.png" alt=""></div>
+            <div class="book3d-cover title-low"><img src="assets/examples/adelina/cover-480.webp" alt="" loading="lazy"><div class="book3d-title is-long"><small>Большая история · акварель</small>Аделина и волшебные качели</div><div class="book3d-hero">Аделина</div></div></div></div>
+        </div>
+        <p class="book3d-tip">Нажмите на книгу — она повернётся, и вы увидите заднюю обложку</p>
+        <a class="book3d-link book3d-open" href="book-pro.html?demo=adelina" data-src="book-pro.html?demo=adelina">Открыть книгу ↓</a>
+        <p class="book3d-note">Так выглядит «Большая история» для малышей до 7 лет: крупный шрифт, мало текста на листе и праздничное оформление. Мама, папа и сестрёнка нарисованы по фото — это опция «Родные по фото»: в «Большой истории» один родной входит бесплатно, второй и третий — +290&nbsp;₽.</p>
       </div>
       <div class="book3d-item">
         <p class="book3d-kind is-skazka"><strong>Сказка</strong><span>Приключение · история на один вечер</span><span>Максу 4 года · 8 иллюстраций · 3D-мультфильм</span></p>
@@ -565,8 +566,8 @@ section.tight{ padding:56px 0; }
     <div class="flip">
       <div class="flip-tabs" aria-label="Образцы книг">
         <button type="button" class="is-active" data-src="book-pro.html?demo=alex3d">Большая история · «Алекс и тайна Ани» · приключение, 13 лет</button>
-        <button type="button" data-src="book-pro.html?demo=adelina">Большая история · «Аделина и волшебные качели» · Новый год, 4 года</button>
         <button type="button" data-src="book.html?demo=aelita">Сказка · «Аэлита и кнопка для лунного торта» · акварель, 2 года</button>
+        <button type="button" data-src="book-pro.html?demo=adelina">Большая история · «Аделина и волшебные качели» · Новый год, 4 года</button>
         <button type="button" data-src="book.html?demo=max3d">Сказка · «Макс и чемодан-путешественник» · приключение, 4 года</button>
       </div>
       <iframe class="flip-frame" id="flipFrame" src="book-pro.html?demo=alex3d" title="Образец книги" loading="lazy"></iframe>

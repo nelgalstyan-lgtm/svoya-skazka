@@ -111,7 +111,23 @@ function concat(parts) {
 
 // Интонация по тарифу (решение владелицы 27.09): «Сказка» — радостная (малыши, одна короткая история),
 // «Большая история» — обычная: 30–40 минут бодрости утомляют, и в тихих главах радость звучит невпопад
-export const roleFor = (input, env = {}) => (input?.tariff === 'big' ? env.YANDEX_TTS_ROLE_BIG || 'neutral' : env.YANDEX_TTS_ROLE_SHORT || 'good');
+// Интонация Ермиля: добрые сказки — радостная (good) у обоих тарифов (решение владелицы 06.10); приключения
+// подростков 11–16 — обычная (neutral), как у образца Алекса.
+export const roleFor = (input, env = {}) => (input?.tariff === 'big'
+  ? env.YANDEX_TTS_ROLE_BIG || (Number(input?.age) >= 11 ? 'neutral' : 'good')
+  : env.YANDEX_TTS_ROLE_SHORT || 'good');
+
+// Ударения, которые Ермиль ставит неверно («+» перед ударной гласной — разметка SpeechKit). Дополнять по замечаниям.
+const STRESS = [
+  [/(^|[^а-яё])([Мм])аш(ин)/g, '$1$2аш+$3'], // машина, машины, машину… — ударение на «и» (06.10)
+  // армянские слова (06.10, книга Аделины): Дзмер Пап+и, гат+а, Ан+уш, +апрес, Нор тар+и
+  [/(^|[^а-яё])([Пп])апи(?![а-яё])/g, '$1$2ап+и'],
+  [/(^|[^а-яё])([Гг])ат(а|у|ы|е|ой)(?![а-яё])/g, '$1$2ат+$3'],
+  [/(^|[^а-яё])([Аа])нуш(?![а-яё])/g, '$1$2н+уш'],
+  [/(^|[^а-яё])([Аа])прес(?![а-яё])/g, '$1+$2прес'],
+  [/(^|[^а-яё])([Тт])ари(?![а-яё])/g, '$1$2ар+и'] // «Нор тар+и» — с Новым годом
+];
+export const speakable = (text) => STRESS.reduce((t, [re, to]) => t.replace(re, to), String(text));
 
 /** Текст → mp3 (Uint8Array). Бросает ошибку, если сервис ответил ошибкой или без звука. */
 export async function synthesize(env, text, role = env.YANDEX_TTS_ROLE) {
@@ -123,7 +139,7 @@ export async function synthesize(env, text, role = env.YANDEX_TTS_ROLE) {
     res = await fetch(TTS_URL, {
       method: 'POST',
       headers: { Authorization: `Api-Key ${env.YANDEX_API_KEY}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ text, hints, outputAudioSpec: { containerAudio: { containerAudioType: 'MP3' } }, unsafeMode: true }),
+      body: JSON.stringify({ text: speakable(text), hints, outputAudioSpec: { containerAudio: { containerAudioType: 'MP3' } }, unsafeMode: true }),
       signal: AbortSignal.timeout(120_000)
     });
   } catch (error) {

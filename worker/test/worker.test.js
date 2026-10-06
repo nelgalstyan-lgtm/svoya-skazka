@@ -7,7 +7,7 @@ import { handleApi, PREVIEW_LIMITS, UPLOAD_CHUNK_BYTES } from '../api.js';
 import { runBook, spreadPick } from '../book.js';
 import { jsonStringField } from '../bytes.js';
 import { queueHandler } from '../queue.js';
-import { splitText, voiceTracks } from '../voice.js';
+import { splitText, voiceTracks, roleFor, speakable } from '../voice.js';
 import { removeExpiredBooks, KEEP_MS } from '../cleanup.js';
 import { createStore } from '../store.js';
 import { recheckArt, ART_OFF_KEY } from '../art.js';
@@ -503,7 +503,7 @@ test('озвучка не удалась — книга готова, «Слуш
     const s = await status(env, id);
     assert.equal(s.paid, true);
     assert.ok(!s.result.book.audio || s.result.book.audio.length === 0);
-    assert.ok(ya.calls.length && ya.calls.every((c) => c.role === 'neutral'), '«Большая история» — обычная интонация');
+    assert.ok(ya.calls.length && ya.calls.every((c) => c.role === 'good'), '«Большая история» до 11 лет — радостная интонация');
     assert.equal(env.BUCKET.keys('voice-tmp/').length + env.BUCKET.keys('media/').length, 0);
   } finally { ya.restore(); ai.restore(); }
 });
@@ -792,4 +792,15 @@ test('письмо владелице о заказе: номер, книга, �
   assert.match(m.text, /book\?job=8f7bbd3b/);
   assert.match(orderSummary({ ...job, input: { ...job.input, tariff: 'big' } }, 'paid').subject, /^Оплачен/);
   assert.equal(await notifyOwner({}, job, 'new'), false);
+});
+
+test('озвучка: радостный голос у добрых сказок, обычный — у подростков; ударение в «машине»', () => {
+  assert.equal(roleFor({ tariff: 'short', age: 4 }), 'good');
+  assert.equal(roleFor({ tariff: 'big', age: 4 }), 'good');
+  assert.equal(roleFor({ tariff: 'big', age: 13 }), 'neutral');
+  assert.equal(speakable('Машины спят? Машину, машиной.'), 'Маш+ины спят? Маш+ину, маш+иной.');
+  assert.equal(speakable('Он машет рукой.'), 'Он машет рукой.');
+  assert.equal(speakable('Дзмер Папи и бабушка Ануш пекут гату. Апрес!'), 'Дзмер Пап+и и бабушка Ан+уш пекут гат+у. +Апрес!');
+  assert.equal(speakable('Богатый папин гатчинский дом.'), 'Богатый папин гатчинский дом.');
+  assert.equal(speakable('Нор тари!'), 'Нор тар+и!');
 });

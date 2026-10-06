@@ -684,6 +684,18 @@
     return book.ageGroup === '11-16' && !!(ADVENTURE_GENRES[book.genre] || TEEN_GENRES[book.genre]) && book.occasion !== 'birthday' && book.occasion !== 'newyear';
   }
 
+  // «Конец» последней строкой текста не нужен: у книги своя страница «Конец» (finaleSheet), иначе слово занимает
+  // целый лист (06.10, книга Аделины)
+  var END_RE = /^[\s*_]*(конец|the end)[\s*_.!…]*$/i;
+  function dropTrailingEnd(book) {
+    var last = book.chapters && book.chapters[book.chapters.length - 1];
+    if (!last || !last.blocks) return;
+    while (last.blocks.length) {
+      var b = last.blocks[last.blocks.length - 1];
+      if (b.t === 'p' && END_RE.test(b.text || '')) last.blocks.pop(); else break;
+    }
+  }
+
   /** Раскладывает книгу по страницам внутри root. Возвращает { pages, sheets }. */
   function render(book, root, opts) {
     // фирменное оформление у всех книг; прежние рамки — только если их явно просят (?frame=… — для сравнения)
@@ -696,6 +708,7 @@
     KIDS_SET = kidsSetFor(book);
     kidsCount = 0;
     BOY = book.meta ? book.meta.heroGirl === false : false;
+    dropTrailingEnd(book);
     EXTRA = FRAME === 'brand' ? ' bk-set-' + SET + (book.ageGroup === '11-16' ? ' bk-teen' : '') : '';
     // книга в стиле «3D-мультфильм»: рисованные рамки берутся в 3D-варианте (parchment.css, .bk-art-3d)
     ART = book.art === '3d' ? ' bk-art-3d' : '';

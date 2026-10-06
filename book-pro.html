@@ -111,8 +111,9 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       document.getElementById('count').textContent = res.pages + (book.lang === 'en' ? ' pages' : ' стр.');
       window.__bookReady = res;
       window.__bookData = book;
-      // book.sample — образец для показа покупателям (копия готовой книги): только чтение и «Слушать», без скачивания
-      if (locked || book.sample) {
+      // book.sample и ?demo= — образцы для показа покупателям (страница «Примеры»): только чтение и «Слушать», без скачивания
+      // книги и аудио (правило владелицы 06.10 — для всех книг на полке)
+      if (locked || book.sample || params.get('demo')) {
         document.getElementById('pdfBtn').style.display = 'none';
         document.getElementById('printBtn').style.display = 'none';
         document.getElementById('specBtn').style.display = 'none';
@@ -184,7 +185,8 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       window.SkazkaExtras.attachAudioDownload(document.getElementById('audioDlBtn'), book.audio, book.audioFile, function () { return window.SkazkaExtras.pdfName(book.title).replace(/\.pdf$/, book.lang === 'en' ? ' — audiobook.mp3' : ' — аудиокнига.mp3'); });
       return;
     }
-    window.SkazkaExtras.attachEditor({
+    // закрытая копия для семьи (job.noEdit, как у Аэлиты): кнопки «Править» нет, сервер всё равно отвечает 403
+    if (!book.noEdit) window.SkazkaExtras.attachEditor({
       button: document.getElementById('editBtn'),
       apiBase: API_BASE,
       jobId: jobId,

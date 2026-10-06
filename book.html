@@ -693,6 +693,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     const book = data.book;
     LANG = book.lang === 'en' ? 'en' : 'ru';
     if (LANG === 'en') englishChrome(book);
+    dropTrailingEnd(book);
     const name = (data.answers && data.answers.name) || '';
     const demoHeroSrc = HERO_IMAGES[name.trim().toLowerCase()];
     const scenes = coverAndFinaleScenes(data.answers);
@@ -967,6 +968,14 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
   function pageText(page) {
     return typeof page === 'string' ? page : page.text;
+  }
+
+  // «Конец» последней строкой текста не нужен: у книги своя страница «Конец» (06.10, книга Аделины)
+  function dropTrailingEnd(book) {
+    const n = (book.pages || []).length - 1;
+    if (n < 0) return;
+    const text = String(pageText(book.pages[n]) || '').replace(/(^|\n)[\s*_]*(Конец|The End)[\s*_.!…]*$/i, '').trimEnd();
+    if (typeof book.pages[n] === 'string') book.pages[n] = text; else book.pages[n].text = text;
   }
 
   // Подгоняем размер шрифта, чтобы текст целиком помещался на листе (и на экране, и в PDF)
