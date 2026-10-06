@@ -804,3 +804,68 @@ test('озвучка: радостный голос у добрых сказок
   assert.equal(speakable('Богатый папин гатчинский дом.'), 'Богатый папин гатчинский дом.');
   assert.equal(speakable('Нор тари!'), 'Нор тар+и!');
 });
+
+// проверка похожести (likeness.js): GPT с картинкой ставит оценки; ставится поверх stubOpenAI
+function stubChecker(scoreFor) {
+  const checks = [];
+  const inner = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (!String(url).endsWith('/chat/completions')) return inner(url, init);
+    const body = JSON.parse(init.body);
+    const text = body.messages[0].content[0].text;
+    if (!/strict quality checker/.test(text)) return new Response('{"error":{"message":"nope"}}', { status: 400 });
+    checks.push({ images: body.messages[0].content.length - 1, family: /"family-0"/.test(text) });
+    const score = scoreFor(checks.length);
+    return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ scores: { child: score }, fix: score < 7 ? 'Make the hair straight, not curly.' : '' }) } }] }), { status: 200 });
+  };
+  return { checks, restore: () => { globalThis.fetch = inner; } };
+}
+
+test('похожесть: непохожий лист героя перерисовывается с замечанием, итог — в заказе', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  const checker = stubChecker((n) => (n === 1 ? 4 : 9));
+  try {
+    const id = await order(env);
+    const job = await createStore(env.BUCKET).getJob(id);
+    assert.deepEqual(ai.calls.map((c) => c.kind).sort(), ['cover', 'scene', 'sheet', 'sheet']);
+    const fixed = ai.calls.filter((c) => c.kind === 'sheet')[1];
+    assert.match(fixed.prompt, /LIKENESS CORRECTION.*Make the hair straight/);
+    assert.ok(!/LIKENESS CORRECTION/.test(ai.calls.find((c) => c.kind === 'cover').prompt));
+    assert.equal(checker.checks.length, 4);
+    assert.deepEqual(job.likeness.sheet, { score: 9, scores: { child: 9 }, tries: 2 });
+    assert.equal(job.likeness.cover.tries, 1);
+    assert.ok(job.likeness['scene-0']);
+    assert.match(job.result.sheet, /sheet-fix1/, 'в книге — перерисованный лист');
+  } finally { checker.restore(); ai.restore(); }
+});
+
+test('похожесть: так и не похож — остаётся лучший вариант, письмо владелице называет картинку', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  const checker = stubChecker((n) => [3, 5, 4][n - 1] ?? 9);
+  try {
+    const id = await order(env);
+    const job = await createStore(env.BUCKET).getJob(id);
+    assert.equal(ai.calls.filter((c) => c.kind === 'sheet').length, 3, 'листу героя — две перерисовки');
+    assert.match(job.result.sheet, /sheet-fix1/, 'лучший из трёх — 5 баллов');
+    assert.equal(job.likeness.sheet.score, 5);
+    const { orderSummary } = await import('../notify.js');
+    const m = orderSummary({ ...job, likeness: { ...job.likeness, 'scene-2': { score: null, scores: null, tries: 1 } } }, 'drawn');
+    assert.match(m.subject, /^⚠ Проверить похожесть/);
+    assert.match(m.text, /лист героя: ребёнок 5\/10/);
+    assert.match(m.text, /Не проверено.*иллюстрация 3/);
+    assert.match(orderSummary({ ...job, likeness: { sheet: { score: 9, scores: { child: 9 }, tries: 1 } } }, 'drawn').subject, /^Дорисована/);
+  } finally { checker.restore(); ai.restore(); }
+});
+
+test('похожесть: проверка недоступна — книга рисуется как раньше, без перерисовок', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  try {
+    const id = await order(env);
+    const job = await createStore(env.BUCKET).getJob(id);
+    assert.equal(ai.calls.length, 3);
+    assert.equal(job.likeness.sheet.score, null);
+  } finally { ai.restore(); }
+});

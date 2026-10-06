@@ -98,8 +98,8 @@ function providers(env) {
  * Одна иллюстрация → { mime, bytes } или null. НИКОГДА не бросает: не нарисовалась — книга обойдётся без неё.
  * kind: 'sheet' | 'cover' | 'scene' | 'coloring'; refs — фото ребёнка, sheet — лист персонажа, source — картинка для раскраски.
  */
-export async function drawImage(env, { kind = 'scene', refs = [], sheet = null, source = null, styleLabel, eyes, brief, look, face, family = [], familySheet = null, log = console.warn } = {}) {
-  const request = imageRequest({ refs, sheet, source, kind, styleLabel, eyes, brief, look, face, family, familySheet });
+export async function drawImage(env, { kind = 'scene', refs = [], sheet = null, source = null, styleLabel, eyes, brief, look, face, family = [], familySheet = null, fix = '', log = console.warn } = {}) {
+  const request = imageRequest({ refs, sheet, source, kind, styleLabel, eyes, brief, look, face, family, familySheet, fix });
   if (!request) return null;
   const timeoutMs = Number(env.IMAGE_TIMEOUT_MS || 180_000);
   for (const provider of providers(env)) {

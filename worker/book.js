@@ -22,6 +22,8 @@ import { voiceFlow } from './voice.js';
 import { proofreadAnswers } from './proofread.js';
 import { describeFace } from './face.js';
 import { songFlow } from './song.js';
+import { checkLikeness, LIKENESS_MIN } from './likeness.js';
+import { notifyOwner } from './notify.js';
 
 const { normalizeInput } = template;
 
@@ -31,6 +33,9 @@ const BIG_TIME = { stepDeadlineMs: 270_000, attemptTimeoutMs: 150_000 };
 const TEXT_STEP = { retries: { limit: 1, delay: '10 seconds', backoff: 'constant' }, timeout: '10 minutes' };
 const IMAGE_STEP = { retries: { limit: 1, delay: '10 seconds', backoff: 'constant' }, timeout: '15 minutes' };
 const QUICK_STEP = { retries: { limit: 3, delay: '5 seconds', backoff: 'exponential' }, timeout: '1 minute' };
+const CHECK_STEP = { retries: { limit: 1, delay: '5 seconds', backoff: 'constant' }, timeout: '4 minutes' };
+// сколько раз перерисовывать непохожую картинку (likeness.js): лист героя — основа всей книги, ему две попытки
+const MAX_FIXES = { sheet: 2, family: 1, cover: 1, scene: 1 };
 const CONCURRENCY = 3;
 const MAX_COLORING = 3; // решение владелицы 01.10: раскраска — 3 страницы (сайт обещает ровно 3)
 
@@ -44,12 +49,42 @@ export function spreadPick(items, n) {
 export async function runBook(env, { id, mode }, step, { log = console.warn } = {}) {
   const store = createStore(env.BUCKET);
   const progress = (text) => store.updateJob(id, (job) => { job.progress = text; if (job.status === 'queued') { job.status = 'processing'; job.startedAt = Date.now(); } });
-  const ctx = { env, store, id, step, log, progress };
+  // likeness — итог проверки похожести по картинкам ({ sheet: {...}, 'scene-3': {...} }); собирается заново при каждом
+  // возобновлении Workflow из запомненных шагов и сохраняется в job.likeness в шагах finish
+  const ctx = { env, store, id, step, log, progress, likeness: {} };
   if (mode === 'voice') return voiceFlow(ctx);
   return mode === 'complete' ? completeFlow(ctx) : previewFlow(ctx);
 }
 
 // ---------------------------------------------------------------- рисование
+
+/**
+ * Картинка с проверкой похожести: рисуем → проверяющий сравнивает с фото → ниже LIKENESS_MIN — перерисовка с его
+ * замечанием (до MAX_FIXES раз), остаётся самый похожий вариант. Итог — в ctx.likeness[name]. Каждое действие — свой шаг.
+ */
+async function drawChecked(ctx, name, kind, { attempt, references, childName = '', childless = false }) {
+  const { env, store, step, log } = ctx;
+  // упавшая проверка (лимит процессора и т.п.) не должна ронять книгу — считаем картинку непроверенной
+  const check = (stepName, src) => step.do(`likeness-${stepName}`, CHECK_STEP, async () => {
+    const [image, refs] = await Promise.all([store.loadImage(src), references()]);
+    return checkLikeness(env, { image, ...refs, childName, childless }, { log });
+  }).catch((error) => { log(`[likeness] ${stepName}: ${error?.message || error}`); return null; });
+  let best = { src: await attempt(name, '') };
+  if (!best.src) return null;
+  best.check = await check(name, best.src);
+  let last = best.check, tries = 1;
+  for (let n = 1; n <= (MAX_FIXES[kind] || 1) && last && last.score < LIKENESS_MIN; n++) {
+    const fixName = `${name}-fix${n}`;
+    const src = await attempt(fixName, last.fix || 'Make every face match the references much more closely.');
+    if (!src) break;
+    tries += 1;
+    last = await check(fixName, src);
+    if (last && last.score > best.check.score) best = { src, check: last };
+  }
+  const base = name.replace(/-retry$/, '');
+  ctx.likeness[base] = { score: best.check?.score ?? null, scores: best.check?.scores || null, tries };
+  return best.src;
+}
 
 /**
  * Иллюстрации книги по шагам: лист персонажа (если его ещё нет), потом обложка и сцены по три одновременно,
@@ -64,19 +99,34 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only 
   const total = wanted.filter(Boolean).length + (coverBrief ? 1 : 0) + (sheet ? 0 : 1);
   let started = 0;
 
-  const draw = (name, kind, brief) => step.do(name, IMAGE_STEP, async () => {
-    started += 1;
+  const attempt = (name, kind, brief, fix = '') => step.do(name, IMAGE_STEP, async () => {
+    if (!fix) started += 1;
     // в превью всего 3 картинки (лист героя, обложка, первая иллюстрация) — называем, что именно рисуем, чтобы «из 3» не путало
     const what = kind === 'sheet' ? 'лист героя по фото' : kind === 'cover' ? 'обложку' : 'иллюстрацию с вашим ребёнком';
-    await progress(`Рисуем ${what} (картинка ${Math.min(started, total)} из ${total})…`);
+    await progress(fix
+      ? `Проверили похожесть — перерисовываем ${what}, чтобы ${kind === 'scene' && family.length ? 'все были' : 'ребёнок был'} больше похож${kind === 'scene' && family.length ? 'и' : ''} на себя…`
+      : `Рисуем ${what} (картинка ${Math.min(started, total)} из ${total})…`);
     const withFamily = kind === 'scene' && family.length > 0;
     const [refs, sheetImage, familyImage] = await Promise.all([
       store.loadPhotos(id),
       kind === 'sheet' ? null : store.loadImage(sheet),
       withFamily ? store.loadImage(familySheet) : null
     ]);
-    const image = await drawImage(env, { kind, refs, sheet: sheetImage, family: familyImage ? family : [], familySheet: familyImage, brief, ...style, log });
+    const image = await drawImage(env, { kind, refs, sheet: sheetImage, family: familyImage ? family : [], familySheet: familyImage, brief, fix, ...style, log });
     return image ? store.putImage(id, name, image) : null;
+  });
+  // эталон похожести — фото; если их уже нет (истёк срок) — лист персонажа и лист родных
+  const references = async (kind) => {
+    const withFamily = kind === 'scene' && family.length > 0;
+    const [photos, familyPhotos] = await Promise.all([store.loadPhotos(id), withFamily ? store.loadPhotos(id, { family: true }) : []]);
+    const refs = photos.length ? photos : kind === 'sheet' ? [] : [await store.loadImage(sheet)].filter(Boolean);
+    const familyRefs = !withFamily ? [] : familyPhotos.length ? familyPhotos : [await store.loadImage(familySheet)].filter(Boolean);
+    return { refs, familyRefs, family: withFamily ? family : [] };
+  };
+  const draw = (name, kind, brief) => drawChecked(ctx, name, kind, {
+    attempt: (fixName, fix) => attempt(fixName, kind, brief, fix),
+    references: () => references(kind),
+    childName: input.name
   });
 
   if (!sheet) sheet = await draw('sheet', 'sheet', 'character reference sheet');
@@ -114,12 +164,17 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only 
  */
 async function drawFamilySheet(ctx, input) {
   const { env, store, id, step, log, progress } = ctx;
-  const run = (name) => step.do(name, IMAGE_STEP, async () => {
-    await progress('Рисуем родных по фото…');
+  const attempt = (name, fix) => step.do(name, IMAGE_STEP, async () => {
+    await progress(fix ? 'Проверили похожесть — перерисовываем родных…' : 'Рисуем родных по фото…');
     const refs = await store.loadPhotos(id, { family: true });
     if (!refs.length) return null;
-    const image = await drawImage(env, { kind: 'family', refs, family: input.family, styleLabel: input.style, log });
+    const image = await drawImage(env, { kind: 'family', refs, family: input.family, styleLabel: input.style, fix, log });
     return image ? store.putImage(id, name, image) : null;
+  });
+  const run = (name) => drawChecked(ctx, name, 'family', {
+    attempt,
+    references: async () => ({ refs: [], familyRefs: await store.loadPhotos(id, { family: true }), family: input.family || [] }),
+    childless: true
   });
   return (await run('family-sheet')) || run('family-sheet-retry');
 }
@@ -261,6 +316,7 @@ async function previewFlow(ctx) {
       if (job.status === 'completed') return; // уже отдали запасную книгу (см. api.js) — не подменяем её
       job.status = 'completed';
       job.result = result;
+      job.likeness = { ...job.likeness, ...ctx.likeness };
       job.finishedAt = Date.now();
       job.progress = '';
     });
@@ -348,11 +404,14 @@ async function completeFlow(ctx) {
       if (job.result.book) for (const ch of job.result.book.chapters) ch.blocks = ch.blocks.filter((b) => b.t !== 'image' || isDrawn(b.src));
       if (coloring.length) target.coloring = coloring;
       delete target.preview;
+      job.likeness = { ...job.likeness, ...ctx.likeness };
       job.finishing = false;
       job.progress = '';
     });
     await store.removePhotos(id); // книга дорисована — фото больше не нужны
   });
+  // письмо владелице: книга дорисована + итог проверки похожести (какие картинки посмотреть и перерисовать)
+  await step.do('likeness-report', QUICK_STEP, async () => { await notifyOwner(ctx.env, await store.getJob(id), 'drawn', ctx.log); });
 
   // озвучка — уже после того, как книга открыта покупателю: пока она идёт, «Слушать» читает голос устройства
   await voiceFlow(ctx);

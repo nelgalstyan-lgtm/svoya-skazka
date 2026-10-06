@@ -139,7 +139,17 @@ const FAMILY_PEOPLE = (family, last) => `People: the ${last ? 'last' : 'second-t
  * refs — фото ребёнка (у 'family' — фото родного), sheet — лист персонажа, source — картинка для раскраски;
  * family — родной из анкеты [{ who, name }], familySheet — его лист. Формат картинок любой ({ mime, data } или { mime, bytes }).
  */
-export function imageRequest({ refs = [], sheet = null, source = null, kind = 'scene', styleLabel, eyes, brief, look, face, family = [], familySheet = null } = {}) {
+/**
+ * Запрос к рисующей модели. fix — замечание проверки похожести (worker/likeness.js) к прошлой попытке: дописывается
+ * в конец промпта, чтобы перерисовка исправила именно лица.
+ */
+export function imageRequest({ fix = '', ...options } = {}) {
+  const request = baseRequest(options);
+  if (!request || !fix || options.kind === 'coloring') return request;
+  return { ...request, prompt: `${request.prompt} LIKENESS CORRECTION — the previous attempt did not look enough like the real people in the references; fix exactly this: ${fix}` };
+}
+
+function baseRequest({ refs = [], sheet = null, source = null, kind = 'scene', styleLabel, eyes, brief, look, face, family = [], familySheet = null } = {}) {
   if (kind === 'coloring') return source ? { images: [source], prompt: buildColoringPrompt() } : null;
   if (kind === 'family') return refs.length && family.length ? { images: refs.slice(0, MAX_FAMILY), prompt: buildFamilySheetPrompt({ family: family.slice(0, refs.length), styleLabel }) } : null;
   // перерисовка после генерации: фото ребёнка уже удалено, лицо и одежду держит лист персонажа
