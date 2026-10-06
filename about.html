@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Именная аудиокнига для ребёнка | Героёнок</title>
-<meta name="description" content="Персонализированная аудиокнига: та же история про вашего ребёнка, но озвученная голосом рассказчика — слушайте перед сном или в дороге.">
+<title>О нас | Героёнок</title>
+<meta name="description" content="Кто придумал Героёнка и зачем: история Нелли о том, почему у каждого ребёнка должна быть своя сказка.">
 <style>
 /* ===========================================================
    Дизайн-система «Героёнок» — тёплая книжная эстетика
@@ -465,15 +465,16 @@ section.tight{ padding:56px 0; }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Caveat:wght@600&family=PT+Sans:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Marck+Script&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,700;1,7..72,400;1,7..72,700&family=Caveat:wght@600&family=PT+Sans:wght@400;700&display=swap">
+<link rel="stylesheet" href="assets/site-extra.css">
 <link rel="stylesheet" href="assets/geroenok.css">
-<link rel="canonical" href="https://geroenok.online/audiobook">
+<link rel="canonical" href="https://geroenok.online/about">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Героёнок">
 <meta property="og:locale" content="ru_RU">
-<meta property="og:title" content="Именная аудиокнига для ребёнка | Героёнок">
-<meta property="og:description" content="Персонализированная аудиокнига: та же история про вашего ребёнка, но озвученная голосом рассказчика — слушайте перед сном или в дороге.">
-<meta property="og:url" content="https://geroenok.online/audiobook">
+<meta property="og:title" content="О нас | Героёнок">
+<meta property="og:description" content="Кто придумал Героёнка и зачем: история Нелли о том, почему у каждого ребёнка должна быть своя сказка.">
+<meta property="og:url" content="https://geroenok.online/about">
 <meta property="og:image" content="https://geroenok.online/assets/brand/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -481,6 +482,82 @@ section.tight{ padding:56px 0; }
 <link rel="icon" href="/assets/brand/star.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
 <meta name="theme-color" content="#F6F3E7">
+<style>
+/* письмо Нелли — светлый лист с волшебными краями */
+.about-letter{
+  max-width:700px; margin:0 auto;
+  background:var(--cream);
+  border-radius:var(--radius-l);
+  box-shadow:
+    0 0 0 1px rgba(215,154,58,.35),
+    0 0 22px 3px rgba(215,154,58,.38),
+    0 0 80px 12px rgba(244,214,140,.45),
+    var(--shadow-soft);
+  padding:66px 76px 58px;
+  position:relative;
+  font-family:'Literata', Georgia, serif;
+  color:#2f2618;
+  font-size:18.5px;
+  line-height:1.85;
+}
+.about-letter::before{ /* тонкая золотая рамка внутри листа */
+  content:""; position:absolute; inset:14px;
+  border:1.5px solid transparent; border-radius:20px; pointer-events:none;
+  background:linear-gradient(135deg,#F3D58C,#D79A3A 30%,#F7E3AE 50%,#C98A2E 70%,#F3D58C) border-box;
+  -webkit-mask:linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  opacity:.75;
+}
+.about-star{
+  position:absolute; color:#D79A3A; font-size:24px; line-height:1; pointer-events:none;
+  text-shadow:0 0 6px rgba(255,214,120,1), 0 0 14px rgba(240,180,70,.8);
+  animation:aboutStar 3.6s ease-in-out infinite;
+}
+.about-star.s1{ top:6px; left:7px; }
+.about-star.s2{ top:6px; right:7px; animation-delay:.9s; }
+.about-star.s3{ bottom:6px; left:7px; animation-delay:1.8s; }
+.about-star.s4{ bottom:6px; right:7px; animation-delay:2.7s; }
+.about-spark{
+  position:absolute; color:#E2A845; line-height:1; pointer-events:none;
+  text-shadow:0 0 6px rgba(255,214,120,.95);
+  animation:aboutSpark 4s ease-in-out infinite;
+}
+@keyframes aboutStar{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(.72) rotate(25deg); opacity:.65; } }
+@keyframes aboutSpark{ 0%,100%{ opacity:.25; transform:scale(.6); } 50%{ opacity:1; transform:scale(1.1); } }
+.about-letter p{ margin:0 0 1.15em; }
+.about-letter em{ color:#6f4e2e; }
+.about-letter .hello{ font-family:'Lora', Georgia, serif; font-weight:700; font-size:25px; line-height:1.35; margin:0 0 1em; }
+.about-letter .dropcap::first-letter{
+  font-family:'Lora', Georgia, serif; font-weight:700; font-size:3.3em; float:left; line-height:.86;
+  margin:.07em .1em 0 0; color:var(--gold-dark);
+}
+.about-say{ font-style:italic; font-size:30px; color:var(--gold-dark); text-align:center; margin:.6em 0 .7em !important; line-height:1.3; }
+.about-signature{ display:flex; align-items:center; gap:18px; margin-top:2em; }
+.about-avatar{
+  width:110px; height:110px; flex:none; border-radius:50%; object-fit:cover;
+  border:2px solid #E7C27A;
+  box-shadow:0 0 0 4px var(--cream), 0 0 0 5px rgba(215,154,58,.35);
+}
+.about-sign{ font-family:'Marck Script', cursive; letter-spacing:-.02em; word-spacing:-.12em; font-size:34px; color:#7a4e26; line-height:1.15; margin:0 !important; }
+.about-sign small{ display:block; font-size:24px; color:#8a6a48; margin-top:4px; }
+.hero-storybook .storybook-text p:not(.lead){ color:var(--text-soft); font-size:18px; max-width:540px; }
+@media (max-width:640px){ .hero-storybook .storybook-text p:not(.lead){ font-size:16.5px; } }
+.about-cta{ text-align:center; padding:8px 0 80px; }
+.about-cta p{ color:var(--text-soft); margin-bottom:20px; }
+@media (max-width:640px){
+  .about-letter{ padding:44px 26px 40px; font-size:17px; line-height:1.8; border-radius:16px; }
+  .about-letter .hello{ font-size:21px; }
+  .about-say{ font-size:26px; }
+  .about-avatar{ width:88px; height:88px; }
+  .about-signature{ gap:14px; }
+  .about-sign{ font-size:29px; }
+  .about-sign small{ font-size:20px; }
+  .about-letter::before{ inset:9px; border-radius:16px; }
+  .about-star{ font-size:18px; }
+  .about-spark{ transform:scale(.8); }
+}
+@media (max-width:640px){ .about-cta .btn{ margin:8px 0 0 !important; } }
+</style>
 </head>
 <body>
 
@@ -492,7 +569,7 @@ section.tight{ padding:56px 0; }
       <a href="how-it-works.html">Как это работает</a>
       <a href="examples.html">Примеры</a>
       <a href="pricing.html">Цены</a>
-      <a href="audiobook.html" class="active">Аудиокниги</a>
+      <a href="audiobook.html">Аудиокниги</a>
     </nav>
     <details class="nav-mobile">
       <summary><span class="nav-mobile-label">Меню</span></summary>
@@ -501,7 +578,7 @@ section.tight{ padding:56px 0; }
       <a href="how-it-works.html">Как это работает</a>
       <a href="examples.html">Примеры</a>
       <a href="pricing.html">Цены</a>
-      <a href="audiobook.html" class="active">Аудиокниги</a>
+      <a href="audiobook.html">Аудиокниги</a>
     </nav>
     </details>
     <a href="create.html" class="header-cta">Создать книгу</a>
@@ -512,99 +589,62 @@ section.tight{ padding:56px 0; }
   <div class="container">
     <div class="storybook-page">
       <div class="storybook-text">
-      <h1>Та же сказка — но теперь можно закрыть глаза и просто слушать</h1>
-      <p class="lead">Каждая именная книга умеет говорить: голос рассказчика читает историю про вашего ребёнка вслух — с его именем, друзьями и привычками внутри.</p>
-      <div class="hero-cta-row">
-        <a href="create.html" class="btn btn-primary">Создать книгу с озвучкой</a>
+        <span class="kicker">Давайте знакомиться</span>
+        <h1>О нас</h1>
+        <p class="lead">Здесь мы верим в одну простую вещь: <strong>у&nbsp;каждого ребёнка должна быть своя сказка.</strong></p>
+        <p>Не просто книга с именем на обложке, а история, в которой ребёнок узнаёт себя — свой характер, свои маленькие привычки, любимые слова, близких людей и то, о чём ему хочется мечтать.</p>
+        <p>И, конечно, себя на каждой картинке.</p>
       </div>
-    </div>
       <figure class="storybook-art">
-        <img class="brand-art" src="assets/brand/pose-listening-240.webp" srcset="assets/brand/pose-listening-240.webp 240w, assets/brand/pose-listening-480.webp 480w" sizes="220px" width="220" height="218" alt="Героёнок в наушниках слушает аудиокнигу" fetchpriority="high">
-        <div class="quote-card">
-        <p style="font-family:var(--font-body); color:var(--text-soft); font-size:15px; margin-bottom:10px;">▶ Глава 1 · 8:51</p>
-        <p>«…Алекс ещё раз посмотрел на льва. Ему казалось, что он уже разгадал первую часть загадки. Через несколько дней он поймёт, насколько ошибался».</p>
-        <p class="name">— из аудиокниги «Алекс и тайна Ани»</p>
-        </div>
+        <img class="brand-art" src="assets/brand/geroenok-main-360.webp" srcset="assets/brand/geroenok-main-360.webp 360w, assets/brand/geroenok-main-560.webp 560w" sizes="(max-width:640px) 96px, 220px" width="360" height="606" alt="Героёнок с сумкой книг" fetchpriority="high" style="width:min(220px,100%);">
+        <figcaption class="storybook-note">Хранитель историй с сумкой книг</figcaption>
       </figure>
     </div>
   </div>
 </section>
 
-<section class="section-paper2" id="audiobook-example">
+<section class="tight">
   <div class="container">
-    <div class="section-head">
-      <span class="kicker">Пример</span>
-      <h2>Послушайте, как это звучит</h2>
-      <p>Настоящая книга «Алекс и тайна Ани» (Алексу 13 лет), озвученная голосом рассказчика — посвящение и шесть глав. Публикуем с согласия родителей.</p>
-    </div>
-    <div class="audio-book">
-      <figure class="audio-book-cover">
-        <img src="assets/examples/alex-3d/cover-480.webp" width="240" height="360" loading="lazy" alt="Обложка аудиокниги «Алекс и тайна Ани»">
-        <figcaption>«Алекс и тайна Ани» · 6 глав · 39 минут</figcaption>
-      </figure>
-      <ol class="audio-tracks">
-          <li class="audio-track">
-            <span class="audio-track-name">Посвящение</span><span class="audio-track-time">1:27</span>
-            <audio controls preload="none" src="/api/media/alex-audio/dedication.mp3" aria-label="Посвящение"></audio>
-          </li>
-          <li class="audio-track">
-            <span class="audio-track-name">Глава 1. Книга со львом</span><span class="audio-track-time">8:51</span>
-            <audio controls preload="none" src="/api/media/alex-audio/ch1.mp3" aria-label="Глава 1. Книга со львом"></audio>
-          </li>
-          <li class="audio-track">
-            <span class="audio-track-name">Глава 2. Дорога</span><span class="audio-track-time">5:54</span>
-            <audio controls preload="none" src="/api/media/alex-audio/ch2.mp3" aria-label="Глава 2. Дорога"></audio>
-          </li>
-          <li class="audio-track">
-            <span class="audio-track-name">Глава 3. Собор</span><span class="audio-track-time">5:52</span>
-            <audio controls preload="none" src="/api/media/alex-audio/ch3.mp3" aria-label="Глава 3. Собор"></audio>
-          </li>
-          <li class="audio-track">
-            <span class="audio-track-name">Глава 4. Ошибка</span><span class="audio-track-time">5:12</span>
-            <audio controls preload="none" src="/api/media/alex-audio/ch4.mp3" aria-label="Глава 4. Ошибка"></audio>
-          </li>
-          <li class="audio-track">
-            <span class="audio-track-name">Глава 5. То, что осталось</span><span class="audio-track-time">4:49</span>
-            <audio controls preload="none" src="/api/media/alex-audio/ch5.mp3" aria-label="Глава 5. То, что осталось"></audio>
-          </li>
-          <li class="audio-track">
-            <span class="audio-track-name">Глава 6. То, что остаётся</span><span class="audio-track-time">7:20</span>
-            <audio controls preload="none" src="/api/media/alex-audio/ch6.mp3" aria-label="Глава 6. То, что остаётся"></audio>
-          </li>
-      </ol>
-    </div>
+    <article class="about-letter">
+      <span class="about-star s1" aria-hidden="true">✦</span><span class="about-star s2" aria-hidden="true">✦</span><span class="about-star s3" aria-hidden="true">✦</span><span class="about-star s4" aria-hidden="true">✦</span>
+      <span class="about-spark" aria-hidden="true" style="top:-9px;left:24%;font-size:13px;animation-delay:0s">✦</span><span class="about-spark" aria-hidden="true" style="top:-7px;left:52%;font-size:10px;animation-delay:1.3s">✦</span><span class="about-spark" aria-hidden="true" style="top:-9px;left:79%;font-size:14px;animation-delay:2.4s">✦</span><span class="about-spark" aria-hidden="true" style="bottom:-9px;left:30%;font-size:14px;animation-delay:.7s">✦</span><span class="about-spark" aria-hidden="true" style="bottom:-7px;left:61%;font-size:10px;animation-delay:2s">✦</span><span class="about-spark" aria-hidden="true" style="bottom:-9px;left:86%;font-size:12px;animation-delay:3.1s">✦</span><span class="about-spark" aria-hidden="true" style="left:-8px;top:22%;font-size:12px;animation-delay:1.6s">✦</span><span class="about-spark" aria-hidden="true" style="left:-7px;top:48%;font-size:10px;animation-delay:.4s">✦</span><span class="about-spark" aria-hidden="true" style="left:-9px;top:74%;font-size:14px;animation-delay:2.8s">✦</span><span class="about-spark" aria-hidden="true" style="right:-9px;top:16%;font-size:14px;animation-delay:2.2s">✦</span><span class="about-spark" aria-hidden="true" style="right:-7px;top:42%;font-size:10px;animation-delay:3.4s">✦</span><span class="about-spark" aria-hidden="true" style="right:-8px;top:69%;font-size:12px;animation-delay:1s">✦</span><span class="about-spark" aria-hidden="true" style="right:-7px;top:91%;font-size:10px;animation-delay:.2s">✦</span>
+      <h2 class="hello">Привет! Меня зовут Нелли, и&nbsp;я&nbsp;придумала Героёнка.</h2>
+
+      <p class="dropcap">С детства мне хотелось стать волшебницей. Я представляла, что однажды у меня появится волшебная палочка и я смогу творить самые настоящие чудеса. Палочки у меня так и не появилось. Зато появились истории.</p>
+
+      <p>Я всегда любила придумывать их для тех, кого люблю. И однажды заметила удивительную вещь: когда ребёнок слышит в сказке своё имя, узнаёт в герое себя, своего друга или свою маленькую смешную привычку, он слушает совсем по-другому. Будто сказка вдруг становится его собственной. Глаза загораются, появляется улыбка — и почти всегда звучит:</p>
+
+      <p class="about-say">«А давай ещё раз!»</p>
+
+      <p>Наверное, именно тогда я впервые подумала: а почему бы не сделать так, чтобы у каждого ребёнка была своя настоящая книга? Книга, которую невозможно перепутать ни с одной другой. Не просто поменять имя в готовой истории, а придумать её именно для этого ребёнка. С его характером, его маленьким миром, его близкими и тем, что сейчас занимает его сердце.</p>
+
+      <p>Сегодня у нас есть технологии, которые помогают воплотить такую задумку в жизнь. Нейросети помогают создавать иллюстрации и текст, но самое важное в этой книге всё равно остаётся за человеком.</p>
+
+      <p>Я придумываю истории и сюжеты, выбираю детали, продумываю оформление и внимательно слежу за каждой страницей. Чтобы ребёнок был похож на себя. Чтобы история была доброй. Чтобы в ней не было случайных слов и чужих шаблонов. И чтобы, открывая книгу, он мог однажды сказать:</p>
+
+      <p class="about-say">«Это же про меня!»</p>
+
+      <p>А помогает мне в этом Героёнок — маленький хранитель историй с сумкой книг. Он путешествует между сказками и бережно собирает те, которые могут стать чьими-то особенными историями. Мне хочется думать, что Героёнок появился именно для этого — чтобы однажды принести книгу в дом, открыть её на первой странице и подарить ребёнку маленькое чудо: увидеть себя героем собственной сказки.</p>
+
+      <p>Кажется, моя детская мечта всё-таки сбылась. Волшебной палочки у меня нет. Но теперь я умею создавать книги, в которых дети узнают себя, улыбаются и просят:</p>
+
+      <p class="about-say">«Ещё раз!»</p>
+
+      <p>И, наверное, это и есть моё маленькое волшебство.</p>
+
+      <div class="about-signature">
+        <img class="about-avatar" src="assets/brand/nelli-avatar-150.webp" srcset="assets/brand/nelli-avatar-150.webp 1x, assets/brand/nelli-avatar-300.webp 2x" width="110" height="110" alt="Нелли — создательница Героёнка" loading="lazy">
+        <p class="about-sign">С любовью,<br>Нелли<small>создательница Героёнка</small></p>
+      </div>
+    </article>
   </div>
 </section>
 
-
-<section class="section-cream">
+<section class="about-cta">
   <div class="container">
-    <div class="section-head">
-      <span class="kicker">Когда это удобно</span>
-      <h2>Слушать проще, чем читать — иногда это именно то, что нужно</h2>
-    </div>
-    <div class="grid grid-3">
-      <div>
-        <h3>Перед сном</h3>
-        <p style="color:var(--text-soft);">Когда голос уже устал читать вслух в десятый раз за неделю — включите аудиокнигу вместо себя.</p>
-      </div>
-      <div>
-        <h3>В дороге</h3>
-        <p style="color:var(--text-soft);">В машине, в самолёте, на прогулке с коляской — история звучит без экрана перед глазами.</p>
-      </div>
-      <div>
-        <h3>Для тех, кто только учится читать</h3>
-        <p style="color:var(--text-soft);">Ребёнок может следить за текстом на экране, слушая, как его произносят — это помогает с чтением.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section-paper2 tight" style="text-align:center;">
-  <div class="container">
-    <h2>Входит в любую книгу</h2>
-    <p class="measure" style="margin:0 auto 28px; color:var(--text-soft);">Озвучка входит в каждую книгу — и в «Сказку», и в «Большую историю»: после оплаты книгу читает голос рассказчика, по главам, и её можно слушать прямо на странице книги. А QR-код на задней обложке открывает книгу с телефона — даже напечатанную.</p>
-    <a href="pricing.html" class="btn btn-ghost-dark">Смотреть цены</a>
+    <p>Хотите, чтобы ваш ребёнок стал героем своей книги?</p>
+    <a href="create.html" class="btn btn-primary">Создать книгу</a>
+    <a href="examples.html" class="btn btn-ghost-dark" style="margin:8px 0 0 10px;">Посмотреть примеры</a>
   </div>
 </section>
 
@@ -624,18 +664,5 @@ section.tight{ padding:56px 0; }
   </div>
 </footer>
 
-<script>
-// Аудиокнига-образец: одновременно играет только одна дорожка, следующая глава включается сама
-(function () {
-  var tracks = Array.prototype.slice.call(document.querySelectorAll('.audio-track audio'));
-  tracks.forEach(function (a, i) {
-    a.addEventListener('play', function () {
-      tracks.forEach(function (b) { if (b !== a) b.pause(); });
-      document.querySelectorAll('.audio-track').forEach(function (li) { li.classList.toggle('is-playing', li.contains(a)); });
-    });
-    a.addEventListener('ended', function () { if (tracks[i + 1]) tracks[i + 1].play(); });
-  });
-})();
-</script>
 </body>
 </html>
