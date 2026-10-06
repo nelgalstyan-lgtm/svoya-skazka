@@ -984,7 +984,7 @@ window.SKAZKA_ADELINA_BOOK = {
     },
     {
      "t": "image",
-     "src": "assets/examples/adelina/ill-10.webp",
+     "src": "assets/examples/adelina/ill-10.webp?v=2",
      "caption": "Новогодняя ночь: папа качает Аделину на качелях в саду."
     },
     {
