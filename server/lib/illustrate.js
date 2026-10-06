@@ -141,12 +141,13 @@ const FAMILY_PEOPLE = (family, last) => `People: the ${last ? 'last' : 'second-t
  */
 /**
  * Запрос к рисующей модели. fix — замечание проверки похожести (worker/likeness.js) к прошлой попытке: дописывается
- * в конец промпта, чтобы перерисовка исправила именно лица.
+ * в конец промпта, чтобы перерисовка исправила именно лица, не уходя в реализм (07.10: обложка Алекса стала похожей,
+ * но перестала быть 3D-мультфильмом).
  */
 export function imageRequest({ fix = '', ...options } = {}) {
   const request = baseRequest(options);
   if (!request || !fix || options.kind === 'coloring') return request;
-  return { ...request, prompt: `${request.prompt} LIKENESS CORRECTION — the previous attempt did not look enough like the real people in the references; fix exactly this: ${fix}` };
+  return { ...request, prompt: `${request.prompt} LIKENESS CORRECTION — the previous attempt did not look enough like the real people in the references; fix exactly this: ${fix} Keep the same stylized art style as the rest of the book: likeness comes from face shape, eyes, nose, mouth and hair — never make the face realistic or photographic.` };
 }
 
 function baseRequest({ refs = [], sheet = null, source = null, kind = 'scene', styleLabel, eyes, brief, look, face, family = [], familySheet = null } = {}) {
