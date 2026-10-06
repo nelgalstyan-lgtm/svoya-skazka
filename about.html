@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>О нас | Героёнок</title>
-<meta name="description" content="Кто придумал Героёнка и зачем: история Нелли о том, почему у каждого ребёнка должна быть своя сказка.">
+<meta name="description" content="Привет! Меня зовут Нелли, и я придумала Героёнка — книги, где ребёнок узнаёт себя на каждой странице.">
 <style>
 /* ===========================================================
    Дизайн-система «Героёнок» — тёплая книжная эстетика
@@ -465,7 +465,7 @@ section.tight{ padding:56px 0; }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Marck+Script&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,700;1,7..72,400;1,7..72,700&family=Caveat:wght@600&family=PT+Sans:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,700;1,7..72,400;1,7..72,700&family=Caveat:wght@600&family=PT+Sans:wght@400;700&display=swap">
 <link rel="stylesheet" href="assets/site-extra.css">
 <link rel="stylesheet" href="assets/geroenok.css">
 <link rel="canonical" href="https://geroenok.online/about">
@@ -473,7 +473,7 @@ section.tight{ padding:56px 0; }
 <meta property="og:site_name" content="Героёнок">
 <meta property="og:locale" content="ru_RU">
 <meta property="og:title" content="О нас | Героёнок">
-<meta property="og:description" content="Кто придумал Героёнка и зачем: история Нелли о том, почему у каждого ребёнка должна быть своя сказка.">
+<meta property="og:description" content="Привет! Меня зовут Нелли, и я придумала Героёнка — книги, где ребёнок узнаёт себя на каждой странице.">
 <meta property="og:url" content="https://geroenok.online/about">
 <meta property="og:image" content="https://geroenok.online/assets/brand/og-image.jpg">
 <meta property="og:image:width" content="1200">
@@ -483,7 +483,22 @@ section.tight{ padding:56px 0; }
 <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
 <meta name="theme-color" content="#F6F3E7">
 <style>
-/* письмо Нелли — светлый лист с волшебными краями */
+/* ---------- страница «О нас» ---------- */
+.about-hero{ padding:64px 0 40px; }
+.about-hero .container{ display:grid; grid-template-columns:1.1fr .9fr; gap:56px; align-items:center; max-width:1040px; }
+.about-hero .kicker{ font-family:var(--font-script); color:var(--gold-dark); font-size:24px; margin-bottom:8px; }
+.about-hero h1{ font-family:'Lora', Georgia, serif; font-weight:700; font-size:42px; line-height:1.2; color:#2f2618; margin:0 0 18px; }
+.about-hero .lead{ font-family:'Literata', Georgia, serif; font-size:20px; line-height:1.65; color:#5a4a3a; max-width:470px; margin:0; }
+.about-hero .lead em{ font-style:italic; color:var(--gold-dark); }
+.about-photo{ margin:0; position:relative; justify-self:center; width:300px; }
+.about-photo .portrait{
+  width:100%; height:auto; display:block; border-radius:999px 999px 24px 24px;
+  border:2px solid #E7C27A;
+  box-shadow:0 0 0 6px var(--paper), 0 0 0 7px rgba(215,154,58,.4), 0 0 46px 8px rgba(240,200,120,.35);
+}
+.about-photo .bunny{ position:absolute; width:118px; height:auto; right:-96px; bottom:-14px; mix-blend-mode:multiply; animation:breathe 7s ease-in-out infinite; transform-origin:50% 100%; }
+
+/* письмо — светлый лист с волшебными краями */
 .about-letter{
   max-width:700px; margin:0 auto;
   background:var(--cream);
@@ -493,14 +508,14 @@ section.tight{ padding:56px 0; }
     0 0 22px 3px rgba(215,154,58,.38),
     0 0 80px 12px rgba(244,214,140,.45),
     var(--shadow-soft);
-  padding:66px 76px 58px;
+  padding:62px 76px 54px;
   position:relative;
   font-family:'Literata', Georgia, serif;
   color:#2f2618;
   font-size:18.5px;
   line-height:1.85;
 }
-.about-letter::before{ /* тонкая золотая рамка внутри листа */
+.about-letter::before{
   content:""; position:absolute; inset:14px;
   border:1.5px solid transparent; border-radius:20px; pointer-events:none;
   background:linear-gradient(135deg,#F3D58C,#D79A3A 30%,#F7E3AE 50%,#C98A2E 70%,#F3D58C) border-box;
@@ -525,8 +540,6 @@ section.tight{ padding:56px 0; }
 @keyframes aboutStar{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(.72) rotate(25deg); opacity:.65; } }
 @keyframes aboutSpark{ 0%,100%{ opacity:.25; transform:scale(.6); } 50%{ opacity:1; transform:scale(1.1); } }
 .about-letter p{ margin:0 0 1.15em; }
-.about-letter em{ color:#6f4e2e; }
-.about-letter .hello{ font-family:'Lora', Georgia, serif; font-weight:700; font-size:25px; line-height:1.35; margin:0 0 1em; }
 .about-letter .dropcap::first-letter{
   font-family:'Lora', Georgia, serif; font-weight:700; font-size:3.3em; float:left; line-height:.86;
   margin:.07em .1em 0 0; color:var(--gold-dark);
@@ -534,29 +547,51 @@ section.tight{ padding:56px 0; }
 .about-say{ font-style:italic; font-size:30px; color:var(--gold-dark); text-align:center; margin:.6em 0 .7em !important; line-height:1.3; }
 .about-signature{ display:flex; align-items:center; gap:18px; margin-top:2em; }
 .about-avatar{
-  width:110px; height:110px; flex:none; border-radius:50%; object-fit:cover;
+  width:96px; height:96px; flex:none; border-radius:50%; object-fit:cover;
   border:2px solid #E7C27A;
   box-shadow:0 0 0 4px var(--cream), 0 0 0 5px rgba(215,154,58,.35);
 }
-.about-sign{ font-family:'Marck Script', cursive; letter-spacing:-.02em; word-spacing:-.12em; font-size:34px; color:#7a4e26; line-height:1.15; margin:0 !important; }
-.about-sign small{ display:block; font-size:24px; color:#8a6a48; margin-top:4px; }
-.hero-storybook .storybook-text p:not(.lead){ color:var(--text-soft); font-size:18px; max-width:540px; }
-@media (max-width:640px){ .hero-storybook .storybook-text p:not(.lead){ font-size:16.5px; } }
-.about-cta{ text-align:center; padding:8px 0 80px; }
-.about-cta p{ color:var(--text-soft); margin-bottom:20px; }
+.about-sign{ font-family:var(--font-script); font-size:34px; color:var(--gold-dark); line-height:1.1; margin:0 !important; }
+.about-sign small{ display:block; font-family:'Literata', Georgia, serif; font-style:italic; font-size:15px; color:var(--text-soft); margin-top:6px; }
+
+/* книги из «Примеров» */
+.about-books{ padding:88px 0 24px; text-align:center; }
+.about-books .kicker{ font-family:var(--font-script); color:var(--gold-dark); font-size:24px; }
+.about-books h2{ font-family:'Lora', Georgia, serif; font-size:32px; color:#2f2618; margin:4px 0 36px; }
+.about-books-row{ display:grid; grid-template-columns:repeat(3, 1fr); gap:36px; max-width:860px; margin:0 auto; }
+.about-book{ text-decoration:none; color:inherit; display:block; }
+.about-book img{ width:100%; height:auto; aspect-ratio:2/3; object-fit:cover; border-radius:4px 12px 12px 4px; box-shadow:0 18px 34px -16px rgba(60,40,20,.55); transition:transform .25s ease; }
+.about-book:hover img{ transform:translateY(-6px) rotate(-1deg); }
+.about-book strong{ display:block; font-family:'Lora', Georgia, serif; font-size:17px; line-height:1.3; margin-top:14px; color:#2f2618; }
+.about-book span{ display:block; font-family:'Literata', Georgia, serif; font-size:14px; color:var(--text-soft); margin-top:4px; }
+.about-cta{ text-align:center; padding:36px 0 88px; }
+.about-cta .btn + .btn{ margin-left:10px; }
+
+@media (max-width:860px){
+  .about-hero{ padding:36px 0 28px; }
+  .about-hero .container{ grid-template-columns:1fr; gap:34px; text-align:center; }
+  .about-hero .lead{ margin:0 auto; }
+  .about-hero h1{ font-size:31px; }
+  .about-photo{ width:220px; order:-1; }
+  .about-photo .bunny{ width:84px; right:-74px; bottom:-8px; }
+}
 @media (max-width:640px){
+  .about-hero .lead{ font-size:17.5px; }
   .about-letter{ padding:44px 26px 40px; font-size:17px; line-height:1.8; border-radius:16px; }
-  .about-letter .hello{ font-size:21px; }
-  .about-say{ font-size:26px; }
-  .about-avatar{ width:88px; height:88px; }
-  .about-signature{ gap:14px; }
-  .about-sign{ font-size:29px; }
-  .about-sign small{ font-size:20px; }
   .about-letter::before{ inset:9px; border-radius:16px; }
   .about-star{ font-size:18px; }
   .about-spark{ transform:scale(.8); }
+  .about-say{ font-size:26px; }
+  .about-avatar{ width:80px; height:80px; }
+  .about-signature{ gap:14px; }
+  .about-sign{ font-size:30px; }
+  .about-books{ padding-top:64px; }
+  .about-books h2{ font-size:25px; margin-bottom:26px; }
+  .about-books-row{ gap:12px; }
+  .about-book strong{ font-size:13.5px; margin-top:10px; }
+  .about-book span{ display:none; }
+  .about-cta .btn{ margin:8px 0 0 !important; }
 }
-@media (max-width:640px){ .about-cta .btn{ margin:8px 0 0 !important; } }
 </style>
 </head>
 <body>
@@ -585,31 +620,25 @@ section.tight{ padding:56px 0; }
   </div>
 </header>
 
-<section class="hero hero-storybook hero-inner">
+<section class="about-hero">
   <div class="container">
-    <div class="storybook-page">
-      <div class="storybook-text">
-        <span class="kicker">Давайте знакомиться</span>
-        <h1>О нас</h1>
-        <p class="lead">Здесь мы верим в одну простую вещь: <strong>у&nbsp;каждого ребёнка должна быть своя сказка.</strong></p>
-        <p>Не просто книга с именем на обложке, а история, в которой ребёнок узнаёт себя — свой характер, свои маленькие привычки, любимые слова, близких людей и то, о чём ему хочется мечтать.</p>
-        <p>И, конечно, себя на каждой картинке.</p>
-      </div>
-      <figure class="storybook-art">
-        <img class="brand-art" src="assets/brand/geroenok-main-360.webp" srcset="assets/brand/geroenok-main-360.webp 360w, assets/brand/geroenok-main-560.webp 560w" sizes="(max-width:640px) 96px, 220px" width="360" height="606" alt="Героёнок с сумкой книг" fetchpriority="high" style="width:min(220px,100%);">
-        <figcaption class="storybook-note">Хранитель историй с сумкой книг</figcaption>
-      </figure>
+    <div>
+      <span class="kicker">Давайте знакомиться</span>
+      <h1>Привет! Меня зовут Нелли, и&nbsp;я&nbsp;придумала Героёнка</h1>
+      <p class="lead">Я верю в одну простую вещь: <em>у каждого ребёнка должна быть своя сказка.</em></p>
     </div>
+    <figure class="about-photo">
+      <img class="portrait" src="assets/brand/nelli-portrait-340.webp" srcset="assets/brand/nelli-portrait-340.webp 340w, assets/brand/nelli-portrait-680.webp 680w" sizes="(max-width:860px) 220px, 300px" width="340" height="403" alt="Нелли — создательница Героёнка, акварельный портрет" fetchpriority="high">
+      <img class="bunny brand-art" src="assets/brand/geroenok-main-360.webp" width="360" height="606" alt="Героёнок с сумкой книг">
+    </figure>
   </div>
 </section>
 
-<section class="tight">
+<section class="tight" style="padding-top:24px;">
   <div class="container">
     <article class="about-letter">
       <span class="about-star s1" aria-hidden="true">✦</span><span class="about-star s2" aria-hidden="true">✦</span><span class="about-star s3" aria-hidden="true">✦</span><span class="about-star s4" aria-hidden="true">✦</span>
       <span class="about-spark" aria-hidden="true" style="top:-9px;left:24%;font-size:13px;animation-delay:0s">✦</span><span class="about-spark" aria-hidden="true" style="top:-7px;left:52%;font-size:10px;animation-delay:1.3s">✦</span><span class="about-spark" aria-hidden="true" style="top:-9px;left:79%;font-size:14px;animation-delay:2.4s">✦</span><span class="about-spark" aria-hidden="true" style="bottom:-9px;left:30%;font-size:14px;animation-delay:.7s">✦</span><span class="about-spark" aria-hidden="true" style="bottom:-7px;left:61%;font-size:10px;animation-delay:2s">✦</span><span class="about-spark" aria-hidden="true" style="bottom:-9px;left:86%;font-size:12px;animation-delay:3.1s">✦</span><span class="about-spark" aria-hidden="true" style="left:-8px;top:22%;font-size:12px;animation-delay:1.6s">✦</span><span class="about-spark" aria-hidden="true" style="left:-7px;top:48%;font-size:10px;animation-delay:.4s">✦</span><span class="about-spark" aria-hidden="true" style="left:-9px;top:74%;font-size:14px;animation-delay:2.8s">✦</span><span class="about-spark" aria-hidden="true" style="right:-9px;top:16%;font-size:14px;animation-delay:2.2s">✦</span><span class="about-spark" aria-hidden="true" style="right:-7px;top:42%;font-size:10px;animation-delay:3.4s">✦</span><span class="about-spark" aria-hidden="true" style="right:-8px;top:69%;font-size:12px;animation-delay:1s">✦</span><span class="about-spark" aria-hidden="true" style="right:-7px;top:91%;font-size:10px;animation-delay:.2s">✦</span>
-      <h2 class="hello">Привет! Меня зовут Нелли, и&nbsp;я&nbsp;придумала Героёнка.</h2>
-
       <p class="dropcap">С детства мне хотелось стать волшебницей. Я представляла, что однажды у меня появится волшебная палочка и я смогу творить самые настоящие чудеса. Палочки у меня так и не появилось. Зато появились истории.</p>
 
       <p>Я всегда любила придумывать их для тех, кого люблю. И однажды заметила удивительную вещь: когда ребёнок слышит в сказке своё имя, узнаёт в герое себя, своего друга или свою маленькую смешную привычку, он слушает совсем по-другому. Будто сказка вдруг становится его собственной. Глаза загораются, появляется улыбка — и почти всегда звучит:</p>
@@ -633,18 +662,29 @@ section.tight{ padding:56px 0; }
       <p>И, наверное, это и есть моё маленькое волшебство.</p>
 
       <div class="about-signature">
-        <img class="about-avatar" src="assets/brand/nelli-avatar-150.webp" srcset="assets/brand/nelli-avatar-150.webp 1x, assets/brand/nelli-avatar-300.webp 2x" width="110" height="110" alt="Нелли — создательница Героёнка" loading="lazy">
-        <p class="about-sign">С любовью,<br>Нелли<small>создательница Героёнка</small></p>
+        <img class="about-avatar" src="assets/brand/nelli-avatar-150.webp" srcset="assets/brand/nelli-avatar-150.webp 1x, assets/brand/nelli-avatar-300.webp 2x" width="96" height="96" alt="" loading="lazy">
+        <p class="about-sign">С любовью, Нелли<small>создательница Героёнка</small></p>
       </div>
     </article>
   </div>
 </section>
 
+<section class="about-books">
+  <div class="container">
+    <span class="kicker">Из наших «Примеров»</span>
+    <h2>Вот такие книги получаются</h2>
+    <div class="about-books-row">
+      <a class="about-book" href="book.html?demo=aelita"><img src="assets/examples/aelita/cover-480.webp" width="480" height="720" loading="lazy" alt="Обложка книги «Аэлита и кнопка для лунного торта»"><strong>Аэлита и кнопка для лунного торта</strong><span>Сказка · акварель · 2 года</span></a>
+      <a class="about-book" href="book.html?demo=max3d"><img src="assets/examples/max-3d/cover-480.webp" width="480" height="720" loading="lazy" alt="Обложка книги «Макс и чемодан-путешественник»"><strong>Макс и чемодан-путешественник</strong><span>Сказка · 3D-мультфильм · 4 года</span></a>
+      <a class="about-book" href="book-pro.html?demo=alex3d"><img src="assets/examples/alex-3d/cover-480.webp" width="480" height="720" loading="lazy" alt="Обложка книги «Алекс и тайна Ани»"><strong>Алекс и тайна Ани</strong><span>Большая история · 3D-мультфильм</span></a>
+    </div>
+  </div>
+</section>
+
 <section class="about-cta">
   <div class="container">
-    <p>Хотите, чтобы ваш ребёнок стал героем своей книги?</p>
     <a href="create.html" class="btn btn-primary">Создать книгу</a>
-    <a href="examples.html" class="btn btn-ghost-dark" style="margin:8px 0 0 10px;">Посмотреть примеры</a>
+    <a href="examples.html" class="btn btn-ghost-dark">Все примеры</a>
   </div>
 </section>
 
