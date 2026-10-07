@@ -449,7 +449,16 @@
     return p;
   }
 
-  function certificateSheet(root, c, cover, ownPortrait, faceCrop) {
+  // Портрет в сертификате по найденному на обложке лицу (coverTitle.face = { x, y, h } долями, worker/art.js coverFaceBox):
+  // лицо — около половины круга, по центру. Обложка 2:3. Без данных — прежний вырез (класс *-face).
+  function faceCropStyle(face) {
+    if (!face || !(face.h > 0)) return null;
+    var ratio = 1.5, k = Math.max(1, Math.min(5, 0.5 / (ratio * face.h))), ky = k * ratio;
+    var at = function (c, s) { return s === 1 ? 50 : Math.max(0, Math.min(100, (0.5 - c * s) / (1 - s) * 100)); };
+    return { size: (k * 100).toFixed(1) + '% auto', position: at(face.x, k).toFixed(1) + '% ' + at(face.y, ky).toFixed(1) + '%' };
+  }
+
+  function certificateSheet(root, c, cover, ownPortrait, faceCrop, faceBox) {
     var page = newSheet(root, 'bk-cert' + (cover ? ' bk-cert-has-portrait' : ''));
     page.appendChild(h('div', 'bk-cert-kicker', c.kicker));
     page.appendChild(h('div', 'bk-cert-title', c.title));
@@ -457,7 +466,10 @@
       var pic = portrait(cover, 'bk-cert-portrait');
       // готовый портрет (book.portrait — лицо крупно) показываем целиком, без кадрирования обложки
       if (ownPortrait) { pic.style.backgroundSize = 'cover'; pic.style.backgroundPosition = '50% 50%'; }
-      else if (faceCrop) pic.classList.add('bk-cert-face');
+      else if (faceCrop) {
+        var crop = faceCropStyle(faceBox);
+        if (crop) { pic.style.backgroundSize = crop.size; pic.style.backgroundPosition = crop.position; } else pic.classList.add('bk-cert-face');
+      }
       page.appendChild(pic);
     }
     page.appendChild(divider());
@@ -769,7 +781,7 @@
         sheets.push({ page: lock, folio: null });
       } else if (!(opts && opts.noFinale)) {
         sheets.push(finaleSheet(root, opts));
-        if (opts && opts.certificate) sheets.push(certificateSheet(root, opts.certificate, book.portrait || book.cover, Boolean(book.portrait), Boolean(opts.onlyGenerated && book.coverFace)));
+        if (opts && opts.certificate) sheets.push(certificateSheet(root, opts.certificate, book.portrait || book.cover, Boolean(book.portrait), Boolean(opts.onlyGenerated && book.coverFace), book.coverTitle && book.coverTitle.face));
         if (book.song && book.song.src && book.song.chorus) sheets.push(songSheet(root, book.song));
         (book.coloring || []).forEach(function (src, i) { sheets.push(coloringSheet(root, src, i === 0)); });
       }

@@ -16,7 +16,7 @@ import { writePlan, writeChapter, chapterContext, assembleBigBook, templateBook 
 import { dedicationFor, shortDedication } from '../server/lib/booktext.js';
 import template from '../js/story-template.js';
 import { createStore } from './store.js';
-import { drawImage, coverTitlePlace, artOff, ART_OFF_MESSAGE } from './art.js';
+import { drawImage, coverTitlePlace, coverFaceBox, artOff, ART_OFF_MESSAGE } from './art.js';
 import { isDrawn, bookImages } from './view.js';
 import { voiceFlow } from './voice.js';
 import { proofreadAnswers } from './proofread.js';
@@ -62,12 +62,12 @@ export async function runBook(env, { id, mode }, step, { log = console.warn } = 
  * Картинка с проверкой похожести: рисуем → проверяющий сравнивает с фото → ниже LIKENESS_MIN — перерисовка с его
  * замечанием (до MAX_FIXES раз), остаётся самый похожий вариант. Итог — в ctx.likeness[name]. Каждое действие — свой шаг.
  */
-async function drawChecked(ctx, name, kind, { attempt, references, childName = '', childless = false }) {
+async function drawChecked(ctx, name, kind, { attempt, references, childName = '', childAge = '', childless = false }) {
   const { env, store, step, log } = ctx;
   // упавшая проверка (лимит процессора и т.п.) не должна ронять книгу — считаем картинку непроверенной
   const check = (stepName, src) => step.do(`likeness-${stepName}`, CHECK_STEP, async () => {
     const [image, refs] = await Promise.all([store.loadImage(src), references()]);
-    return checkLikeness(env, { image, ...refs, childName, childless }, { log });
+    return checkLikeness(env, { image, ...refs, childName, childAge, childless }, { log });
   }).catch((error) => { log(`[likeness] ${stepName}: ${error?.message || error}`); return null; });
   let best = { src: await attempt(name, '') };
   if (!best.src) return null;
@@ -92,7 +92,7 @@ async function drawChecked(ctx, name, kind, { attempt, references, childName = '
  */
 async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only = null, sheet = null, familySheet = null }) {
   const { env, store, id, step, log, progress } = ctx;
-  const style = { styleLabel: input.style, eyes: normalizeInput(input).eyes, look, face };
+  const style = { styleLabel: input.style, eyes: normalizeInput(input).eyes, look, face, age: input.age };
   // родные по фото: их лист прикладывается к сценам (к листу ребёнка и обложке — нет: на обложке только ребёнок)
   const family = familySheet ? input.family || [] : [];
   const wanted = briefs.map((_, i) => !only || only.includes(i));
@@ -126,7 +126,8 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only 
   const draw = (name, kind, brief) => drawChecked(ctx, name, kind, {
     attempt: (fixName, fix) => attempt(fixName, kind, brief, fix),
     references: () => references(kind),
-    childName: input.name
+    childName: input.name,
+    childAge: input.age
   });
 
   if (!sheet) sheet = await draw('sheet', 'sheet', 'character reference sheet');
@@ -275,6 +276,7 @@ async function previewFlow(ctx) {
   const face = await step.do('face', QUICK_STEP, async () => describeFace(ctx.env, await store.loadPhotos(id), { log }));
   const art = await drawBook(ctx, { input, briefs, coverBrief, look, face, only: [0] });
   const titlePlace = await coverPlaceStep(ctx, art.cover);
+  const faceBox = await coverFaceStep(ctx, art.cover);
 
   // ни одной картинки, потому что в OpenAI кончились деньги: книга без ребёнка — не наш продукт, отдаём сообщение
   const noArt = await step.do('art-check', QUICK_STEP, async () => !art.sheet && !art.cover && !art.scenes.some(Boolean) && Boolean(await artOff(ctx.env)));
@@ -297,7 +299,7 @@ async function previewFlow(ctx) {
       const book = text.book;
       heroBlocks.forEach((b, i) => { b.hero = true; if (art.scenes[i]) b.src = art.scenes[i]; });
       book.preview = true;
-      if (art.cover) { book.cover = art.cover; book.coverFace = true; book.coverTitle = { place: titlePlace }; } // обложка по COVER_COMPOSITION с 01.10: лицо крупно по центру
+      if (art.cover) { book.cover = art.cover; book.coverFace = true; book.coverTitle = coverTitleOf(titlePlace, faceBox); } // обложка по COVER_COMPOSITION с 01.10: лицо крупно по центру
       if (art.sheet) book.sheet = art.sheet; // для дорисовки после оплаты и бесплатной перерисовки
       if (face) book.face = face;
       const provider = Object.entries(book.meta?.providers || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
@@ -308,7 +310,7 @@ async function previewFlow(ctx) {
       // посвящение есть всегда: своё от родителей или наши тёплые слова (так обещает анкета), с подписью «От кого»
       result.dedication = dedicationFor(input, shortDedication(input));
       art.scenes.forEach((src, i) => { if (src) result.pages[i].heroImage = src; });
-      if (art.cover) { result.cover = art.cover; result.coverFace = true; result.coverTitle = { place: titlePlace }; }
+      if (art.cover) { result.cover = art.cover; result.coverFace = true; result.coverTitle = coverTitleOf(titlePlace, faceBox); }
       if (art.sheet) result.sheet = art.sheet; // нужен для бесплатной перерисовки: фото к тому времени уже удалено
       if (face) result.face = face;
     }
@@ -360,6 +362,18 @@ async function coverPlaceStep(ctx, cover) {
   });
 }
 
+/** Где лицо на обложке — для портрета в сертификате (coverFaceBox в art.js). Ошибка — null: портрет режется как раньше. */
+async function coverFaceStep(ctx, cover) {
+  if (!cover) return null;
+  const { env, store, step } = ctx;
+  return step.do('cover-face', QUICK_STEP, async () => {
+    const image = await store.loadImage(cover).catch(() => null);
+    return coverFaceBox(env, image);
+  }).catch(() => null);
+}
+
+const coverTitleOf = (place, face) => (face ? { place, face } : { place });
+
 // ---------------------------------------------------------------- после оплаты
 
 async function completeFlow(ctx) {
@@ -392,6 +406,7 @@ async function completeFlow(ctx) {
   const art = await drawBook(ctx, { input: todo.input, briefs: todo.briefs, coverBrief: todo.coverBrief, look: todo.look, face: todo.face, only, sheet: todo.sheet, familySheet });
   const srcs = todo.srcs.map((src, i) => art.scenes[i] || src);
   const titlePlace = art.cover ? await coverPlaceStep(ctx, art.cover) : null;
+  const faceBox = art.cover ? await coverFaceStep(ctx, art.cover) : null;
   const coloring = todo.input.coloring ? await drawColoring(ctx, srcs.filter(isDrawn)) : [];
 
   await step.do('complete-finish', QUICK_STEP, async () => {
@@ -399,7 +414,7 @@ async function completeFlow(ctx) {
       const target = job.result.book || job.result;
       bookImages(job.result).forEach((im, i) => { if (art.scenes[i]) im.set(art.scenes[i]); });
       if (familySheet) target.familySheet = familySheet; // для бесплатной перерисовки: фото родных к тому времени удалены
-      if (art.cover) { target.cover = art.cover; target.coverFace = true; target.coverTitle = { place: titlePlace || 'top' }; }
+      if (art.cover) { target.cover = art.cover; target.coverFace = true; target.coverTitle = coverTitleOf(titlePlace || 'top', faceBox); }
       // «Большая история»: иллюстрация так и не получилась — убираем её, фоновых сцен в книге клиента нет
       if (job.result.book) for (const ch of job.result.book.chapters) ch.blocks = ch.blocks.filter((b) => b.t !== 'image' || isDrawn(b.src));
       if (coloring.length) target.coloring = coloring;

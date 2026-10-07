@@ -307,6 +307,15 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   // фоновые сцены — только у старого образца ?demo=1; у образцов с иллюстрациями (?demo=max3d) их нет
   const SCENES = params.get('demo') === '1';
 
+  // Портрет в сертификате по найденному на обложке лицу (coverTitle.face = { x, y, h } долями, worker/art.js coverFaceBox):
+  // лицо — около половины круга, по центру. Обложка 2:3. Без данных — прежний вырез (.cert-face). То же — в js/book-engine.js.
+  function faceCropStyle(face) {
+    if (!face || !(face.h > 0)) return null;
+    const ratio = 1.5, k = Math.max(1, Math.min(5, 0.5 / (ratio * face.h))), ky = k * ratio;
+    const at = (c, s) => (s === 1 ? 50 : Math.max(0, Math.min(100, (0.5 - c * s) / (1 - s) * 100)));
+    return { size: (k * 100).toFixed(1) + '% auto', position: at(face.x, k).toFixed(1) + '% ' + at(face.y, ky).toFixed(1) + '%' };
+  }
+
   function el(tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -860,7 +869,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
       if (book.cover) {
         medal = el('div', 'cert-portrait');
         medal.style.backgroundImage = 'url("' + String(book.cover).replace(/"/g, '%22') + '")';
-        if (book.coverFace) medal.classList.add('cert-face'); // обложка нарисована с крупным лицом по центру (с 01.10)
+        // обложка нарисована с крупным лицом (с 01.10); где именно лицо — нашёл сервер (coverTitle.face, с 08.10)
+        const crop = book.coverFace && faceCropStyle(book.coverTitle && book.coverTitle.face);
+        if (crop) { medal.style.backgroundSize = crop.size; medal.style.backgroundPosition = crop.position; }
+        else if (book.coverFace) medal.classList.add('cert-face');
       } else {
         medal = el('img', 'cert-medal'); medal.src = 'assets/brand/item-star-alpha.png'; medal.alt = '';
       }

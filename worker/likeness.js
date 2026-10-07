@@ -10,7 +10,7 @@ import { toBase64 } from './bytes.js';
 
 export const LIKENESS_MIN = 7;
 
-const PROMPT = (who) => 'You are a strict quality checker for a personalised children\'s book. IMAGE 1 is an illustration. '
+const PROMPT = (who, age) => 'You are a strict quality checker for a personalised children\'s book. IMAGE 1 is an illustration. '
   + 'The other images are REFERENCES of the real people (photos, or an approved character sheet). '
   + `People to check: ${who}. `
   + 'For each person who appears in IMAGE 1, compare their FACE with the references and score likeness from 1 to 10: '
@@ -18,6 +18,8 @@ const PROMPT = (who) => 'You are a strict quality checker for a personalised chi
   + '5 — similar type but could be someone else; 1–3 — a different person. Judge face shape, eyes, eyebrows, nose, mouth, hair '
   + '(colour, texture, length, hairstyle), skin tone and distinctive features; ignore the art style, clothes, pose and background. '
   + 'Style matters too: if a face looks photorealistic, like a photo pasted into the illustration instead of matching its art style, give that person at most 6 and say in "fix" that the face must be re-rendered in the art style of the illustration while keeping its features. '
+  // пробный заказ 08.10: 13-летний Алекс выглядел на 8–9, а проверка ставила 7–8 — возраст не оценивался
+  + (age ? `Age matters too: the child is ${age} years old. If the drawn child looks noticeably younger or older than ${age} (face and body proportions, height, head-to-body ratio), give the child at most 6 and say in "fix" how to make the child look ${age}. ` : '')
   + 'A person who is not in IMAGE 1 gets null. '
   + 'Then write "fix": one or two short sentences in English telling the illustrator exactly what to change in the faces to make them '
   + 'look like the references (empty string if every score is 8 or more). '
@@ -83,12 +85,13 @@ async function askGemini(env, prompt, images, timeoutMs) {
  * image — нарисованная картинка; refs — фото ребёнка (или [лист персонажа]); familyRefs — фото родных (или [лист родных]).
  * childName, family — из анкеты; family пустой — родных не проверяем.
  */
-export async function checkLikeness(env, { image, refs = [], familyRefs = [], childName = '', family = [], childless = false }, { log = console.warn, timeoutMs = 60_000 } = {}) {
+export async function checkLikeness(env, { image, refs = [], familyRefs = [], childName = '', childAge = '', family = [], childless = false }, { log = console.warn, timeoutMs = 60_000 } = {}) {
   if (!image?.bytes || (!refs.length && !familyRefs.length)) return null;
   const list = people(childName, familyRefs.length ? family : []).filter((p) => !(childless && p.key === 'child'));
   if (!list.length) return null;
   const who = list.map((p) => `"${p.key}" = ${p.label}`).join('; ');
-  const prompt = PROMPT(who) + (refs.length && familyRefs.length ? ' The references go in this order: the child first, then the relatives.' : '');
+  const age = /^(?:[2-9]|1[0-6])$/.test(String(childAge).trim()) ? String(childAge).trim() : '';
+  const prompt = PROMPT(who, age) + (refs.length && familyRefs.length ? ' The references go in this order: the child first, then the relatives.' : '');
   const images = [image, ...refs.slice(0, 2), ...familyRefs.slice(0, 3)];
   for (const ask of [askOpenAI, askGemini]) {
     try {

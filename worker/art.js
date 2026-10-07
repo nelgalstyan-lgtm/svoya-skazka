@@ -98,8 +98,8 @@ function providers(env) {
  * Одна иллюстрация → { mime, bytes } или null. НИКОГДА не бросает: не нарисовалась — книга обойдётся без неё.
  * kind: 'sheet' | 'cover' | 'scene' | 'coloring'; refs — фото ребёнка, sheet — лист персонажа, source — картинка для раскраски.
  */
-export async function drawImage(env, { kind = 'scene', refs = [], sheet = null, source = null, styleLabel, eyes, brief, look, face, family = [], familySheet = null, fix = '', log = console.warn } = {}) {
-  const request = imageRequest({ refs, sheet, source, kind, styleLabel, eyes, brief, look, face, family, familySheet, fix });
+export async function drawImage(env, { kind = 'scene', refs = [], sheet = null, source = null, styleLabel, eyes, brief, look, face, age, family = [], familySheet = null, fix = '', log = console.warn } = {}) {
+  const request = imageRequest({ refs, sheet, source, kind, styleLabel, eyes, brief, look, face, age, family, familySheet, fix });
   if (!request) return null;
   const timeoutMs = Number(env.IMAGE_TIMEOUT_MS || 180_000);
   for (const provider of providers(env)) {
@@ -169,6 +169,45 @@ export async function coverTitlePlace(env, image, { timeoutMs = 20000 } = {}) {
   const answers = (await Promise.all([askGemini(env, image, prompt, timeoutMs), askOpenAI(env, image, prompt, timeoutMs)])).filter(Boolean);
   const top = answers.filter((x) => x.a).length, bottom = answers.filter((x) => x.b).length;
   return top > bottom ? 'bottom' : 'top';
+}
+
+/**
+ * Где на обложке лицо героя → { x, y, h } (центр и высота лица, доли от ширины/высоты) или null.
+ * Портрет в сертификате вырезается из обложки; раньше — по одному месту для всех («лицо на 43% высоты»), и в пробном
+ * заказе 08.10 лицо Алекса было выше — в круг попали подбородок и футболка. Gemini умеет находить объекты (box_2d).
+ */
+export async function coverFaceBox(env, image, { timeoutMs = 20000 } = {}) {
+  if (!image?.bytes || !env.GEMINI_API_KEY) return null;
+  const prompt = 'Find the face of the main child in this children’s book cover illustration (the face only: from the top of the forehead or hairline to the chin, ear to ear). '
+    + 'Answer strictly as JSON: {"box_2d": [ymin, xmin, ymax, xmax]} with coordinates normalized to 0-1000. If there is no child face, answer {"box_2d": null}.';
+  const models = String(env.GEMINI_VISION_MODELS || 'gemini-3.5-flash-lite,gemini-3.6-flash').split(',').map((m) => m.trim()).filter(Boolean);
+  for (const model of models) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }, { inlineData: { mimeType: image.mime || 'image/webp', data: toBase64(image.bytes) } }] }], generationConfig: { maxOutputTokens: 200, temperature: 0, responseMimeType: 'application/json' } }),
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const box = parseFaceBox((data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join(' '));
+      if (box !== undefined) return box;
+    } catch { /* следующая модель */ }
+  }
+  return null;
+}
+
+/** '{"box_2d":[ymin,xmin,ymax,xmax]}' (0–1000) → { x, y, h } долями; null — лица нет; undefined — ответ не разобрать. */
+export function parseFaceBox(text) {
+  let box;
+  try { box = JSON.parse(String(text || '').replace(/^```(?:json)?|```$/g, '').trim())?.box_2d; } catch { return undefined; }
+  if (box === null) return null;
+  if (!Array.isArray(box) || box.length !== 4 || !box.every((v) => Number.isFinite(v))) return undefined;
+  const [y0, x0, y1, x1] = box.map((v) => Math.min(1000, Math.max(0, v)) / 1000);
+  if (y1 - y0 < 0.03 || x1 - x0 < 0.02) return undefined;
+  const r = (v) => Math.round(v * 1000) / 1000;
+  return { x: r((x0 + x1) / 2), y: r((y0 + y1) / 2), h: r(y1 - y0) };
 }
 
 function parseBands(text) {

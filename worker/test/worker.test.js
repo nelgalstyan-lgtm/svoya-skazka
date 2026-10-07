@@ -869,3 +869,11 @@ test('похожесть: проверка недоступна — книга �
     assert.equal(job.likeness.sheet.score, null);
   } finally { ai.restore(); }
 });
+
+test('лицо на обложке: box_2d → центр и высота долями; мусор — undefined, нет лица — null', async () => {
+  const { parseFaceBox } = await import('../art.js');
+  assert.deepEqual(parseFaceBox('{"box_2d": [188, 381, 387, 616]}'), { x: 0.499, y: 0.288, h: 0.199 });
+  assert.equal(parseFaceBox('{"box_2d": null}'), null);
+  assert.equal(parseFaceBox('нет'), undefined);
+  assert.equal(parseFaceBox('{"box_2d": [1, 2]}'), undefined);
+});

@@ -60,11 +60,20 @@ export function pickStyleKey(styleLabel) {
 const OUTFIT_FROM_PHOTO = 'The child wears exactly the same clothes and shoes as in the reference photo throughout the whole book (same garments, colors and prints), changed only when a scene explicitly requires it.';
 const lookLine = (look) => [OUTFIT_FROM_PHOTO, String(look || '').trim() ? `Pets and toys from the story, the same on every page: ${String(look).trim()}` : ''].filter(Boolean).join(' ');
 
+// Пробный заказ 08.10: Алекс (13 лет) на всех картинках выглядел на 8–9 — точного возраста в промпте не было, модель
+// угадывала по фото, а 3D-стиль молодит. Теперь возраст из анкеты идёт в каждый рисунок, с пропорциями тела.
+export const ageLine = (age) => {
+  const n = Number(age);
+  if (!Number.isInteger(n) || n < 2 || n > 16) return '';
+  const older = n >= 9 ? ' Do not draw a younger, smaller or cuter child: no round baby face, no oversized head, no short chubby limbs.' : '';
+  return `Age: the child is exactly ${n} years old and must clearly look ${n} — age-accurate face (length of the face, cheeks, jaw) and body proportions (height, head-to-body ratio, length of arms and legs).${older}`;
+};
+
 /** Собирает полный английский image_prompt по правилам из docs/story-prompt-template.md. */
 // face — приметы ребёнка словами (worker/face.js): идут в каждый рисунок, чтобы модель не «додумывала» типовое лицо
 const faceLine = (face) => (String(face || '').trim() ? `The child's exact appearance, observed from the photos — follow it precisely: ${String(face).trim()}` : '');
 
-export function buildHeroPrompt({ styleLabel, eyes, brief, look, face, photoCount = 1, withSheet = false, kind = 'scene', people = ONLY_CHILD } = {}) {
+export function buildHeroPrompt({ styleLabel, eyes, brief, look, face, age, photoCount = 1, withSheet = false, kind = 'scene', people = ONLY_CHILD } = {}) {
   const styleKey = pickStyleKey(styleLabel);
   const scene = String(brief || '').trim()
     || 'The child stands confidently at the story’s key moment, caught in an active, dynamic pose that fits the scene, surrounded by details from the adventure around them.';
@@ -73,6 +82,7 @@ export function buildHeroPrompt({ styleLabel, eyes, brief, look, face, photoCoun
   return [
     IDENTITY_BLOCK(eyes, photoCount),
     faceLine(face),
+    ageLine(age),
     STYLIZATION_LIMITS,
     withSheet && kind !== 'sheet' ? SHEET_BLOCK : '',
     kind === 'sheet' ? 'Facial expression: a friendly open smile, bright engaged eyes.' : EMOTION_BLOCK,
@@ -157,7 +167,7 @@ export function imageRequest({ fix = '', ...options } = {}) {
   return { ...request, prompt: `${request.prompt} LIKENESS CORRECTION — the previous attempt did not look enough like the real people in the references; fix exactly this: ${fix} Keep the same stylized art style as the rest of the book: likeness comes from face shape, eyes, nose, mouth and hair — never make the face realistic or photographic.` };
 }
 
-function baseRequest({ refs = [], sheet = null, source = null, kind = 'scene', styleLabel, eyes, brief, look, face, family = [], familySheet = null } = {}) {
+function baseRequest({ refs = [], sheet = null, source = null, kind = 'scene', styleLabel, eyes, brief, look, face, age, family = [], familySheet = null } = {}) {
   if (kind === 'coloring') return source ? { images: [source], prompt: buildColoringPrompt() } : null;
   if (kind === 'family') return refs.length && family.length ? { images: refs.slice(0, MAX_FAMILY), prompt: buildFamilySheetPrompt({ family: family.slice(0, refs.length), styleLabel }) } : null;
   // перерисовка после генерации: фото ребёнка уже удалено, лицо и одежду держит лист персонажа
@@ -167,7 +177,7 @@ function baseRequest({ refs = [], sheet = null, source = null, kind = 'scene', s
   const images = [...refs, ...(withFamily ? [familySheet] : []), ...(withSheet ? [sheet] : [])];
   const people = withFamily ? FAMILY_PEOPLE(family, !withSheet) : ONLY_CHILD;
   const prompt = refs.length
-    ? buildHeroPrompt({ styleLabel, eyes, brief, look, face, photoCount: refs.length, withSheet, kind, people })
-    : buildHeroPrompt({ styleLabel, eyes, brief, look, face, withSheet: true, kind, people }).replace(/reference photo/g, 'character reference sheet');
+    ? buildHeroPrompt({ styleLabel, eyes, brief, look, face, age, photoCount: refs.length, withSheet, kind, people })
+    : buildHeroPrompt({ styleLabel, eyes, brief, look, face, age, withSheet: true, kind, people }).replace(/reference photo/g, 'character reference sheet');
   return { images, prompt };
 }

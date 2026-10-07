@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildHeroPrompt, buildColoringPrompt, pickStyleKey, imageRequest } from '../lib/illustrate.js';
+import { buildHeroPrompt, buildColoringPrompt, pickStyleKey, imageRequest, ageLine } from '../lib/illustrate.js';
 
 // Промпты иллюстраций. Само рисование (OpenAI, R2, шаги Workflow) проверяется в worker/test/worker.test.js.
 
@@ -82,4 +82,13 @@ test('приметы ребёнка по фото идут в каждый ри�
     assert.ok(r.prompt.includes(face), kind);
   }
   assert.match(imageRequest({ refs: [img], kind: 'sheet', styleLabel: '3D' }).prompt, /large head-and-shoulders portrait/);
+});
+
+test('возраст из анкеты идёт в каждый рисунок; старшим — запрет молодить (пробный заказ 08.10)', () => {
+  const { prompt } = imageRequest({ refs: [{ mime: 'image/jpeg', data: 'x' }], kind: 'scene', styleLabel: '3D-мультфильм', brief: 'scene', age: '13' });
+  assert.match(prompt, /exactly 13 years old/);
+  assert.match(prompt, /Do not draw a younger/);
+  assert.doesNotMatch(imageRequest({ refs: [{ mime: 'image/jpeg', data: 'x' }], kind: 'scene', age: '4' }).prompt, /Do not draw a younger/);
+  assert.equal(ageLine(''), '');
+  assert.equal(ageLine('40'), '');
 });
