@@ -142,6 +142,23 @@ const STYLE = `
 .blog-more h2{ font-family:'Lora', Georgia, serif; font-size:24px; color:#2f2618; }
 .blog-more a{ display:block; padding:12px 0; border-bottom:1px solid var(--line); color:#2f2618; text-decoration:none; font-family:'Literata', Georgia, serif; }
 .blog-more a:hover{ color:var(--gold-dark); }
+.blog-article .tldr{ background:var(--cream); border:1px solid var(--line); border-radius:var(--radius-m); padding:20px 24px; margin:0 0 1.6em; font-size:17px; }
+.blog-article .tldr p{ margin:0; }
+.blog-article .toc{ background:var(--paper-2); border-radius:var(--radius-m); padding:18px 24px 8px; margin:0 0 1.8em; font-size:16.5px; line-height:1.6; }
+.blog-article .toc p{ margin:0 0 .4em; }
+.blog-article .toc a{ text-decoration:none; }
+.blog-article .table-wrap{ overflow-x:auto; margin:1.2em 0 1.6em; }
+.blog-article table{ width:100%; border-collapse:collapse; font-family:var(--font-body); font-size:15px; line-height:1.45; background:var(--cream); border-radius:var(--radius-m); overflow:hidden; }
+.blog-article th, .blog-article td{ padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+.blog-article th{ background:var(--ink); color:var(--text-light); font-weight:700; }
+.blog-article figure{ margin:1.6em 0; }
+.blog-article .spread{ display:grid; grid-template-columns:1fr 1fr; gap:0; border-radius:var(--radius-m); overflow:hidden; box-shadow:var(--shadow-soft); }
+.blog-article .spread img{ margin:0; border-radius:0; box-shadow:none; width:100%; height:auto; }
+.blog-article figcaption{ font-size:15px; line-height:1.55; color:var(--text-soft); margin-top:10px; font-style:italic; }
+.blog-article details{ background:var(--cream); border-radius:var(--radius-m); padding:14px 20px; margin:0 0 12px; }
+.blog-article summary{ cursor:pointer; font-family:'Lora', Georgia, serif; }
+.blog-article details p{ margin:.7em 0 0; }
+.blog-article .related{ font-size:16px; margin-top:2em; }
 @media (max-width:640px){
   .blog-hero h1{ font-size:29px; }
   .blog-hero .lead{ font-size:17px; }
@@ -156,6 +173,13 @@ const STYLE = `
 
 const tail = `\n${footer}\n\n</body>\n</html>\n`;
 const ld = (obj) => `<script type="application/ld+json">${JSON.stringify(obj)}</script>`;
+// «Частые вопросы» в статье (<details><summary>вопрос</summary><p>ответ</p>) → разметка FAQPage
+const plain = (h) => h.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+function faqLd(body) {
+  const qa = [...body.matchAll(/<summary>([\s\S]*?)<\/summary>\s*<p>([\s\S]*?)<\/p>/g)]
+    .map((m) => ({ '@type': 'Question', name: plain(m[1]), acceptedAnswer: { '@type': 'Answer', text: plain(m[2]) } }));
+  return qa.length ? '\n' + ld({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: qa }) : '';
+}
 const publisher = { '@type': 'Organization', name: 'Героёнок', url: SITE + '/', logo: SITE + '/assets/brand/apple-touch-icon.png' };
 
 // --- страницы статей ---
@@ -168,13 +192,14 @@ for (const p of posts) {
   <a href="${esc(p.cta_href || 'create.html')}" class="btn btn-primary">${esc(p.cta_button || 'Создать книгу')}</a>
 </section>`;
   const html = head({
-    title: `${p.title} | Блог Героёнка`, description: p.description, path, type: 'article', image: p.image,
+    title: p.seo_title || `${p.title} | Блог Героёнка`, description: p.description, path, type: 'article', image: p.image,
     extra: ld({
       '@context': 'https://schema.org', '@type': 'BlogPosting', headline: p.title, description: p.description,
       datePublished: p.date, dateModified: p.updated || p.date, inLanguage: 'ru',
       mainEntityOfPage: SITE + path, image: p.image ? SITE + '/' + p.image.replace(/^\//, '') : SITE + '/assets/brand/og-image.jpg',
-      author: { '@type': 'Person', name: p.author || 'Нелли Галстян', url: SITE + '/about' }, publisher,
-    }) + '\n' + ld({
+      author: /^Команда/.test(p.author || '') ? { '@type': 'Organization', name: p.author, url: SITE + '/' }
+        : { '@type': 'Person', name: p.author || 'Нелли Галстян', url: SITE + '/about' }, publisher,
+    }) + faqLd(p.body) + '\n' + ld({
       '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Героёнок', item: SITE + '/' },
         { '@type': 'ListItem', position: 2, name: 'Блог', item: SITE + '/blog' },
