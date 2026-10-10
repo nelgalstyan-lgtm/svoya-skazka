@@ -20,15 +20,11 @@ const YANDEX_VERIFY = { '/yandex_e834183a40931d36.html': 'e834183a40931d36' };
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    // один адрес сайта для поисковиков: www → без www, навсегда (301)
+    // www → без www (301). Сработает, только если запрос придёт на Cloudflare напрямую: через шлюз Яндекса Worker
+    // видит адрес workers.dev и не знает, был ли www (проверено 10.10) — для шлюза www переадресует отдельный шлюз (docs/handoff.md)
     if (url.hostname === 'www.geroenok.online') {
       url.hostname = 'geroenok.online';
       return Response.redirect(url.toString(), 301);
-    }
-    // ВРЕМЕННО (10.10): какие заголовки присылает шлюз — чтобы понять, можно ли отличить www. Только имена, без значений.
-    if (url.pathname === '/__gw-headers') {
-      return Response.json({ host: url.hostname, names: [...request.headers.keys()],
-        forwarded: Object.fromEntries([...request.headers].filter(([k]) => /forwarded|original|host|uri|url/i.test(k))) });
     }
     if (YANDEX_VERIFY[url.pathname]) {
       return new Response(`<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n    </head>\n    <body>Verification: ${YANDEX_VERIFY[url.pathname]}</body>\n</html>\n`,
