@@ -25,6 +25,11 @@ export default {
       url.hostname = 'geroenok.online';
       return Response.redirect(url.toString(), 301);
     }
+    // ВРЕМЕННО (10.10): какие заголовки присылает шлюз — чтобы понять, можно ли отличить www. Только имена, без значений.
+    if (url.pathname === '/__gw-headers') {
+      return Response.json({ host: url.hostname, names: [...request.headers.keys()],
+        forwarded: Object.fromEntries([...request.headers].filter(([k]) => /forwarded|original|host|uri|url/i.test(k))) });
+    }
     if (YANDEX_VERIFY[url.pathname]) {
       return new Response(`<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n    </head>\n    <body>Verification: ${YANDEX_VERIFY[url.pathname]}</body>\n</html>\n`,
         { headers: { 'content-type': 'text/html; charset=UTF-8' } });
@@ -44,15 +49,16 @@ export default {
       if (!obj) { const nf = await env.ASSETS.fetch(new Request(new URL('/404', url), request)); return new Response(nf.body, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } }); }
       return new Response(obj.body, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex, nofollow', 'cache-control': 'private, no-store', 'referrer-policy': 'no-referrer' } });
     }
-    // /pricing/ → /pricing: у каждой страницы один адрес
+    // /pricing/ → /pricing: у каждой страницы один адрес. Location — относительный: сайт открывают через шлюз Яндекса,
+    // а Worker видит адрес workers.dev — абсолютная ссылка увела бы посетителя туда
     if (url.pathname.length > 1 && url.pathname.endsWith('/')) {
-      url.pathname = url.pathname.replace(/\/+$/, '');
-      return Response.redirect(url.toString(), 301);
+      return new Response(null, { status: 301, headers: { location: url.pathname.replace(/\/+$/, '') + url.search } });
     }
     const res = await env.ASSETS.fetch(request);
     // статика отвечает 307 на /pricing.html → /pricing; поисковикам нужна постоянная переадресация 301
     if ((res.status === 307 || res.status === 308) && res.headers.get('location')) {
-      return new Response(null, { status: 301, headers: { location: new URL(res.headers.get('location'), url).toString() } });
+      const to = new URL(res.headers.get('location'), url);
+      return new Response(null, { status: 301, headers: { location: to.pathname + to.search } });
     }
     return res;
   },
