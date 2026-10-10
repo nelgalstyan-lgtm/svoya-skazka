@@ -26,6 +26,10 @@ export default {
       url.hostname = 'geroenok.online';
       return Response.redirect(url.toString(), 301);
     }
+    // Подтверждение Google Search Console (файл аккаунта владелицы, тот же, что у findena.ru)
+    if (url.pathname === '/googleca27defc77ae2c61.html') {
+      return new Response('google-site-verification: googleca27defc77ae2c61.html', { headers: { 'content-type': 'text/html; charset=UTF-8' } });
+    }
     if (YANDEX_VERIFY[url.pathname]) {
       return new Response(`<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n    </head>\n    <body>Verification: ${YANDEX_VERIFY[url.pathname]}</body>\n</html>\n`,
         { headers: { 'content-type': 'text/html; charset=UTF-8' } });
