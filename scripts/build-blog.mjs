@@ -275,7 +275,7 @@ const author = (p) => (/^(Команда|Героёнок)/.test(authorName(p))
   : { '@type': 'Person', name: authorName(p), url: SITE + '/about' });
 const BUNNY_BIO = 'Маленький хранитель историй с сумкой книг. Путешествует между сказками, собирает те, в которых дети узнают себя, и делится с родителями тем, что узнал о детях, книгах и чтении.';
 const STARS = '<span class="page-star s1" aria-hidden="true">✦</span><span class="page-star s2" aria-hidden="true">✦</span><span class="page-star s3" aria-hidden="true">✦</span><span class="page-star s4" aria-hidden="true">✦</span>';
-const publisher = { '@type': 'Organization', name: 'Героёнок', url: SITE + '/', logo: SITE + '/assets/brand/apple-touch-icon.png' };
+const publisher = { '@type': 'Organization', name: 'Героёнок', url: SITE + '/', logo: SITE + '/assets/brand/apple-touch-icon.png', sameAs: ['https://dzen.ru/id/6aca4137e1ecda1f099d7ed6'] };
 
 // --- страницы статей ---
 for (const p of posts) {
