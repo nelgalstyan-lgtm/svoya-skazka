@@ -159,6 +159,65 @@ const STYLE = `
 .blog-article summary{ cursor:pointer; font-family:'Lora', Georgia, serif; }
 .blog-article details p{ margin:.7em 0 0; }
 .blog-article .related{ font-size:16px; margin-top:2em; }
+/* ---------- книжная страница ---------- */
+.title-ornament{ font-size:18px; letter-spacing:.5em; color:var(--gold-dark); margin:4px 0 0; opacity:.85; }
+.book-page{
+  position:relative; background:var(--cream); border-radius:var(--radius-l);
+  padding:64px 76px 48px;
+  box-shadow:0 0 0 1px rgba(215,154,58,.35), 0 0 22px 3px rgba(215,154,58,.28), 0 0 70px 10px rgba(244,214,140,.35), var(--shadow-soft);
+  max-width:820px;
+}
+.book-page::before{
+  content:""; position:absolute; inset:14px; border-radius:20px; pointer-events:none;
+  border:1.5px solid transparent;
+  background:linear-gradient(135deg,#F3D58C,#D79A3A 30%,#F7E3AE 50%,#C98A2E 70%,#F3D58C) border-box;
+  -webkit-mask:linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude;
+  opacity:.7;
+}
+.page-star{ position:absolute; color:#D79A3A; font-size:22px; line-height:1; pointer-events:none; text-shadow:0 0 6px rgba(255,214,120,1), 0 0 14px rgba(240,180,70,.7); }
+.page-star.s1{ top:5px; left:6px; } .page-star.s2{ top:5px; right:6px; } .page-star.s3{ bottom:5px; left:6px; } .page-star.s4{ bottom:5px; right:6px; }
+.book-page > p:first-of-type::first-letter, .book-page .tldr + .toc + p::first-letter{
+  font-family:'Lora', Georgia, serif; font-weight:700; font-size:3.4em; float:left; line-height:.86; margin:.07em .1em 0 0; color:var(--gold-dark);
+}
+.book-page{ counter-reset:chapter; }
+.book-page h2{ counter-increment:chapter; text-align:center; margin:2.2em 0 .8em; clear:both; }
+.book-page h2::before{
+  content:"✦ глава " counter(chapter, upper-roman) "\\00a0✦"; display:block; font-family:var(--font-script); font-weight:600;
+  font-size:21px; color:var(--gold-dark); letter-spacing:.02em; margin-bottom:4px;
+}
+.book-page h3{ color:#4a3a28; }
+.book-page .tldr{ background:var(--paper-2); border:none; border-left:3px solid var(--gold); border-radius:0 var(--radius-m) var(--radius-m) 0; }
+.book-page .toc{ background:transparent; border:1px dashed var(--line); }
+.book-page ul{ list-style:none; padding-left:1.4em; }
+.book-page ul > li{ position:relative; }
+.book-page ul > li::before{ content:"✦"; position:absolute; left:-1.3em; top:.05em; color:var(--gold); font-size:.8em; }
+.book-page ul, .book-page ol, .book-page .tldr, .book-page details, .book-page .table-wrap{ display:flow-root; }
+/* иллюстрации как вклейки */
+.plate{ margin:.4em 0 1.2em; }
+.plate.right{ float:right; width:42%; margin:.3em -24px 1em 28px; transform:rotate(1.2deg); }
+.plate.left{ float:left; width:42%; margin:.3em 28px 1em -24px; transform:rotate(-1.2deg); }
+.plate img{ display:block; width:100%; height:auto; margin:0; border-radius:4px; border:8px solid #fff; box-shadow:0 14px 28px -14px rgba(60,40,20,.55), 0 0 0 1px rgba(215,154,58,.35); }
+.plate figcaption{ font-family:var(--font-script); font-style:normal; font-size:19px; line-height:1.3; color:#6b5440; text-align:center; margin-top:8px; }
+.page-end{ text-align:center; color:var(--gold-dark); letter-spacing:.4em; margin-top:2.4em; clear:both; }
+/* автор */
+.blog-author{ max-width:820px; margin:28px auto 0; display:flex; gap:20px; align-items:center; padding:22px 26px; background:var(--paper-2); border-radius:var(--radius-l); }
+.blog-author img{ width:96px; height:96px; flex:none; border-radius:50%; object-fit:cover; border:2px solid #E7C27A; box-shadow:0 0 0 4px var(--cream), 0 0 0 5px rgba(215,154,58,.35); }
+.blog-author .kicker{ font-family:var(--font-script); color:var(--gold-dark); font-size:20px; display:block; line-height:1; }
+.blog-author strong{ font-family:'Lora', Georgia, serif; font-size:22px; color:#2f2618; }
+.blog-author p{ margin:4px 0 0; font-family:'Literata', Georgia, serif; font-size:16px; color:var(--text-soft); line-height:1.55; }
+/* список статей — как книги на полке */
+.blog-card{ border-radius:4px 14px 14px 4px; box-shadow:inset 6px 0 0 rgba(120,80,30,.18), var(--shadow-soft); }
+@media (max-width:860px){
+  .book-page{ padding:48px 34px 40px; }
+  .plate.right, .plate.left{ float:none; width:auto; max-width:360px; margin:1em auto 1.4em; transform:none; }
+}
+@media (max-width:640px){
+  .book-page{ padding:40px 22px 34px; border-radius:16px; }
+  .book-page::before{ inset:8px; border-radius:12px; }
+  .page-star{ font-size:16px; }
+  .book-page h2::before{ font-size:18px; }
+  .blog-author{ flex-direction:column; text-align:center; }
+}
 @media (max-width:640px){
   .blog-hero h1{ font-size:29px; }
   .blog-hero .lead{ font-size:17px; }
@@ -180,6 +239,14 @@ function faqLd(body) {
     .map((m) => ({ '@type': 'Question', name: plain(m[1]), acceptedAnswer: { '@type': 'Answer', text: plain(m[2]) } }));
   return qa.length ? '\n' + ld({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: qa }) : '';
 }
+// Автор по умолчанию — сам Героёнок (маскот), в разметке — как организация; живой человек — author: Имя Фамилия
+const BUNNY = 'Героёнок';
+const authorName = (p) => p.author || BUNNY;
+const author = (p) => (/^(Команда|Героёнок)/.test(authorName(p))
+  ? { '@type': 'Organization', name: authorName(p), url: SITE + '/about' }
+  : { '@type': 'Person', name: authorName(p), url: SITE + '/about' });
+const BUNNY_BIO = 'Маленький хранитель историй с сумкой книг. Путешествует между сказками, собирает те, в которых дети узнают себя, и делится с родителями тем, что узнал о детях, книгах и чтении.';
+const STARS = '<span class="page-star s1" aria-hidden="true">✦</span><span class="page-star s2" aria-hidden="true">✦</span><span class="page-star s3" aria-hidden="true">✦</span><span class="page-star s4" aria-hidden="true">✦</span>';
 const publisher = { '@type': 'Organization', name: 'Героёнок', url: SITE + '/', logo: SITE + '/assets/brand/apple-touch-icon.png' };
 
 // --- страницы статей ---
@@ -197,8 +264,7 @@ for (const p of posts) {
       '@context': 'https://schema.org', '@type': 'BlogPosting', headline: p.title, description: p.description,
       datePublished: p.date, dateModified: p.updated || p.date, inLanguage: 'ru',
       mainEntityOfPage: SITE + path, image: p.image ? SITE + '/' + p.image.replace(/^\//, '') : SITE + '/assets/brand/og-image.jpg',
-      author: /^Команда/.test(p.author || '') ? { '@type': 'Organization', name: p.author, url: SITE + '/' }
-        : { '@type': 'Person', name: p.author || 'Нелли Галстян', url: SITE + '/about' }, publisher,
+      author: author(p), publisher,
     }) + faqLd(p.body) + '\n' + ld({
       '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Героёнок', item: SITE + '/' },
@@ -212,15 +278,22 @@ for (const p of posts) {
     <a class="kicker" href="blog.html" style="text-decoration:none">${esc(p.kicker || 'Блог Героёнка')}</a>
     <h1>${esc(p.title)}</h1>
     ${p.lead ? `<p class="lead">${esc(p.lead)}</p>` : ''}
-    <p class="blog-meta">${ruDate(p.date)} · ${readMinutes(p.body)} мин чтения · ${esc(p.author || 'Нелли Галстян')}</p>
+    <div class="title-ornament" aria-hidden="true">✦ ❦ ✦</div>
+    <p class="blog-meta">${ruDate(p.date)} · ${readMinutes(p.body)} мин чтения · ${esc(authorName(p))}</p>
   </div>
 </section>
 
 <section class="tight" style="padding-top:8px;">
   <div class="container">
-    <article class="blog-article">
+    <article class="blog-article book-page">
+${STARS}
 ${markdown(p.body)}
+<div class="page-end" aria-hidden="true">— ✦ —</div>
     </article>
+    ${authorName(p) === BUNNY ? `<aside class="blog-author">
+      <img src="assets/brand/geroenok-avatar-160.webp" srcset="assets/brand/geroenok-avatar-160.webp 1x, assets/brand/geroenok-avatar-320.webp 2x" width="96" height="96" alt="Героёнок — зайчик с сумкой книг" loading="lazy">
+      <div><span class="kicker">Автор</span><strong>Героёнок</strong><p>${esc(p.author_bio || BUNNY_BIO)}</p></div>
+    </aside>` : ''}
   </div>
 </section>
 
@@ -248,6 +321,7 @@ writeFileSync(join(out, 'blog.html'), head({
     <p class="lead">Советы родителям, идеи подарков и материалы для печати.</p>
   </div>
 </section>
+<div class="title-ornament" aria-hidden="true" style="text-align:center">✦ ❦ ✦</div>
 <section class="tight" style="padding-top:0;"><div class="container"><div class="blog-list">
 ${cards}
 </div></div></section>
