@@ -14,9 +14,21 @@ export class BookWorkflow extends WorkflowEntrypoint {
   }
 }
 
+// Подтверждение прав в Яндекс Вебмастере: файл должен отвечать 200 по адресу с .html (статика переадресовала бы на адрес без .html)
+const YANDEX_VERIFY = { '/yandex_e834183a40931d36.html': 'e834183a40931d36' };
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    // один адрес сайта для поисковиков: www → без www, навсегда (301)
+    if (url.hostname === 'www.geroenok.online') {
+      url.hostname = 'geroenok.online';
+      return Response.redirect(url.toString(), 301);
+    }
+    if (YANDEX_VERIFY[url.pathname]) {
+      return new Response(`<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n    </head>\n    <body>Verification: ${YANDEX_VERIFY[url.pathname]}</body>\n</html>\n`,
+        { headers: { 'content-type': 'text/html; charset=UTF-8' } });
+    }
     if (url.pathname.startsWith('/api/')) {
       try {
         return await handleApi(request, env);
@@ -32,7 +44,17 @@ export default {
       if (!obj) { const nf = await env.ASSETS.fetch(new Request(new URL('/404', url), request)); return new Response(nf.body, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } }); }
       return new Response(obj.body, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex, nofollow', 'cache-control': 'private, no-store', 'referrer-policy': 'no-referrer' } });
     }
-    return env.ASSETS.fetch(request);
+    // /pricing/ → /pricing: у каждой страницы один адрес
+    if (url.pathname.length > 1 && url.pathname.endsWith('/')) {
+      url.pathname = url.pathname.replace(/\/+$/, '');
+      return Response.redirect(url.toString(), 301);
+    }
+    const res = await env.ASSETS.fetch(request);
+    // статика отвечает 307 на /pricing.html → /pricing; поисковикам нужна постоянная переадресация 301
+    if ((res.status === 307 || res.status === 308) && res.headers.get('location')) {
+      return new Response(null, { status: 301, headers: { location: new URL(res.headers.get('location'), url).toString() } });
+    }
+    return res;
   },
 
   // книги запускаются из очереди: так OpenAI не видит страну покупателя (см. queue.js)

@@ -192,6 +192,34 @@ const STYLE = `
 .book-page ul > li{ position:relative; }
 .book-page ul > li::before{ content:"✦"; position:absolute; left:-1.3em; top:.05em; color:var(--gold); font-size:.8em; }
 .book-page ul, .book-page ol, .book-page .tldr, .book-page details, .book-page .table-wrap{ display:flow-root; }
+/* таблица «как в книге»: возраст — цветные закладки, на телефоне строки становятся карточками */
+.gift-table{ border-collapse:separate; border-spacing:0; background:#FFFBF2; border:1px solid rgba(215,154,58,.45); border-radius:18px; overflow:hidden; box-shadow:0 14px 30px -18px rgba(60,40,20,.45); font-size:15.5px; }
+.book-page .gift-table th{ background:linear-gradient(180deg,#F6E7C4,#EBD3A0); color:#4a3a28; font-family:'Lora', Georgia, serif; font-size:15px; letter-spacing:.01em; padding:14px 14px; border-bottom:1px solid rgba(184,127,39,.45); }
+.book-page .gift-table td{ padding:14px; border-bottom:1px dashed rgba(215,154,58,.35); }
+.gift-table tbody tr:last-child td{ border-bottom:none; }
+.gift-table tbody tr:nth-child(even){ background:rgba(239,230,210,.35); }
+.gift-table tbody tr{ transition:background .2s ease; }
+.gift-table tbody tr:hover{ background:rgba(240,200,120,.18); }
+.gift-table td.age{ width:92px; white-space:nowrap; }
+.gift-table td.age span{ display:inline-block; white-space:nowrap; padding:5px 12px 5px 14px; border-radius:4px 999px 999px 4px; font-family:'Lora', Georgia, serif; font-weight:700; font-size:14.5px; color:#fff; background:#75906B; box-shadow:0 3px 8px -4px rgba(0,0,0,.35); }
+.gift-table tbody tr:nth-child(2) td.age span{ background:#D79A3A; }
+.gift-table tbody tr:nth-child(3) td.age span{ background:#B4495A; }
+.gift-table tbody tr:nth-child(4) td.age span{ background:#4F78A8; }
+.gift-table tbody tr:nth-child(5) td.age span{ background:#7A5C9E; }
+.gift-table td.dev{ font-family:var(--font-script); font-size:20px; line-height:1.15; color:#6b5440; }
+.gift-table td.ideas{ color:#2f2618; font-weight:600; }
+.gift-table td.avoid{ color:#9a4655; }
+.gift-table td.avoid::before{ content:"✕ "; font-weight:700; }
+@media (max-width:640px){
+  .gift-table, .gift-table tbody, .gift-table tr, .gift-table td{ display:block; width:auto; }
+  .gift-table thead{ display:none; }
+  .gift-table{ background:transparent; border:none; box-shadow:none; }
+  .gift-table tbody tr, .gift-table tbody tr:nth-child(even){ background:#FFFBF2; border:1px solid rgba(215,154,58,.45); border-radius:16px; margin:0 0 14px; padding:6px 4px; box-shadow:0 10px 22px -16px rgba(60,40,20,.45); }
+  .book-page .gift-table td{ border-bottom:none; padding:6px 12px; white-space:normal; }
+  .gift-table td:not(.age)::before{ content:attr(data-label) ": "; font-family:var(--font-body); font-weight:700; font-size:13px; color:#8a7356; text-transform:uppercase; letter-spacing:.04em; display:block; }
+  .gift-table td.avoid::before{ content:attr(data-label) ": "; }
+  .gift-table td.dev{ font-size:19px; }
+}
 /* иллюстрации как вклейки */
 .plate{ margin:.4em 0 1.2em; }
 .plate.right{ float:right; width:42%; margin:.3em -24px 1em 28px; transform:rotate(1.2deg); }

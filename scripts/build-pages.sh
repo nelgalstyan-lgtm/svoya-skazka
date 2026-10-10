@@ -12,6 +12,7 @@ cp -r assets js dist/
 cp robots.txt sitemap.xml _redirects dist/
 node scripts/build-blog.mjs dist   # блог из scripts/blog/posts/*.md; пока статей нет — ничего не публикует
 node scripts/clean-urls.mjs dist
+node scripts/add-metrika.mjs dist   # Яндекс Метрика на всех страницах (не на личных книгах ?job=)
 
 # Номер версии у скриптов и стилей (?v=…): после выкладки телефоны сразу берут новые файлы, а не старые из кэша
 # (01.10 Safari на iPhone показывал книгу со старым js/book-engine.js)
