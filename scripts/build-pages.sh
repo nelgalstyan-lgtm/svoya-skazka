@@ -10,6 +10,7 @@ mkdir -p dist
 cp ./*.html dist/
 cp -r assets js dist/
 cp robots.txt sitemap.xml _redirects dist/
+node scripts/build-blog.mjs dist   # блог из scripts/blog/posts/*.md; пока статей нет — ничего не публикует
 node scripts/clean-urls.mjs dist
 
 # Номер версии у скриптов и стилей (?v=…): после выкладки телефоны сразу берут новые файлы, а не старые из кэша
