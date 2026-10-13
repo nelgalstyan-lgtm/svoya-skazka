@@ -5,6 +5,13 @@
 Сайт: **https://geroenok.online** (Cloudflare Worker `svoya-skazka`). Старая копия: https://nelgalstyan-lgtm.github.io/svoya-skazka/.
 Подробности по коду: `docs/project-brief.md`, `server/README.md`, `server/.env.example`, `wrangler.jsonc`.
 
+## ⚠ 13.10: откат на Cloudflare (шлюз Яндекса лежит с 11.10)
+
+- У Яндекса открыт инцидент «Недоступность зон Yandex Cloud» (id 2136, с 11.10 04:00 МСК); 13.10 шлюз `d5dhkj56d30ub9umgonq` всё ещё 502 (пустой ответ), API управления шлюзами — 504. Worker напрямую — 200.
+- Сделано (af39c18): в `wrangler.jsonc` маршруты `geroenok.online/*` и `www.geroenok.online/*` + `workers_dev: true` (на workers.dev ходит шлюз). Маршруты в зоне есть (проверено API).
+- **Осталось владелице:** в Cloudflare → DNS включить оранжевое облачко (Proxied) у CNAME `geroenok.online` и `www` (мне система безопасности DNS менять не даёт). `_acme-challenge` не трогать.
+- Вернуться на Яндекс, когда шлюз ответит 200 на `/api/health`: выключить облачко у обеих записей (DNS only) и убрать `routes` из `wrangler.jsonc`. До возврата «Айнет» сайт не откроет, остальные — да.
+
 ## ▶ НАЧАТЬ 11.10 ОТСЮДА (итог 10.10: блог, SEO, Дзен)
 
 - **Блог работает:** `/blog`, первая статья `/blog-chto-podarit-rebenku-na-novyj-god` (текст и семантика Вордстата — от владелицы; оформление «как страница книги», автор — Героёнок с круглым портретом, вклейки из книги Аделины без армянских сцен, таблица-«закладки»). Генератор `scripts/build-blog.mjs`, статьи — `scripts/blog/posts/*.md` (формат в `scripts/blog/README.md`). Владелице: переобход статьи в Вебмастере и Google. В начале декабря — обновить статью (`updated`) и выпустить поддерживающие: «подарок ребёнку 3 лет», «подарок от Деда Мороза», «как подписать книгу в подарок».
