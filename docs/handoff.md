@@ -9,7 +9,8 @@
 
 - У Яндекса открыт инцидент «Недоступность зон Yandex Cloud» (id 2136, с 11.10 04:00 МСК); 13.10 шлюз `d5dhkj56d30ub9umgonq` всё ещё 502 (пустой ответ), API управления шлюзами — 504. Worker напрямую — 200.
 - Сделано (af39c18): в `wrangler.jsonc` маршруты `geroenok.online/*` и `www.geroenok.online/*` + `workers_dev: true` (на workers.dev ходит шлюз). Маршруты в зоне есть (проверено API).
-- **Осталось владелице:** в Cloudflare → DNS включить оранжевое облачко (Proxied) у CNAME `geroenok.online` и `www` (мне система безопасности DNS менять не даёт). `_acme-challenge` не трогать.
+- **Облачко включено владелицей 13.10** у CNAME `geroenok.online` и `www` (мне система безопасности DNS менять не даёт; `_acme-challenge` не трогали). Проверено: /, /api/health, www и .html → 301, сертификат Cloudflare (Let's Encrypt до 24.12), check-host Москва ×2 и СПб — 200. ЮKassa может проверять сайт.
+- **Решение владелицы 13.10:** ждём Яндекс неделю (до ~20.10). Если не поднимется — свой VPS в РФ (предложен Timeweb Cloud, оплата картой Армении — уточнить у них) с обратным прокси на workers.dev: заголовки `x-geroenok-proxy` (= PROXY_SECRET) и `x-real-remote-address`, www → 301, вырезать `alt-svc`, Let's Encrypt; DNS — A на VPS, серое облачко.
 - Вернуться на Яндекс, когда шлюз ответит 200 на `/api/health`: выключить облачко у обеих записей (DNS only) и убрать `routes` из `wrangler.jsonc`. До возврата «Айнет» сайт не откроет, остальные — да.
 
 ## ▶ НАЧАТЬ 11.10 ОТСЮДА (итог 10.10: блог, SEO, Дзен)
