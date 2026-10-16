@@ -5,6 +5,12 @@
 Сайт: **https://geroenok.online** (Cloudflare Worker `svoya-skazka`). Старая копия: https://nelgalstyan-lgtm.github.io/svoya-skazka/.
 Подробности по коду: `docs/project-brief.md`, `server/README.md`, `server/.env.example`, `wrangler.jsonc`.
 
+## 16.10: шлюз Яндекса снова работает
+
+- Шлюз `geroenok-proxy` в статусе ACTIVE, домены geroenok.online и www привязаны, сертификат на месте. Через шлюз: /api/health, /, /create, /pricing отдают 200; с адресом geroenok.online через 158.160.220.5 — тоже 200; check-host Москва ×2 и СПб — 200 за 0,3 с. Полный адрес для проверки: `https://d5dhkj56d30ub9umgonq.s183zexc.apigw.yandexcloud.net/api/health`. Короткий, без `s183zexc`, отвечает 404 «not found», и это не авария.
+- Список шлюзов можно посмотреть через API ключом `yc-key.json` (сервисный аккаунт geroenok-setup, каталог b1gnhq9g6rlh8aojm9pq): IAM-токен по JWT PS256.
+- Как переключиться: владелица выключает облачко у geroenok.online и www (DNS only), я проверяю, что домен смотрит на 158.160.220.5, и убираю `routes` из `wrangler.jsonc`.
+
 ## 16.10: защита анкеты от роботов (Яндекс SmartCaptcha)
 
 - Пришёл бесплатный заказ с именем ребёнка «Claude Sonnet 5»: чей-то ИИ-агент заполнил анкету. Владелица решила поставить защиту. **Не Turnstile:** у части провайдеров РФ Cloudflare недоступен, после возврата на шлюз Яндекса они не смогли бы заказать.
@@ -245,7 +251,7 @@
 - **Проверено 01.10:** страницы, `/api/health`, книги-образцы, аудио с Range (206), 404, http→https, check-host из Москвы/СПб — 200 через 158.160.220.5; тесты 88.
 - **Лимит шлюза — запрос до 3,5 МБ** (больше — 413). С 01.10 анкета жмёт каждое фото до ≤450 КБ (`PHOTO_SEND_BYTES`, `shrinkPhoto`: 1280 px → качество 0,75 → 1024 → 800 px), 6 фото ≈2,7 МБ; на 413 — просьба заменить фото. Влито и в `family-photos` (тесты 90).
 - `www.geroenok.online` — тоже через шлюз (облачко выключено владелицей 01.10, проверено: ycalb, 158.160.220.5).
-- **11.10: сайт не открывался ни у кого** — авария Яндекс Облака «Нарушение электропитания в зоне доступности ru-central-a» (с 04:00 МСК, status.yandex.cloud): 158.160.220.5 молчит, адрес шлюза `*.apigw.yandexcloud.net` → 502, Worker напрямую — 200. Владелица решила ждать Яндекс, обход через Cloudflare не включали. Как быстро проверить: `curl https://svoya-skazka.nelgalstyan.workers.dev/api/health` (Worker) и `curl https://d5dhkj56d30ub9umgonq.apigw.yandexcloud.net/api/health` (шлюз).
+- **11.10: сайт не открывался ни у кого** — авария Яндекс Облака «Нарушение электропитания в зоне доступности ru-central-a» (с 04:00 МСК, status.yandex.cloud): 158.160.220.5 молчит, адрес шлюза `*.apigw.yandexcloud.net` → 502, Worker напрямую — 200. Владелица решила ждать Яндекс, обход через Cloudflare не включали. Как быстро проверить: `curl https://svoya-skazka.nelgalstyan.workers.dev/api/health` (Worker) и `curl https://d5dhkj56d30ub9umgonq.s183zexc.apigw.yandexcloud.net/api/health` (шлюз).
 - **01.10 днём: у владелицы на iPhone (Safari, домашний вай-фай в Ереване) сайт не открывался** — чёрный экран «загружается», в «Частном доступе» тоже; с компьютера в той же сети всё работало (curl и Chrome); через какое-то время само заработало. Причина не установлена. Найденная проблема: шлюз пробрасывает от Cloudflare (workers.dev) заголовок `alt-svc: h3=":443"`, а UDP/443 на 158.160.220.5 молчит (Chrome netlog: QUIC handshake timeout 4 с → Chrome уходит на h2, Safari может висеть). Со стороны Cloudflare не убрать: `_headers` с `Alt-Svc: clear` проверен на пробной версии — Cloudflare перезаписывает. Если повторится: (1) спросить, открывается ли по мобильному интернету и выключен ли «Частный узел» iCloud; (2) быстрый откат — маршруты Worker'а `geroenok.online/*` и `www.geroenok.online/*` → svoya-skazka (на 11.10 маршрутов и кастомных доменов у Worker'а нет, одного облачка мало) + оранжевое облачко у `geroenok.online` и `www` (как до 30.09, «Айнет» снова не откроет; `_acme-challenge` не трогать); (3) настоящее лечение — шлюз ходит не на workers.dev, а на свой адрес вроде `origin.geroenok.online` (кастомный домен Worker'а) с выключенным HTTP/3 в зоне (`settings/http3` сейчас `on`), либо шлюз вырезает `alt-svc`. Менять DNS/шлюз мне система безопасности не даёт — делает владелица в панели.
 - Цена: 100 000 запросов/мес и 100 ГБ трафика бесплатно, дальше 142,3 ₽ за 1 млн запросов (одна страница ≈30–50 запросов).
 
