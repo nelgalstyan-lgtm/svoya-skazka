@@ -7,6 +7,7 @@
 
 ## 16.10: шлюз Яндекса снова работает
 
+- **Переключено обратно 16.10:** владелица выключила облачко у @ и www (DNS → 158.160.220.5 у Google, Cloudflare и Яндекса), `routes` убраны из `wrangler.jsonc`. Раздел «⚠ 13.10» ниже больше не действует, нужен только если шлюз снова ляжет.
 - Шлюз `geroenok-proxy` в статусе ACTIVE, домены geroenok.online и www привязаны, сертификат на месте. Через шлюз: /api/health, /, /create, /pricing отдают 200; с адресом geroenok.online через 158.160.220.5 — тоже 200; check-host Москва ×2 и СПб — 200 за 0,3 с. Полный адрес для проверки: `https://d5dhkj56d30ub9umgonq.s183zexc.apigw.yandexcloud.net/api/health`. Короткий, без `s183zexc`, отвечает 404 «not found», и это не авария.
 - Список шлюзов можно посмотреть через API ключом `yc-key.json` (сервисный аккаунт geroenok-setup, каталог b1gnhq9g6rlh8aojm9pq): IAM-токен по JWT PS256.
 - Как переключиться: владелица выключает облачко у geroenok.online и www (DNS only), я проверяю, что домен смотрит на 158.160.220.5, и убираю `routes` из `wrangler.jsonc`.
