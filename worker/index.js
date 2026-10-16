@@ -15,7 +15,7 @@ export class BookWorkflow extends WorkflowEntrypoint {
 }
 
 // Подтверждение прав в Яндекс Вебмастере: файл должен отвечать 200 по адресу с .html (статика переадресовала бы на адрес без .html)
-const YANDEX_VERIFY = { '/yandex_e834183a40931d36.html': 'e834183a40931d36' };
+const YANDEX_VERIFY = { '/yandex_e834183a40931d36.html': 'e834183a40931d36', '/yandex_3b4b953fbbf8266d.html': '3b4b953fbbf8266d' };
 
 export default {
   async fetch(request, env) {
