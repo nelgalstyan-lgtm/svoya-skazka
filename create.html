@@ -952,7 +952,7 @@ section.tight{ padding:56px 0; }
 
     // Невидимая Яндекс SmartCaptcha (проверка — worker/api.js, captchaPassed): задание видят только подозрительные
     // посетители. Пустой ключ — проверки нет. Токен одноразовый и живёт 5 минут — берём его прямо перед отправкой анкеты.
-    const SMARTCAPTCHA_SITEKEY = '';
+    const SMARTCAPTCHA_SITEKEY = 'ysc1_v0h6CpPCgoKLMJP88lhaDdhOxaWs9wbBXhWC8pER13034ecd';
     const captcha = (function () {
       if (!SMARTCAPTCHA_SITEKEY) return { token: function () { return Promise.resolve(''); } };
       let widgetId = null;
