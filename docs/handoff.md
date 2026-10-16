@@ -5,6 +5,12 @@
 Сайт: **https://geroenok.online** (Cloudflare Worker `svoya-skazka`). Старая копия: https://nelgalstyan-lgtm.github.io/svoya-skazka/.
 Подробности по коду: `docs/project-brief.md`, `server/README.md`, `server/.env.example`, `wrangler.jsonc`.
 
+## 16.10: защита анкеты от роботов (Яндекс SmartCaptcha)
+
+- Пришёл бесплатный заказ с именем ребёнка «Claude Sonnet 5»: чей-то ИИ-агент заполнил анкету. Владелица решила поставить защиту. **Не Turnstile:** у части провайдеров РФ Cloudflare недоступен, после возврата на шлюз Яндекса они не смогли бы заказать.
+- Код выложен (56dbb04): невидимая капча в `create.html` (`SMARTCAPTCHA_SITEKEY`), проверка в `worker/api.js` (`captchaPassed`, секрет `SMARTCAPTCHA_SECRET`). Без ключей не работает. Если Яндекс не отвечает, анкета проходит (так советует документация). Хозяйке с `x-admin-key` капча не нужна. Бесплатно 10 000 проверок в месяц.
+- **Ждём от владелицы ключи** (капча создаётся в консоли Яндекс Облака). Потом: ключ клиента вписать в create.html, секрет записать через `npx wrangler secret put SMARTCAPTCHA_SECRET`, добавить SmartCaptcha в privacy.html и проверить заказ на проде.
+
 ## ⚠ 13.10: откат на Cloudflare (шлюз Яндекса лежит с 11.10)
 
 - У Яндекса открыт инцидент «Недоступность зон Yandex Cloud» (id 2136, с 11.10 04:00 МСК); 13.10 шлюз `d5dhkj56d30ub9umgonq` всё ещё 502 (пустой ответ), API управления шлюзами — 504. Worker напрямую — 200.
