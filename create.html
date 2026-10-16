@@ -950,6 +950,43 @@ section.tight{ padding:56px 0; }
     const MAX_WAIT_PHOTO_MS = 7 * 60000; // с фото рисуются 10 иллюстраций — это несколько минут
     const MAX_POLL_ERRORS = 5;
 
+    // Невидимая Яндекс SmartCaptcha (проверка — worker/api.js, captchaPassed): задание видят только подозрительные
+    // посетители. Пустой ключ — проверки нет. Токен одноразовый и живёт 5 минут — берём его прямо перед отправкой анкеты.
+    const SMARTCAPTCHA_SITEKEY = '';
+    const captcha = (function () {
+      if (!SMARTCAPTCHA_SITEKEY) return { token: function () { return Promise.resolve(''); } };
+      let widgetId = null;
+      let waiting = null;
+      const done = function (token) { if (waiting) { const resolve = waiting; waiting = null; resolve(token || ''); } };
+      const box = document.createElement('div');
+      box.id = 'smartCaptchaBox';
+      document.body.appendChild(box);
+      window.geroenokCaptchaLoaded = function () {
+        if (!window.smartCaptcha) return;
+        widgetId = window.smartCaptcha.render('smartCaptchaBox', { sitekey: SMARTCAPTCHA_SITEKEY, invisible: true, hideShield: true, callback: done });
+        window.smartCaptcha.subscribe(widgetId, 'challenge-hidden', function () { done(''); });
+        window.smartCaptcha.subscribe(widgetId, 'network-error', function () { done(''); });
+      };
+      const script = document.createElement('script');
+      script.src = 'https://smartcaptcha.cloud.yandex.ru/captcha.js?render=onload&onload=geroenokCaptchaLoaded';
+      script.defer = true;
+      document.head.appendChild(script);
+      // о капче надо сообщить посетителю: значок Яндекса скрыт (hideShield), поэтому — строкой под кнопкой
+      const consent = document.querySelector('.form-consent');
+      if (consent) consent.insertAdjacentHTML('beforeend', ' Защита от роботов — Яндекс SmartCaptcha (<a href="https://yandex.ru/legal/smartcaptcha_notice/" target="_blank" rel="noopener">условия обработки данных</a>).');
+      return {
+        token: function () {
+          if (widgetId === null || !window.smartCaptcha) return Promise.resolve('');
+          return new Promise(function (resolve) {
+            waiting = resolve;
+            setTimeout(function () { done(''); }, 180000); // задание бросили открытым — не держим кнопку вечно
+            window.smartCaptcha.reset(widgetId);
+            window.smartCaptcha.execute(widgetId);
+          });
+        }
+      };
+    })();
+
     const generateBtn = document.getElementById('generatePreviewBtn');
     const statusBox = document.getElementById('generationStatus');
     const previewBox = document.getElementById('previewResult');
@@ -1514,8 +1551,9 @@ section.tight{ padding:56px 0; }
       };
     }
 
-    function orderForm(answers, uploaded) {
+    function orderForm(answers, uploaded, captchaToken) {
       const form = new FormData();
+      if (captchaToken) form.append('captcha', captchaToken);
       form.append('answers', JSON.stringify(answers));
       form.append('device', deviceId());
       form.append('upload', uploaded.upload);
@@ -1730,14 +1768,16 @@ section.tight{ padding:56px 0; }
           if (myRun === runId) setStatus('Отправляем фото… ' + Math.round(share * 100) + '%');
         }, answers.familyPhotos ? familyReady().map(function (p) { return p.photo; }) : []);
         if (myRun !== runId) return;
+        const captchaToken = await captcha.token();
+        if (myRun !== runId) return;
         setStatus('Начинаем писать вашу сказку…');
-        const data = await fetchJson(API_BASE + '/api/book/generate', { method: 'POST', body: orderForm(answers, uploaded) }, 60000);
+        const data = await fetchJson(API_BASE + '/api/book/generate', { method: 'POST', body: orderForm(answers, uploaded, captchaToken) }, 60000);
 
         if (!data.jobId) throw new Error('нет jobId');
         if (answers.tariff === 'big') { location.href = 'book-pro.html?job=' + encodeURIComponent(data.jobId); return; }
         await waitForBook(data.jobId, answers, myRun, startedAt, selectedPhotos.length ? MAX_WAIT_PHOTO_MS : MAX_WAIT_MS);
       } catch (error) {
-        if (error.status === 400 && error.payload && error.payload.error) {
+        if ((error.status === 400 || error.status === 403) && error.payload && error.payload.error) {
           setStatus(error.payload.error, 'error');
           generateBtn.disabled = false;
           generateBtn.textContent = 'Показать бесплатное превью';

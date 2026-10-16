@@ -3,7 +3,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleApi, PREVIEW_LIMITS, UPLOAD_CHUNK_BYTES } from '../api.js';
+import { handleApi, PREVIEW_LIMITS, UPLOAD_CHUNK_BYTES, captchaPassed } from '../api.js';
 import { runBook, spreadPick } from '../book.js';
 import { jsonStringField } from '../bytes.js';
 import { queueHandler } from '../queue.js';
@@ -876,4 +876,42 @@ test('лицо на обложке: box_2d → центр и высота дол
   assert.equal(parseFaceBox('{"box_2d": null}'), null);
   assert.equal(parseFaceBox('нет'), undefined);
   assert.equal(parseFaceBox('{"box_2d": [1, 2]}'), undefined);
+});
+
+test('капча: без секрета не проверяем, без токена — отказ, сбой Яндекса — пропускаем', async () => {
+  const original = globalThis.fetch;
+  const sent = [];
+  let reply = () => new Response(JSON.stringify({ status: 'ok', host: 'geroenok.online' }));
+  globalThis.fetch = async (url, init) => { sent.push({ url: String(url), body: String(init.body) }); return reply(); };
+  try {
+    assert.equal(await captchaPassed({}, ''), true);
+    const env = { SMARTCAPTCHA_SECRET: 's' };
+    assert.equal(await captchaPassed(env, ''), false);
+    assert.equal(await captchaPassed(env, 'tok', '5.6.7.8'), true);
+    assert.equal(sent[0].url, 'https://smartcaptcha.cloud.yandex.ru/validate');
+    assert.equal(sent[0].body, 'secret=s&token=tok&ip=5.6.7.8');
+    reply = () => new Response(JSON.stringify({ status: 'failed', message: '' }));
+    assert.equal(await captchaPassed(env, 'tok'), false);
+    reply = () => new Response('', { status: 500 });
+    assert.equal(await captchaPassed(env, 'tok'), true);
+    reply = () => { throw new Error('сеть'); };
+    assert.equal(await captchaPassed(env, 'tok'), true);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test('капча: анкета без токена не запускает книгу, хозяйке капча не нужна', async () => {
+  const env = fakeEnv({ SMARTCAPTCHA_SECRET: 's' });
+  const res = await api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, photos: [PHOTO] } });
+  assert.equal(res.status, 403);
+  assert.match((await res.json()).error, /человек/);
+  assert.equal(env.runs.length, 0);
+  const ai = stubOpenAI();
+  try {
+    const own = await api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, photos: [PHOTO] }, headers: { 'x-admin-key': 'admin' } });
+    assert.equal(own.status, 200);
+  } finally {
+    ai.restore();
+  }
 });

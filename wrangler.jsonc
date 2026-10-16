@@ -1,6 +1,6 @@
 // Cloudflare Worker «Героёнок»: сайт (статика из dist/) и API на /api/* (worker/), книги рисует Workflow.
 // Workers Builds запускает `npx wrangler deploy` при каждом пуше в main, сборка сайта — через build.command.
-// Секреты (не в git): OPENAI_API_KEY, GEMINI_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY, ADMIN_KEY —
+// Секреты (не в git): OPENAI_API_KEY, GEMINI_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY, ADMIN_KEY, SMARTCAPTCHA_SECRET —
 // `npx wrangler secret put ИМЯ`; локально для `npx wrangler dev` — файл .dev.vars.
 {
   "name": "svoya-skazka",

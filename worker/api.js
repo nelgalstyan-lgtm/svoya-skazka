@@ -64,15 +64,16 @@ async function readOrder(request, env) {
     let body;
     try { body = JSON.parse(String(form.get('answers') || '{}')); } catch { return null; }
     const device = String(form.get('device') || '');
-    if (form.get('upload')) return { body, device, ...(await readUpload(env, String(form.get('upload')), String(form.get('photoParts') || ''), String(form.get('familyParts') || ''))) };
+    const captcha = String(form.get('captcha') || '');
+    if (form.get('upload')) return { body, device, captcha, ...(await readUpload(env, String(form.get('upload')), String(form.get('photoParts') || ''), String(form.get('familyParts') || ''))) };
     const files = form.getAll('photo').filter((f) => typeof f === 'object' && f && PHOTO_MIME_RE.test(f.type) && f.size > 0 && f.size <= PHOTO_MAX_BYTES);
     const photos = await Promise.all(files.slice(0, MAX_PHOTOS).map(async (f) => ({ mime: f.type, bytes: new Uint8Array(await f.arrayBuffer()) })));
     const familyFiles = form.getAll('family').filter((f) => typeof f === 'object' && f && PHOTO_MIME_RE.test(f.type) && f.size > 0 && f.size <= PHOTO_MAX_BYTES);
     const familyPhotos = await Promise.all(familyFiles.slice(0, MAX_FAMILY).map(async (f) => ({ mime: f.type, bytes: new Uint8Array(await f.arrayBuffer()) })));
-    return { body, photos, familyPhotos, device };
+    return { body, photos, familyPhotos, device, captcha };
   }
   const body = await readJson(request);
-  return body && { body, photos: parsePhotos(body), device: String(body.device || '') };
+  return body && { body, photos: parsePhotos(body), device: String(body.device || ''), captcha: String(body.captcha || '') };
 }
 
 /**
@@ -135,6 +136,27 @@ export function clientIp(request, env = {}) {
   const viaProxy = Boolean(env.PROXY_SECRET) && request.headers.get('x-geroenok-proxy') === env.PROXY_SECRET;
   const real = viaProxy && (request.headers.get('x-real-remote-address') || '').trim();
   return real || request.headers.get('cf-connecting-ip') || 'local';
+}
+
+/**
+ * Яндекс SmartCaptcha (невидимая) на анкете: превью стоит денег, роботам его не рисуем. Включается секретом
+ * SMARTCAPTCHA_SECRET (ключ сервера); ключ клиента — SMARTCAPTCHA_SITEKEY в create.html. Нет секрета — проверки нет.
+ * Яндекс недоступен (не 200, сеть) — пропускаем, как советует его документация: покупатель не должен страдать
+ * из-за сбоя капчи, а от потока превью остаются лимиты. Без токена или «failed» — отказ.
+ */
+export const CAPTCHA_MESSAGE = 'Не получилось проверить, что анкету отправил человек. Обновите страницу и нажмите кнопку ещё раз.';
+export async function captchaPassed(env, token, ip) {
+  if (!env.SMARTCAPTCHA_SECRET) return true;
+  if (!token) return false;
+  try {
+    const params = new URLSearchParams({ secret: env.SMARTCAPTCHA_SECRET, token });
+    if (ip && ip !== 'local') params.set('ip', ip);
+    const res = await fetch('https://smartcaptcha.cloud.yandex.ru/validate', { method: 'POST', body: params, signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return true;
+    return (await res.json()).status === 'ok';
+  } catch {
+    return true;
+  }
 }
 
 // Бесплатные превью в сутки (каждое ≈15 ₽ картинок): с одного браузера — 3; с одного адреса — 10, с запасом,
@@ -213,6 +235,7 @@ async function generate(request, env, store) {
   if (age && !/^(?:[2-9]|1[0-6])$/.test(age)) return fail(400, 'Возраст ребёнка — от 2 до 16 лет.');
 
   const owner = Boolean(env.ADMIN_KEY) && request.headers.get('x-admin-key') === env.ADMIN_KEY;
+  if (!owner && !(await captchaPassed(env, order.captcha, ip))) return fail(403, CAPTCHA_MESSAGE);
   // в OpenAI кончились деньги — превью вышло бы без ребёнка на картинках, поэтому не принимаем (хозяйке — можно, для проверки)
   if (!owner && await artOff(env)) return fail(503, ART_OFF_MESSAGE);
   const counters = owner ? null : await previewCounters(env, request, order.device);
