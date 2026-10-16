@@ -20,11 +20,11 @@ const YANDEX_VERIFY = { '/yandex_e834183a40931d36.html': 'e834183a40931d36' };
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    // www → без www (301). Сработает, только если запрос придёт на Cloudflare напрямую: через шлюз Яндекса Worker
-    // видит адрес workers.dev и не знает, был ли www (проверено 10.10) — для шлюза www переадресует отдельный шлюз (docs/handoff.md)
-    if (url.hostname === 'www.geroenok.online') {
-      url.hostname = 'geroenok.online';
-      return Response.redirect(url.toString(), 301);
+    // www → без www (301). Через шлюз Яндекса Worker видит адрес workers.dev, поэтому шлюз присылает адрес, на который
+    // пришёл посетитель, в x-geroenok-host (параметр Host в спецификации шлюза, 16.10); напрямую через Cloudflare — hostname
+    const host = url.hostname === 'www.geroenok.online' ? url.hostname : (request.headers.get('x-geroenok-host') || '').toLowerCase();
+    if (host.startsWith('www.')) {
+      return Response.redirect(`https://geroenok.online${url.pathname}${url.search}`, 301);
     }
     // Подтверждение Google Search Console (файл аккаунта владелицы, тот же, что у findena.ru)
     if (url.pathname === '/googleca27defc77ae2c61.html') {
