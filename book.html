@@ -661,6 +661,10 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     set('pdfBtn', 'Download PDF');
     set('audioDlBtn', '⬇ Download audiobook');
     set('printBtn', 'For the print shop');
+    const spec = document.getElementById('specBtn');
+    if (spec) { spec.textContent = '📄 Print specification'; spec.href = 'assets/docs/print-spec-en.pdf'; spec.setAttribute('download', 'Print specification — Geroenok.pdf'); }
+    const hint = document.getElementById('pdfHint');
+    if (hint) hint.textContent = '“Download PDF” saves the whole book as one A4 file to print at home. “For the print shop” gives two files — pages and the cover as one sheet — plus the print specification.';
     ['editBtn', 'sequelBtn', 'songBtn'].forEach(function (id) { const b = document.getElementById(id); if (b) { b.hidden = true; b.style.display = 'none'; } });
     const back = document.querySelector('.toolbar-actions a[href="create.html"]'); if (back) back.hidden = true;
     const logo = document.querySelector('.toolbar .logo'); if (logo) logo.remove(); // логотип ведёт на русский сайт
@@ -1081,8 +1085,9 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
 
     // «Скачать PDF» — файл формата A4 (страницы 794×1123 px); печать — запасной вариант внутри attachPdf
     const pdfBtn = document.getElementById('pdfBtn');
-    // образцы — книги детей: полистать и послушать можно, забрать файлом — нет
-    if (params.get('demo')) { ['audioDlBtn', 'songBtn', 'editBtn', 'sequelBtn'].forEach(function (id) { document.getElementById(id).hidden = true; }); document.querySelector('.toolbar-actions a[href="create.html"]').hidden = true; pdfBtn.style.display = 'none'; document.getElementById('printBtn').style.display = 'none'; document.getElementById('specBtn').style.display = 'none'; document.getElementById('pdfHint').style.display = 'none'; }
+    // образцы — книги детей: полистать и послушать можно, забрать файлом — нет;
+    // book.downloads — семейная копия по отдельной ссылке (английские книги Аделины и Аэлиты для мамы): кнопки как в заказе
+    if (params.get('demo') && !(data.book && data.book.downloads)) { ['audioDlBtn', 'songBtn', 'editBtn', 'sequelBtn'].forEach(function (id) { document.getElementById(id).hidden = true; }); document.querySelector('.toolbar-actions a[href="create.html"]').hidden = true; pdfBtn.style.display = 'none'; document.getElementById('printBtn').style.display = 'none'; document.getElementById('specBtn').style.display = 'none'; document.getElementById('pdfHint').style.display = 'none'; }
     window.SkazkaExtras.attachPdf(pdfBtn, {
       selector: '.sheet', widthMm: 210, heightMm: 297, scaleVar: '--scale',
       fileName: function () { return window.SkazkaExtras.pdfName(document.title.replace(/ — (Героёнок|Geroenok)$/, '')); },

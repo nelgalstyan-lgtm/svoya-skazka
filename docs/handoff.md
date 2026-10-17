@@ -9,7 +9,8 @@
 
 - **Отдельные ссылки, русские книги не тронуты:** `geroenok.online/book-pro?demo=adelina-en` и `geroenok.online/book?demo=aelita-en`. Файлы — `assets/examples/adelina/book-en.js`, `assets/examples/aelita/book-en.js` (как у Макса `max3d-en`); иллюстрации те же (надписей на картинках нет), название на обложке ставит код. На русском сайте ссылок нет; пригодятся для английской версии сайта.
 - Армянские слова оставлены латиницей: jan, Dzmer Papi («the Armenian Grandfather Frost»), gata, Apres, Barev dzez, Shnorhavor Nor Tari, Ayb/Ben/Gim. Пуговка → Button, Цветик → Blossom, «Кач-кач — до самого неба!» → “Swing-swing, up to the sky!”.
-- **Английской озвучки нет** → кнопки «Listen» нет (голос устройства читает по-русски; в `book-pro.html` теперь тоже скрыта у английских книг без `audio`). Если владелица запишет озвучку (как у Макса — ElevenLabs), положить в R2 и добавить `audio` в book-en.js.
+- **Озвучка готова 17.10** (владелица в ElevenLabs; тексты и mp3 — `Desktop/svoya-skazka-primery/adelina-aelita-en-ozvuchka/`): R2 `media/adelina-audio-en/` (dedication, ch1–ch6) и `media/aelita-audio-en/` (dedication, story). У английских книг без `audio` кнопка «Listen» скрыта (голос устройства читает по-русски) — в обоих просмотрщиках.
+- **`downloads: true`** (просьба владелицы 17.10) — у этих двух семейных копий все кнопки скачивания, как в заказе: PDF, аудиокнига, «For the print shop», ТЗ для типографии. Правило «на полке только слушать» не нарушено: на сайте ссылок на них нет. У остальных `?demo=` всё по-прежнему.
 - Если меняется текст русской книги — поправить и английскую.
 
 ## 17.10: лимит превью, шаблон, Аделина стр. 10

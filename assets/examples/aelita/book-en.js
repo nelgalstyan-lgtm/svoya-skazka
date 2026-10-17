@@ -1,6 +1,6 @@
 // Английская версия образца «Аэлита и кнопка для лунного торта» — для book.html?demo=aelita-en (17.10, для мамы;
 // возможно, пригодится для английской версии сайта). Перевод книги assets/examples/aelita/book.js, иллюстрации те же.
-// Английской озвучки пока нет — кнопки «Listen» нет. answers (кроме имени) — служебные значения, их не переводим.
+// Озвучка — владелица в ElevenLabs (17.10), R2 media/aelita-audio-en/; downloads: true — все кнопки скачивания, как в заказе. answers (кроме имени) — служебные значения, их не переводим.
 window.SKAZKA_AELITA_EN_BOOK = {
  "answers": {
   "name": "Aelita",
@@ -12,6 +12,17 @@ window.SKAZKA_AELITA_EN_BOOK = {
  },
  "book": {
   "lang": "en",
+  "downloads": true,
+  "audio": [
+   {
+    "title": "Dedication",
+    "src": "/api/media/aelita-audio-en/dedication.mp3"
+   },
+   {
+    "title": "Aelita and the Button for the Moon Cake",
+    "src": "/api/media/aelita-audio-en/story.mp3"
+   }
+  ],
   "dedication": {
    "title": "Dedicated to",
    "lead": "Aelita — the heroine of this fairy tale.",
@@ -28,7 +39,7 @@ window.SKAZKA_AELITA_EN_BOOK = {
   },
   "backImage": "assets/examples/aelita/ill-8.webp",
   "backQr": {
-   "label": "Read online",
+   "label": "Read & listen",
    "url": "https://geroenok.online/book?demo=aelita-en"
   },
   "pages": [

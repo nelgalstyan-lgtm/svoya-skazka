@@ -1,8 +1,39 @@
 // Английская версия образца «Аделина и волшебные качели» — для book-pro.html?demo=adelina-en (17.10, для мамы;
 // возможно, пригодится для английской версии сайта). Перевод книги assets/examples/adelina/book.js, иллюстрации те же.
-// Английской озвучки пока нет — кнопки «Listen» нет. Если текст русской книги меняется — поправить и здесь.
+// Озвучка — владелица в ElevenLabs (17.10), R2 media/adelina-audio-en/; downloads: true — все кнопки скачивания, как в заказе. Если текст русской книги меняется — поправить и здесь.
 window.SKAZKA_ADELINA_EN_BOOK = {
  "lang": "en",
+ "downloads": true,
+ "audio": [
+  {
+   "title": "Dedication",
+   "src": "/api/media/adelina-audio-en/dedication.mp3"
+  },
+  {
+   "title": "Chapter 1. Where Does the Sun Go?",
+   "src": "/api/media/adelina-audio-en/ch1.mp3"
+  },
+  {
+   "title": "Chapter 2. The Dinosaur from the Sketchbook",
+   "src": "/api/media/adelina-audio-en/ch2.mp3"
+  },
+  {
+   "title": "Chapter 3. Over the Wide Blue Sea",
+   "src": "/api/media/adelina-audio-en/ch3.mp3"
+  },
+  {
+   "title": "Chapter 4. Dzmer Papi and the Spilled Presents",
+   "src": "/api/media/adelina-audio-en/ch4.mp3"
+  },
+  {
+   "title": "Chapter 5. The Gata with a Coin",
+   "src": "/api/media/adelina-audio-en/ch5.mp3"
+  },
+  {
+   "title": "Chapter 6. The Second New Year",
+   "src": "/api/media/adelina-audio-en/ch6.mp3"
+  }
+ ],
  "title": "Adelina and the Magic Swing",
  "theme": "parchment",
  "genre": "newyear",
@@ -995,7 +1026,7 @@ window.SKAZKA_ADELINA_EN_BOOK = {
  "blurb": "Adelina is four, and she has lots and lots of questions. Where does the sun go? Why do eyes close all by themselves? Do cars sleep? On her birthday, just before New Year’s Eve, Mom tells Adelina that the sun is in Armenia right now — and the New Year will come there first. At nap time, the dinosaur she drew climbs out of her sketchbook, the swing in the garden turns magic — and Adelina flies across the wide blue sea to Ararat. Snow, Dzmer Papi with his spilled presents, a gata with a lucky coin and fireworks over the mountains are waiting for her there. And at home — one more New Year.",
  "backImage": "assets/examples/adelina/ill-5.webp",
  "backQr": {
-  "label": "Read online",
+  "label": "Read & listen",
   "url": "https://geroenok.online/book-pro?demo=adelina-en"
  }
 };

@@ -113,7 +113,8 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
       window.__bookData = book;
       // book.sample и ?demo= — образцы для показа покупателям (страница «Примеры»): только чтение и «Слушать», без скачивания
       // книги и аудио (правило владелицы 06.10 — для всех книг на полке)
-      if (locked || book.sample || params.get('demo')) {
+      // book.downloads — семейная копия по отдельной ссылке (английская книга Аделины для мамы): кнопки как в заказе
+      if (locked || book.sample || (params.get('demo') && !book.downloads)) {
         document.getElementById('pdfBtn').style.display = 'none';
         document.getElementById('printBtn').style.display = 'none';
         document.getElementById('specBtn').style.display = 'none';
@@ -123,6 +124,8 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
         if (locked || (book.lang === 'en' && !(book.audio && book.audio.length))) document.getElementById('listenBtn').style.display = 'none';
         else window.SkazkaExtras.attachListen(document.getElementById('listenBtn'), function () { return listenTexts(book); }, book.audio);
       } else {
+        if (book.downloads) ['pdfBtn', 'printBtn', 'specBtn'].forEach(function (id) { document.getElementById(id).style.display = ''; });
+        if (book.downloads) { var dlHint = document.querySelector('.hint.no-print'); if (dlHint) dlHint.style.display = ''; }
         attachActions(book, answers, jobId, status || {});
       }
       if (params.get('print') === '1') setTimeout(function () { document.getElementById('pdfBtn').click(); }, 400);
