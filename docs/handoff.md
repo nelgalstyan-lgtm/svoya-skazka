@@ -5,6 +5,13 @@
 Сайт: **https://geroenok.online** (Cloudflare Worker `svoya-skazka`). Старая копия: https://nelgalstyan-lgtm.github.io/svoya-skazka/.
 Подробности по коду: `docs/project-brief.md`, `server/README.md`, `server/.env.example`, `wrangler.jsonc`.
 
+## 17.10: английские версии книг Аделины и Аэлиты (для мамы)
+
+- **Отдельные ссылки, русские книги не тронуты:** `geroenok.online/book-pro?demo=adelina-en` и `geroenok.online/book?demo=aelita-en`. Файлы — `assets/examples/adelina/book-en.js`, `assets/examples/aelita/book-en.js` (как у Макса `max3d-en`); иллюстрации те же (надписей на картинках нет), название на обложке ставит код. На русском сайте ссылок нет; пригодятся для английской версии сайта.
+- Армянские слова оставлены латиницей: jan, Dzmer Papi («the Armenian Grandfather Frost»), gata, Apres, Barev dzez, Shnorhavor Nor Tari, Ayb/Ben/Gim. Пуговка → Button, Цветик → Blossom, «Кач-кач — до самого неба!» → “Swing-swing, up to the sky!”.
+- **Английской озвучки нет** → кнопки «Listen» нет (голос устройства читает по-русски; в `book-pro.html` теперь тоже скрыта у английских книг без `audio`). Если владелица запишет озвучку (как у Макса — ElevenLabs), положить в R2 и добавить `audio` в book-en.js.
+- Если меняется текст русской книги — поправить и английскую.
+
 ## 17.10: лимит превью, шаблон, Аделина стр. 10
 
 - **Бесплатное превью — 1 в сутки с браузера, 3 с одного адреса** (решение владелицы; было 3 и 10): `PREVIEW_LIMITS` в `worker/api.js`. Попытка считается при постановке в очередь.

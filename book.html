@@ -1114,6 +1114,13 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     se.onload = function () { show(window.SKAZKA_MAX3D_EN_BOOK); };
     se.onerror = function () { show(null); };
     document.body.appendChild(se);
+  } else if (params.get('demo') === 'aelita-en') {
+    // английская версия книги Аэлиты (отдельная ссылка для мамы, на русском сайте ссылки нет)
+    const sae = document.createElement('script');
+    sae.src = 'assets/examples/aelita/book-en.js';
+    sae.onload = function () { show(window.SKAZKA_AELITA_EN_BOOK); };
+    sae.onerror = function () { show(null); };
+    document.body.appendChild(sae);
   } else if (params.get('demo') === 'max3d') {
     // образец «Сказки» в 3D: книга Макса (иллюстрации — assets/examples/max-3d)
     const sm = document.createElement('script');
