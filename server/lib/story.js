@@ -19,6 +19,11 @@ export function brandMentions(text) {
 }
 
 // Никаких чужих брендов и персонажей: книга оригинальная и безопасна юридически
+/** Слова имени ребёнка в латинице (в нижнем регистре) — их в тексте книги не считаем «английскими словами». */
+export function nameLatinWords(name) {
+  return new Set(String(name || '').split(/[^A-Za-z]+/).filter(Boolean).map((w) => w.toLowerCase()));
+}
+
 export const ORIGINALITY_RULE = 'Никаких брендов, названий игр, мультфильмов, фильмов и их персонажей (Майнкрафт, Роблокс, Супермен, Эльза, Человек-паук и т.п.). Если ребёнок их любит, передай суть своими словами: «мир из кубиков», «герой в плаще», «снежная королева» — и придумай своих персонажей.';
 
 // Аннотация на задней обложке: о чём книга, без развязки
@@ -130,7 +135,9 @@ export function parseStory(raw, name, library = sceneLibraryFor('adventure')) {
 
   // Слабые модели иногда вставляют иероглифы и английские слова — такую книгу клиенту не отдаём
   if (FOREIGN_SCRIPT.test(all)) throw new Error('foreign script in text');
-  const latin = all.split(/\s+/).map((w) => w.replace(/[^A-Za-z]/g, '')).filter((w) => w.length >= 3 && w.toLowerCase() !== String(name || '').toLowerCase());
+  // имя латиницей («Alex», «Claude Sonnet») — не ошибка модели: каждое слово имени разрешено
+  const nameWords = nameLatinWords(name);
+  const latin = all.split(/\s+/).map((w) => w.replace(/[^A-Za-z]/g, '')).filter((w) => w.length >= 3 && !nameWords.has(w.toLowerCase()));
   if (latin.length) throw new Error(`latin words in text: ${latin.slice(0, 3).join(', ')}`);
   const brands = brandMentions(all);
   if (brands.length) throw new Error(`brand names in text: ${brands.slice(0, 3).join(', ')}`);

@@ -18,7 +18,7 @@
 import template from '../../js/story-template.js';
 import { buildProviders, generateWithFailover, sharedHealth } from './providers.js';
 import { fixDialogue, normalizeChapterBlocks, genitiveName, dativeName, normalizeGenre, ageGroupFor, styleFor, dedicationFor, ageVoiceRule, occasionRule, fixMixedScript, illustrationPeopleRule } from './booktext.js';
-import { ORIGINALITY_RULE, BLURB_RULE, brandMentions, cleanBlurb } from './story.js';
+import { ORIGINALITY_RULE, BLURB_RULE, brandMentions, cleanBlurb, nameLatinWords } from './story.js';
 
 const { buildTemplateStory, normalizeInput, sceneLibraryFor, occasionKind, holidayKind } = template;
 
@@ -260,7 +260,8 @@ function parseJson(raw) {
 
 function checkRussian(text, name, what) {
   if (FOREIGN.test(text)) throw new Error(`${what}: foreign script`);
-  const latin = text.split(/\s+/).map((w) => w.replace(/[^A-Za-z]/g, '')).filter((w) => w.length >= 3 && w.toLowerCase() !== String(name).toLowerCase());
+  const nameWords = nameLatinWords(name);
+  const latin = text.split(/\s+/).map((w) => w.replace(/[^A-Za-z]/g, '')).filter((w) => w.length >= 3 && !nameWords.has(w.toLowerCase()));
   if (latin.length) throw new Error(`${what}: latin words (${latin.slice(0, 3).join(', ')})`);
   const letters = text.match(/\p{L}/gu) || [];
   const cyr = (text.match(/[а-яёА-ЯЁ]/g) || []).length;

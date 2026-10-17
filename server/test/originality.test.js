@@ -25,3 +25,11 @@ test('в промптах есть правило оригинальности, 
   assert.ok(/Оригинальность: Никаких брендов/.test(plan.system));
   assert.ok(/Боится темноты/.test(plan.user) && /Тайна камня/.test(plan.user));
 });
+
+test('имя латиницей из нескольких слов — не «английские слова»: книга не уходит в шаблон', () => {
+  const page = (t) => ({ text: `${t} ${'Alex Smith шёл по лесу и слушал, как шумят высокие сосны над головой. '.repeat(10)}`, scene: 'forest_path', heroBrief: 'x' });
+  const raw = JSON.stringify({ title: 'Alex Smith и лес', pages: [page('Начало.'), page('Дальше.'), page('Ещё.'), page('Конец.')] });
+  assert.equal(parseStory(raw, 'Alex Smith').pages.length, 4);
+  const bad = JSON.stringify({ title: 'Лес', pages: [page('Начало hello.'), page('Дальше.'), page('Ещё.'), page('Конец.')] });
+  assert.throws(() => parseStory(bad, 'Alex Smith'), /latin words/);
+});

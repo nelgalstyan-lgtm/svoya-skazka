@@ -101,6 +101,8 @@ test('шаблон: мальчик и девочка, все темы, без «
       assert.equal(s.pages.length, 6);
       assert.ok(!/undefined|null|NaN/.test(text));
       assert.ok(text.includes('Милена'));
+      // страницы шаблона почти на целый лист малыша (≈650 знаков) — иначе листы полупустые
+      assert.ok(s.pages.every((p) => p.text.split(/\s+/).length >= 70), `${gender} ${theme}: ${s.pages.map((p) => p.text.split(/\s+/).length)}`);
     }
   }
 });
