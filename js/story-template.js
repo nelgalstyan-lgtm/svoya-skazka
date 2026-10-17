@@ -233,8 +233,29 @@
     };
   }
 
+  // Имя ребёнка: явный мусор не принимаем (анкета и сервер). Существует ли имя, не проверяем — редкие настоящие имена важнее.
+  var NAME_MESSAGE = 'Впишите настоящее имя ребёнка — оно будет в каждой строчке сказки. Без цифр, ссылок и значков.';
+  var NAME_STOPWORDS = ['тест', 'test', 'имя', 'name', 'ребенок', 'ребёнок', 'child', 'kid', 'никто', 'аноним', 'asdf', 'qwerty', 'йцукен', 'фыв', 'фывфыв', 'ываыва', 'claude', 'sonnet', 'gpt', 'chatgpt', 'бот', 'bot'];
+  function nameProblem(raw) {
+    var s = String(raw || '').trim();
+    if (!s) return 'Впишите имя ребёнка — без него история не получится.';
+    var letters = s.replace(/[^\p{L}]/gu, '');
+    var words = s.split(/[\s\-]+/).filter(Boolean);
+    if (!/^[\p{L}\s'’.\-]+$/u.test(s) || letters.length < 2 || s.length > 30 || words.length > 3) return NAME_MESSAGE;
+    if (/(\p{L})\1\1/iu.test(s)) return NAME_MESSAGE; // «ааааа»
+    if (words.some(function (w) { return NAME_STOPWORDS.indexOf(w.toLowerCase().replace(/[.'’]/g, '')) !== -1; })) return NAME_MESSAGE;
+    return '';
+  }
+  // имя только латиницей: в русской книге так и будет — анкета переспрашивает, но не запрещает
+  function nameIsLatin(raw) {
+    var s = String(raw || '');
+    return /[A-Za-z]/.test(s) && !/[А-Яа-яЁё]/.test(s);
+  }
+
   return {
     buildTemplateStory: buildTemplateStory,
+    nameProblem: nameProblem,
+    nameIsLatin: nameIsLatin,
     normalizeInput: normalize,
     cleanText: clean,
     SCENES: SCENES,

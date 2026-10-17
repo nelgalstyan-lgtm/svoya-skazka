@@ -105,3 +105,15 @@ test('короткая книга целиком: заказ праздника 
   assert.equal(story.source, 'ai');
   assert.ok(story.pages.every((p) => ['tree_lights', 'snow_yard', 'fireplace_stockings', 'midnight_fireworks'].includes(p.scene)));
 });
+
+test('имя ребёнка: настоящие (и редкие) — да, явный мусор — нет; латиница — отдельно', () => {
+  const { nameProblem, nameIsLatin } = template;
+  for (const ok of ['Милена', 'Аэлита', 'Анна-Мария', 'Ли', 'Мирослава', 'Сонечка', 'Тигран', 'Алекс', 'Alex', 'Mary Jane', 'Զարա', 'Д’Артаньян', 'Анна Мария Луиза']) {
+    assert.equal(nameProblem(ok), '', ok);
+  }
+  for (const bad of ['', 'Claude Sonnet 5', 'Test123', 'тест', 'Тест Тестович', 'https://x.ru', 'mail@x.ru', 'аааааа', 'А', 'Маша 😊', 'Маша#1', 'фывфыв', 'Один Два Три Четыре', 'Очень Длинноеимякотороебольшетридцати']) {
+    assert.notEqual(nameProblem(bad), '', bad);
+  }
+  assert.equal(nameIsLatin('Alex'), true);
+  assert.equal(nameIsLatin('Алекс'), false);
+});

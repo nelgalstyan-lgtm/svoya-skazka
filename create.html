@@ -307,6 +307,7 @@ section.tight{ padding:56px 0; }
   display:block; font-weight:700; margin-bottom:8px; font-size:15px;
 }
 .field .hint{ font-weight:400; color:var(--text-soft); font-size:14px; display:block; margin-top:4px; }
+.field .name-note.is-error{ color:#b4442f; }
 .field input[type="text"],
 .field input[type="number"],
 .field select,
@@ -630,6 +631,7 @@ section.tight{ padding:56px 0; }
           <div class="field">
             <label for="name">Имя ребёнка</label>
             <input type="text" id="name" placeholder="Например, Милена">
+            <span class="hint name-note" id="nameNote" hidden></span>
           </div>
           <div class="field">
             <label for="age">Возраст</label>
@@ -1720,12 +1722,37 @@ section.tight{ padding:56px 0; }
     }
     restoreDraft();
 
+    // Имя: явный мусор не пропускаем (так же проверяет сервер), имя латиницей — переспрашиваем один раз
+    const nameInput = document.getElementById('name');
+    const nameNote = document.getElementById('nameNote');
+    let latinNameOk = '';
+    function nameHint(strict) {
+      const value = nameInput.value.trim();
+      const problem = value || strict ? window.SkazkaTemplate.nameProblem(value) : '';
+      const latin = !problem && window.SkazkaTemplate.nameIsLatin(value) && latinNameOk !== value;
+      nameNote.hidden = !problem && !latin;
+      nameNote.classList.toggle('is-error', Boolean(problem));
+      nameNote.textContent = problem || (latin ? 'Имя будет в книге латиницей: «' + value + '». Если хотите по-русски — напишите его русскими буквами.' : '');
+      return { problem: problem, latin: latin };
+    }
+    nameInput.addEventListener('blur', function () { nameHint(false); });
+    nameInput.addEventListener('input', function () { if (!nameNote.hidden) nameHint(false); });
+
     generateBtn.addEventListener('click', async function () {
       const answers = collectAnswers();
 
-      if (!answers.name) {
-        setStatus('Впишите имя ребёнка — без него история не получится.', 'error');
-        document.getElementById('name').focus();
+      const nameCheck = nameHint(true);
+      if (nameCheck.problem) {
+        setStatus(nameCheck.problem, 'error');
+        nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        nameInput.focus({ preventScroll: true });
+        return;
+      }
+      if (nameCheck.latin) {
+        // второе нажатие с тем же именем — значит, латиницей так и задумано
+        latinNameOk = answers.name;
+        setStatus('Имя «' + answers.name + '» будет в книге латиницей. Если так и задумано — нажмите кнопку ещё раз. Если нет — исправьте имя на русское.', 'error');
+        nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
       // книги — для детей и подростков: возраст от 2 до 16 (выбирается из списка) (по нему пишется текст и выбирается оформление)

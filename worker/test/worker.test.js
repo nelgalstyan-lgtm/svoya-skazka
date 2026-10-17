@@ -364,6 +364,20 @@ test('зависшая книга: через 15 минут клиент пол�
   assert.ok(s.result.lockedPages >= 2);
 });
 
+test('имя-мусор («Claude Sonnet 5», «Test123») — 400 с подсказкой, попытка превью не тратится', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  try {
+    for (const name of ['Claude Sonnet 5', 'Test123']) {
+      const res = await api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, name, photos: [PHOTO] } });
+      assert.equal(res.status, 400);
+      assert.match((await res.json()).error, /настоящее имя/);
+    }
+    assert.equal(env.BUCKET.keys('limits/').length, 0);
+    assert.equal((await api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, name: 'Alex', photos: [PHOTO] } })).status, 200, 'латиница — можно');
+  } finally { ai.restore(); }
+});
+
 test('лимит бесплатных превью: 1 в день с браузера, 3 с адреса; хозяйке — без лимита', async () => {
   const env = fakeEnv();
   const ai = stubOpenAI();

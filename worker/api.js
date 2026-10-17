@@ -9,6 +9,7 @@ import { drawImage, artOff, ART_OFF_MESSAGE } from './art.js';
 import { fromBase64 } from './bytes.js';
 import { jobView, bookImages, REDRAW_LIMIT } from './view.js';
 import { notifyOwner } from './notify.js';
+import template from '../js/story-template.js';
 
 const PHOTO_MAX_BYTES = 8 * 1024 * 1024;
 // Шлюз Яндекса (через него идёт сайт, см. clientIp) обрывает запросы к Cloudflare тяжелее ~30 КБ: 503 через 50 с.
@@ -232,6 +233,9 @@ async function generate(request, env, store) {
 
   // Главная ценность книги — ребёнок, похожий на себя, на каждой иллюстрации: без фото заказ не принимаем
   if (!photos.length) return fail(400, 'Загрузите хотя бы одно фото ребёнка — по нему рисуются все иллюстрации книги.');
+  // имя — в каждой строчке книги: явный мусор («Test123», ссылки, «ааааа») не принимаем, как и анкета
+  const nameProblem = template.nameProblem(body.name);
+  if (nameProblem) return fail(400, nameProblem);
   const age = String(body.age ?? '').trim();
   if (age && !/^(?:[2-9]|1[0-6])$/.test(age)) return fail(400, 'Возраст ребёнка — от 2 до 16 лет.');
 
