@@ -325,3 +325,17 @@
   .home-pairs h3{ font-size:24px; }
   .home-pairs-row{ grid-template-columns:minmax(0, 500px); gap:30px; }
 }
+
+/* главная: «Кто делает книги» — фото владелицы и несколько тёплых фраз */
+.home-maker{ display:grid; grid-template-columns:140px minmax(0, 720px); justify-content:start; gap:36px; align-items:start; margin-top:72px; padding-top:56px; border-top:1px solid var(--line); }
+.home-maker-photo{ width:140px; height:140px; border-radius:50%; object-fit:cover; border:2px solid var(--brass); box-shadow:0 0 0 5px var(--card); }
+.home-maker h3{ font-size:28px; line-height:1.25; margin:6px 0 14px; }
+.home-maker p{ color:var(--ink-soft); font-size:18px; }
+.home-maker-sign{ font-family:'Lora', Georgia, serif; font-style:italic; font-weight:600; color:var(--ink) !important; margin-top:14px; }
+.home-maker-sign .btn-link{ font-family:'Golos Text', sans-serif; font-style:normal; }
+@media (max-width:760px){
+  .home-maker{ grid-template-columns:1fr; gap:18px; margin-top:52px; padding-top:40px; }
+  .home-maker-photo{ width:96px; height:96px; }
+  .home-maker h3{ font-size:22px; }
+  .home-maker p{ font-size:17px; }
+}
