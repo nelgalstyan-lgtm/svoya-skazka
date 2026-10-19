@@ -257,7 +257,7 @@
 .eb-item img{ width:64px; height:64px; object-fit:contain; margin-bottom:14px; }
 .eb-item h3{ font-size:21px; margin:0 0 8px; }
 .eb-item p{ margin:0; color:var(--ink-soft); font-size:16px; }
-.eb-small{ list-style:none; margin:44px 0 0; padding:22px 0 0; border-top:1px solid var(--line); display:grid; grid-template-columns:repeat(4,1fr); gap:14px 22px; }
+.eb-small{ list-style:none; margin:44px 0 0; padding:22px 0 0; border-top:1px solid var(--line); display:grid; grid-template-columns:repeat(5,1fr); gap:14px 22px; }
 .eb-small li{ display:flex; align-items:center; gap:10px; font-size:15px; color:var(--ink-soft); line-height:1.35; }
 .eb-small strong{ color:var(--ink); }
 .eb-small img{ flex:none; width:36px; height:36px; object-fit:contain; }
