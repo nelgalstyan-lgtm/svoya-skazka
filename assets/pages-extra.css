@@ -44,12 +44,13 @@
 /* вопросы на страницах поводов (Новый год, день рождения) — как на «Ценах» */
 .faq-list{ max-width:760px; }
 .faq-item{ border-bottom:1px solid var(--line); padding:22px 0; }
-.faq-item summary{ font-weight:700; cursor:pointer; font-size:17px; list-style:none; display:flex; justify-content:space-between; gap:16px; }
+/* вопрос Golos 600 18, «+» поворачивается в «×» за 200 мс (UI Kit аудита) */
+.faq-item summary{ font-weight:600; cursor:pointer; font-size:18px; line-height:1.4; list-style:none; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
 .faq-item summary::-webkit-details-marker{ display:none; }
-.faq-item summary::after{ content:"+"; font-family:var(--font-display); font-size:22px; color:var(--gold-dark); }
-.faq-item[open] summary::after{ content:"–"; }
+.faq-item summary::after{ content:"+"; flex:none; font-family:var(--font-body); font-weight:400; font-size:26px; line-height:.95; color:var(--brass-text); transition:transform .2s var(--ease, ease); }
+.faq-item[open] summary::after{ transform:rotate(45deg); }
 .faq-item p{ margin-top:12px; color:var(--text-soft); max-width:680px; }
-.faq-item p a{ color:var(--gold-dark); font-weight:700; }
+.faq-item p a{ color:var(--ink); font-weight:600; text-decoration-color:var(--brass); }
 
 /* «Цены» (07.10): шапка с «сначала бесплатно», обложки примеров в тарифах, добавки с иконками, вопросы на панели */
 .price-intro{ display:grid; grid-template-columns:1.3fr 1fr; gap:36px; align-items:center; }
@@ -66,7 +67,7 @@
 .addon{ background:#FFFBF2 !important; border-color:#E6D3AE !important; border-radius:18px !important; padding:22px !important; box-shadow:0 14px 28px -22px rgba(74,53,39,.55); }
 .addon .why-icon{ margin-bottom:12px; }
 .addon strong span{ padding:2px 10px; border-radius:8px; background:#FFF1D6; border:1px solid #E6C98F; color:#7a4f12 !important; font-size:14.5px; }
-.faq-panel{ max-width:820px; padding:6px 28px; background:#FFFBF2; border:1px solid #E6D3AE; border-radius:20px; box-shadow:0 18px 34px -28px rgba(74,53,39,.55); }
+.faq-panel{ max-width:820px; padding:6px 28px; background:var(--card); border:0; border-radius:20px; box-shadow:0 18px 34px -28px rgba(46,34,25,.45); }
 .faq-panel .faq-item:last-child{ border-bottom:0; }
 @media (max-width:760px){ .price-intro{ grid-template-columns:1fr; gap:20px; } .faq-panel{ padding:4px 18px; } .price-cover{ width:64px; } }
 
@@ -128,3 +129,156 @@
 .home-prices-more{ margin:22px 0 0; text-align:center; }
 .home-prices-more a{ color:var(--gold-dark); font-weight:700; }
 @media (max-width:760px){ .home-prices{ grid-template-columns:1fr; gap:28px; } .home-price{ padding:24px 20px 20px; } }
+
+/* ===================== главная после редизайна 19.10 (docs/redesign-plan.md, этап 1) ===================== */
+
+/* первый экран: без карточки; справа обложка Аделины как книга с корешком, за ней разворот */
+.hero-home{ position:relative; padding:56px 0 64px; overflow:hidden; }
+.hero-home .container{ display:grid; grid-template-columns:1.05fr .95fr; gap:40px; align-items:center; }
+.hero-home h1{ font-size:56px; line-height:1.143; margin:0 0 20px; max-width:600px; }
+.hero-home h1 em{ font-style:italic; color:var(--cta); white-space:nowrap; }
+.hero-home .lead{ font-size:19px; line-height:1.55; color:var(--ink-soft); max-width:540px; margin:0 0 30px; }
+.hh-actions{ display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
+.hh-actions .btn-primary{ min-width:320px; }
+.hh-facts{ margin:0; font-size:14px; color:var(--ink-soft); }
+.hh-actions .btn-link{ margin-top:4px; }
+.hh-format{ list-style:none; margin:30px 0 0; padding:20px 0 0; border-top:1px solid var(--line); display:flex; flex-wrap:wrap; gap:10px 28px; max-width:540px; }
+.hh-format li{ display:inline-flex; align-items:center; gap:10px; font-size:15px; font-weight:500; color:var(--ink); }
+.hh-format img{ width:30px; height:30px; object-fit:contain; mix-blend-mode:multiply; }
+
+.hh-art{ position:relative; margin:0; height:600px; }
+.hh-art::before{ /* размытое синее пятно — обложка «светится» */
+  content:""; position:absolute; left:50%; top:46%; width:560px; height:560px; transform:translate(-50%,-50%);
+  background:radial-gradient(closest-side, rgba(30,51,84,.14), rgba(30,51,84,.06) 60%, transparent); border-radius:50%; pointer-events:none;
+}
+.hh-book{ position:absolute; inset:0; display:block; text-decoration:none; color:inherit; }
+.hh-spread{ position:absolute; right:-24px; top:70px; width:430px; display:flex; transform:rotate(5deg); border-radius:6px; overflow:hidden;
+  box-shadow:0 26px 40px -24px rgba(30,51,84,.55); background:var(--card); transition:transform .4s var(--ease); }
+.hh-spread img{ width:50%; height:auto; display:block; }
+.hh-spread::after{ content:""; position:absolute; top:0; bottom:0; left:50%; width:40px; transform:translateX(-50%);
+  background:linear-gradient(90deg,transparent,rgba(46,34,25,.18) 50%,transparent); }
+.hh-cover{ position:absolute; left:30px; top:6px; width:300px; aspect-ratio:2/3; transform:rotate(-4deg); border-radius:3px 10px 10px 3px; overflow:hidden;
+  box-shadow:12px 16px 30px -12px rgba(30,51,84,.45), 0 40px 60px -30px rgba(30,51,84,.55); transition:transform .4s var(--ease); }
+.hh-cover img{ width:100%; height:100%; object-fit:cover; display:block; }
+.hh-cover::before{ /* корешок */ content:""; position:absolute; left:0; top:0; bottom:0; width:14px; z-index:1;
+  background:linear-gradient(90deg, rgba(0,0,0,.38), rgba(0,0,0,.12) 6px, rgba(255,255,255,.18) 8px, transparent 14px); }
+.hh-cover::after{ content:""; position:absolute; inset:0 0 55% 0; background:linear-gradient(rgba(14,22,40,.7), transparent); }
+.hh-cover-title{ position:absolute; left:20px; right:16px; top:24px; z-index:1; text-align:center; font-family:var(--font-display); font-weight:600;
+  font-size:25px; line-height:1.15; color:#FFF3D6; text-shadow:0 2px 12px rgba(0,0,0,.55); }
+.hh-cover-title small{ display:block; margin-bottom:8px; font-family:var(--font-body); font-weight:600; font-size:10px; letter-spacing:.16em; text-transform:uppercase; opacity:.9; }
+.hh-book:hover .hh-cover{ transform:rotate(-2deg) translateY(-4px); }
+.hh-book:hover .hh-spread{ transform:rotate(6deg) translateX(6px); }
+.hh-hare{ position:absolute; left:-30px; bottom:0; width:104px; pointer-events:none; }
+.hh-hare img{ width:100%; height:auto; }
+.hh-art figcaption{ position:absolute; left:84px; right:0; bottom:8px; display:flex; flex-direction:column; gap:8px; }
+.hh-note{ font-family:var(--font-script); font-size:21px; line-height:1.2; color:var(--brass-text); max-width:280px; transform:rotate(-2deg); }
+.hh-caption{ font-size:13px; color:var(--ink-soft); }
+@media (max-width:1100px){
+  .hero-home h1{ font-size:46px; }
+  .hh-spread{ width:340px; }
+  .hh-cover{ width:270px; left:20px; }
+}
+@media (max-width:900px){
+  .hero-home{ padding:18px 0 40px; }
+  .hero-home .container{ grid-template-columns:1fr; gap:18px; }
+  .hh-art{ order:-1; height:350px; }
+  .hh-art::before{ width:380px; height:380px; }
+  .hh-spread{ display:none; }
+  .hh-cover{ width:218px; left:50%; top:6px; margin-left:-109px; }
+  .hh-hare{ left:calc(50% - 190px); width:84px; bottom:0; }
+  .hh-art figcaption{ display:none; }
+  .hero-home h1{ font-size:34px; line-height:1.18; margin-bottom:12px; }
+  .hero-home .lead{ font-size:17px; margin-bottom:20px; }
+  .hh-lead-more{ display:none; }
+  .hh-actions{ align-items:stretch; }
+  .hh-actions .btn-primary{ min-width:0; width:100%; }
+  .hh-facts{ text-align:center; }
+  .hh-actions .btn-link{ align-self:center; }
+  .hh-format{ margin-top:22px; gap:10px 18px; justify-content:center; }
+  .hh-format li{ font-size:14px; }
+}
+@media (prefers-reduced-motion: reduce){ .hh-cover, .hh-spread{ transition:none; } }
+
+/* полоса гарантий */
+.guarantees{ padding:0; background:var(--card); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.guarantees ul{ list-style:none; margin:0; padding:22px 0; display:grid; grid-template-columns:repeat(4,auto); justify-content:space-between; gap:16px 28px; }
+.guarantees li{ display:flex; align-items:center; gap:12px; font-size:15.5px; font-weight:600; color:var(--ink); }
+.guarantees svg{ flex:none; width:24px; height:24px; fill:none; stroke:var(--sage); stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+@media (max-width:980px){ .guarantees ul{ grid-template-columns:1fr 1fr; justify-content:stretch; } }
+@media (max-width:420px){ .guarantees li{ font-size:14px; gap:8px; align-items:flex-start; } .guarantees svg{ width:20px; height:20px; } }
+
+.section-head--center{ text-align:center; margin-left:auto; margin-right:auto; }
+
+/* две книги: крупные обложки, цены выше */
+.home-prices{ max-width:960px; gap:28px; }
+.home-price{ align-items:center; text-align:center; padding:32px 30px 28px; background:var(--card); border:1px solid var(--line); border-radius:20px; box-shadow:0 18px 34px -26px rgba(46,34,25,.5); }
+.home-price.is-main{ border:2px solid var(--brass); }
+.home-price-badge{ left:50%; transform:translateX(-50%); background:var(--brass); color:var(--ink); font-weight:600; letter-spacing:.06em; text-transform:uppercase; font-size:12px; padding:5px 14px; }
+.hp-cover{ display:block; width:174px; margin:4px auto 22px; transform:rotate(-2deg); transition:transform .25s var(--ease); }
+.hp-cover:hover{ transform:rotate(0) translateY(-3px); }
+.hp-cover img{ width:100%; height:auto; display:block; aspect-ratio:2/3; object-fit:cover; border-radius:3px 9px 9px 3px;
+  box-shadow:12px 16px 30px -12px rgba(30,51,84,.45); }
+.home-price h3{ margin:0 0 4px; }
+.hp-sub{ margin:0; font-size:15px; color:var(--ink-soft); }
+.home-price-amount{ margin:12px 0 14px; font-size:32px; font-weight:600; }
+.home-price ul{ text-align:left; width:100%; max-width:330px; }
+.home-price li{ color:var(--ink-soft); font-size:16px; }
+.home-price li::before{ color:var(--sage); }
+.home-compare{ max-width:960px; margin:36px auto 0; display:grid; grid-template-columns:.8fr 1fr 1fr; border-top:1px solid var(--line); }
+.hc-row{ display:contents; }
+.hc-row > span{ padding:14px 16px; border-bottom:1px solid var(--line); font-size:15.5px; line-height:1.45; }
+.hc-row > span:first-child{ font-weight:600; color:var(--ink); padding-left:0; }
+.hc-row > span:nth-child(2){ color:var(--ink-soft); }
+.hc-row > span:nth-child(3){ color:var(--ink); font-weight:500; }
+.hc-head > span{ font-size:13px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text) !important; }
+.home-prices-more{ margin-top:26px; }
+.home-prices-more a{ color:var(--ink); }
+@media (max-width:760px){
+  .home-price{ padding:30px 20px 22px; }
+  .hp-cover{ width:150px; }
+  .home-compare{ grid-template-columns:1fr 1fr; }
+  .hc-row > span:first-child{ grid-column:1 / -1; padding:16px 0 0; border-bottom:0; }
+  .hc-head > span:first-child{ display:none; }
+  .hc-row > span{ padding:6px 10px 14px 0; font-size:14.5px; }
+}
+
+/* три шага: без карточек, крупные номера Lora; заяц идёт по пунктиру над ними */
+.hare-steps li{ padding:30px 18px 0; background:none; border:0; box-shadow:none; }
+.hare-steps li h3{ margin-top:6px; }
+.step-num{ top:-24px; width:48px; height:48px; font-size:24px; font-weight:600; }
+
+/* «В каждой книге»: 4 крупных + строка мелких */
+.every-book{ display:grid; grid-template-columns:repeat(4,1fr); gap:32px; }
+.eb-item img{ width:64px; height:64px; object-fit:contain; margin-bottom:14px; }
+.eb-item h3{ font-size:21px; margin:0 0 8px; }
+.eb-item p{ margin:0; color:var(--ink-soft); font-size:16px; }
+.eb-small{ list-style:none; margin:44px 0 0; padding:22px 0 0; border-top:1px solid var(--line); display:grid; grid-template-columns:repeat(5,1fr); gap:14px 22px; }
+.eb-small li{ display:flex; align-items:center; gap:10px; font-size:15px; color:var(--ink-soft); line-height:1.35; }
+.eb-small strong{ color:var(--ink); }
+.eb-small img{ flex:none; width:36px; height:36px; object-fit:contain; }
+@media (max-width:980px){ .every-book{ grid-template-columns:1fr 1fr; } .eb-small{ grid-template-columns:1fr 1fr; } }
+@media (max-width:560px){ .every-book{ grid-template-columns:1fr; gap:26px; } .eb-small{ grid-template-columns:1fr; } }
+
+/* «Книга, которая умеет говорить» + образец озвучки */
+.talking-book{ display:grid; grid-template-columns:1.15fr .85fr; gap:56px; align-items:center; }
+.talking-book p{ color:var(--ink-soft); }
+.tb-player{ margin:0; display:flex; gap:20px; align-items:center; padding:22px; background:var(--card); border-radius:20px; box-shadow:0 18px 34px -26px rgba(46,34,25,.5); }
+.tb-player img{ flex:none; width:96px; height:auto; border-radius:3px 7px 7px 3px; box-shadow:8px 10px 20px -10px rgba(30,51,84,.5); }
+.tb-player figcaption{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.tb-player figcaption span{ font-size:14px; color:var(--ink-soft); }
+.tb-player audio{ width:100%; height:40px; margin-top:10px; }
+@media (max-width:880px){ .talking-book{ grid-template-columns:1fr; gap:28px; } }
+@media (max-width:420px){ .tb-player{ padding:16px; gap:14px; } .tb-player img{ width:72px; } }
+
+/* вопросы на главной */
+.faq-more{ margin:20px 0 0; color:var(--ink-soft); }
+.faq-more a{ color:var(--ink); font-weight:600; text-decoration-color:var(--brass); }
+
+/* финальный призыв на синем */
+.final-cta{ text-align:center; padding:96px 0; }
+.final-cta .container{ position:relative; z-index:1; }
+.final-cta h2{ color:var(--moon); margin:0 0 12px; }
+.final-cta p{ color:var(--moon-soft); max-width:520px; margin:0 auto 28px; font-size:19px; }
+.final-cta-hare{ width:120px; height:120px; object-fit:contain; margin:0 auto 18px; padding:10px; border-radius:50%; background:#fff; mix-blend-mode:normal;
+  box-shadow:0 0 0 3px rgba(201,154,75,.5); }
+@media (max-width:640px){ .final-cta{ padding:72px 0; } .final-cta-hare{ width:96px; height:96px; } .final-cta .btn{ width:100%; } }

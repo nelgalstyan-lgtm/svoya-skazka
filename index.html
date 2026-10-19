@@ -25,7 +25,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/assets/brand/star.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
-<meta name="theme-color" content="#F6F3E7">
+<meta name="theme-color" content="#FAF6EC">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
  {"@type":"Organization","@id":"https://geroenok.online/#org","name":"Героёнок","url":"https://geroenok.online/","logo":"https://geroenok.online/assets/brand/logo-full-480.webp","email":"support@geroenok.online","sameAs":["https://dzen.ru/id/6aca4137e1ecda1f099d7ed6"]},
@@ -58,33 +58,45 @@
   </div>
 </header>
 
-<section class="hero hero-storybook">
+<section class="hero-home">
   <div class="container">
-    <div class="storybook-page">
-      <div class="storybook-text">
-        <span class="kicker">Каждая книга — это чья-то маленькая сказка</span>
-        <h1>Книга, в которой главный герой — ваш ребёнок</h1>
-        <p class="lead">Не открытка на десять страниц, а настоящая книга с главами. Ребёнок нарисован на каждой иллюстрации по вашему фото, а в сюжете — его привычки, смешные словечки, друзья и семья.</p>
-        <div class="format-strip" aria-label="Формат книги">
-          <p class="format-strip-title">Электронная книга <small>— не печатная: открывается по ссылке, без доставки</small></p>
-          <span class="format-item"><img src="assets/brand/item-preview.webp" alt="" width="30" height="30">Читать онлайн</span>
-          <span class="format-item"><img src="assets/brand/item-headphones.webp" alt="" width="30" height="30">Слушать — озвучка</span>
-          <span class="format-item"><img src="assets/brand/item-books.webp" alt="" width="30" height="30">PDF — распечатать дома или в типографии</span>
-        </div>
-        <div class="hero-cta-row">
-          <a href="create.html" class="btn btn-primary">Создать книгу</a>
-          <a href="how-it-works.html" class="btn btn-ghost-dark">Как это устроено</a>
-        </div>
-        <p class="hero-facts">Бесплатное превью за пару минут · книга от 690 ₽ · читать, слушать и распечатать</p>
+    <div class="hh-text">
+      <span class="kicker">Персональные книги по фото</span>
+      <h1>Книга, в которой главный герой — <em>ваш ребёнок</em></h1>
+      <p class="lead"><span>Рисуем ребёнка по фото на каждой иллюстрации</span><span class="hh-lead-more"> и пишем историю про его привычки, друзей и семью. Читайте, слушайте и печатайте.</span></p>
+      <div class="hh-actions">
+        <a href="create.html" class="btn btn-primary" data-goal="hero_cta">Создать бесплатное превью</a>
+        <p class="hh-facts">за пару минут · платите, если понравится · от 690 ₽</p>
+        <a href="book-pro.html?demo=adelina" class="btn-link" data-goal="hero_sample">Полистать готовую книгу <span class="arr" aria-hidden="true">→</span></a>
       </div>
-      <figure class="storybook-art">
-        <img class="brand-art" src="assets/brand/geroenok-main-560.webp"
-             srcset="assets/brand/geroenok-main-360.webp 360w, assets/brand/geroenok-main-560.webp 560w, assets/brand/geroenok-main-820.webp 820w"
-             sizes="(max-width: 900px) 96px, 360px" width="560" height="943"
-             alt="Героёнок — зайчик в зелёной курточке с сумкой книг и книгой со звездой в лапах" fetchpriority="high">
-        <figcaption class="storybook-note">Я Героёнок, хранитель историй. Найду ту, что написана для вашего ребёнка</figcaption>
-      </figure>
+      <ul class="hh-format" aria-label="Формат книги">
+        <li><img src="assets/brand/item-preview.webp" alt="" width="30" height="30">Читать онлайн</li>
+        <li><img src="assets/brand/item-headphones.webp" alt="" width="30" height="30">Слушать</li>
+        <li><img src="assets/brand/item-books.webp" alt="" width="30" height="30">PDF для печати</li>
+      </ul>
     </div>
+    <figure class="hh-art">
+      <a class="hh-book" href="book-pro.html?demo=adelina" aria-label="Открыть книгу-пример «Аделина и волшебные качели»" data-goal="hero_sample">
+        <span class="hh-spread" aria-hidden="true"><img src="assets/examples/adelina/spread-r.webp" width="640" height="975" alt=""><img src="assets/examples/adelina/spread-l.webp" width="640" height="975" alt=""></span>
+        <span class="hh-cover">
+          <img src="assets/examples/adelina/cover-480.webp" srcset="assets/examples/adelina/cover-480.webp 480w, assets/examples/adelina/cover.webp 1024w" sizes="(max-width: 900px) 220px, 310px" width="480" height="720" alt="Обложка книги «Аделина и волшебные качели»: девочка на качелях под звёздным небом" fetchpriority="high">
+          <span class="hh-cover-title"><small>Большая история</small>Аделина и волшебные качели</span>
+        </span>
+      </a>
+      <span class="hh-hare"><img class="brand-art" src="assets/brand/geroenok-main-360.webp" width="360" height="606" alt=""></span>
+      <figcaption><span class="hh-note">Я Героёнок. Найду историю для вашего ребёнка!</span><span class="hh-caption">Настоящая книга «Аделина и волшебные качели». Публикуем с согласия родителей.</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="guarantees" aria-label="Гарантии">
+  <div class="container">
+    <ul>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Превью бесплатно</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><path d="m14.5 15 1.5 1.5 3-3"/></svg>Платите, если понравится</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M9 10h.01M15 10h.01M9.5 15a3.5 3.5 0 0 0 5 0"/></svg>Сверяем каждую иллюстрацию с фото</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4"/></svg>Фото удаляем через 48 ч</li>
+    </ul>
   </div>
 </section>
 
@@ -97,12 +109,58 @@
     </div>
     <div class="real-spread">
       <div class="real-spread-book"><img src="assets/examples/alex-3d/spread-home-l.webp" width="640" height="975" loading="lazy" alt="Начало первой главы книги «Алекс и тайна Ани»"><img src="assets/examples/alex-3d/spread-home-r.webp?v=2" width="640" height="975" loading="lazy" alt="Иллюстрация: Алекс решает задачу, младший брат Макс подсказывает"></div>
-      <div class="real-spread-meta"><div><div class="tags"><span>Большая история</span><span>Приключение</span><span>3D-мультфильм</span><span>Алексу 13 лет</span></div><p><strong>«Алекс и тайна Ани».</strong> Настоящие страницы книги — такими их видит семья. Алекс и младший брат Макс нарисованы по фото. Публикуем с согласия родителей.</p></div><a class="btn btn-primary" href="book-pro.html?demo=alex3d">Полистать всю книгу</a></div>
+      <div class="real-spread-meta"><div><div class="tags"><span>Большая история</span><span>Приключение</span><span>3D-мультфильм</span><span>Алексу 13 лет</span></div><p><strong>«Алекс и тайна Ани».</strong> Настоящие страницы книги — такими их видит семья. Алекс и младший брат Макс нарисованы по фото. Публикуем с согласия родителей.</p></div><a class="btn btn-ghost-dark" href="book-pro.html?demo=alex3d" data-goal="spread_open">Полистать всю книгу</a></div>
     </div>
   </div>
 </section>
 
-<section class="section-paper2">
+<!-- Этап 2 редизайна: здесь будут отзывы (только настоящие) и пары «по фото → в книге» (с согласия семей) -->
+
+<section class="section-paper2" id="prices">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <span class="kicker">Цены</span>
+      <h2>Две книги на выбор</h2>
+      <p>Сначала — бесплатное превью: обложка и первые страницы с вашим ребёнком. Платите, только если понравится.</p>
+    </div>
+    <div class="home-prices">
+      <div class="home-price">
+        <a class="hp-cover" href="book.html?demo=aelita" title="Пример: «Аэлита и кнопка для лунного торта»"><img src="assets/examples/aelita/cover-480.webp" width="480" height="720" loading="lazy" alt="Обложка книги-примера «Аэлита и кнопка для лунного торта»"></a>
+        <h3>Сказка</h3>
+        <p class="hp-sub">История на один вечер · чаще для 2–6 лет</p>
+        <div class="home-price-amount"><small>от</small> 690 ₽</div>
+        <ul>
+          <li>8 иллюстраций с ребёнком и обложка</li>
+          <li>Озвучка, PDF для печати, сертификат героя</li>
+          <li>Бесплатные правки и до 3 перерисовок</li>
+        </ul>
+        <a href="create.html" class="btn btn-ghost-dark">Создать «Сказку»</a>
+      </div>
+      <div class="home-price is-main">
+        <span class="home-price-badge">Главная книга</span>
+        <a class="hp-cover" href="book-pro.html?demo=adelina" title="Пример: «Аделина и волшебные качели»"><img src="assets/examples/adelina/cover-480.webp" width="480" height="720" loading="lazy" alt="Обложка книги-примера «Аделина и волшебные качели»"></a>
+        <h3>Большая история</h3>
+        <p class="hp-sub">6 глав на несколько вечеров · слушать с 5 лет</p>
+        <div class="home-price-amount"><small>от</small> 1 490 ₽</div>
+        <ul>
+          <li>8–10 иллюстраций с ребёнком и обложка</li>
+          <li>Раскраска на 3 страницы — включена</li>
+          <li>Один родной по фото — бесплатно</li>
+        </ul>
+        <a href="create.html?tariff=big" class="btn btn-primary">Создать «Большую историю»</a>
+      </div>
+    </div>
+    <div class="home-compare" role="table" aria-label="Обычная именная книга и «Большая история» от Героёнка">
+      <div class="hc-row hc-head" role="row"><span role="columnheader"></span><span role="columnheader">Обычная именная книга</span><span role="columnheader">«Большая история»</span></div>
+      <div class="hc-row" role="row"><span role="rowheader">Объём</span><span role="cell">5–10 страниц, около 700 слов</span><span role="cell">6 глав, 2 500–5 000 слов</span></div>
+      <div class="hc-row" role="row"><span role="rowheader">Сюжет</span><span role="cell">Шаблон, в который подставлено имя</span><span role="cell">Новая история по вашей анкете</span></div>
+      <div class="hc-row" role="row"><span role="rowheader">Ребёнок на картинках</span><span role="cell">Часто только на обложке</span><span role="cell">На обложке и на каждой иллюстрации</span></div>
+    </div>
+    <p class="home-prices-more"><a href="pricing.html" class="btn-link">Все цены и добавки <span class="arr" aria-hidden="true">→</span></a></p>
+  </div>
+</section>
+
+<section class="section-cream">
   <div class="container">
     <div class="section-head">
       <span class="kicker">Три шага</span>
@@ -113,19 +171,16 @@
       <ol>
       <li>
         <span class="step-num">1</span>
-        <span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4"/></svg></span>
         <h3>Расскажите о ребёнке</h3>
         <p>Не только имя и возраст — привычки, любимые фразы, друзья, кого хочет видеть рядом в истории. Чем подробнее, тем точнее книга.</p>
       </li>
       <li>
         <span class="step-num">2</span>
-        <span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20 15 9"/><path d="M13 7l4 4"/><path d="M18 2.5v3M16.5 4h3M20.5 8.5v2M19.5 9.5h2"/></svg></span>
         <h3>Мы пишем историю и рисуем</h3>
         <p>Сюжет строится вокруг темы, которую вы выбрали. По 1–3 фото мы рисуем ребёнка на обложке и на каждой иллюстрации — в акварели или в стиле 3D-мультфильма.</p>
       </li>
       <li>
         <span class="step-num">3</span>
-        <span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/></svg></span>
         <h3>Читайте и слушайте</h3>
         <p>Книга открывается прямо в браузере, её можно слушать вслух, скачать PDF для печати и бесплатно поправить, если что-то хочется изменить.</p>
       </li>
@@ -134,117 +189,7 @@
   </div>
 </section>
 
-<section class="section-cream">
-  <div class="container">
-    <div class="section-head">
-      <span class="kicker">Не открытка, а книга</span>
-      <h2>Настоящая история на несколько вечеров</h2>
-      <p>Большинство персональных книг — это десяток страниц с парой фраз и подставленным именем. Мы пишем иначе.</p>
-    </div>
-    <div class="vs" role="table" aria-label="Обычная именная книга и «Большая история» от Героёнка">
-      <div class="vs-row vs-head" role="row">
-        <div class="vs-label" role="columnheader"></div>
-        <div class="vs-them" role="columnheader">Обычная именная книга</div>
-        <div class="vs-us" role="columnheader"><img class="brand-art vs-hare" src="assets/brand/pose-reading.webp" width="216" height="235" alt="" loading="lazy"><span class="vs-badge">Главная книга</span><strong>«Большая история» от&nbsp;Героёнка</strong></div>
-      </div>
-      <div class="vs-row" role="row">
-        <div class="vs-label" role="rowheader"><img class="brand-art" src="assets/brand/item-books.webp" alt="" width="40" height="40" loading="lazy">Объём текста</div>
-        <div class="vs-them" role="cell">5–10 страниц, около 700 слов</div>
-        <div class="vs-us" role="cell">6 глав, 2 500–5 000 слов</div>
-      </div>
-      <div class="vs-row" role="row">
-        <div class="vs-label" role="rowheader"><img class="brand-art" src="assets/brand/item-hourglass.webp" alt="" width="40" height="40" loading="lazy">Время чтения</div>
-        <div class="vs-them" role="cell">5 минут</div>
-        <div class="vs-us" role="cell">Несколько вечеров, 30–40 минут</div>
-      </div>
-      <div class="vs-row" role="row">
-        <div class="vs-label" role="rowheader"><img class="brand-art" src="assets/brand/item-feather.webp" alt="" width="40" height="40" loading="lazy">Сюжет</div>
-        <div class="vs-them" role="cell">Шаблон, в который подставлено имя</div>
-        <div class="vs-us" role="cell">Новая история с загадкой, диалогами и юмором по вашей анкете</div>
-      </div>
-      <div class="vs-row" role="row">
-        <div class="vs-label" role="rowheader"><img class="brand-art" src="assets/brand/emotion-smile.webp" alt="" width="40" height="40" loading="lazy">Ребёнок на иллюстрациях</div>
-        <div class="vs-them" role="cell">Часто только на обложке</div>
-        <div class="vs-us" role="cell">На обложке и на каждой иллюстрации, по вашим фото</div>
-      </div>
-      <div class="vs-row" role="row">
-        <div class="vs-label" role="rowheader"><img class="brand-art" src="assets/brand/item-star.webp" alt="" width="40" height="40" loading="lazy">Возраст</div>
-        <div class="vs-them" role="cell">Малыши</div>
-        <div class="vs-us" role="cell">От 2 до 16 лет — у подростков своя подача</div>
-      </div>
-      <div class="vs-row" role="row">
-        <div class="vs-label" role="rowheader"><img class="brand-art" src="assets/brand/item-palette.webp" alt="" width="40" height="40" loading="lazy">Оформление</div>
-        <div class="vs-them" role="cell">Одна рамка на все книги</div>
-        <div class="vs-us" role="cell">Страницы под тему: море, поход, королевство, волшебный лес, Новый год; подросткам — пергамент и карта</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section-ink stars">
-  <div class="container">
-    <div class="grid grid-2" style="align-items:center;">
-      <div>
-        <span class="kicker">Для 8–16 лет</span>
-        <h2 style="color:var(--text-light)">Книга, которую не стыдно читать и в двенадцать</h2>
-        <p style="color:var(--text-light-soft); font-size:18px;">Подростки не читают сказки про принцесс. Для них мы пишем приключенческую прозу: тайна, которую нужно разгадать, живые диалоги с друзьями, юмор из их собственных словечек и «записи героя» в конце каждой главы. Оформление — сдержаннее, без малышовых картинок.</p>
-        <a href="create.html?tariff=big" class="btn btn-primary" style="margin-top:12px;">Создать «Большую историю»</a>
-      </div>
-      <div class="feature-grid" style="grid-template-columns:1fr 1fr;">
-        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-key.webp" alt="" width="52" height="52" loading="lazy"><h3>Загадка</h3><p>Сюжет держит до последней главы, а разгадку находит сам герой.</p></div>
-        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-letter.webp" alt="" width="52" height="52" loading="lazy"><h3>Диалоги</h3><p>Друзья из анкеты спорят, шутят и спасают положение.</p></div>
-        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-feather.webp" alt="" width="52" height="52" loading="lazy"><h3>Записи героя</h3><p>Каждая глава заканчивается выводом «из записей» ребёнка.</p></div>
-        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-palette.webp" alt="" width="52" height="52" loading="lazy"><h3>Своё оформление</h3><p>Акварельные заставки и украшения страниц под тему книги — в стиле Героёнка.</p></div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <section class="section-paper2">
-  <div class="container">
-    <div class="section-head">
-      <span class="kicker">В каждой книге</span>
-      <h2>Больше, чем просто текст с картинками</h2>
-    </div>
-    <div class="feature-grid">
-      <div class="feature"><img class="ico-art brand-art" src="assets/brand/emotion-smile.webp" alt="" width="52" height="52" loading="lazy"><h3>Ребёнок на каждой иллюстрации</h3><p>По 1–3 фото рисуем ребёнка на обложке и на всех страницах — с той же одеждой и тем же питомцем во всей книге.</p></div>
-      <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-lantern.webp" alt="" width="52" height="52" loading="lazy"><h3>Помогает в важный момент</h3><p>Страх темноты, первый класс, появление братика — герой проживает похожую историю и находит опору. Без нравоучений.</p></div>
-      <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-headphones.webp" alt="" width="52" height="52" loading="lazy"><h3>Слушать вслух</h3><p>Книгу можно включить вслух прямо на телефоне — удобно перед сном. QR-код на последней странице открывает её онлайн.</p></div>
-      <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-pencils.webp" alt="" width="52" height="52" loading="lazy"><h3>Раскраска</h3><p>Иллюстрации книги в виде контуров для печати: ребёнок раскрашивает самого себя.</p></div>
-      <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-star.webp" alt="" width="52" height="52" loading="lazy"><h3>Сертификат героя</h3><p>Именной сертификат на последней странице: «главный герой книги прошёл все испытания».</p></div>
-      <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-pencil.webp" alt="" width="52" height="52" loading="lazy"><h3>Бесплатные правки</h3><p>Исправьте любой абзац прямо в книге и перерисуйте до трёх иллюстраций — бесплатно.</p></div>
-      <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-key.webp" alt="" width="52" height="52" loading="lazy"><h3>Продолжение</h3><p>Понравилось? Закажите вторую книгу с теми же героями и новым приключением — анкета заполнится сама, останется только добавить фото.</p></div>
-      <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-books.webp" alt="" width="52" height="52" loading="lazy"><h3>PDF для печати</h3><p>Скачайте книгу в PDF и напечатайте дома или в любом копицентре — как это сделать, рассказываем по шагам.</p></div>
-      <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-letter.webp" alt="" width="52" height="52" loading="lazy"><h3>Посвящение</h3><p>В начале книги — тёплые слова ребёнку от вашего имени. Напишите свои или доверьте их нам.</p></div>
-    </div>
-  </div>
-</section>
-
-<section class="section-ink">
-  <div class="container">
-    <div class="section-head">
-      <span class="kicker">Без бумаги — и это не компромисс</span>
-      <h2>Почему мы сознательно не печатаем книги</h2>
-      <p>Мы могли бы отправлять бумажные книги — но выбрали другой путь, и вот почему это лучше для вас.</p>
-    </div>
-    <div class="grid grid-3">
-      <div>
-        <h3 style="color:var(--text-light)">Долетает мгновенно, куда угодно</h3>
-        <p style="color:var(--text-light-soft)">Бабушке в другой город, папе в командировку, ребёнку на планшет перед сном — книга открывается за секунду, без почты и границ.</p>
-      </div>
-      <div>
-        <h3 style="color:var(--text-light)">Книга умеет говорить</h3>
-        <p style="color:var(--text-light-soft)">У печатной книги нет голоса. У нашей — есть: можно закрыть глаза и просто слушать, как всё это рассказывают вслух.</p>
-      </div>
-      <div>
-        <h3 style="color:var(--text-light)">Это только начало истории</h3>
-        <p style="color:var(--text-light-soft)">Электронная книга — живая: её можно поправить, а потом заказать продолжение с теми же героями. А если захочется бумагу — PDF готов к печати.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section-cream">
   <div class="container">
     <div class="section-head">
       <span class="kicker">О чём книга</span>
@@ -279,54 +224,76 @@
   </div>
 </section>
 
-<section class="section-paper2">
+<section class="section-ink stars">
   <div class="container">
-    <div class="section-head" style="text-align:center; margin-left:auto; margin-right:auto;">
-      <span class="kicker">Цены</span>
-      <h2>Две книги на выбор</h2>
-      <p>Сначала — бесплатное превью: обложка и первые страницы с вашим ребёнком. Платите, только если понравится.</p>
-    </div>
-    <div class="home-prices">
-      <div class="home-price">
-        <div class="home-price-top">
-          <div><h3>Сказка</h3><p>История на один вечер · чаще для 2–6 лет</p></div>
-          <a class="price-cover" href="book.html?demo=aelita" title="Пример: «Аэлита и кнопка для лунного торта»"><img src="assets/examples/aelita/cover-480.webp" width="480" height="720" loading="lazy" alt="Обложка книги-примера «Аэлита и кнопка для лунного торта»"></a>
-        </div>
-        <div class="home-price-amount"><small>от</small> 690 ₽</div>
-        <ul>
-          <li>8 иллюстраций с ребёнком и обложка</li>
-          <li>Озвучка, PDF для печати, сертификат героя</li>
-          <li>Бесплатные правки и до 3 перерисовок</li>
-        </ul>
-        <a href="create.html" class="btn btn-ghost-dark">Создать «Сказку»</a>
+    <div class="grid grid-2" style="align-items:center;">
+      <div>
+        <span class="kicker">Для 8–16 лет</span>
+        <h2>Книга, которую не стыдно читать и в двенадцать</h2>
+        <p>Подростки не читают сказки про принцесс. Для них мы пишем приключенческую прозу: тайна, которую нужно разгадать, живые диалоги с друзьями, юмор из их собственных словечек и «записи героя» в конце каждой главы. Оформление — сдержаннее, без малышовых картинок.</p>
+        <a href="create.html?tariff=big" class="btn btn-primary" style="margin-top:12px;">Создать «Большую историю»</a>
       </div>
-      <div class="home-price is-main">
-        <span class="home-price-badge">Главная книга</span>
-        <div class="home-price-top">
-          <div><h3>Большая история</h3><p>6 глав на несколько вечеров · слушать с 5 лет</p></div>
-          <a class="price-cover" href="book-pro.html?demo=adelina" title="Пример: «Аделина и волшебные качели»"><img src="assets/examples/adelina/cover-480.webp" width="480" height="720" loading="lazy" alt="Обложка книги-примера «Аделина и волшебные качели»"></a>
-        </div>
-        <div class="home-price-amount"><small>от</small> 1 490 ₽</div>
-        <ul>
-          <li>8–10 иллюстраций с ребёнком и обложка</li>
-          <li>Раскраска на 3 страницы — включена</li>
-          <li>Один родной по фото — бесплатно</li>
-        </ul>
-        <a href="create.html?tariff=big" class="btn btn-primary">Создать «Большую историю»</a>
+      <div class="feature-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-key.webp" alt="" width="52" height="52" loading="lazy"><h3>Загадка</h3><p>Сюжет держит до последней главы, а разгадку находит сам герой.</p></div>
+        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-letter.webp" alt="" width="52" height="52" loading="lazy"><h3>Диалоги</h3><p>Друзья из анкеты спорят, шутят и спасают положение.</p></div>
+        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-feather.webp" alt="" width="52" height="52" loading="lazy"><h3>Записи героя</h3><p>Каждая глава заканчивается выводом «из записей» ребёнка.</p></div>
+        <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-palette.webp" alt="" width="52" height="52" loading="lazy"><h3>Своё оформление</h3><p>Акварельные заставки и украшения страниц под тему книги — в стиле Героёнка.</p></div>
       </div>
     </div>
-    <p class="home-prices-more"><a href="pricing.html">Все цены и добавки →</a></p>
   </div>
 </section>
 
-<section class="section-cream tight">
+<section class="section-cream">
+  <div class="container">
+    <div class="section-head">
+      <span class="kicker">В каждой книге</span>
+      <h2>Больше, чем просто текст с картинками</h2>
+    </div>
+    <div class="every-book">
+      <div class="eb-item"><img class="brand-art" src="assets/brand/emotion-smile.webp" alt="" width="64" height="64" loading="lazy"><h3>Ребёнок на каждой иллюстрации</h3><p>По 1–3 фото рисуем ребёнка на обложке и на всех страницах — с той же одеждой и тем же питомцем во всей книге.</p></div>
+      <div class="eb-item"><img class="brand-art" src="assets/brand/item-lantern.webp" alt="" width="64" height="64" loading="lazy"><h3>Помогает в важный момент</h3><p>Страх темноты, первый класс, появление братика — герой проживает похожую историю и находит опору. Без нравоучений.</p></div>
+      <div class="eb-item"><img class="brand-art" src="assets/brand/item-books.webp" alt="" width="64" height="64" loading="lazy"><h3>PDF для печати</h3><p>Скачайте книгу в PDF и напечатайте дома или в любом копицентре — как это сделать, рассказываем по шагам.</p></div>
+      <div class="eb-item"><img class="brand-art" src="assets/brand/item-pencil.webp" alt="" width="64" height="64" loading="lazy"><h3>Бесплатные правки</h3><p>Исправьте любой абзац прямо в книге и перерисуйте до трёх иллюстраций — бесплатно.</p></div>
+    </div>
+    <ul class="eb-small" aria-label="А ещё в книге">
+      <li><img class="brand-art" src="assets/brand/item-letter.webp" alt="" width="36" height="36" loading="lazy"><span><strong>Посвящение</strong> — тёплые слова от вашего имени</span></li>
+      <li><img class="brand-art" src="assets/brand/item-star.webp" alt="" width="36" height="36" loading="lazy"><span><strong>Сертификат героя</strong> на последней странице</span></li>
+      <li><img class="brand-art" src="assets/brand/item-preview.webp" alt="" width="36" height="36" loading="lazy"><span><strong>QR-код</strong> открывает книгу онлайн</span></li>
+      <li><img class="brand-art" src="assets/brand/item-key.webp" alt="" width="36" height="36" loading="lazy"><span><strong>Продолжение</strong> с теми же героями</span></li>
+      <li><img class="brand-art" src="assets/brand/item-pencils.webp" alt="" width="36" height="36" loading="lazy"><span><strong>Раскраска</strong> — в «Большой истории»</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section-paper2">
+  <div class="container">
+    <div class="talking-book">
+      <div>
+        <span class="kicker">Без бумаги — и это не компромисс</span>
+        <h2>Книга, которая умеет говорить</h2>
+        <p>У печатной книги нет голоса. У нашей — есть: в каждой оплаченной книге её читает голос рассказчика, и её можно скачать как аудиокнигу. А ещё она долетает мгновенно — бабушке в другой город, папе в командировку, ребёнку на планшет перед сном. Захочется бумагу — PDF готов к печати.</p>
+        <a href="audiobook.html" class="btn-link">Все аудиокниги-образцы <span class="arr" aria-hidden="true">→</span></a>
+      </div>
+      <figure class="tb-player">
+        <img src="assets/examples/alex-3d/cover-480.webp" width="480" height="720" alt="" loading="lazy">
+        <figcaption>
+          <strong>«Алекс и тайна Ани»</strong>
+          <span>Посвящение — послушайте, как звучит настоящая книга</span>
+          <audio controls preload="none" src="/api/media/alex-audio/dedication.mp3" aria-label="Послушать посвящение книги «Алекс и тайна Ани»" data-goal="audio_play"></audio>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="section-cream">
   <div class="container">
     <div class="grid grid-2" style="align-items:center;">
       <div>
         <span class="kicker">Фото ребёнка в безопасности</span>
         <h2>Фото — только для иллюстраций</h2>
-        <p style="color:var(--text-soft); font-size:18px;">Фото нужны, чтобы нарисовать ребёнка в книге. Как только книга дорисована, они удаляются с сервера, а если вы её не оформили — через 48 часов сами. Фото передаются только сервису, который рисует иллюстрации, и больше никому. Сама книга (без фото) хранится год — чтобы её можно было открыть по QR-коду, а по вашей просьбе удалим её раньше.</p>
-        <a href="privacy.html" style="color:var(--gold-dark); font-weight:700;">Подробнее — в политике конфиденциальности →</a>
+        <p style="color:var(--text-soft);">Фото нужны, чтобы нарисовать ребёнка в книге. Как только книга дорисована, они удаляются с сервера, а если вы её не оформили — через 48 часов сами. Фото передаются только сервису, который рисует иллюстрации, и больше никому. Сама книга (без фото) хранится год — чтобы её можно было открыть по QR-коду, а по вашей просьбе удалим её раньше.</p>
+        <a href="privacy.html" class="btn-link">Подробнее — в политике конфиденциальности <span class="arr" aria-hidden="true">→</span></a>
       </div>
       <div class="feature-grid" style="grid-template-columns:1fr;">
         <div class="feature"><img class="ico-art brand-art" src="assets/brand/item-hourglass.webp" alt="" width="52" height="52" loading="lazy"><h3>Не дольше 48 часов</h3><p>Удаляются, как только книга дорисована, и никогда не попадают в сохранённую книгу.</p></div>
@@ -336,6 +303,58 @@
   </div>
 </section>
 
+<section class="section-paper2" id="faq">
+  <div class="container">
+    <div class="section-head">
+      <span class="kicker">Вопросы</span>
+      <h2>Частые вопросы</h2>
+    </div>
+    <div class="faq-panel">
+      <details class="faq-item">
+        <summary>Можно ли посмотреть книгу перед оплатой?</summary>
+        <p>Да. Бесплатное превью — это обложка с вашим ребёнком и первые страницы с иллюстрацией («Сказка») или вся первая глава («Большая история»). Превью готово за пару минут. Понравилось — оплачиваете, и остальные иллюстрации дорисовываются за несколько минут.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Что, если ребёнок на картинке не очень похож?</summary>
+        <p>Каждую иллюстрацию мы сверяем с фото, а непохожую перерисовываем ещё до того, как книга попадёт к вам. Если какая-то картинка всё равно не понравится, перерисуйте до трёх иллюстраций прямо в книге — бесплатно. Если нужно больше, напишите нам — поможем.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Какие фото подойдут?</summary>
+        <p>От 1 до 3 фото ребёнка. Лучше всего: лицо анфас, лицо вполоборота и фото в полный рост — чётко, без солнечных очков и головных уборов. Фото нужны только для иллюстраций и удаляются, как только книга дорисована (не позже чем через 48 часов).</p>
+      </details>
+      <details class="faq-item">
+        <summary>Это печатная книга?</summary>
+        <p>Нет, книга электронная: открывается по персональной ссылке с любого телефона, планшета или компьютера, без доставки. Так она готова через несколько минут, а печать с доставкой сделала бы её заметно дороже и дольше. Бумажный экземпляр можно сделать самим — PDF готов к печати.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Как распечатать книгу?</summary>
+        <p>Скачайте PDF и напечатайте его дома, в копицентре или в типографии — как это сделать, рассказываем по шагам на странице <a href="how-it-works.html">«Как это работает»</a>. QR-код на последней странице откроет книгу онлайн, даже если вы её напечатали.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Можно ли исправить текст или картинку?</summary>
+        <p>Да. Исправьте любой абзац прямо в книге кнопкой «Править книгу» и перерисуйте до трёх иллюстраций — бесплатно.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Можно ли подарить книгу?</summary>
+        <p>Да: книгу открывают по ссылке, поэтому её можно отправить бабушке в другой город, папе в командировку или кому угодно. А PDF можно напечатать и подарить на бумаге.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Как долго книга остаётся доступной?</summary>
+        <p>PDF, который вы скачали, — ваш навсегда. Онлайн-версия по ссылке и QR-коду хранится год; фото ребёнка в неё не входят.</p>
+      </details>
+    </div>
+    <p class="faq-more">Остались вопросы? Напишите на <a href="mailto:support@geroenok.online">support@geroenok.online</a></p>
+  </div>
+</section>
+
+<section class="final-cta section-ink stars">
+  <div class="container">
+    <img class="brand-art final-cta-hare" src="assets/brand/pose-reading.webp" width="216" height="235" alt="" loading="lazy">
+    <h2>Первые страницы — бесплатно</h2>
+    <p>Увидите своего ребёнка в книге через пару минут. Платите, только если понравится.</p>
+    <a href="create.html" class="btn btn-primary" data-goal="final_cta">Создать бесплатное превью</a>
+  </div>
+</section>
 
 <footer class="site-footer">
   <div class="container">
