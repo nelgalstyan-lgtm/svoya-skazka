@@ -448,3 +448,9 @@
   .home-styles .section-head{ margin-bottom:0; }
   .hs-row{ justify-content:end; }
 }
+
+/* финальный призыв: ночной Героёнок с фонарём (этап 3) — края картинки растворяются в синем фоне */
+.final-cta{ padding-top:56px; }
+.final-cta-night{ display:block; width:300px; height:auto; margin:0 auto 8px;
+  -webkit-mask-image:radial-gradient(closest-side, #000 62%, transparent 100%); mask-image:radial-gradient(closest-side, #000 62%, transparent 100%); }
+@media (max-width:640px){ .final-cta{ padding-top:40px; } .final-cta-night{ width:220px; } }
