@@ -5,6 +5,11 @@
 Сайт: **https://geroenok.online** (Cloudflare Worker `svoya-skazka`). Старая копия: https://nelgalstyan-lgtm.github.io/svoya-skazka/.
 Подробности по коду: `docs/project-brief.md`, `server/README.md`, `server/.env.example`, `wrangler.jsonc`.
 
+## ▶ 19.10: редизайн сайта по аудиту — НАЧАТЬ ОТСЮДА
+
+- Аудит дизайна и ТЗ готовы; план работ с галочками — `docs/redesign-plan.md`. Владелица попросила исполнить всё.
+- Делать по порядку: этап 1 (код, без её материалов) → этап 2 (отзывы, согласия, фото — ждём от неё) → этап 3 (иллюстратор).
+
 ## 17.10: английские версии книг Аделины и Аэлиты (для мамы)
 
 - **Отдельные ссылки, русские книги не тронуты:** `geroenok.online/book-pro?demo=adelina-en` и `geroenok.online/book?demo=aelita-en`. Файлы — `assets/examples/adelina/book-en.js`, `assets/examples/aelita/book-en.js` (как у Макса `max3d-en`); иллюстрации те же (надписей на картинках нет), название на обложке ставит код. На русском сайте ссылок нет; пригодятся для английской версии сайта.
