@@ -66,7 +66,7 @@
     <span class="kicker">Подарок, который точно попадёт в цель</span>
     <h1>Подарочный сертификат</h1>
     <p>Хотите подарить книгу, но не знаете смешных словечек ребёнка и имени его кота? Подарите сертификат — родители сами заполнят анкету и загрузят фото, а книга получится по-настоящему личной.</p>
-    <p style="margin-top:14px; padding:12px 16px; display:inline-block; background:rgba(255,250,238,.9); border:1px solid var(--line); border-radius:12px; color:var(--brass-text, #7E5A26); font-weight:600;">Подключаем онлайн-оплату через ЮKassa. Пока напишите нам через <a href="contacts.html">«Контакты»</a> — оформим сертификат вручную.</p>
+    <p style="margin-top:14px; padding:12px 16px; display:inline-block; background:rgba(255,250,238,.9); border:1px solid var(--line); border-radius:12px; color:var(--brass-text, #7E5A26); font-weight:600;">Подключаем онлайн-оплату через ЮKassa.</p>
   </div>
 </section>
 
@@ -97,7 +97,7 @@
           <button type="button" class="btn btn-primary" id="giftBuy">Оформить сертификат</button>
           <button type="button" class="btn btn-ghost-dark" id="giftPrint">Распечатать макет</button>
         </div>
-        <p class="hint" id="giftStatus" style="margin-top:14px;">Подключаем онлайн-оплату через ЮKassa. Пока напишите нам через страницу <a href="contacts.html">«Контакты»</a> — оформим сертификат вручную.</p>
+        <p class="hint" id="giftStatus" style="margin-top:14px;">Подключаем онлайн-оплату через ЮKassa.</p>
       </form>
 
       <div>
@@ -147,9 +147,9 @@
   });
   ['giftTo', 'giftFrom', 'giftNote'].forEach(function (id) { document.getElementById(id).addEventListener('input', update); });
   document.getElementById('giftPrint').addEventListener('click', function () { window.print(); });
-  // Оплата подключается последним этапом — до этого сертификат оформляем вручную через почту
+  // Оплата подключается последним этапом (ЮKassa) — до этого только сообщение, вручную сертификаты не оформляем
   document.getElementById('giftBuy').addEventListener('click', function () {
-    document.getElementById('giftStatus').textContent = 'Подключаем онлайн-оплату через ЮKassa. Пока напишите нам через страницу «Контакты» — оформим сертификат вручную.';
+    document.getElementById('giftStatus').textContent = 'Подключаем онлайн-оплату через ЮKassa.';
   });
   update();
 })();
