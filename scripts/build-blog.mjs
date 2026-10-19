@@ -115,7 +115,7 @@ function head({ title, description, path, type, image, extra }) {
 
 const STYLE = `
 .blog-hero{ padding:56px 0 24px; text-align:center; }
-.blog-hero .kicker{ font-family:var(--font-script); color:var(--gold-dark); font-size:24px; }
+.blog-hero .kicker{ margin-bottom:10px; }
 .blog-hero h1{ font-family:'Lora', Georgia, serif; font-size:40px; line-height:1.2; color:#2f2618; margin:6px auto 14px; max-width:820px; }
 .blog-hero .lead{ font-family:'Literata', Georgia, serif; font-size:19px; color:#5a4a3a; max-width:640px; margin:0 auto; }
 .blog-meta{ font-size:14px; color:var(--text-soft); margin-top:14px; }
@@ -124,7 +124,7 @@ const STYLE = `
 .blog-card:hover{ transform:translateY(-4px); }
 .blog-card img{ width:100%; aspect-ratio:16/9; object-fit:cover; }
 .blog-card div{ padding:20px 22px 24px; }
-.blog-card .kicker{ font-family:var(--font-script); color:var(--gold-dark); font-size:20px; }
+.blog-card .kicker{ font-size:12px; margin-bottom:6px; }
 .blog-card h2{ font-family:'Lora', Georgia, serif; font-size:21px; line-height:1.3; color:#2f2618; margin:2px 0 8px; }
 .blog-card p{ font-size:15.5px; color:var(--text-soft); margin:0; }
 .blog-article{ max-width:720px; margin:0 auto; padding:8px 0 40px; font-family:'Literata', Georgia, serif; font-size:18.5px; line-height:1.8; color:#2f2618; }
@@ -230,7 +230,7 @@ const STYLE = `
 /* автор */
 .blog-author{ max-width:820px; margin:28px auto 0; display:flex; gap:20px; align-items:center; padding:22px 26px; background:var(--paper-2); border-radius:var(--radius-l); }
 .blog-author img{ width:96px; height:96px; flex:none; border-radius:50%; object-fit:cover; border:2px solid #E7C27A; box-shadow:0 0 0 4px var(--cream), 0 0 0 5px rgba(215,154,58,.35); }
-.blog-author .kicker{ font-family:var(--font-script); color:var(--gold-dark); font-size:20px; display:block; line-height:1; }
+.blog-author .kicker{ display:block; margin-bottom:4px; }
 .blog-author strong{ font-family:'Lora', Georgia, serif; font-size:22px; color:#2f2618; }
 .blog-author p{ margin:4px 0 0; font-family:'Literata', Georgia, serif; font-size:16px; color:var(--text-soft); line-height:1.55; }
 /* список статей — как книги на полке */

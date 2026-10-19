@@ -1,46 +1,55 @@
 /*
  * Дизайн-система «Героёнок» — Geroenok Storybook Style.
- * Канон: docs/brand/character-sheet.png (палитра, персонаж, предметы). Подключается ПОСЛЕ встроенных стилей
- * страницы и переопределяет их переменные и общие блоки (шапка, кнопки, карточки, подвал) — на всех страницах сразу.
+ * Подключается ПОСЛЕ assets/base.css и site-extra.css и переопределяет общие блоки (шапка, кнопки, карточки, подвал)
+ * на всех страницах сразу.
  *
- * Шрифты (Lora, PT Sans, Caveat) подключает сама страница <link> перед этим файлом.
- * Палитра снята с листа персонажа. Контраст текста (WCAG): основной 12:1, приглушённый 6:1, на кнопке 5,5:1.
+ * Токены — по аудиту дизайна 19.10 (docs/redesign-plan.md): тёплая бумага, чернила, вечерний синий, терракота для кнопок.
+ * Шрифты (Lora, Golos Text, Caveat) подключает сама страница <link> перед этим файлом.
+ * Контраст (WCAG): --ink на --paper 15:1, --ink-soft 7,6:1, белый на --cta ≈5:1, --moon на --night 11:1.
  */
 
 :root{
-  /* --- бумага --- */
-  --paper:      #F6F3E7;   /* фон листа персонажа */
-  --paper-2:    #F1E7D2;   /* крем — полосы и подложки */
-  --cream:      #FBF8EF;   /* светлая страница книги */
-  --card:       #FFFCF5;   /* карточка «из архива» */
+  /* --- токены редизайна --- */
+  --paper:      #FAF6EC;   /* бумага — основной фон */
+  --card:       #FFFDF7;   /* крем — карточки, формы */
+  --sand:       #F1E6D0;   /* песок — второй фон для ритма секций */
+  --line:       #E2D3B5;   /* карандаш — разделители, рамки полей */
+  --ink:        #2E2219;   /* чернила — заголовки и текст */
+  --ink-soft:   #5E4B3C;   /* орех — подписи, вторичный текст */
+  --night:      #1E3354;   /* вечерний синий — тёмные секции, подвал */
+  --dusk:       #3D5A80;   /* сумерки — значки и метки на синем, ссылки */
+  --cta:        #B4502F;   /* терракота — только главные кнопки */
+  --cta-hover:  #963F23;
+  --brass:      #C99A4B;   /* латунь — звёзды, ключ, закладки (не текст) */
+  --brass-text: #7E5A26;   /* старая латунь — надзаголовки, метки */
+  --sage:       #56714F;   /* шалфей — галочки, безопасность */
+  --moon:       #F5ECDA;   /* лунный крем — текст на синем */
+  --moon-soft:  #CCD4E1;   /* приглушённый текст на синем (8:1) */
 
-  /* --- краски листа --- */
-  --sand:       #DFC39A;
-  --brown:      #B87F52;   /* сумка, шерсть */
-  --walnut:     #4A3527;   /* «вечернее чтение» — тёмные секции */
+  /* --- прочие краски листа персонажа --- */
+  --sand-deep:  #DFC39A;
+  --brown:      #B87F52;
+  --walnut:     #4A3527;   /* орех — тёмные секции до редизайна */
   --walnut-2:   #5B4332;
-  --sage-light: #AAB8A2;   /* курточка */
-  --blue:       #7C9CA3;   /* книга со звездой (светлый) */
-  --blue-deep:  #4F6E75;   /* книга со звездой — для текста и значков */
-  --peach:      #EEC8B4;   /* ушки */
-  --brass:      #C99A4B;   /* ключ, звезда — только декор и крупные значки */
+  --night-2:    #2B4468;
+  --sage-light: #AAB8A2;
+  --blue:       #7C9CA3;
+  --blue-deep:  #4F6E75;
+  --peach:      #EEC8B4;
   --brass-light:#D4A95F;   /* подложка значков под тёмный текст (5,3:1) */
-  --brass-text: #7E5A26;   /* латунь для текста (контраст ≥5:1 на бумаге и креме) */
 
-  /* --- переменные, которые уже используют страницы: теперь в палитре листа --- */
-  --ink:        var(--walnut);
+  /* --- старые имена, которые используют страницы и base.css --- */
+  --paper-2:    var(--sand);
+  --cream:      #FBF8EF;   /* светлая страница книги */
+  --text:       var(--ink);
+  --text-soft:  var(--ink-soft);
+  --text-light: var(--moon);
+  --text-light-soft: #E6D8C2;
   --ink-2:      var(--walnut-2);
   --gold:       var(--brass);
   --gold-dark:  var(--brass-text);
-  --berry:      #A5583F;   /* терракота вместо ягоды (редкий второй акцент) */
-  --sage:       #56714F;   /* шалфей для текста */
-  --text:       #3F2816;
-  --text-soft:  #6B5443;
-  --text-light: #FBF3E3;
-  --text-light-soft: #E6D8C2;
-  --line:       #E2D3B5;
+  --berry:      #A5583F;
   --line-dark:  #6A5140;
-
   --btn:        #8A5A36;   /* основная кнопка */
   --btn-hover:  #7A4E2E;
 
@@ -49,11 +58,12 @@
   --radius-l: 24px;
 
   --font-display: 'Lora', Georgia, 'Times New Roman', serif;
-  --font-script:  'Caveat', cursive;
-  --font-body:    'PT Sans', Arial, sans-serif;
+  --font-script:  'Caveat', cursive;   /* только реплики зайца, до 3 раз на страницу */
+  --font-body:    'Golos Text', 'PT Sans', Arial, sans-serif;
 
-  --shadow-soft:  0 18px 36px -22px rgba(74,53,39,.38);
-  --shadow-paper: 0 1px 0 rgba(255,255,255,.7) inset, 0 10px 24px -18px rgba(74,53,39,.35);
+  --ease: cubic-bezier(.2,.7,.2,1);
+  --shadow-soft:  0 18px 36px -22px rgba(46,34,25,.38);
+  --shadow-paper: 0 1px 0 rgba(255,255,255,.7) inset, 0 10px 24px -18px rgba(46,34,25,.35);
 
   /* бумажная фактура: едва заметный шум, без файла */
   --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .31 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -65,8 +75,18 @@ body{
   background-image:var(--paper-grain);
   color:var(--text);
 }
+body{ font-size:18px; line-height:1.61; }
+b, strong{ font-weight:600; }
 h1,h2,h3,h4{ font-family:var(--font-display); font-weight:600; letter-spacing:0; color:var(--text); }
-h1{ font-weight:700; }
+h1{ font-size:56px; line-height:1.143; }
+h2{ font-size:40px; line-height:1.2; }
+h3{ font-size:24px; line-height:1.25; }
+@media (max-width:640px){
+  body{ font-size:17px; line-height:1.59; }
+  h1{ font-size:34px; line-height:1.18; }
+  h2{ font-size:28px; line-height:1.21; }
+  h3{ font-size:20px; line-height:1.3; }
+}
 .section-ink h1,.section-ink h2,.section-ink h3{ color:var(--text-light); }
 a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible{
   outline:3px solid var(--brass-text);
@@ -182,7 +202,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .section-cream{ background-color:var(--cream); background-image:var(--paper-grain); }
 .section-paper2{ background-color:var(--paper-2); background-image:var(--paper-grain); }
 .section-ink{ background-color:var(--walnut); background-image:var(--paper-grain); color:var(--text-light); }
-.kicker{ color:var(--brass-text); font-size:23px; }
+/* надзаголовок: капитель Golos, латунь (рукописный Caveat — только у реплик зайца) */
+.kicker{ font-family:var(--font-body); font-weight:600; font-size:13px; line-height:1.4; letter-spacing:.12em; text-transform:uppercase; color:var(--brass-text); margin-bottom:12px; }
 .section-ink .kicker{ color:var(--brass); }
 .section-head p{ color:var(--text-soft); }
 
@@ -313,9 +334,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 }
 .field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--brass-text); box-shadow:0 0 0 3px rgba(201,154,75,.25); outline:none; }
 .choice-card{ background:#FFFEFA; border-color:var(--line); border-radius:12px; transition:border-color .2s ease, background .2s ease; }
-.choice-card:hover{ border-color:var(--sand); }
+.choice-card:hover{ border-color:var(--sand-deep); }
 .choice-card.is-selected{ border-color:var(--btn); background:#F7EBD6; box-shadow:0 0 0 3px rgba(201,154,75,.25); }
-.photo-drop{ background:#FFFEFA; border-color:var(--sand); border-radius:var(--radius-m); }
+.photo-drop{ background:#FFFEFA; border-color:var(--sand-deep); border-radius:var(--radius-m); }
 .progress-track span{ background:var(--line); }
 .progress-track span.done{ background:var(--brass); }
 .upsell-row{ background:var(--paper-2); }
