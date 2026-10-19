@@ -340,7 +340,7 @@
   .home-maker p{ font-size:17px; }
 }
 
-/* главная: подарочный сертификат под ценами (оплата через ЮKassa подключается — оформляем вручную) */
+/* главная: подарочный сертификат под ценами (оплата через ЮKassa подключается; вручную не оформляем) */
 .home-gift{ max-width:960px; margin:40px auto 0; display:grid; grid-template-columns:52px 1fr auto; gap:20px 24px; align-items:center; padding:24px 28px; background:var(--card); border:1px solid var(--line); border-radius:16px; }
 .home-gift h3{ font-size:22px; margin:0 0 6px; }
 .home-gift p{ margin:0; color:var(--ink-soft); font-size:16px; }
