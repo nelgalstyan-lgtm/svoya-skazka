@@ -313,3 +313,15 @@
   .hf-track img{ flex-basis:100%; width:100%; scroll-snap-align:start; }
   .hf-tabs button{ flex:1 1 auto; font-size:14px; padding:0 12px; }
 }
+
+/* главная: пары «по фото → в книге» под разворотом */
+.home-pairs{ margin-top:72px; }
+.home-pairs .section-head{ margin-bottom:32px; }
+.home-pairs h3{ font-size:32px; line-height:1.2; }
+.home-pairs-row{ display:grid; grid-template-columns:repeat(2, minmax(0, 500px)); gap:40px; justify-content:start; }
+.home-pairs .before-after{ max-width:none; }
+@media (max-width:860px){
+  .home-pairs{ margin-top:52px; }
+  .home-pairs h3{ font-size:24px; }
+  .home-pairs-row{ grid-template-columns:minmax(0, 500px); gap:30px; }
+}
