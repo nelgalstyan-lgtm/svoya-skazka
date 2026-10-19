@@ -3,6 +3,10 @@
 // — на личных книгах (?job=… в адресе) счётчик не запускается, Вебвизор их не записывает;
 // — поля ввода (анкета: имя ребёнка и т.п.) получают класс ym-disable-keys — Вебвизор не записывает, что в них вводят.
 // Об использовании Метрики сказано в privacy.html (раздел «Cookie и Яндекс Метрика»).
+// Скорость (решение владелицы 19.10): сам счётчик tag.js (с Вебвизором он блокирует страницу на телефоне на 5–9 с)
+// скачивается только после первого действия посетителя — движение мыши, прокрутка, касание, клавиша.
+// Очередь ym() создаётся сразу, поэтому init и цели (js/site.js) не теряются: уйдут, когда счётчик загрузится.
+// Цена: посетитель, ушедший без единого действия, в статистику не попадает.
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -15,7 +19,10 @@ const snippet = `<!-- Yandex.Metrika counter -->
         m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
         m[i].l=1*new Date();
         for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        var evs=['pointerdown','pointermove','scroll','touchstart','keydown','wheel'], done=false;
+        function load(){ if (done) return; done=true; evs.forEach(function(ev){ m.removeEventListener(ev, load, true); });
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a) }
+        evs.forEach(function(ev){ m.addEventListener(ev, load, {capture:true, passive:true, once:true}); });
     })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=${ID}', 'ym');
 
     ym(${ID}, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
