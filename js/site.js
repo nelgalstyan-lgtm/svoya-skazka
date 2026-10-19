@@ -48,6 +48,29 @@
     check();
   }
 
+  // --- обложка на первом экране главной чуть поворачивается за мышью (±3°); на телефоне и при «уменьшить движение» — нет
+  var heroBook = document.querySelector('.hh-book');
+  if (heroBook && matchMedia('(hover: hover) and (pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var hero = heroBook.closest('.hero-home') || heroBook;
+    var frame = 0, mx = 0, my = 0;
+    var tilt = function () {
+      frame = 0;
+      var r = heroBook.getBoundingClientRect();
+      var nx = Math.max(-1, Math.min(1, (mx - (r.left + r.width / 2)) / (window.innerWidth / 2)));
+      var ny = Math.max(-1, Math.min(1, (my - (r.top + r.height / 2)) / (window.innerHeight / 2)));
+      heroBook.style.setProperty('--tilt-y', (nx * 3).toFixed(2) + 'deg');
+      heroBook.style.setProperty('--tilt-x', (-ny * 3).toFixed(2) + 'deg');
+    };
+    hero.addEventListener('mousemove', function (e) {
+      mx = e.clientX; my = e.clientY;
+      if (!frame) frame = requestAnimationFrame(tilt);
+    });
+    hero.addEventListener('mouseleave', function () {
+      heroBook.style.setProperty('--tilt-x', '0deg');
+      heroBook.style.setProperty('--tilt-y', '0deg');
+    });
+  }
+
   // --- листалка разворотов на главной ([data-flip]): вкладки книг, стрелки, счётчик; свайп — прокруткой ленты ---
   document.querySelectorAll('[data-flip]').forEach(function (flip) {
     var tabs = flip.querySelectorAll('.hf-tabs [data-book]');
