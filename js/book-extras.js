@@ -779,7 +779,7 @@
       if (typeof global.SkazkaPay === 'function') { global.SkazkaPay(opts.jobId, opts.price); return; }
       var admin = new URLSearchParams(location.search).get('admin');
       if (admin) { unlock(opts, admin, btn); return; }
-      toast('Онлайн-оплата пока подключается.');
+      toast('Подключаем онлайн-оплату через ЮKassa. Сохраните ссылку на эту страницу — книга будет ждать вас.');
     });
     // под кнопкой — согласие с офертой (оплата = акцепт, п. 1 оферты)
     var note = document.createElement('small');
