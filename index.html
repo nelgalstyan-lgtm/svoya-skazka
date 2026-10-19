@@ -107,9 +107,35 @@
       <h2>Так выглядит история внутри</h2>
       <p>Текст и иллюстрация — на каждом развороте, как в обычной детской книге. Только эта — про конкретного ребёнка, и нарисован на картинках тоже он.</p>
     </div>
-    <div class="real-spread">
-      <div class="real-spread-book"><img src="assets/examples/alex-3d/spread-home-l.webp" width="640" height="975" loading="lazy" alt="Начало первой главы книги «Алекс и тайна Ани»"><img src="assets/examples/alex-3d/spread-home-r.webp?v=2" width="640" height="975" loading="lazy" alt="Иллюстрация: Алекс решает задачу, младший брат Макс подсказывает"></div>
-      <div class="real-spread-meta"><div><div class="tags"><span>Большая история</span><span>Приключение</span><span>3D-мультфильм</span><span>Алексу 13 лет</span></div><p><strong>«Алекс и тайна Ани».</strong> Настоящие страницы книги — такими их видит семья. Алекс и младший брат Макс нарисованы по фото. Публикуем с согласия родителей.</p></div><a class="btn btn-ghost-dark" href="book-pro.html?demo=alex3d" data-goal="spread_open">Полистать всю книгу</a></div>
+    <div class="home-flip" data-flip>
+      <div class="hf-tabs" role="tablist" aria-label="Стиль иллюстраций">
+        <button type="button" role="tab" aria-selected="true" aria-controls="hf-alex" data-book="hf-alex">3D-мультфильм · Алекс, 13 лет</button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="hf-adelina" data-book="hf-adelina">Акварель · Аделина, 4 года</button>
+      </div>
+      <div class="hf-book" id="hf-alex" role="tabpanel" data-title="«Алекс и тайна Ани»" data-href="book-pro.html?demo=alex3d">
+        <div class="hf-track" tabindex="0" aria-label="Страницы книги «Алекс и тайна Ани» — листайте">
+          <img src="assets/examples/alex-3d/spread-home-l.webp" width="640" height="975" loading="lazy" alt="Начало первой главы книги «Алекс и тайна Ани»">
+          <img src="assets/examples/alex-3d/spread-home-r.webp?v=2" width="640" height="975" loading="lazy" alt="Иллюстрация: Алекс решает задачу, младший брат Макс подсказывает">
+          <img src="assets/examples/alex-3d/spread-l.webp" width="640" height="975" loading="lazy" alt="Страница с текстом из книги «Алекс и тайна Ани»">
+          <img src="assets/examples/alex-3d/spread-r.webp" width="640" height="975" loading="lazy" alt="Иллюстрация: Алекс у Львиных ворот">
+        </div>
+      </div>
+      <div class="hf-book" id="hf-adelina" role="tabpanel" data-title="«Аделина и волшебные качели»" data-href="book-pro.html?demo=adelina" hidden>
+        <div class="hf-track" tabindex="0" aria-label="Страницы книги «Аделина и волшебные качели» — листайте">
+          <img src="assets/examples/adelina/spread-bday-l.webp" width="640" height="975" loading="lazy" alt="Начало первой главы книги «Аделина и волшебные качели»">
+          <img src="assets/examples/adelina/spread-bday-r.webp" width="640" height="975" loading="lazy" alt="Иллюстрация: Аделина с мамой у окна провожают солнце">
+          <img src="assets/examples/adelina/spread-l.webp" width="640" height="975" loading="lazy" alt="Страница с текстом из книги «Аделина и волшебные качели»">
+          <img src="assets/examples/adelina/spread-r.webp" width="640" height="975" loading="lazy" alt="Иллюстрация: волшебные качели взлетают над крышами, рядом летит динозавр Дино">
+          <img src="assets/examples/adelina/spread-ny-l.webp" width="640" height="975" loading="lazy" alt="Иллюстрация: Аделина на качелях летит над океаном, внизу кит">
+          <img src="assets/examples/adelina/spread-ny-r.webp" width="640" height="975" loading="lazy" alt="Страница с текстом из книги «Аделина и волшебные качели»">
+        </div>
+      </div>
+      <div class="hf-controls">
+        <button type="button" class="hf-prev" aria-label="Назад">←</button>
+        <span class="hf-count" aria-live="polite"></span>
+        <button type="button" class="hf-next" aria-label="Дальше">→</button>
+      </div>
+      <div class="real-spread-meta"><div><p><strong class="hf-title">«Алекс и тайна Ани».</strong> Настоящие страницы книг — такими их видят семьи. Дети и их близкие нарисованы по фото. Публикуем с согласия родителей.</p></div><a class="btn btn-ghost-dark hf-open" href="book-pro.html?demo=alex3d" data-goal="spread_open">Полистать всю книгу</a></div>
     </div>
   </div>
 </section>

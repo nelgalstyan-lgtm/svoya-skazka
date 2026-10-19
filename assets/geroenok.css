@@ -615,3 +615,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .format-item img{ width:30px; height:30px; object-fit:contain; flex:none; }
 .format-pill{ display:block; width:fit-content; margin:0 0 10px; padding:4px 11px; border-radius:999px; background:#EFE3C8; color:#6B4A2B; font-size:12.5px; font-weight:600; letter-spacing:.02em; }
 @media (max-width:640px){ .format-strip{ padding:12px 14px; gap:8px 14px; } .format-item{ font-size:14px; } }
+
+/* анкета (редизайн 19.10): шапка в две строки, у загрузки фото — замок и срок удаления */
+.form-intro{ padding:32px 0 8px !important; }
+.form-intro h1{ font-size:34px; line-height:1.2; margin:0 0 6px; }
+.form-intro p{ margin:0; font-size:17px; max-width:none; }
+@media (max-width:640px){ .form-intro{ padding:20px 0 4px !important; } .form-intro h1{ font-size:28px; } .form-intro p{ font-size:15.5px; } }
+.photo-safe{ display:flex; width:fit-content; align-items:center; gap:6px; margin:12px auto 0; padding:5px 12px; border-radius:999px;
+  background:rgba(86,113,79,.1); color:var(--sage); font-size:13.5px; font-weight:600; }
+.photo-safe svg{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }

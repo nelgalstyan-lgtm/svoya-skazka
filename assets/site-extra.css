@@ -136,15 +136,13 @@
 /* подпись над книгой на «Примерах»: какой это тариф и тема — чтобы разница «Сказки» и «Большой истории» была видна сразу */
 .book3d-kind{ margin:0; display:flex; flex-direction:column; align-items:center; gap:2px; text-align:center; font-size:14px; color:var(--text-soft, #6b5a48); }
 .book3d-kind strong{ display:inline-block; margin-bottom:6px; padding:5px 16px; border-radius:999px; font-family:var(--font-display, Georgia, serif); font-size:18px; letter-spacing:.02em; color:#fff8e8; }
-.book3d-kind.is-big strong{ background:#6a4b35; }
-.book3d-kind.is-skazka strong{ background:#34305a; }
+/* один цвет плашек для всех книг (редизайн 19.10) */
+.book3d-kind.is-big strong, .book3d-kind.is-skazka strong{ background:var(--night, #1E3354); }
 /* «Алексу 13 лет · 6 глав · 3D-мультфильм» — заметной плашкой (05.10: владелица — «сделай заметнее») */
 .book3d-kind span:last-child{ margin-top:8px; padding:7px 16px; border-radius:12px; background:#FFF8E8; border:1px solid #E6D3AE; color:var(--text, #3F2816); font-weight:600; font-size:14.5px; box-shadow:0 6px 14px -10px rgba(74,53,39,.45); }
-.book3d-kind.is-big span:last-child{ border-color:#C9A27E; }
-.book3d-kind.is-skazka span:last-child{ border-color:#A9A3CF; }
+.book3d-kind.is-big span:last-child, .book3d-kind.is-skazka span:last-child{ border-color:var(--line, #E2D3B5); }
 /* пояснение под книгой (07.10, владелица — «оформи красиво»): карточка — оформление метками + блок «Родные по фото» */
-.book3d-note{ --tone:#6a4b35; --tone-soft:#C9A27E; --tone-bg:#F6EBD8; width:100%; max-width:320px; margin:14px 0 0; padding:14px 14px 12px; border-radius:16px; background:#FFFBF2; border:1px solid var(--tone-soft); box-shadow:0 10px 22px -16px rgba(74,53,39,.5); text-align:center; color:var(--text-soft, #6b5a48); font-size:13px; line-height:1.45; }
-.book3d-note.is-skazka{ --tone:#34305a; --tone-soft:#A9A3CF; --tone-bg:#ECEAF7; }
+.book3d-note{ --tone:var(--night, #1E3354); --tone-soft:var(--line, #E2D3B5); --tone-bg:var(--sand, #F1E6D0); width:100%; max-width:320px; margin:14px 0 0; padding:14px 14px 12px; border-radius:16px; background:#FFFBF2; border:1px solid var(--tone-soft); box-shadow:0 10px 22px -16px rgba(74,53,39,.5); text-align:center; color:var(--text-soft, #6b5a48); font-size:13px; line-height:1.45; }
 .book3d-note p{ margin:0; }
 .book3d-note .note-label{ font-family:var(--font-display, Georgia, serif); font-size:15px; font-weight:600; color:var(--tone); }
 .book3d-note .note-chips{ list-style:none; margin:8px 0 0; padding:0; display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }

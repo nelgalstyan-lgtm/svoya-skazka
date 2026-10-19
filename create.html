@@ -157,11 +157,10 @@
   </div>
 </header>
 
-<section class="page-intro section-cream tight">
+<section class="page-intro form-intro section-cream tight">
   <div class="container">
-    <span class="kicker">Анкета о ребёнке</span>
-    <h1>Чем больше вы расскажете — тем сильнее ребёнок узнает себя</h1>
-    <p>Это не техническая форма, а разговор о вашем ребёнке. Особенно важные поля — про характер и близких — можно писать свободно, в двух словах или в десяти абзацах.</p>
+    <h1>Анкета о ребёнке</h1>
+    <p>Чем больше расскажете, тем сильнее ребёнок узнает себя. Пишите свободно — в двух словах или в десяти абзацах.</p>
   </div>
 </section>
 
@@ -228,8 +227,9 @@
             <strong id="photoDropTitle">Перетащите фото сюда или нажмите, чтобы выбрать</strong>
             <span id="photoDropHint">Лучше всего: лицо анфас, лицо вполоборота и фото в полный рост — чётко, без солнечных очков и головных уборов</span>
             <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" multiple hidden>
+            <span class="photo-safe"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>Удалим через 48 ч</span>
           </div>
-          <p class="privacy-note">🔒 Фото нужны только чтобы нарисовать иллюстрации. Они удаляются с сервера, как только книга дорисована, и никогда не хранятся дольше 48 часов.</p>
+          <p class="privacy-note">Фото нужны только чтобы нарисовать иллюстрации. Они удаляются с сервера, как только книга дорисована, и никогда не хранятся дольше 48 часов.</p>
           <details class="photo-why">
             <summary>Зачем нужно фото и что с ним будет</summary>
             <div class="photo-why-body">
@@ -671,6 +671,7 @@
       }
 
       function addPhotos(files) {
+        if (files && files.length && window.geroenokGoal) window.geroenokGoal('photo_upload', true); // цель Метрики (js/site.js)
         Array.prototype.slice.call(files || []).forEach(function (file) {
           if (selectedPhotos.length >= MAX_PHOTOS) {
             setStatus('Можно загрузить не больше ' + MAX_PHOTOS + ' фото.', 'error');
