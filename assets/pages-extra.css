@@ -294,6 +294,11 @@
 .hf-tabs button{ min-height:44px; padding:0 18px; border:1px solid var(--line); border-radius:999px; background:var(--card); color:var(--ink); font:inherit; font-size:15px; font-weight:500; cursor:pointer; transition:border-color .2s var(--ease), background .2s var(--ease); }
 .hf-tabs button:hover{ border-color:var(--ink-soft); }
 .hf-tabs button[aria-selected="true"]{ background:var(--night); border-color:var(--night); color:var(--moon); }
+/* вкладка: стиль крупно, под ним формат книги и герой */
+.hf-tabs button{ display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:1px; padding:8px 20px; border-radius:14px; text-align:left; line-height:1.25; }
+.hf-tabs button b{ font-weight:600; font-size:16px; }
+.hf-tabs button small{ font-size:13.5px; color:var(--ink-soft); }
+.hf-tabs button[aria-selected="true"] small{ color:var(--moon); opacity:.85; }
 .hf-book{ position:relative; padding:14px; border-radius:18px; background:linear-gradient(160deg,#2B4468,#1E3354); box-shadow:0 34px 60px -34px rgba(20,30,50,.75); }
 .hf-book[hidden]{ display:none; }
 .hf-track{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; border-radius:6px; outline-offset:4px; }
@@ -311,7 +316,9 @@
   .hf-book{ padding:8px; border-radius:12px; }
   .hf-book::after{ display:none; }
   .hf-track img{ flex-basis:100%; width:100%; scroll-snap-align:start; }
-  .hf-tabs button{ flex:1 1 auto; font-size:14px; padding:0 12px; }
+  .hf-tabs button{ flex:1 1 0; font-size:14px; padding:8px 12px; }
+  .hf-tabs button b{ font-size:15px; }
+  .hf-tabs button small{ font-size:12.5px; }
 }
 
 /* главная: пары «по фото → в книге» под разворотом */
