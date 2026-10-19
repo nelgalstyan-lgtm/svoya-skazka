@@ -173,9 +173,9 @@
 .hh-book:hover .hh-spread{ transform:rotate(6deg) translateX(6px); }
 .hh-hare{ position:absolute; left:-30px; bottom:0; width:104px; pointer-events:none; }
 .hh-hare img{ width:100%; height:auto; }
-/* «живой» заяц (19.10): обложка поворачивается за мышью (--tilt-x/--tilt-y ставит js/site.js, ±3°), правое ухо раз в 7 с дёргается */
-.hh-hare .hh-ear{ position:absolute; left:0; top:0; transform-origin:70.8% 19%; animation:hh-ear 7s ease-in-out 2s infinite; }
-@keyframes hh-ear{ 0%,86%,100%{ transform:rotate(0); } 89%{ transform:rotate(-7deg); } 92%{ transform:rotate(2deg); } 95%{ transform:rotate(-4deg); } 98%{ transform:rotate(0); } }
+/* «живой» заяц (19.10): обложка поворачивается за мышью (--tilt-x/--tilt-y ставит js/site.js, ±3°), правое ухо раз в 5 с дважды поднимается (вниз нельзя — у основания виден шов) */
+.hh-hare .hh-ear{ position:absolute; left:0; top:0; transform-origin:70.8% 19%; animation:hh-ear 5s ease-in-out 1s infinite; }
+@keyframes hh-ear{ 0%,76%,100%{ transform:rotate(0); } 80%{ transform:rotate(-16deg); } 84%{ transform:rotate(-3deg); } 88%{ transform:rotate(-14deg); } 94%{ transform:rotate(0); } }
 .hh-art figcaption{ position:absolute; left:84px; right:0; bottom:8px; display:flex; flex-direction:column; gap:8px; }
 .hh-note{ font-family:var(--font-script); font-size:21px; line-height:1.2; color:var(--brass-text); max-width:280px; transform:rotate(-2deg); }
 .hh-caption{ font-size:13px; color:var(--ink-soft); }
