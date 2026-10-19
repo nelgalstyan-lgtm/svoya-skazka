@@ -14,6 +14,7 @@ node scripts/build-blog.mjs dist   # блог из scripts/blog/posts/*.md; по
 node scripts/clean-urls.mjs dist
 node scripts/add-metrika.mjs dist   # Яндекс Метрика на всех страницах (не на личных книгах ?job=)
 node scripts/inline-css.mjs dist   # стили сайта — прямо в <head>, шрифты без блокировки (быстрее первая отрисовка на телефоне)
+node scripts/lazy-images.mjs dist  # главная: картинки ниже первого экрана — при подлистывании (Lighthouse на телефоне)
 
 # Номер версии у скриптов и стилей (?v=…): после выкладки телефоны сразу берут новые файлы, а не старые из кэша
 # (01.10 Safari на iPhone показывал книгу со старым js/book-engine.js)

@@ -23,6 +23,30 @@
     if (e.target && e.target.tagName === 'AUDIO') goal(e.target.getAttribute('data-goal') || 'audio_play', true);
   }, true);
 
+  // --- картинки ниже первого экрана (data-src ставит scripts/lazy-images.mjs при сборке): грузим за ~600 px до экрана.
+  // В ленте листалки — сразу все страницы ленты, чтобы листать без пустых страниц.
+  var waiting = document.querySelectorAll('img[data-src]');
+  function show(img) {
+    if (!img.hasAttribute('data-src')) return;
+    if (img.hasAttribute('data-srcset')) { img.srcset = img.getAttribute('data-srcset'); img.removeAttribute('data-srcset'); }
+    img.src = img.getAttribute('data-src');
+    img.removeAttribute('data-src');
+  }
+  if (waiting.length) {
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          var strip = e.target.closest('.hf-track');
+          (strip ? strip.querySelectorAll('img') : [e.target]).forEach(function (img) { show(img); io.unobserve(img); });
+        });
+      }, { rootMargin: '600px 0px' });
+      waiting.forEach(function (img) { io.observe(img); });
+    } else {
+      waiting.forEach(show);
+    }
+  }
+
   // --- липкая кнопка: на телефоне кнопки в шапке нет (geroenok.css); после первого экрана внизу «Создать бесплатное превью».
   // На самой анкете кнопка не нужна.
   var cta = document.querySelector('.header-cta');
