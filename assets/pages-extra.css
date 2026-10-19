@@ -175,7 +175,7 @@
 .hh-caption{ font-size:13px; color:var(--ink-soft); }
 @media (max-width:1100px){
   .hero-home h1{ font-size:46px; }
-  .hh-spread{ width:340px; }
+  .hh-spread{ width:320px; right:-6px; }
   .hh-cover{ width:270px; left:20px; }
 }
 @media (max-width:900px){
