@@ -258,7 +258,7 @@ const STYLE = `
   body{ background:#fff; }
 }`;
 
-const tail = `\n${footer}\n\n</body>\n</html>\n`;
+const tail = `\n${footer}\n<script src="js/site.js" defer></script>\n</body>\n</html>\n`;
 const ld = (obj) => `<script type="application/ld+json">${JSON.stringify(obj)}</script>`;
 // «Частые вопросы» в статье (<details><summary>вопрос</summary><p>ответ</p>) → разметка FAQPage
 const plain = (h) => h.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();

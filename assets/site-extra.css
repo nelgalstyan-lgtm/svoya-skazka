@@ -149,7 +149,7 @@
 .book3d-note .note-label{ font-family:var(--font-display, Georgia, serif); font-size:15px; font-weight:600; color:var(--tone); }
 .book3d-note .note-chips{ list-style:none; margin:8px 0 0; padding:0; display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
 .book3d-note .note-chips li{ padding:3px 10px; border-radius:999px; background:var(--tone-bg); color:var(--tone); font-size:12.5px; font-weight:600; }
-.book3d-note .note-chips li::before{ content:"✦"; margin-right:5px; font-size:10px; opacity:.6; }
+
 .book3d-note .note-extra{ margin-top:8px; font-size:12.5px; font-style:italic; }
 .book3d-note .note-family{ display:flex; align-items:flex-start; gap:10px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--tone-soft); text-align:left; }
 .book3d-note .note-icon{ flex:none; display:grid; place-items:center; width:34px; height:34px; border-radius:50%; background:var(--tone); }

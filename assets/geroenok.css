@@ -44,14 +44,14 @@
   --text:       var(--ink);
   --text-soft:  var(--ink-soft);
   --text-light: var(--moon);
-  --text-light-soft: #E6D8C2;
+  --text-light-soft: var(--moon-soft);
   --ink-2:      var(--walnut-2);
   --gold:       var(--brass);
   --gold-dark:  var(--brass-text);
   --berry:      #A5583F;
-  --line-dark:  #6A5140;
-  --btn:        #8A5A36;   /* основная кнопка */
-  --btn-hover:  #7A4E2E;
+  --line-dark:  rgba(245,236,218,.18);
+  --btn:        var(--cta);   /* основная кнопка */
+  --btn-hover:  var(--cta-hover);
 
   --radius-s: 8px;
   --radius-m: 16px;
@@ -124,12 +124,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .main-nav a{ color:var(--text-soft); font-weight:700; font-size:15px; }
 .main-nav a:hover, .main-nav a.active{ color:var(--text); border-bottom-color:var(--brass); }
 .header-cta{
-  background:var(--btn); color:var(--text-light);
+  background:var(--cta); color:#fff; font-weight:600;
   border-radius:12px; padding:10px 18px;
-  box-shadow:0 0 0 1px rgba(201,154,75,.0);
-  transition:background .2s ease, box-shadow .2s ease;
+  transition:background .2s var(--ease), transform .2s var(--ease);
 }
-.header-cta:hover{ background:var(--btn-hover); color:var(--text-light); box-shadow:0 0 0 3px rgba(201,154,75,.35); }
+.header-cta:hover{ background:var(--cta-hover); color:#fff; transform:translateY(-1px); }
 
 /* мобильное меню: <details class="nav-mobile"> — без скриптов, работает с клавиатуры */
 .nav-mobile{ display:none; position:relative; }
@@ -150,58 +149,78 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 }
 .nav-mobile nav a{ padding:12px 14px; border-radius:10px; text-decoration:none; font-weight:700; color:var(--text); }
 .nav-mobile nav a:hover, .nav-mobile nav a.active{ background:var(--paper-2); }
+/* на телефоне кнопки в шапке нет: после первого экрана внизу появляется липкая кнопка (js/site.js) */
 @media (max-width:880px){
-  .nav-mobile{ display:block; }
+  .nav-mobile{ display:block; margin-left:auto; }
   .site-header .container{ gap:12px; }
-  .header-cta{ margin-left:auto; }
+  .header-cta{ display:none; }
 }
 @media (max-width:420px){
   .logo{ font-size:20px; }
-  .header-cta{ padding:9px 12px; font-size:14px; }
+}
+.sticky-cta{ display:none; }
+@media (max-width:880px){
+  .sticky-cta{
+    display:block; position:fixed; left:0; right:0; bottom:0; z-index:40;
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    background:rgba(250,246,236,.94); border-top:1px solid var(--line);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    transform:translateY(110%); visibility:hidden;
+    transition:transform .3s var(--ease), visibility 0s linear .3s;
+  }
+  .sticky-cta.is-shown{ transform:none; visibility:visible; transition:transform .3s var(--ease); }
+  .sticky-cta .btn{ width:100%; }
+  body.has-sticky-cta .site-footer{ padding-bottom:96px; }
 }
 
 /* ---------- кнопки: мягкие, «переплётные», но настоящие элементы интерфейса ---------- */
+/* кнопки: высота 56, радиус 14, Golos 600 17 (UI Kit аудита, 7.4) */
 .btn{
   border-radius:14px;
-  padding:14px 26px;
-  font-weight:700;
-  letter-spacing:.01em;
-  transition:background .2s ease, color .2s ease, box-shadow .2s ease, border-color .2s ease, transform .2s ease;
-  min-height:48px; /* удобно пальцем */
+  padding:0 28px;
+  min-height:56px;
+  justify-content:center;
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:17px;
+  line-height:1.2;
+  letter-spacing:0;
+  border-width:1px;
+  transition:background .2s var(--ease), color .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease);
 }
 .btn:active{ transform:translateY(1px); }
 .btn[disabled], .btn.is-disabled, button:disabled.btn{
   opacity:.55; cursor:not-allowed; box-shadow:none; transform:none;
 }
 .btn-primary{
-  background:var(--btn); color:var(--text-light);
-  box-shadow:0 1px 0 rgba(255,255,255,.18) inset, 0 8px 18px -12px rgba(74,53,39,.7);
+  background:var(--cta); color:#fff;
+  box-shadow:0 8px 20px -10px rgba(180,80,47,.55);
 }
-.btn-primary:hover{ background:var(--btn-hover); color:var(--text-light); box-shadow:0 0 0 3px rgba(201,154,75,.35), 0 8px 18px -12px rgba(74,53,39,.7); }
-.btn-primary::after{
-  content:""; width:14px; height:14px; flex:none;
-  background:url("brand/star.svg") center/contain no-repeat;
-  transition:transform .4s ease;
-}
-.btn-primary:hover::after{ transform:rotate(18deg) scale(1.08); }
-.btn-ghost-dark{ border-color:var(--btn); color:var(--btn); background:transparent; }
-.btn-ghost-dark:hover{ background:var(--paper-2); color:var(--btn-hover); border-color:var(--btn-hover); }
-.btn-ghost-light{ border-color:rgba(251,243,227,.5); color:var(--text-light); }
-.btn-ghost-light:hover{ border-color:var(--text-light); background:rgba(251,243,227,.08); }
+.btn-primary:hover{ background:var(--cta-hover); color:#fff; transform:translateY(-1px); }
+.btn-primary:active{ transform:none; }
+/* вторичная: кремовая с тонкой линией */
+.btn-ghost-dark{ background:var(--card); border-color:var(--line); color:var(--ink); }
+.btn-ghost-dark:hover{ background:var(--card); border-color:var(--ink-soft); color:var(--ink); }
+.btn-ghost-light{ border-color:rgba(245,236,218,.45); color:var(--moon); }
+.btn-ghost-light:hover{ border-color:var(--moon); background:rgba(245,236,218,.08); }
 .btn-berry{ background:var(--berry); color:var(--text-light); }
 .btn-berry:hover{ background:#8E4832; }
 /* третья кнопка: текстовая, со звёздочкой */
+/* ссылка-действие: «Полистать готовую книгу →» — стрелка сдвигается при наведении */
 .btn-link{
   display:inline-flex; align-items:center; gap:8px; min-height:44px;
-  color:var(--btn); font-weight:700; text-decoration:underline; text-decoration-color:rgba(138,90,54,.35);
-  text-underline-offset:4px; background:none; border:0; padding:0; cursor:pointer; font:inherit;
+  background:none; border:0; padding:0; cursor:pointer; font:inherit;
+  font-family:var(--font-body); font-weight:600; font-size:17px; color:var(--ink);
+  text-decoration:underline; text-decoration-thickness:2px; text-decoration-color:var(--brass); text-underline-offset:5px;
 }
-.btn-link:hover{ text-decoration-color:currentColor; color:var(--btn-hover); }
+.btn-link .arr{ display:inline-block; transition:transform .2s var(--ease); }
+.btn-link:hover{ color:var(--ink); text-decoration-color:var(--brass-text); }
+.btn-link:hover .arr{ transform:translateX(4px); }
 
 /* ---------- секции ---------- */
 .section-cream{ background-color:var(--cream); background-image:var(--paper-grain); }
 .section-paper2{ background-color:var(--paper-2); background-image:var(--paper-grain); }
-.section-ink{ background-color:var(--walnut); background-image:var(--paper-grain); color:var(--text-light); }
+.section-ink{ background-color:var(--night); background-image:none; color:var(--moon); }
 /* надзаголовок: капитель Golos, латунь (рукописный Caveat — только у реплик зайца) */
 .kicker{ font-family:var(--font-body); font-weight:600; font-size:13px; line-height:1.4; letter-spacing:.12em; text-transform:uppercase; color:var(--brass-text); margin-bottom:12px; }
 .section-ink .kicker{ color:var(--brass); }
@@ -239,9 +258,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 .price-card{ background:var(--card); }
 .price-card.is-popular{ border-color:var(--brass); box-shadow:0 0 0 1px var(--brass), var(--shadow-soft); }
-.price-card .badge{ background:var(--brass-light); color:var(--walnut); border-radius:10px; }
-.flip-tabs button.is-active{ background:var(--brass-light); border-color:var(--brass-light); color:var(--walnut); }
-.price-card li::before{ content:"★"; color:var(--brass); font-size:13px; top:3px; }
+.price-card .badge{ background:var(--brass-light); color:var(--ink); border-radius:10px; }
+.flip-tabs button.is-active{ background:var(--brass-light); border-color:var(--brass-light); color:var(--ink); }
+.price-card li::before{ content:"✓"; color:var(--sage); font-weight:700; }
 
 .theme-card{ border:1px solid var(--line); box-shadow:var(--shadow-paper); transition:transform .25s ease, box-shadow .25s ease; }
 .theme-card:hover{ transform:translateY(-3px); box-shadow:0 16px 30px -20px rgba(74,53,39,.5); }
@@ -254,8 +273,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* сравнение */
 .compare{ background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow-paper); border-radius:var(--radius-m); }
-.compare thead th{ background:var(--walnut); color:var(--text-light); }
-.compare thead th.ours{ background:var(--btn); }
+.compare thead th{ background:var(--night); color:var(--moon); }
+.compare thead th.ours{ background:var(--dusk); }
 .compare td.ours{ background:#F7EBD6; }
 
 /* сравнение «обычная книга / Большая история» — карточка книги вместо таблицы */
@@ -268,7 +287,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .vs-them{ color:var(--text-soft); position:relative; padding-left:44px !important; }
 .vs-them::before{ content:"—"; position:absolute; left:18px; color:#b9a88f; }
 .vs-us{ background:var(--card); border-left:2px solid var(--brass); border-right:2px solid var(--brass); color:var(--text); font-weight:700; position:relative; padding-left:48px !important; }
-.vs-us::before{ content:"★"; position:absolute; left:20px; color:var(--brass); }
+.vs-us::before{ content:"✓"; position:absolute; left:20px; color:var(--sage); font-weight:700; }
 .vs-head > div{ border-bottom:none; font-family:var(--font-display); font-size:18px; align-self:end; }
 .vs-head .vs-them{ color:var(--text-soft); padding-bottom:18px; }
 .vs-head .vs-them::before, .vs-head .vs-us::before{ content:none; }
@@ -299,8 +318,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .spread{ align-items:stretch; }
 .spread-page{ display:flex; flex-direction:column; justify-content:center; padding:44px 52px; position:relative;
   background:linear-gradient(90deg, rgba(74,53,39,.06), transparent 8%), var(--cream); }
-.spread-page::before{ content:""; position:absolute; inset:16px; border:1px solid var(--line); border-radius:6px; pointer-events:none; }
-.spread-page::after{ content:"✦  ✦  ✦"; display:block; text-align:center; color:var(--brass); letter-spacing:.3em; margin:6px 0 0; order:-1; margin-bottom:22px; font-size:14px; }
 .spread-text{ font-family:var(--font-display); font-size:19px; line-height:1.6; }
 .spread-page .spread-text:first-child::first-letter{ float:left; font-size:3.3em; line-height:.85; margin:6px 10px 0 0; color:var(--brass-text); font-weight:700; }
 .spread-source{ margin-top:22px; padding-top:14px; border-top:1px dashed var(--line); }
@@ -314,8 +331,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 /* темы на главной — как страницы книги: бумага, двойная рамка, акварельная заставка темы */
 .theme-card{ position:relative; display:flex; flex-direction:column; align-items:center; text-align:center; padding:30px 30px 26px !important;
   background:var(--card) !important; border:1px solid var(--line); border-radius:6px 20px 20px 6px; color:inherit; text-decoration:none; }
-.theme-card::before{ content:""; position:absolute; inset:10px; border:1px solid var(--line); border-radius:4px 14px 14px 4px;
-  box-shadow:0 0 0 3px var(--card), 0 0 0 4px rgba(201,154,75,.35); pointer-events:none; }
 .theme-card .tc-art{ height:96px; display:flex; align-items:center; justify-content:center; margin:6px 0 14px; }
 .theme-card .tc-art img{ max-height:96px; width:auto; max-width:100%; }
 .theme-card .tc-trio{ gap:10px; align-items:flex-end; }
@@ -344,8 +359,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* ---------- подвал: тёмный орех, как корешок книги ---------- */
 .site-footer{
-  background-color:var(--walnut);
-  background-image:var(--paper-grain);
+  background-color:var(--night);
+  background-image:none;
   color:var(--text-light-soft);
   position:relative;
 }
@@ -383,12 +398,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   border-radius:6px 22px 22px 6px;
   box-shadow:var(--shadow-soft);
 }
-/* двойная рамка старой книги */
-.storybook-page::before{
-  content:""; position:absolute; inset:14px; pointer-events:none;
-  border:1px solid var(--line); border-radius:4px 16px 16px 4px;
-  box-shadow:0 0 0 4px var(--card), 0 0 0 5px rgba(201,154,75,.35);
-}
 .storybook-text{ position:relative; }
 .hero-storybook h1{ color:var(--text); font-size:44px; line-height:1.15; }
 .hero-storybook .lead{ color:var(--text-soft); font-size:19px; max-width:540px; }
@@ -403,7 +412,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 @media (max-width:900px){
   .hero-storybook{ padding:16px 0 44px; }
   .storybook-page{ grid-template-columns:1fr; gap:4px; padding:30px 24px 28px; }
-  .storybook-page::before{ inset:9px; }
   .hero-storybook h1{ font-size:30px; }
   .hero-storybook .lead{ font-size:17px; }
   /* на телефоне Героёнок встречает рядом со своей запиской и не отодвигает кнопку */
@@ -586,10 +594,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* «Примеры»: полка с настоящими книгами — обложка открывает книгу в листалке */
 .book-shelf{ display:flex; justify-content:center; gap:40px; flex-wrap:wrap; margin-bottom:42px; }
-.book3d-link{ display:inline-block; text-decoration:none; color:var(--btn); border-radius:8px; }
-.book3d-open{ margin-top:4px; font-weight:700; text-decoration:underline; text-underline-offset:4px; text-decoration-color:rgba(138,90,54,.35); }
+.book3d-link{ display:inline-block; text-decoration:none; color:var(--ink); border-radius:8px; }
+.book3d-open{ margin-top:4px; font-weight:600; text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:5px; text-decoration-color:var(--brass); }
 .spread-source{ margin:18px 0 0; font-size:14px; color:var(--text-soft); }
-.spread-source a{ color:var(--btn); font-weight:700; }
+.spread-source a{ color:var(--ink); font-weight:600; text-decoration-color:var(--brass); }
 
 /* анкета: блок «Посвящение» на последней странице */
 .dedication-block{ margin-top:30px; padding-top:26px; border-top:1px dashed var(--line); }
