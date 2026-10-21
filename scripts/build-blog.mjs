@@ -115,9 +115,17 @@ function head({ title, description, path, type, image, extra }) {
 
 const STYLE = `
 .blog-hero{ padding:56px 0 24px; text-align:center; }
+.crumbs{ margin:0 auto 22px; font-size:13.5px; line-height:1.5; color:var(--ink-soft); }
+.crumbs ol{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; justify-content:center; gap:2px 0; }
+.crumbs li{ display:inline-flex; align-items:center; min-width:0; }
+.crumbs li + li::before{ content:"›"; margin:0 9px; color:var(--brass); }
+.crumbs a{ color:var(--brass-text); text-decoration:none; border-bottom:1px solid var(--line); }
+.crumbs a:hover{ border-bottom-color:var(--brass); }
+.crumbs [aria-current]{ max-width:46ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media (max-width:640px){ .blog-hero{ padding-top:28px; } .crumbs{ font-size:13px; margin-bottom:16px; } .crumbs-title{ display:none !important; } } /* на телефоне название статьи — сразу под крошками */
 .blog-hero .kicker{ margin-bottom:10px; }
-.blog-hero h1{ font-family:'Lora', Georgia, serif; font-size:40px; line-height:1.2; color:#2f2618; margin:6px auto 14px; max-width:820px; }
-.blog-hero .lead{ font-family:'Literata', Georgia, serif; font-size:19px; color:#5a4a3a; max-width:640px; margin:0 auto; }
+.blog-hero h1{ font-family:'Lora', Georgia, serif; font-size:40px; line-height:1.2; color:var(--ink); margin:6px auto 14px; max-width:820px; }
+.blog-hero .lead{ font-family:'Literata', Georgia, serif; font-size:19px; color:var(--ink-soft); max-width:640px; margin:0 auto; }
 .blog-meta{ font-size:14px; color:var(--text-soft); margin-top:14px; }
 .blog-list{ display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:28px; max-width:1040px; margin:0 auto; padding:24px 0 88px; }
 .blog-card{ display:flex; flex-direction:column; background:var(--cream); border-radius:var(--radius-m); overflow:hidden; text-decoration:none; color:inherit; box-shadow:var(--shadow-soft); transition:transform .2s ease; }
@@ -125,9 +133,9 @@ const STYLE = `
 .blog-card img{ width:100%; aspect-ratio:16/9; object-fit:cover; }
 .blog-card div{ padding:20px 22px 24px; }
 .blog-card .kicker{ font-size:12px; margin-bottom:6px; }
-.blog-card h2{ font-family:'Lora', Georgia, serif; font-size:21px; line-height:1.3; color:#2f2618; margin:2px 0 8px; }
+.blog-card h2{ font-family:'Lora', Georgia, serif; font-size:21px; line-height:1.3; color:var(--ink); margin:2px 0 8px; }
 .blog-card p{ font-size:15.5px; color:var(--text-soft); margin:0; }
-.blog-article{ max-width:720px; margin:0 auto; padding:8px 0 40px; font-family:'Literata', Georgia, serif; font-size:18.5px; line-height:1.8; color:#2f2618; }
+.blog-article{ max-width:720px; margin:0 auto; padding:8px 0 40px; font-family:'Literata', Georgia, serif; font-size:18.5px; line-height:1.8; color:var(--ink); }
 .blog-article h2{ font-family:'Lora', Georgia, serif; font-size:28px; margin:1.6em 0 .5em; }
 .blog-article h3{ font-family:'Lora', Georgia, serif; font-size:22px; margin:1.4em 0 .4em; }
 .blog-article ul, .blog-article ol{ padding-left:1.3em; margin:0 0 1.1em; }
@@ -139,8 +147,8 @@ const STYLE = `
 .blog-cta{ max-width:720px; margin:8px auto 40px; padding:30px 34px; background:var(--ink); color:var(--text-light); border-radius:var(--radius-l); text-align:center; }
 .blog-cta p{ font-family:'Literata', Georgia, serif; font-size:19px; margin:0 0 18px; }
 .blog-more{ max-width:720px; margin:0 auto; padding:0 0 88px; }
-.blog-more h2{ font-family:'Lora', Georgia, serif; font-size:24px; color:#2f2618; }
-.blog-more a{ display:block; padding:12px 0; border-bottom:1px solid var(--line); color:#2f2618; text-decoration:none; font-family:'Literata', Georgia, serif; }
+.blog-more h2{ font-family:'Lora', Georgia, serif; font-size:24px; color:var(--ink); }
+.blog-more a{ display:block; padding:12px 0; border-bottom:1px solid var(--line); color:var(--ink); text-decoration:none; font-family:'Literata', Georgia, serif; }
 .blog-more a:hover{ color:var(--gold-dark); }
 .blog-article .tldr{ background:var(--cream); border:1px solid var(--line); border-radius:var(--radius-m); padding:20px 24px; margin:0 0 1.6em; font-size:17px; }
 .blog-article .tldr p{ margin:0; }
@@ -207,7 +215,7 @@ const STYLE = `
 .gift-table tbody tr:nth-child(4) td.age span{ background:#4F78A8; }
 .gift-table tbody tr:nth-child(5) td.age span{ background:#7A5C9E; }
 .gift-table td.dev{ font-family:var(--font-script); font-size:20px; line-height:1.15; color:#6b5440; }
-.gift-table td.ideas{ color:#2f2618; font-weight:600; }
+.gift-table td.ideas{ color:var(--ink); font-weight:600; }
 .gift-table td.avoid{ color:#9a4655; }
 .gift-table td.avoid::before{ content:"✕ "; font-weight:700; }
 @media (max-width:640px){
@@ -231,7 +239,7 @@ const STYLE = `
 .blog-author{ max-width:820px; margin:28px auto 0; display:flex; gap:20px; align-items:center; padding:22px 26px; background:var(--paper-2); border-radius:var(--radius-l); }
 .blog-author img{ width:96px; height:96px; flex:none; border-radius:50%; object-fit:cover; border:2px solid #E7C27A; box-shadow:0 0 0 4px var(--cream), 0 0 0 5px rgba(215,154,58,.35); }
 .blog-author .kicker{ display:block; margin-bottom:4px; }
-.blog-author strong{ font-family:'Lora', Georgia, serif; font-size:22px; color:#2f2618; }
+.blog-author strong{ font-family:'Lora', Georgia, serif; font-size:22px; color:var(--ink); }
 .blog-author p{ margin:4px 0 0; font-family:'Literata', Georgia, serif; font-size:16px; color:var(--text-soft); line-height:1.55; }
 /* список статей — как книги на полке */
 .blog-card{ border-radius:4px 14px 14px 4px; box-shadow:inset 6px 0 0 rgba(120,80,30,.18), var(--shadow-soft); }
@@ -303,6 +311,7 @@ for (const p of posts) {
   }) + `
 <section class="blog-hero">
   <div class="container">
+    <nav class="crumbs" aria-label="Хлебные крошки"><ol><li><a href="index.html">Главная</a></li><li><a href="blog.html">Блог</a></li><li class="crumbs-title"><span aria-current="page" title="${esc(p.title)}">${esc(p.title)}</span></li></ol></nav>
     <a class="kicker" href="blog.html" style="text-decoration:none">${esc(p.kicker || 'Блог Героёнка')}</a>
     <h1>${esc(p.title)}</h1>
     ${p.lead ? `<p class="lead">${esc(p.lead)}</p>` : ''}
@@ -341,9 +350,16 @@ writeFileSync(join(out, 'blog.html'), head({
   title: 'Блог Героёнка — о детях, книгах и чтении',
   description: 'Статьи для родителей: как приучить к чтению, что подарить ребёнку, как придумать сказку на ночь, и материалы для печати.',
   path: '/blog', type: 'website',
+  extra: ld({
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Героёнок', item: SITE + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Блог', item: SITE + '/blog' },
+    ],
+  }),
 }) + `
 <section class="blog-hero">
   <div class="container">
+    <nav class="crumbs" aria-label="Хлебные крошки"><ol><li><a href="index.html">Главная</a></li><li><span aria-current="page">Блог</span></li></ol></nav>
     <span class="kicker">Блог Героёнка</span>
     <h1>О детях, книгах и маленьких героях</h1>
     <p class="lead">Советы родителям, идеи подарков и материалы для печати.</p>
