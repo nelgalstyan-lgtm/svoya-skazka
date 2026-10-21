@@ -115,14 +115,7 @@ function head({ title, description, path, type, image, extra }) {
 
 const STYLE = `
 .blog-hero{ padding:56px 0 24px; text-align:center; }
-.crumbs{ margin:0 auto 22px; font-size:13.5px; line-height:1.5; color:var(--ink-soft); }
-.crumbs ol{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; justify-content:center; gap:2px 0; }
-.crumbs li{ display:inline-flex; align-items:center; min-width:0; }
-.crumbs li + li::before{ content:"›"; margin:0 9px; color:var(--brass); }
-.crumbs a{ color:var(--brass-text); text-decoration:none; border-bottom:1px solid var(--line); }
-.crumbs a:hover{ border-bottom-color:var(--brass); }
-.crumbs [aria-current]{ max-width:46ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-@media (max-width:640px){ .blog-hero{ padding-top:28px; } .crumbs{ font-size:13px; margin-bottom:16px; } .crumbs-title{ display:none !important; } } /* на телефоне название статьи — сразу под крошками */
+@media (max-width:640px){ .blog-hero{ padding-top:28px; } }
 .blog-hero .kicker{ margin-bottom:10px; }
 .blog-hero h1{ font-family:'Lora', Georgia, serif; font-size:40px; line-height:1.2; color:var(--ink); margin:6px auto 14px; max-width:820px; }
 .blog-hero .lead{ font-family:'Literata', Georgia, serif; font-size:19px; color:var(--ink-soft); max-width:640px; margin:0 auto; }
@@ -170,42 +163,39 @@ const STYLE = `
 /* ---------- книжная страница ---------- */
 .title-ornament{ font-size:18px; letter-spacing:.5em; color:var(--gold-dark); margin:4px 0 0; opacity:.85; }
 .book-page{
-  position:relative; background:var(--cream); border-radius:var(--radius-l);
+  position:relative; background:var(--card); border-radius:var(--radius-l);
   padding:64px 76px 48px;
-  box-shadow:0 0 0 1px rgba(215,154,58,.35), 0 0 22px 3px rgba(215,154,58,.28), 0 0 70px 10px rgba(244,214,140,.35), var(--shadow-soft);
+  box-shadow:0 0 0 1px var(--line), 0 30px 60px -34px rgba(60,40,20,.45), 0 2px 6px rgba(60,40,20,.05); /* как письмо на «О нас»: без сияния */
   max-width:820px;
 }
 .book-page::before{
   content:""; position:absolute; inset:14px; border-radius:20px; pointer-events:none;
-  border:1.5px solid transparent;
-  background:linear-gradient(135deg,#F3D58C,#D79A3A 30%,#F7E3AE 50%,#C98A2E 70%,#F3D58C) border-box;
-  -webkit-mask:linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude;
-  opacity:.7;
+  border:1px solid var(--brass); opacity:.6;
 }
-.page-star{ position:absolute; color:#D79A3A; font-size:22px; line-height:1; pointer-events:none; text-shadow:0 0 6px rgba(255,214,120,1), 0 0 14px rgba(240,180,70,.7); }
-.page-star.s1{ top:5px; left:6px; } .page-star.s2{ top:5px; right:6px; } .page-star.s3{ bottom:5px; left:6px; } .page-star.s4{ bottom:5px; right:6px; }
+.page-star{ position:absolute; color:var(--brass); font-size:18px; line-height:1; pointer-events:none; }
+.page-star.s1{ top:7px; left:8px; } .page-star.s2{ top:7px; right:8px; } .page-star.s3{ bottom:7px; left:8px; } .page-star.s4{ bottom:7px; right:8px; }
 .book-page > p:first-of-type::first-letter, .book-page .tldr + .toc + p::first-letter{
   font-family:'Lora', Georgia, serif; font-weight:700; font-size:3.4em; float:left; line-height:.86; margin:.07em .1em 0 0; color:var(--gold-dark);
 }
 .book-page{ counter-reset:chapter; }
 .book-page h2{ counter-increment:chapter; text-align:center; margin:2.2em 0 .8em; clear:both; }
 .book-page h2::before{
-  content:"✦ глава " counter(chapter, upper-roman) "\\00a0✦"; display:block; font-family:var(--font-script); font-weight:600;
-  font-size:21px; color:var(--gold-dark); letter-spacing:.02em; margin-bottom:4px;
+  content:"✦ глава " counter(chapter, upper-roman) "\\00a0✦"; display:block; font-family:var(--font-body); font-weight:600;
+  font-size:12.5px; text-transform:uppercase; color:var(--brass-text); letter-spacing:.16em; margin-bottom:8px;
 }
-.book-page h3{ color:#4a3a28; }
-.book-page .tldr{ background:var(--paper-2); border:none; border-left:3px solid var(--gold); border-radius:0 var(--radius-m) var(--radius-m) 0; }
+.book-page h3{ color:var(--ink-soft); }
+.book-page .tldr{ background:var(--sand); border:none; border-left:3px solid var(--brass); border-radius:0 var(--radius-m) var(--radius-m) 0; }
 .book-page .toc{ background:transparent; border:1px dashed var(--line); }
 .book-page ul{ list-style:none; padding-left:1.4em; }
 .book-page ul > li{ position:relative; }
 .book-page ul > li::before{ content:"✦"; position:absolute; left:-1.3em; top:.05em; color:var(--gold); font-size:.8em; }
 .book-page ul, .book-page ol, .book-page .tldr, .book-page details, .book-page .table-wrap{ display:flow-root; }
 /* таблица «как в книге»: возраст — цветные закладки, на телефоне строки становятся карточками */
-.gift-table{ border-collapse:separate; border-spacing:0; background:#FFFBF2; border:1px solid rgba(215,154,58,.45); border-radius:18px; overflow:hidden; box-shadow:0 14px 30px -18px rgba(60,40,20,.45); font-size:15.5px; }
-.book-page .gift-table th{ background:linear-gradient(180deg,#F6E7C4,#EBD3A0); color:#4a3a28; font-family:'Lora', Georgia, serif; font-size:15px; letter-spacing:.01em; padding:14px 14px; border-bottom:1px solid rgba(184,127,39,.45); }
+.gift-table{ border-collapse:separate; border-spacing:0; background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:0 14px 30px -18px rgba(60,40,20,.45); font-size:15.5px; }
+.book-page .gift-table th{ background:var(--sand); color:var(--ink-soft); font-family:'Lora', Georgia, serif; font-size:15px; letter-spacing:.01em; padding:14px 14px; border-bottom:1px solid rgba(184,127,39,.45); }
 .book-page .gift-table td{ padding:14px; border-bottom:1px dashed rgba(215,154,58,.35); }
 .gift-table tbody tr:last-child td{ border-bottom:none; }
-.gift-table tbody tr:nth-child(even){ background:rgba(239,230,210,.35); }
+.gift-table tbody tr:nth-child(even){ background:rgba(241,230,208,.45); }
 .gift-table tbody tr{ transition:background .2s ease; }
 .gift-table tbody tr:hover{ background:rgba(240,200,120,.18); }
 .gift-table td.age{ width:92px; white-space:nowrap; }
@@ -214,7 +204,7 @@ const STYLE = `
 .gift-table tbody tr:nth-child(3) td.age span{ background:#B4495A; }
 .gift-table tbody tr:nth-child(4) td.age span{ background:#4F78A8; }
 .gift-table tbody tr:nth-child(5) td.age span{ background:#7A5C9E; }
-.gift-table td.dev{ font-family:var(--font-script); font-size:20px; line-height:1.15; color:#6b5440; }
+.gift-table td.dev{ font-family:var(--font-script); font-size:20px; line-height:1.15; color:var(--ink-soft); }
 .gift-table td.ideas{ color:var(--ink); font-weight:600; }
 .gift-table td.avoid{ color:#9a4655; }
 .gift-table td.avoid::before{ content:"✕ "; font-weight:700; }
@@ -222,7 +212,7 @@ const STYLE = `
   .gift-table, .gift-table tbody, .gift-table tr, .gift-table td{ display:block; width:auto; }
   .gift-table thead{ display:none; }
   .gift-table{ background:transparent; border:none; box-shadow:none; }
-  .gift-table tbody tr, .gift-table tbody tr:nth-child(even){ background:#FFFBF2; border:1px solid rgba(215,154,58,.45); border-radius:16px; margin:0 0 14px; padding:6px 4px; box-shadow:0 10px 22px -16px rgba(60,40,20,.45); }
+  .gift-table tbody tr, .gift-table tbody tr:nth-child(even){ background:var(--card); border:1px solid var(--line); border-radius:16px; margin:0 0 14px; padding:6px 4px; box-shadow:0 10px 22px -16px rgba(60,40,20,.45); }
   .book-page .gift-table td{ border-bottom:none; padding:6px 12px; white-space:normal; }
   .gift-table td:not(.age)::before{ content:attr(data-label) ": "; font-family:var(--font-body); font-weight:700; font-size:13px; color:#8a7356; text-transform:uppercase; letter-spacing:.04em; display:block; }
   .gift-table td.avoid::before{ content:attr(data-label) ": "; }
@@ -232,12 +222,12 @@ const STYLE = `
 .plate{ margin:.4em 0 1.2em; }
 .plate.right{ float:right; width:42%; margin:.3em -24px 1em 28px; transform:rotate(1.2deg); }
 .plate.left{ float:left; width:42%; margin:.3em 28px 1em -24px; transform:rotate(-1.2deg); }
-.plate img{ display:block; width:100%; height:auto; margin:0; border-radius:4px; border:8px solid #fff; box-shadow:0 14px 28px -14px rgba(60,40,20,.55), 0 0 0 1px rgba(215,154,58,.35); }
-.plate figcaption{ font-family:var(--font-script); font-style:normal; font-size:19px; line-height:1.3; color:#6b5440; text-align:center; margin-top:8px; }
+.plate img{ display:block; width:100%; height:auto; margin:0; border-radius:3px; border:8px solid var(--sand); box-shadow:0 14px 28px -14px rgba(60,40,20,.55), 0 0 0 1px #D9C59E; } /* вклейка — песочная рамка, как фото на главной */
+.plate figcaption{ font-family:var(--font-script); font-style:normal; font-size:19px; line-height:1.3; color:var(--ink-soft); text-align:center; margin-top:8px; }
 .page-end{ text-align:center; color:var(--gold-dark); letter-spacing:.4em; margin-top:2.4em; clear:both; }
 /* автор */
 .blog-author{ max-width:820px; margin:28px auto 0; display:flex; gap:20px; align-items:center; padding:22px 26px; background:var(--paper-2); border-radius:var(--radius-l); }
-.blog-author img{ width:96px; height:96px; flex:none; border-radius:50%; object-fit:cover; border:2px solid #E7C27A; box-shadow:0 0 0 4px var(--cream), 0 0 0 5px rgba(215,154,58,.35); }
+.blog-author img{ width:96px; height:96px; flex:none; border-radius:50%; object-fit:cover; border:2px solid var(--brass); box-shadow:0 0 0 4px var(--card), 0 0 0 5px var(--line); }
 .blog-author .kicker{ display:block; margin-bottom:4px; }
 .blog-author strong{ font-family:'Lora', Georgia, serif; font-size:22px; color:var(--ink); }
 .blog-author p{ margin:4px 0 0; font-family:'Literata', Georgia, serif; font-size:16px; color:var(--text-soft); line-height:1.55; }
@@ -309,9 +299,9 @@ for (const p of posts) {
       ],
     }),
   }) + `
+<nav class="crumbs container" aria-label="Хлебные крошки"><ol><li><a href="index.html">Главная</a></li><li><a href="blog.html">Блог</a></li><li class="crumbs-title"><span aria-current="page" title="${esc(p.title)}">${esc(p.title)}</span></li></ol></nav>
 <section class="blog-hero">
   <div class="container">
-    <nav class="crumbs" aria-label="Хлебные крошки"><ol><li><a href="index.html">Главная</a></li><li><a href="blog.html">Блог</a></li><li class="crumbs-title"><span aria-current="page" title="${esc(p.title)}">${esc(p.title)}</span></li></ol></nav>
     <a class="kicker" href="blog.html" style="text-decoration:none">${esc(p.kicker || 'Блог Героёнка')}</a>
     <h1>${esc(p.title)}</h1>
     ${p.lead ? `<p class="lead">${esc(p.lead)}</p>` : ''}
@@ -357,9 +347,9 @@ writeFileSync(join(out, 'blog.html'), head({
     ],
   }),
 }) + `
+<nav class="crumbs container" aria-label="Хлебные крошки"><ol><li><a href="index.html">Главная</a></li><li><span aria-current="page">Блог</span></li></ol></nav>
 <section class="blog-hero">
   <div class="container">
-    <nav class="crumbs" aria-label="Хлебные крошки"><ol><li><a href="index.html">Главная</a></li><li><span aria-current="page">Блог</span></li></ol></nav>
     <span class="kicker">Блог Героёнка</span>
     <h1>О детях, книгах и маленьких героях</h1>
     <p class="lead">Советы родителям, идеи подарков и материалы для печати.</p>

@@ -625,3 +625,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .photo-safe{ display:flex; width:fit-content; align-items:center; gap:6px; margin:12px auto 0; padding:5px 12px; border-radius:999px;
   background:rgba(86,113,79,.1); color:var(--sage); font-size:13.5px; font-weight:600; }
 .photo-safe svg{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ---------- хлебные крошки (21.10): сразу под шапкой на внутренних страницах и в блоге ---------- */
+.crumbs{ padding-top:16px; font-size:13.5px; line-height:1.5; color:var(--ink-soft); }
+.crumbs ol{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; align-items:center; gap:2px 0; }
+.crumbs li{ display:inline-flex; align-items:center; min-width:0; }
+.crumbs li + li::before{ content:"›"; margin:0 9px; color:var(--brass); }
+.crumbs a{ color:var(--brass-text); text-decoration:none; border-bottom:1px solid var(--line); }
+.crumbs a:hover{ border-bottom-color:var(--brass); }
+.crumbs [aria-current]{ max-width:52ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media (max-width:640px){ .crumbs{ padding-top:12px; font-size:13px; } .crumbs-title{ display:none !important; } }
