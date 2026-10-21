@@ -158,3 +158,8 @@
 .book3d-note .note-price{ display:block; width:fit-content; margin-top:6px; padding:3px 9px; border-radius:8px; background:#FFF1D6; border:1px solid #E6C98F; color:#7a4f12; font-size:12.5px; font-weight:600; }
 .book3d-note .nw{ white-space:nowrap; }
 .book3d-note .note-sub{ display:block; margin-top:6px; font-size:12px; }
+
+/* пары «фото → книга»: фото из анкеты — как распечатанная карточка в белой рамке, обложка — чуть наклонена в другую сторону */
+.before-after figure:first-child img{ box-sizing:border-box; background:#fff; padding:7px; border-radius:3px; transform:rotate(-2deg); box-shadow:0 12px 24px -14px rgba(60,40,20,.55), 0 1px 3px rgba(60,40,20,.12); }
+.before-after figure:last-child img{ transform:rotate(1.5deg); }
+.before-after figure:first-child figcaption{ margin-top:14px; }
