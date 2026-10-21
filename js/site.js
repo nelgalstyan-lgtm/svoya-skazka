@@ -108,12 +108,16 @@
     function track() { return book.querySelector('.hf-track'); }
     function update() {
       var t = track();
-      var pages = t.children.length;
-      var w = t.children[0].getBoundingClientRect().width || 1;
+      // только картинки: сборка добавляет к каждой <noscript>-копию, иначе страниц выходило вдвое больше
+      var imgs = t.querySelectorAll(':scope > img');
+      var pages = imgs.length;
+      var w = imgs[0].getBoundingClientRect().width || 1;
       var perView = Math.max(1, Math.round(t.clientWidth / w));
       var first = Math.round(t.scrollLeft / w) + 1;
-      var last = Math.min(pages, first + perView - 1);
-      count.textContent = (perView > 1 ? 'Страницы ' + first + '–' + last : 'Страница ' + first) + ' из ' + pages;
+      // на широком экране — развороты (номера страниц напечатаны в самой книге, со счётчиком не спорим)
+      count.textContent = perView > 1
+        ? 'Разворот ' + Math.ceil(first / perView) + ' из ' + Math.ceil(pages / perView)
+        : 'Страница ' + first + ' из ' + pages;
       prev.disabled = t.scrollLeft < 4;
       next.disabled = t.scrollLeft + t.clientWidth > t.scrollWidth - 4;
     }

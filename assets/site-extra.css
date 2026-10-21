@@ -163,3 +163,5 @@
 .before-after figure:first-child img{ box-sizing:border-box; background:#fff; padding:7px; border-radius:3px; transform:rotate(-2deg); box-shadow:0 12px 24px -14px rgba(60,40,20,.55), 0 1px 3px rgba(60,40,20,.12); }
 .before-after figure:last-child img{ transform:rotate(1.5deg); }
 .before-after figure:first-child figcaption{ margin-top:14px; }
+/* готовая обложка — в латунной рамке, как картина в книжной лавке: золото снаружи, кремовая кромка внутри */
+.before-after figure:last-child img{ box-sizing:border-box; padding:6px; border-radius:6px; background:linear-gradient(140deg, #E8C983 0%, var(--brass, #C99A4B) 38%, #F2DCA4 58%, #A87A32 100%); box-shadow:inset 0 0 0 1px rgba(255,248,230,.55), inset 0 0 0 5px rgba(126,90,38,.25), 0 14px 28px -16px rgba(60,40,20,.6); }
