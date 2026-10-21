@@ -124,10 +124,12 @@ const STYLE = `
 .blog-card{ display:flex; flex-direction:column; background:var(--cream); border-radius:var(--radius-m); overflow:hidden; text-decoration:none; color:inherit; box-shadow:var(--shadow-soft); transition:transform .2s ease; }
 .blog-card:hover{ transform:translateY(-4px); }
 .blog-card img{ width:100%; aspect-ratio:16/9; object-fit:cover; }
-.blog-card div{ padding:20px 22px 24px; }
+.blog-card div{ padding:20px 22px 22px; display:flex; flex-direction:column; flex:1; }
 .blog-card .kicker{ font-size:12px; margin-bottom:6px; }
 .blog-card h2{ font-family:'Lora', Georgia, serif; font-size:21px; line-height:1.3; color:var(--ink); margin:2px 0 8px; }
 .blog-card p{ font-size:15.5px; color:var(--text-soft); margin:0; }
+.blog-card .card-meta{ margin-top:auto; padding-top:14px; font-size:13.5px; color:var(--text-soft); letter-spacing:.01em; }
+.blog-card .card-meta::before{ content:"✦ "; color:var(--brass); }
 .blog-article{ max-width:720px; margin:0 auto; padding:8px 0 40px; font-family:'Literata', Georgia, serif; font-size:18.5px; line-height:1.8; color:var(--ink); }
 .blog-article h2{ font-family:'Lora', Georgia, serif; font-size:28px; margin:1.6em 0 .5em; }
 .blog-article h3{ font-family:'Lora', Georgia, serif; font-size:22px; margin:1.4em 0 .4em; }
@@ -334,7 +336,7 @@ ${more ? `<section class="blog-more" style="padding-top:0"><div class="container
 // --- список статей ---
 const cards = posts.map((p) => `<a class="blog-card" href="blog-${p.slug}.html">
   ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : ''}
-  <div><span class="kicker">${esc(p.kicker || ruDate(p.date))}</span><h2>${esc(p.title)}</h2><p>${esc(p.description)}</p></div>
+  <div><span class="kicker">${esc(p.kicker || ruDate(p.date))}</span><h2>${esc(p.title)}</h2><p>${esc(p.description)}</p><time class="card-meta" datetime="${p.date}">${ruDate(p.date)} · ${readMinutes(p.body)} мин чтения</time></div>
 </a>`).join('\n');
 writeFileSync(join(out, 'blog.html'), head({
   title: 'Блог Героёнка — о детях, книгах и чтении',
