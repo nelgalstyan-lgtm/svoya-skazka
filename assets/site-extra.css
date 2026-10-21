@@ -84,9 +84,9 @@
 .feature{ background:#fff; border:1px solid var(--line, #E6DCC3); border-radius:16px; padding:22px 22px 20px; }
 .section-ink .feature{ background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.12); }
 .feature .ico{ font-size:28px; line-height:1; display:block; margin-bottom:12px; }
-.feature h3{ margin:0 0 6px; font-size:19px; }
+.feature h3, .feature h2{ margin:0 0 6px; font-size:19px; }
 .feature p{ margin:0; color:var(--text-soft, #514A63); font-size:15px; }
-.section-ink .feature h3{ color:var(--text-light, #F4EFE0); }
+.section-ink .feature h3, .section-ink .feature h2{ color:var(--text-light, #F4EFE0); }
 .section-ink .feature p{ color:var(--text-light-soft, #C9C3D6); }
 
 /* ---------- пары «фото → иллюстрация» ---------- */

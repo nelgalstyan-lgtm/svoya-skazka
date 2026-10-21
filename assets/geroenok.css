@@ -80,12 +80,12 @@ b, strong{ font-weight:600; }
 h1,h2,h3,h4{ font-family:var(--font-display); font-weight:600; letter-spacing:0; color:var(--text); }
 h1{ font-size:56px; line-height:1.143; }
 h2{ font-size:40px; line-height:1.2; }
-h3{ font-size:24px; line-height:1.25; }
+h3, h2.h3{ font-size:24px; line-height:1.25; }
 @media (max-width:640px){
   body{ font-size:17px; line-height:1.59; }
   h1{ font-size:34px; line-height:1.18; }
   h2{ font-size:28px; line-height:1.21; }
-  h3{ font-size:20px; line-height:1.3; }
+  h3, h2.h3{ font-size:20px; line-height:1.3; }
 }
 .section-ink h1,.section-ink h2,.section-ink h3{ color:var(--text-light); }
 a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible{
@@ -367,7 +367,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 }
 .site-footer .logo{ color:var(--text-light); }
 .footer-grid{ border-bottom-color:var(--line-dark); }
-.footer-grid h4{ color:var(--text-light); }
+.footer-grid h4, .footer-grid .footer-title{ color:var(--text-light); font-weight:600; }
 .footer-grid a{ color:var(--text-light-soft); }
 .footer-grid a:hover{ color:var(--brass); }
 .footer-tagline{

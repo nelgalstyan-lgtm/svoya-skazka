@@ -159,8 +159,11 @@ section.tight{ padding:56px 0; }
   padding-bottom:40px;
   border-bottom:1px solid var(--line-dark);
 }
-.footer-grid h4{
+.footer-grid h4, .footer-grid .footer-title{
   font-family:var(--font-body);
+  font-weight:700;
+  line-height:1.22;
+  margin-top:0;
   color:var(--text-light);
   font-size:15px;
   margin-bottom:14px;
