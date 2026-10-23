@@ -20,7 +20,7 @@ import { drawImage, coverTitlePlace, coverFaceBox, artOff, ART_OFF_MESSAGE } fro
 import { isDrawn, bookImages } from './view.js';
 import { voiceFlow } from './voice.js';
 import { proofreadAnswers } from './proofread.js';
-import { describeFace } from './face.js';
+import { describeFace, splitLooks } from './face.js';
 import { songFlow } from './song.js';
 import { checkLikeness, LIKENESS_MIN } from './likeness.js';
 import { notifyOwner } from './notify.js';
@@ -273,7 +273,7 @@ async function previewFlow(ctx) {
     : text.coverBrief;
   const look = big ? text.plan?.look || '' : text.look;
   // приметы ребёнка по фото — до первого рисунка (правило владелицы: главное — чтобы герой был похож)
-  const face = await step.do('face', QUICK_STEP, async () => describeFace(ctx.env, await store.loadPhotos(id), { log }));
+  const { face, looks } = splitLooks(await step.do('face', QUICK_STEP, async () => describeFace(ctx.env, await store.loadPhotos(id), { log })));
   const art = await drawBook(ctx, { input, briefs, coverBrief, look, face, only: [0] });
   const titlePlace = await coverPlaceStep(ctx, art.cover);
   const faceBox = await coverFaceStep(ctx, art.cover);
@@ -319,6 +319,7 @@ async function previewFlow(ctx) {
       job.status = 'completed';
       job.result = result;
       job.likeness = { ...job.likeness, ...ctx.likeness };
+      if (looks) job.looks = looks; // кто на фото, по мнению ИИ — для вопроса «всё верно?» на превью (view.js)
       job.finishedAt = Date.now();
       job.progress = '';
     });

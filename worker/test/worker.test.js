@@ -126,8 +126,12 @@ const FORM = { name: 'Милена', age: '7', gender: 'Девочка', eyes: '
 const api = (env, path, { method = 'GET', body, headers = {} } = {}) =>
   handleApi(new Request(`https://geroenok.online${path}`, { method, headers: { 'content-type': 'application/json', ...headers }, body: body ? JSON.stringify(body) : undefined }), env);
 
+// каждый заказ — со своего адреса: лимит бесплатных превью проверяет отдельный тест
+let orderIp = 0;
+const nextIp = () => `10.0.${Math.floor(++orderIp / 250)}.${orderIp % 250}`;
+
 async function order(env, extra = {}) {
-  const res = await api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, photos: [PHOTO], ...extra } });
+  const res = await api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, photos: [PHOTO], ...extra }, headers: { 'cf-connecting-ip': nextIp() } });
   const data = await res.json();
   assert.equal(res.status, 200, JSON.stringify(data));
   return data.jobId;
@@ -173,7 +177,7 @@ test('анкета: фото кусками (шлюз Яндекса не про
       form.append('answers', JSON.stringify(FORM));
       form.append('upload', upload);
       form.append('photoParts', JSON.stringify(parts));
-      return handleApi(new Request('https://geroenok.online/api/book/generate', { method: 'POST', body: form }), env);
+      return handleApi(new Request('https://geroenok.online/api/book/generate', { method: 'POST', body: form, headers: { 'cf-connecting-ip': nextIp() } }), env);
     };
     const missing = await orderWith([{ type: 'image/jpeg', n: 4 }]);
     assert.equal(missing.status, 400, 'не хватает куска');
@@ -378,7 +382,7 @@ test('имя-мусор («Claude Sonnet 5», «Test123») — 400 с подск
   } finally { ai.restore(); }
 });
 
-test('лимит бесплатных превью: 1 в день с браузера, 3 с адреса; хозяйке — без лимита', async () => {
+test('лимит бесплатных превью: 1 в день с браузера, 2 с адреса; хозяйке — без лимита', async () => {
   const env = fakeEnv();
   const ai = stubOpenAI();
   try {
@@ -739,7 +743,7 @@ test('родные по фото: в превью — только ребёно�
       form.append('answers', JSON.stringify(answers));
       form.append('photo', new Blob([Buffer.from('child')], { type: 'image/jpeg' }), 'p');
       for (let i = 0; i < familyFiles; i++) form.append('family', new Blob([Buffer.from(`relative-${i}`)], { type: 'image/jpeg' }), `f${i}`);
-      return handleApi(new Request('https://geroenok.online/api/book/generate', { method: 'POST', body: form }), env);
+      return handleApi(new Request('https://geroenok.online/api/book/generate', { method: 'POST', body: form, headers: { 'cf-connecting-ip': nextIp() } }), env);
     };
     const mom = [{ who: 'мама', name: 'Лена' }];
     // без согласия — не принимаем; в «Сказке» родные — +290 ₽ за всех

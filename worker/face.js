@@ -11,7 +11,15 @@ const PROMPT = 'You are helping an illustrator draw this child so that parents i
   + 'skin tone, eye shape, eye size and color, eyebrows, nose, mouth and smile, hair color, hair texture (straight / slightly wavy / wavy / curly — be exact), '
   + 'hair length, parting and how it is usually worn, and any distinctive features (freckles, dimples, moles, gap in teeth, glasses). '
   + 'Then add one short sentence starting with "Avoid:" naming the most likely mistakes an illustrator could make with this face (for example: "making the hair curly", "a round doll face", "eyes too big"). '
-  + 'Do not describe clothes or background. Do not guess age, ethnicity or name. Plain text only.';
+  + 'Do not describe clothes or background. Do not guess age, ethnicity or name. Plain text only. '
+  // сверка с анкетой (просьба владелицы 23.10: прислали фото девочки, а в анкете «мальчик»)
+  + 'Finally, on a separate last line write exactly one of: "Looks like: boy", "Looks like: girl", "Looks like: unclear".';
+
+/** Отделяет от примет строку «Looks like: …» → { face, looks: 'boy' | 'girl' | '' }. В рисунки идут только приметы. */
+export function splitLooks(text = '') {
+  const m = String(text).match(/\s*Looks like:\s*(boy|girl|unclear)\W*$/i);
+  return { face: m ? String(text).slice(0, m.index).trim() : String(text), looks: m && m[1].toLowerCase() !== 'unclear' ? m[1].toLowerCase() : '' };
+}
 
 export async function describeFace(env, photos = [], { log = console.warn, timeoutMs = 45_000 } = {}) {
   if (!env.OPENAI_API_KEY || !photos.length) return '';
@@ -30,7 +38,7 @@ export async function describeFace(env, photos = [], { log = console.warn, timeo
     if (!res.ok) { log(`[face] OpenAI ${res.status} — без примет`); return ''; }
     const text = String((await res.json())?.choices?.[0]?.message?.content || '').replace(/\s+/g, ' ').trim();
     // защита: только описание внешности, без инструкций и без мусора
-    return /[a-z]/i.test(text) && text.length > 40 ? text.slice(0, 900) : '';
+    return /[a-z]/i.test(text) && text.length > 40 ? text.slice(0, 960) : '';
   } catch (error) {
     log(`[face] ${error?.message || error} — без примет`);
     return '';

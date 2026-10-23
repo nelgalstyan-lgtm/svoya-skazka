@@ -736,6 +736,41 @@
     if (logo && logo.nextSibling) bar.insertBefore(span, logo.nextSibling); else bar.insertBefore(span, bar.firstChild);
   }
 
+  /**
+   * Мягкий вопрос на превью (решение владелицы 23.10): в анкете «мальчик», а на фото, похоже, девочка (или наоборот).
+   * ИИ может ошибиться (мальчик с длинными волосами) — поэтому только переспрашиваем, «Всё верно» прячет вопрос насовсем.
+   */
+  function photoLooksNote(status, jobId) {
+    var looks = status && status.photoLooks;
+    if (looks !== 'boy' && looks !== 'girl') return;
+    var key = 'skazka:looksOk:' + jobId;
+    try { if (localStorage.getItem(key)) return; } catch (e) { /* хранилище недоступно — просто спросим */ }
+    if (document.querySelector('.looks-note')) return;
+    var said = looks === 'girl' ? 'мальчик' : 'девочка';
+    var seen = looks === 'girl' ? 'девочка' : 'мальчик';
+    var box = document.createElement('div');
+    box.className = 'looks-note';
+    box.setAttribute('role', 'status');
+    box.style.cssText = 'margin:12px auto; max-width:720px; padding:14px 18px; border-radius:14px; background:#f3e8d0; color:#4a3826; border:1px solid #d8c39b; font-size:15.5px; line-height:1.5; display:flex; gap:14px; align-items:center; flex-wrap:wrap; box-sizing:border-box;';
+    var text = document.createElement('div');
+    text.style.cssText = 'flex:1 1 320px;';
+    text.innerHTML = 'Вы указали «' + said + '», а на фото, похоже, ' + seen + '. Всё верно? Если ошиблись — напишите нам на '
+      + '<a href="mailto:support@geroenok.online" style="color:inherit">support@geroenok.online</a>' + (orderNo(jobId) ? ' (заказ № ' + orderNo(jobId) + ')' : '')
+      + ' — бесплатно перепишем превью.';
+    var ok = document.createElement('button');
+    ok.type = 'button';
+    ok.textContent = 'Всё верно';
+    ok.style.cssText = 'flex:0 0 auto; padding:9px 18px; border-radius:999px; border:1px solid #b9935a; background:#e9d6ae; color:#4a3826; font:inherit; font-weight:600; cursor:pointer;';
+    ok.addEventListener('click', function () {
+      try { localStorage.setItem(key, '1'); } catch (e) { /* не запомнили — спросим в следующий раз */ }
+      box.remove();
+    });
+    box.appendChild(text);
+    box.appendChild(ok);
+    var bar = document.querySelector('.toolbar');
+    if (bar && bar.parentNode) bar.parentNode.insertBefore(box, bar.nextSibling); else document.body.insertBefore(box, document.body.firstChild);
+  }
+
   // ---------------------------------------------------------------- ожидание
   // Пока книга пишется и рисуется (минуты), под строкой «что сейчас делаем» сменяются тёплые фразы — ожидание
   // становится частью сказки (идея владелицы 05.10). active() — показывать ли сейчас (например, пока идёт ожидание).
@@ -823,6 +858,7 @@
     waitTales: waitTales,
     orderNo: orderNo,
     showOrderNo: showOrderNo,
+    photoLooksNote: photoLooksNote,
     downloadUrl: downloadUrl,
     attachAudioDownload: attachAudioDownload,
     payButton: payButton,

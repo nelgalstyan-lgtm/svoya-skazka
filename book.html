@@ -359,7 +359,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     const note = document.getElementById('waitNote');
     if (note) note.remove();
     if (!d.result || !Array.isArray(d.result.pages)) throw new Error('not ready');
-    return { answers: d.result.answers || {}, book: d.result, jobId: jobId, canRedraw: d.canRedraw, redrawsLeft: d.redrawsLeft, locked: Boolean(d.result.locked) };
+    return { answers: d.result.answers || {}, book: d.result, jobId: jobId, canRedraw: d.canRedraw, redrawsLeft: d.redrawsLeft, locked: Boolean(d.result.locked), photoLooks: d.photoLooks || '' };
   }
 
   function loadBook() {
@@ -920,6 +920,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
   function attachActions(data) {
     const book = data.book;
     if (data.jobId && !params.get('demo')) window.SkazkaExtras.showOrderNo(data.jobId);
+    if (data.jobId && !params.get('demo')) window.SkazkaExtras.photoLooksNote(data, data.jobId);
     // «← К анкете» — анкета этой книги, заполненная (create.html?again=1 берёт ответы из geroenok:formDraft)
     const back = document.querySelector('.toolbar-actions a[href="create.html"]');
     if (back && data.answers && data.answers.name) back.addEventListener('click', function (e) {

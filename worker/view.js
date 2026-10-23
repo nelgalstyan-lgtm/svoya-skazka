@@ -56,6 +56,14 @@ function fullResult(job) {
     : { title: job.result.title, dedication: job.result.dedication || null, pages: job.result.pages, cover: job.result.cover || null, coverFace: Boolean(job.result.coverFace), coverTitle: job.result.coverTitle || null, blurb: job.result.blurb || null, coloring: job.result.coloring || [], audio: job.result.audio || [], song: job.result.song || null, ...(job.noEdit ? { noEdit: true } : {}), answers: jobAnswers(job) };
 }
 
+/** Пол в анкете не совпадает с тем, кого ИИ видит на фото (face.js). Пол не указан или ИИ не уверен — не переспрашиваем. */
+export function genderMismatch(job) {
+  const gender = String(job.input?.gender || '').trim();
+  if (!gender || !job.looks) return false;
+  const boy = /^(мал|boy|male)/i.test(gender);
+  return job.looks !== (boy ? 'boy' : 'girl');
+}
+
 export function jobView(job, now = Date.now()) {
   const done = job.status === 'completed';
   return {
@@ -71,6 +79,8 @@ export function jobView(job, now = Date.now()) {
     redrawsLeft: done ? Math.max(0, REDRAW_LIMIT - (job.redraws || 0)) : null,
     canRedraw: done ? Boolean(job.result.sheet || job.result.book?.sheet) : false,
     elapsedMs: (job.finishedAt || now) - job.createdAt,
+    // на фото, похоже, ребёнок другого пола, чем в анкете: превью мягко переспрашивает ('boy' | 'girl')
+    ...(done && !job.paid && genderMismatch(job) ? { photoLooks: job.looks } : {}),
     // клиенту отдаём только книгу; лист персонажа остаётся на сервере — он нужен только для перерисовки
     result: !done ? null : job.paid && !job.finishing ? fullResult(job) : previewResult(job)
   };
