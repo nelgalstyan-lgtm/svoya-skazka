@@ -167,15 +167,15 @@ export const PREVIEW_LIMITS = { device: 1, ip: 2 };
 const DEVICE_RE = /^[a-z0-9-]{16,64}$/i;
 
 /** Счётчики превью за сутки: R2 limits/<дата>/<хэш>. Адрес и id браузера храним только хэшем; правило R2 удаляет limits/ через 3 дня. */
+async function visitorHash(env, value) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${env.ADMIN_KEY || 'geroenok'}:${value}`));
+  return [...new Uint8Array(digest)].slice(0, 16).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function previewCounters(env, request, device) {
   const day = new Date().toISOString().slice(0, 10);
-  const salt = env.ADMIN_KEY || 'geroenok';
-  const hash = async (value) => {
-    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}:${value}`));
-    return [...new Uint8Array(digest)].slice(0, 16).map((b) => b.toString(16).padStart(2, '0')).join('');
-  };
-  const keys = { ip: `limits/${day}/ip-${await hash(`ip:${clientIp(request, env)}`)}` };
-  if (DEVICE_RE.test(device || '')) keys.device = `limits/${day}/dev-${await hash(`device:${device}`)}`;
+  const keys = { ip: `limits/${day}/ip-${await visitorHash(env, `ip:${clientIp(request, env)}`)}` };
+  if (DEVICE_RE.test(device || '')) keys.device = `limits/${day}/dev-${await visitorHash(env, `device:${device}`)}`;
   const counts = {};
   await Promise.all(Object.entries(keys).map(async ([kind, key]) => {
     const obj = await env.BUCKET.get(key);
@@ -185,6 +185,18 @@ async function previewCounters(env, request, device) {
     exceeded: Object.keys(keys).find((kind) => counts[kind] >= PREVIEW_LIMITS[kind]) || null,
     count: () => Promise.all(Object.entries(keys).map(([kind, key]) => env.BUCKET.put(key, JSON.stringify({ n: counts[kind] + 1 }))))
   };
+}
+
+// Чёрный список (решение владелицы 23.10: заказ с матом во всех полях тратил деньги на рисование): R2 system/blocked.json
+// { "ip": [хэш], "device": [хэш] } — те же хэши, что в limits/ (адресов в открытом виде у нас нет). Пополняется без выкладки.
+export const BLOCKED_KEY = 'system/blocked.json';
+const BLOCKED_MESSAGE = 'С этого устройства бесплатное превью недоступно. Если это ошибка — напишите нам на support@geroenok.online.';
+async function blocked(env, request, device) {
+  const obj = await env.BUCKET.get(BLOCKED_KEY);
+  if (!obj) return false;
+  const list = await obj.json().catch(() => ({}));
+  if ((list.ip || []).includes(await visitorHash(env, `ip:${clientIp(request, env)}`))) return true;
+  return DEVICE_RE.test(device || '') && (list.device || []).includes(await visitorHash(env, `device:${device}`));
 }
 
 const LIMIT_MESSAGES = {
@@ -247,6 +259,7 @@ async function generate(request, env, store) {
   if (age && !/^(?:[2-9]|1[0-6])$/.test(age)) return fail(400, 'Возраст ребёнка — от 2 до 16 лет.');
 
   const owner = Boolean(env.ADMIN_KEY) && request.headers.get('x-admin-key') === env.ADMIN_KEY;
+  if (!owner && await blocked(env, request, order.device)) return fail(403, BLOCKED_MESSAGE);
   if (!owner && !(await captchaPassed(env, order.captcha, ip))) return fail(403, CAPTCHA_MESSAGE);
   // в OpenAI кончились деньги — превью вышло бы без ребёнка на картинках, поэтому не принимаем (хозяйке — можно, для проверки)
   if (!owner && await artOff(env)) return fail(503, ART_OFF_MESSAGE);

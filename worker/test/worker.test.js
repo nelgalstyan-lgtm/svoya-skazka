@@ -3,7 +3,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleApi, PREVIEW_LIMITS, UPLOAD_CHUNK_BYTES, captchaPassed } from '../api.js';
+import { handleApi, PREVIEW_LIMITS, BLOCKED_KEY, UPLOAD_CHUNK_BYTES, captchaPassed } from '../api.js';
 import { runBook, spreadPick } from '../book.js';
 import { jsonStringField } from '../bytes.js';
 import { queueHandler } from '../queue.js';
@@ -404,6 +404,23 @@ test('лимит бесплатных превью: 1 в день с брауз�
     assert.equal((await send('bbbbbbbb-0000-4000-8000-000000000001', '2.2.2.2')).status, 200, 'другой адрес — можно');
     // адрес и браузер хранятся только хэшем
     assert.ok(env.BUCKET.keys('limits/').every((k) => !k.includes('1.1.1.1') && !k.includes('aaaaaaaa')));
+  } finally { ai.restore(); }
+});
+
+test('чёрный список: адрес или браузер из system/blocked.json — без превью; остальные и хозяйка — как обычно', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  try {
+    const hash = async (v) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`admin:${v}`)))].slice(0, 16).map((b) => b.toString(16).padStart(2, '0')).join('');
+    const dev = 'cccccccc-0000-4000-8000-000000000001';
+    await env.BUCKET.put(BLOCKED_KEY, JSON.stringify({ ip: [await hash('ip:6.6.6.6')], device: [await hash(`device:${dev}`)] }));
+    const send = (device, ip, headers = {}) => api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, photos: [PHOTO], device }, headers: { 'cf-connecting-ip': ip, ...headers } });
+    const byIp = await send('dddddddd-0000-4000-8000-000000000001', '6.6.6.6');
+    assert.equal(byIp.status, 403);
+    assert.match((await byIp.json()).error, /недоступно/);
+    assert.equal((await send(dev, '7.7.7.7')).status, 403, 'тот же браузер с другого адреса');
+    assert.equal((await send('dddddddd-0000-4000-8000-000000000002', '7.7.7.7')).status, 200);
+    assert.equal((await send(dev, '6.6.6.6', { 'x-admin-key': 'admin' })).status, 200, 'хозяйка — без списка');
   } finally { ai.restore(); }
 });
 
