@@ -219,6 +219,9 @@ export function castWithFamily(cast = '', family = []) {
 
 // ---------------------------------------------------------------- маршруты
 
+// текстовые поля анкеты, которые попадают в книгу
+const ORDER_TEXT_KEYS = ['name', 'eyes', 'occasion', 'habits', 'friends', 'cast', 'theme', 'interests', 'special', 'lesson', 'sequel', 'from', 'dedication'];
+
 async function generate(request, env, store) {
   const order = await readOrder(request, env);
   if (!order) return fail(400, 'Не получилось прочитать анкету. Попробуйте ещё раз.');
@@ -236,6 +239,10 @@ async function generate(request, env, store) {
   // имя — в каждой строчке книги: явный мусор («Test123», ссылки, «ааааа») не принимаем, как и анкета
   const nameProblem = template.nameProblem(body.name);
   if (nameProblem) return fail(400, nameProblem);
+  // мат и непристойности — ни в одном поле анкеты (заказ 23.10: «Гнойный», повод «Кастрация»…): книга для ребёнка
+  const texts = [...ORDER_TEXT_KEYS.map((k) => body[k]), ...(Array.isArray(body.family) ? body.family.flatMap((p) => [p?.who, p?.name]) : [])];
+  const rude = texts.map((t) => (typeof t === 'string' ? template.rudeProblem(t) : '')).find(Boolean);
+  if (rude) return fail(400, rude);
   const age = String(body.age ?? '').trim();
   if (age && !/^(?:[2-9]|1[0-6])$/.test(age)) return fail(400, 'Возраст ребёнка — от 2 до 16 лет.');
 

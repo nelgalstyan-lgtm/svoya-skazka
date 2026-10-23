@@ -243,8 +243,22 @@
     var words = s.split(/[\s\-]+/).filter(Boolean);
     if (!/^[\p{L}\s'’.\-]+$/u.test(s) || letters.length < 2 || s.length > 30 || words.length > 3) return NAME_MESSAGE;
     if (/(\p{L})\1\1/iu.test(s)) return NAME_MESSAGE; // «ааааа»
+    if (rudeProblem(s)) return RUDE_MESSAGE;
     if (words.some(function (w) { return NAME_STOPWORDS.indexOf(w.toLowerCase().replace(/[.'’]/g, '')) !== -1; })) return NAME_MESSAGE;
     return '';
+  }
+  // Грубые и непристойные слова (заказ 23.10: в имени и во всех полях анкеты — мат и оскорбления): книга — подарок ребёнку,
+  // такие анкеты не принимаем. Корни ищем с начала слова, чтобы не цеплять «хлеба», «небо», «кастрюлю», «потребовать».
+  var RUDE_MESSAGE = 'В анкете есть грубые слова. Героёнок пишет добрые книги для детей — пожалуйста, перепишите это поле.';
+  var END = '(?![\\p{L}])'; // конец слова
+  var RUDE_RE = new RegExp('(?:^|[^\\p{L}])(?:'
+    + '(?:за|вы|на|по|у|от|отъ|подъ|съ|раз|разъ|долбо|при|въ)?[её]б(?!ер|би)|ху[йёя]|хуе[впнлсц]|хули' + END + '|пизд|бля|сук(?:а|и|у|ой|ам|ами)' + END + '|мудак|мудил|муда' + END
+    + '|пид[оа]р|педик(?!юр)|педоф|г[ао]ндон|шлюх|проститут|залуп|манд[аеуы]' + END + '|дроч|говн|дерьм|жоп|(?:за|об|вы)?сра[нт]|сиськ|порн|трахн|трахат|секс'
+    + '|кастрат|кастрац|евнух|гнойн|гитлер|хайль'
+    + '|fuck|shit|bitch|cunt|porn|whore|nigg|asshole'
+    + ')', 'iu');
+  function rudeProblem(raw) {
+    return RUDE_RE.test(String(raw || '')) ? RUDE_MESSAGE : '';
   }
   // имя только латиницей: в русской книге так и будет — анкета переспрашивает, но не запрещает
   function nameIsLatin(raw) {
@@ -256,6 +270,8 @@
     buildTemplateStory: buildTemplateStory,
     nameProblem: nameProblem,
     nameIsLatin: nameIsLatin,
+    rudeProblem: rudeProblem,
+    RUDE_MESSAGE: RUDE_MESSAGE,
     normalizeInput: normalize,
     cleanText: clean,
     SCENES: SCENES,

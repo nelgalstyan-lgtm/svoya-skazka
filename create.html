@@ -1314,6 +1314,16 @@
         nameInput.focus({ preventScroll: true });
         return;
       }
+      // мат и непристойности — ни в одном поле (так же проверяет сервер): книга для ребёнка
+      const rude = window.SkazkaTemplate.rudeProblem;
+      const rudeKey = ['name', 'occasion', 'habits', 'friends', 'cast', 'lesson', 'from', 'dedication'].find(function (k) { return rude(answers[k]); })
+        || (answers.family.some(function (p) { return rude(p.who) || rude(p.name); }) ? 'familyBox' : '');
+      if (rudeKey) {
+        setStatus(window.SkazkaTemplate.RUDE_MESSAGE, 'error');
+        const field = document.getElementById(rudeKey);
+        if (field && field.focus) { field.scrollIntoView({ behavior: 'smooth', block: 'center' }); field.focus({ preventScroll: true }); }
+        return;
+      }
       if (nameCheck.latin) {
         // второе нажатие с тем же именем — значит, латиницей так и задумано
         latinNameOk = answers.name;
