@@ -7,6 +7,7 @@ import { runBook } from './book.js';
 import { queueHandler } from './queue.js';
 import { recheckArt } from './art.js';
 import { removeExpiredBooks } from './cleanup.js';
+import { isJobId } from './store.js';
 
 export class BookWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
@@ -15,6 +16,14 @@ export class BookWorkflow extends WorkflowEntrypoint {
 }
 
 // Подтверждение прав в Яндекс Вебмастере: файл должен отвечать 200 по адресу с .html (статика переадресовала бы на адрес без .html)
+// Страницы книг: книги нет (удалена или такой не было) — настоящий 404, а не пустая страница, ждущая книгу
+const BOOK_PAGES = new Set(['/book', '/book-pro', '/book-pro-alex']);
+
+async function notFound(env, request, url) {
+  const nf = await env.ASSETS.fetch(new Request(new URL('/404', url), request));
+  return new Response(nf.body, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+}
+
 const YANDEX_VERIFY = { '/yandex_e834183a40931d36.html': 'e834183a40931d36', '/yandex_3b4b953fbbf8266d.html': '3b4b953fbbf8266d' };
 
 export default {
@@ -46,7 +55,7 @@ export default {
     const priv = /^\/p\/([A-Za-z0-9_-]{20,64})\/?$/.exec(url.pathname);
     if (priv) {
       const obj = await env.BUCKET.get(`private/${priv[1]}.html`);
-      if (!obj) { const nf = await env.ASSETS.fetch(new Request(new URL('/404', url), request)); return new Response(nf.body, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } }); }
+      if (!obj) return notFound(env, request, url);
       return new Response(obj.body, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex, nofollow', 'cache-control': 'private, no-store', 'referrer-policy': 'no-referrer' } });
     }
     // /pricing/ → /pricing: у каждой страницы один адрес. Location — относительный: сайт открывают через шлюз Яндекса,
@@ -54,6 +63,8 @@ export default {
     if (url.pathname.length > 1 && url.pathname.endsWith('/')) {
       return new Response(null, { status: 301, headers: { location: url.pathname.replace(/\/+$/, '') + url.search } });
     }
+    const job = BOOK_PAGES.has(url.pathname) ? url.searchParams.get('job') : null;
+    if (job !== null && !(isJobId(job) && await env.BUCKET.head(`jobs/${job}.json`))) return notFound(env, request, url);
     const res = await env.ASSETS.fetch(request);
     // статика отвечает 307 на /pricing.html → /pricing; поисковикам нужна постоянная переадресация 301
     if ((res.status === 307 || res.status === 308) && res.headers.get('location')) {
