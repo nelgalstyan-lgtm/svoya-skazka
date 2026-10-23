@@ -90,13 +90,13 @@ async function drawChecked(ctx, name, kind, { attempt, references, childName = '
  * Иллюстрации книги по шагам: лист персонажа (если его ещё нет), потом обложка и сцены по три одновременно,
  * вторая попытка для не получившихся. Возвращает адреса: { sheet, cover, scenes: [src|null] }.
  */
-async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only = null, sheet = null, familySheet = null }) {
+async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only = null, sheet = null, sheetTried = false, familySheet = null }) {
   const { env, store, id, step, log, progress } = ctx;
   const style = { styleLabel: input.style, eyes: normalizeInput(input).eyes, look, face, age: input.age };
   // родные по фото: их лист прикладывается к сценам (к листу ребёнка и обложке — нет: на обложке только ребёнок)
   const family = familySheet ? input.family || [] : [];
   const wanted = briefs.map((_, i) => !only || only.includes(i));
-  const total = wanted.filter(Boolean).length + (coverBrief ? 1 : 0) + (sheet ? 0 : 1);
+  const total = wanted.filter(Boolean).length + (coverBrief ? 1 : 0) + (sheet || sheetTried ? 0 : 1);
   let started = 0;
 
   const attempt = (name, kind, brief, fix = '') => step.do(name, IMAGE_STEP, async () => {
@@ -105,7 +105,7 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only 
     const what = kind === 'sheet' ? 'лист героя по фото' : kind === 'cover' ? 'обложку' : 'иллюстрацию с вашим ребёнком';
     await progress(fix
       ? `Проверили похожесть — перерисовываем ${what}, чтобы ${kind === 'scene' && family.length ? 'все были' : 'ребёнок был'} больше похож${kind === 'scene' && family.length ? 'и' : ''} на себя…`
-      : `Рисуем ${what} (картинка ${Math.min(started, total)} из ${total})…`);
+      : total > 1 ? `Рисуем ${what} (картинка ${Math.min(started, total)} из ${total})…` : `Рисуем ${what}…`);
     const withFamily = kind === 'scene' && family.length > 0;
     const [refs, sheetImage, familyImage] = await Promise.all([
       store.loadPhotos(id),
@@ -130,7 +130,8 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only 
     childAge: input.age
   });
 
-  if (!sheet) sheet = await draw('sheet', 'sheet', 'character reference sheet');
+  // sheetTried — лист уже рисовали отдельно (превью: одновременно с текстом); не вышел — второй раз не пробуем
+  if (!sheet && !sheetTried) sheet = await draw('sheet', 'sheet', 'character reference sheet');
 
   const jobs = [
     ...(coverBrief ? [{ name: 'cover', kind: 'cover', brief: coverBrief }] : []),
@@ -232,38 +233,51 @@ async function previewFlow(ctx) {
   });
   const big = input.tariff === 'big';
 
-  // текст: фото в генераторы текста не передаём — картинки рисуются отдельными шагами ниже
-  let text;
-  if (!big) {
-    text = await step.do('story', TEXT_STEP, async () => {
-      await progress('Пишем историю…');
-      // в Workflow нет 55-секундного предела старого сервера: до шаблона даём ИИ до 4 минут (шаг — до 10 минут);
-      // GPT-5.5 пишет «Сказку» ≈ 50 с, поэтому на одну попытку — до 2 минут
-      const story = await generateStory(input, { log, ...STORY_TIME }); // текст + описания иллюстраций (heroBrief, coverBrief)
-      if (story.source !== 'template' || !describeProviders().length) return story;
-      // все сервисы были заняты (05.10 так вышло у Gemini) — шаблон читается как пересказ анкеты, поэтому ещё одна попытка
-      // через 20 с, с чистой памятью о сбоях (иначе все модели ещё «в паузе» и сразу снова шаблон)
-      log(`[book] ${id}: текст из шаблона — пробуем ИИ ещё раз`);
-      await new Promise((resolve) => setTimeout(resolve, 20_000));
-      return generateStory(input, { log, ...STORY_TIME, health: createHealth() });
-    });
-  } else {
-    const planned = await step.do('plan', TEXT_STEP, async () => {
-      await progress('Придумываем сюжет и героев книги…');
-      return writePlan(input, { log, ...BIG_TIME });
-    });
-    if (!planned) {
-      text = await step.do('assemble', QUICK_STEP, async () => ({ template: true, book: templateBook(input) }));
+  // Текст и лист героя — одновременно (решение владелицы 23.10: превью быстрее ≈ на минуту). Листу текст не нужен:
+  // одежда берётся с фото, а look из текста — только питомцы и игрушки, на листе героя их нет.
+  const heroTask = (async () => {
+    // приметы ребёнка по фото — до первого рисунка (правило владелицы: главное — чтобы герой был похож)
+    const { face, looks } = splitLooks(await step.do('face', QUICK_STEP, async () => describeFace(ctx.env, await store.loadPhotos(id), { log })));
+    const { sheet } = await drawBook(ctx, { input, briefs: [], coverBrief: '', look: '', face });
+    return { face, looks, sheet };
+  })();
+
+  // текст: фото в генераторы текста не передаём — картинки рисуются отдельными шагами
+  const textTask = (async () => {
+    let text;
+    if (!big) {
+      text = await step.do('story', TEXT_STEP, async () => {
+        await progress('Пишем историю…');
+        // в Workflow нет 55-секундного предела старого сервера: до шаблона даём ИИ до 4 минут (шаг — до 10 минут);
+        // GPT-5.5 пишет «Сказку» ≈ 50 с, поэтому на одну попытку — до 2 минут
+        const story = await generateStory(input, { log, ...STORY_TIME }); // текст + описания иллюстраций (heroBrief, coverBrief)
+        if (story.source !== 'template' || !describeProviders().length) return story;
+        // все сервисы были заняты (05.10 так вышло у Gemini) — шаблон читается как пересказ анкеты, поэтому ещё одна попытка
+        // через 20 с, с чистой памятью о сбоях (иначе все модели ещё «в паузе» и сразу снова шаблон)
+        log(`[book] ${id}: текст из шаблона — пробуем ИИ ещё раз`);
+        await new Promise((resolve) => setTimeout(resolve, 20_000));
+        return generateStory(input, { log, ...STORY_TIME, health: createHealth() });
+      });
     } else {
-      const { plan } = planned;
-      const meta = { source: 'ai', providers: { [planned.provider]: 1 }, fallbackChapters: [], softChapters: [], tookMs: 0 };
-      // в превью видна только первая глава — остальные пишутся после оплаты (completeFlow): текст GPT-5.5 на всю книгу
-      // ≈ 55 ₽, и платить его за каждое неоплаченное превью незачем (решение владелицы 05.10)
-      const chapters = await writeChapters(ctx, input, plan, [], PREVIEW_CHAPTERS_WRITTEN, meta);
-      // отдельным шагом: код между шагами Workflow повторяется при каждом возобновлении, а книга должна быть одна и та же
-      text = await step.do('assemble', QUICK_STEP, async () => ({ plan, book: assembleBigBook(input, plan, chapters, meta), draft: { plan, chapters, meta } }));
+      const planned = await step.do('plan', TEXT_STEP, async () => {
+        await progress('Придумываем сюжет и героев книги…');
+        return writePlan(input, { log, ...BIG_TIME });
+      });
+      if (!planned) {
+        text = await step.do('assemble', QUICK_STEP, async () => ({ template: true, book: templateBook(input) }));
+      } else {
+        const { plan } = planned;
+        const meta = { source: 'ai', providers: { [planned.provider]: 1 }, fallbackChapters: [], softChapters: [], tookMs: 0 };
+        // в превью видна только первая глава — остальные пишутся после оплаты (completeFlow): текст GPT-5.5 на всю книгу
+        // ≈ 55 ₽, и платить его за каждое неоплаченное превью незачем (решение владелицы 05.10)
+        const chapters = await writeChapters(ctx, input, plan, [], PREVIEW_CHAPTERS_WRITTEN, meta);
+        // отдельным шагом: код между шагами Workflow повторяется при каждом возобновлении, а книга должна быть одна и та же
+        text = await step.do('assemble', QUICK_STEP, async () => ({ plan, book: assembleBigBook(input, plan, chapters, meta), draft: { plan, chapters, meta } }));
+      }
     }
-  }
+    return text;
+  })();
+  const [text, { face, looks, sheet }] = await Promise.all([textTask, heroTask]);
 
   // иллюстрации превью: лист персонажа, обложка и первая сцена
   const heroBlocks = big ? text.book.chapters.flatMap((ch) => ch.blocks.filter((b) => b.t === 'image')) : null;
@@ -272,9 +286,7 @@ async function previewFlow(ctx) {
     ? text.plan?.coverBrief || `The child at the heart of the story "${text.plan?.logline || text.book.title}", looking ahead with excitement.`
     : text.coverBrief;
   const look = big ? text.plan?.look || '' : text.look;
-  // приметы ребёнка по фото — до первого рисунка (правило владелицы: главное — чтобы герой был похож)
-  const { face, looks } = splitLooks(await step.do('face', QUICK_STEP, async () => describeFace(ctx.env, await store.loadPhotos(id), { log })));
-  const art = await drawBook(ctx, { input, briefs, coverBrief, look, face, only: [0] });
+  const art = await drawBook(ctx, { input, briefs, coverBrief, look, face, only: [0], sheet, sheetTried: true });
   const titlePlace = await coverPlaceStep(ctx, art.cover);
   const faceBox = await coverFaceStep(ctx, art.cover);
 
