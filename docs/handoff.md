@@ -5,6 +5,14 @@
 Сайт: **https://geroenok.online** (Cloudflare Worker `svoya-skazka`). Старая копия: https://nelgalstyan-lgtm.github.io/svoya-skazka/.
 Подробности по коду: `docs/project-brief.md`, `server/README.md`, `server/.env.example`, `wrangler.jsonc`.
 
+## 23.10: защита от хулиганских заказов
+
+- **Грубые слова** не принимаются ни в одном поле анкеты (анкета и сервер): `rudeProblem` в `js/story-template.js`, поля — `ORDER_TEXT_KEYS` в `worker/api.js`. Хулиганский заказ («Гнойный», мат во всех полях) удалён.
+- **Чёрный список:** R2 `system/blocked.json` — `{"ip": [хэш], "device": [хэш]}`, те же хэши, что в счётчиках `limits/<дата>/ip-…` и `dev-…` (адресов в открытом виде нет). Пополнять без выкладки: `wrangler r2 object put geroenok/system/blocked.json --file … --content-type application/json --remote`. Чей хэш — сверять по времени заказа и времени изменения счётчика за тот день. Хозяйке (`x-admin-key`) список не мешает.
+- **Страница книги по `?job=`**, если книги нет, — настоящий 404 (`worker/index.js`, `BOOK_PAGES`).
+- **Вопрос «всё верно?» на превью:** ИИ по фото говорит, мальчик или девочка (`splitLooks` в `worker/face.js` → `job.looks`); не совпало с анкетой — плашка `photoLooksNote` (`js/book-extras.js`). Клиент пишет на support — превью переделываем вручную.
+- **Лимит превью: 2 в сутки с адреса**, 1 с браузера.
+
 ## ▶ 19.10: редизайн сайта по аудиту — НАЧАТЬ ОТСЮДА
 
 - Аудит дизайна и ТЗ готовы; план работ с галочками — `docs/redesign-plan.md`. Владелица попросила исполнить всё.
