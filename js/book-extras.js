@@ -622,9 +622,9 @@
       '.redo-text{flex:1 1 260px;display:grid;gap:3px}.redo-text strong{font-size:17.5px}.redo-text span{color:#5E4B3C;font-size:15px}' +
       '.redo-btn{flex:0 0 auto;padding:12px 22px;border-radius:999px;background:#1E3354;color:#FAF6EC;font-weight:700;text-decoration:none;white-space:nowrap}' +
       '.redo-btn:hover{background:#2A4570}.redo-btn:focus-visible{outline:3px solid #C99A4B;outline-offset:2px}' +
-      '.sk-redo-link{display:block;margin-top:12px;font:600 15px/1.4 Arial,sans-serif;color:inherit}' +
+      '.redo-quiet{margin:8px auto;max-width:760px;padding:0 16px;box-sizing:border-box;text-align:center;font:14px/1.4 Arial,sans-serif;color:#5E4B3C}.redo-quiet a{color:#1E3354}' +
       '@media (max-width:560px){.redo-note{margin:12px 16px}.redo-btn{flex:1 1 100%;text-align:center}}' +
-      '@media print{.sk-redraw,.sk-toast,.sk-pay,.sk-pay-note,.redo-note,.sk-redo-link{display:none!important}}';
+      '@media print{.sk-redraw,.sk-toast,.sk-pay,.sk-pay-note,.redo-note,.redo-quiet{display:none!important}}';
     document.head.appendChild(css);
   }
 
@@ -787,24 +787,32 @@
   }
 
   /**
-   * «Загрузить другое фото» на превью (решение владелицы 24.10): попробовали и хотят заказать с нужным фото — переделываем
-   * бесплатно 1 раз, дневной лимит превью не мешает (сервер: canRedo в worker/view.js).
+   * «Загрузить другое фото» на превью (решение владелицы 24.10): переделка бесплатно 1 раз, дневной лимит не мешает
+   * (сервер: canRedo в worker/view.js). Заметная карточка — только если проверка похожести недовольна (redoHint),
+   * иначе — тихая строчка: не отвлекаем от покупки тех, кому превью и так нравится.
    */
   function redoOffer(status, jobId, answers) {
-    if (!status || !status.canRedo || status.paid || document.querySelector('.redo-note')) return;
+    if (!status || !status.canRedo || status.paid || document.querySelector('.redo-note, .redo-quiet')) return;
     injectEditorStyles();
-    var box = document.createElement('div');
-    box.className = 'redo-note';
-    box.setAttribute('role', 'note');
-    box.innerHTML = '<div class="redo-ico" aria-hidden="true">📷</div>'
-      + '<div class="redo-text"><strong>Ребёнок вышел не очень похожим?</strong>'
-      + '<span>Загрузите другое фото — переделаем превью бесплатно, один раз. Ответы анкеты сохранятся.</span></div>';
     var go = document.createElement('a');
-    go.className = 'redo-btn';
     go.href = redoUrl(jobId, answers);
-    go.textContent = 'Загрузить другое фото';
     go.addEventListener('click', function () { redoUrl(jobId, answers); }); // ответы — свежие, на момент нажатия
-    box.appendChild(go);
+    var box = document.createElement('div');
+    if (status.redoHint) {
+      box.className = 'redo-note';
+      box.setAttribute('role', 'note');
+      box.innerHTML = '<div class="redo-ico" aria-hidden="true">📷</div>'
+        + '<div class="redo-text"><strong>Похоже, ребёнок вышел не очень похожим</strong>'
+        + '<span>Так бывает, если лицо на фото мелкое или в тени. Загрузите другое фото, где лицо видно крупно, — переделаем превью бесплатно, один раз.</span></div>';
+      go.className = 'redo-btn';
+      go.textContent = 'Загрузить другое фото';
+      box.appendChild(go);
+    } else {
+      box.className = 'redo-quiet';
+      box.appendChild(document.createTextNode('Есть фото, где ребёнок виден лучше? '));
+      go.textContent = 'Переделать превью с ним';
+      box.appendChild(go);
+    }
     var bar = document.querySelector('.toolbar');
     if (bar && bar.parentNode) bar.parentNode.insertBefore(box, bar.nextSibling); else document.body.insertBefore(box, document.body.firstChild);
   }
@@ -861,14 +869,6 @@
     var frag = document.createDocumentFragment();
     frag.appendChild(btn);
     frag.appendChild(note);
-    if (opts.canRedo) {
-      var redo = document.createElement('a');
-      redo.className = 'sk-redo-link';
-      redo.href = redoUrl(opts.jobId, opts.answers);
-      redo.textContent = '📷 Ребёнок не очень похож? Загрузить другое фото — бесплатно';
-      redo.addEventListener('click', function () { redoUrl(opts.jobId, opts.answers); });
-      frag.appendChild(redo);
-    }
     return frag;
   }
 

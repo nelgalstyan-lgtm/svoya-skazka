@@ -372,7 +372,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     const note = document.getElementById('waitNote');
     if (note) note.remove();
     if (!d.result || !Array.isArray(d.result.pages)) throw new Error('not ready');
-    return { answers: d.result.answers || {}, book: d.result, jobId: jobId, canRedraw: d.canRedraw, redrawsLeft: d.redrawsLeft, locked: Boolean(d.result.locked), photoLooks: d.photoLooks || '', canRedo: Boolean(d.canRedo) };
+    return { answers: d.result.answers || {}, book: d.result, jobId: jobId, canRedraw: d.canRedraw, redrawsLeft: d.redrawsLeft, locked: Boolean(d.result.locked), photoLooks: d.photoLooks || '', canRedo: Boolean(d.canRedo), redoHint: Boolean(d.redoHint) };
   }
 
   function loadBook() {
@@ -868,7 +868,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
         pages: book.lockedPages, name: name || 'ваш ребёнок',
         girl: window.SkazkaTemplate.normalizeInput(data.answers || {}).girl, coloring: book.coloringOrdered
       })));
-      lock.appendChild(window.SkazkaExtras.payButton({ jobId: data.jobId, price: book.price, apiBase: API_BASE, canRedo: data.canRedo, answers: data.answers }));
+      lock.appendChild(window.SkazkaExtras.payButton({ jobId: data.jobId, price: book.price, apiBase: API_BASE }));
       lock.appendChild(el('small', '', 'Все иллюстрации дорисуются сразу после оплаты — за несколько минут.'));
       backCover(book, name, window.SkazkaTemplate.normalizeInput(data.answers || {}).girl, data.jobId);
       return;

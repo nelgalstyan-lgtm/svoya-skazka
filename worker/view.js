@@ -2,6 +2,7 @@
 
 import { normalizeBook } from '../server/lib/booktext.js';
 import { pickStyleKey } from '../server/lib/illustrate.js';
+import { LIKENESS_MIN } from './likeness.js';
 
 // Нарисованная иллюстрация с ребёнком: картинка из хранилища (или старый data:URL), а не запасной фон assets/scenes/…
 export const isDrawn = (src) => /^(data:|\/api\/img\/)/.test(src || '');
@@ -74,6 +75,11 @@ export function canRedo(job) {
   return job.status === 'completed' || (job.status === 'failed' && Boolean(job.noChild));
 }
 
+/** Проверка похожести (likeness.js) поставила картинке превью меньше LIKENESS_MIN — тогда переделку с другим фото предлагаем заметно. */
+export function weakLikeness(job) {
+  return Object.values(job.likeness || {}).some((v) => typeof v?.score === 'number' && v.score < LIKENESS_MIN);
+}
+
 export function jobView(job, now = Date.now()) {
   const done = job.status === 'completed';
   return {
@@ -90,6 +96,8 @@ export function jobView(job, now = Date.now()) {
     canRedraw: done ? Boolean(job.result.sheet || job.result.book?.sheet) : false,
     // переделать превью с другим фото — 1 раз (api.js, canRedo)
     canRedo: canRedo(job),
+    // заметная карточка «загрузить другое фото» — только если есть причина (24.10: иначе зовём не платить, а пробовать ещё)
+    redoHint: canRedo(job) && done && weakLikeness(job),
     elapsedMs: (job.finishedAt || now) - job.createdAt,
     // на фото, похоже, ребёнок другого пола, чем в анкете: превью мягко переспрашивает ('boy' | 'girl')
     ...(done && !job.paid && genderMismatch(job) ? { photoLooks: job.looks } : {}),

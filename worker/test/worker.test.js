@@ -915,6 +915,7 @@ test('похожесть: на всё превью — не больше 2 пе�
     assert.deepEqual(ai.calls.map((c) => c.kind).sort(), ['cover', 'scene', 'sheet', 'sheet', 'sheet'], '5 картинок вместо 7');
     assert.equal(job.likeness.cover.tries, 1);
     assert.equal(job.likeness['scene-0'].tries, 1);
+    assert.equal((await status(env, id)).redoHint, true, 'непохоже — заметно предлагаем другое фото');
   } finally { checker.restore(); ai.restore(); }
 });
 
@@ -945,6 +946,7 @@ test('переделка превью с другим фото: 1 раз без 
     const send = (extra = {}) => api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, photos: [PHOTO], device: dev, ...extra }, headers: { 'cf-connecting-ip': '3.3.3.3' } });
     const first = (await (await send()).json()).jobId;
     assert.equal((await status(env, first)).canRedo, true);
+    assert.equal((await status(env, first)).redoHint, false, 'похожесть не проверена — без заметной карточки');
     assert.equal((await send()).status, 429, 'новое превью — по дневному лимиту');
     assert.equal((await send({ redo: '00000000-0000-4000-8000-000000000000' })).status, 429, 'несуществующий номер — по лимиту');
 

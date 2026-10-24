@@ -974,7 +974,7 @@
         no.textContent = 'Номер заказа: ' + window.SkazkaExtras.orderNo(jobId) + ' — назовите его, если будете писать нам. Ссылку на книгу сохраните — по ней книга откроется с любого устройства.';
         previewBox.appendChild(no);
       }
-      if (book.locked && redoJob) {
+      if (book.locked && redoJob && redoHint) {
         const redo = document.createElement('p');
         redo.className = 'story-ready-meta';
         redo.textContent = 'Ребёнок вышел не очень похожим? Замените фото в анкете и нажмите «Создать ещё раз» — переделаем превью бесплатно, один раз.';
@@ -1180,6 +1180,7 @@
           }
           if (data.ready && data.result && Array.isArray(data.result.pages) && data.result.pages.length) {
             redoJob = data.canRedo ? jobId : ''; // «Создать ещё раз» с другим фото — переделка этого превью
+            redoHint = Boolean(data.redoHint); // подсказку про другое фото — только если проверка похожести недовольна
             return finish(data.result, answers, jobId);
           }
           setStatus(data.progress || progressMessage(elapsed, data.position));
@@ -1199,6 +1200,7 @@
     // ?sequel=1 — продолжение прошлой книги: анкета заполняется по ней, в запрос уходит краткое содержание первой книги
     let sequel = new URLSearchParams(location.search).get('sequel') === '1' && window.SkazkaExtras ? window.SkazkaExtras.readSequel() : null;
     // ?redo=<номер превью> — переделка превью с другим фото: 1 раз бесплатно, дневной лимит не мешает (сервер решает, можно ли)
+    let redoHint = false;
     let redoJob = /^[0-9a-f-]{36}$/i.test(new URLSearchParams(location.search).get('redo') || '') ? new URLSearchParams(location.search).get('redo') : '';
     function selectCard(group, text) {
       if (!text) return;
