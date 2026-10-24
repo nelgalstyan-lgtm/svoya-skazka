@@ -13,12 +13,15 @@ const PROMPT = 'You are helping an illustrator draw this child so that parents i
   + 'Then add one short sentence starting with "Avoid:" naming the most likely mistakes an illustrator could make with this face (for example: "making the hair curly", "a round doll face", "eyes too big"). '
   + 'Do not describe clothes or background. Do not guess age, ethnicity or name. Plain text only. '
   // сверка с анкетой (просьба владелицы 23.10: прислали фото девочки, а в анкете «мальчик»)
-  + 'Finally, on a separate last line write exactly one of: "Looks like: boy", "Looks like: girl", "Looks like: unclear".';
+  + 'Finally, on a separate last line write exactly one of: "Looks like: boy", "Looks like: girl", "Looks like: unclear", '
+  // хулиганский заказ 23.10 ($3,10 за день): не фото ребёнка → все картинки «непохожи» и перерисовываются — такие превью не рисуем
+  + 'or "Looks like: no child" — only if the photos show no real child or teenager at all (a drawing, cartoon, toy, object, animal, text, a meme, or only clearly grown-up adults over 20).';
 
-/** Отделяет от примет строку «Looks like: …» → { face, looks: 'boy' | 'girl' | '' }. В рисунки идут только приметы. */
+/** Отделяет от примет строку «Looks like: …» → { face, looks: 'boy' | 'girl' | '', noChild }. В рисунки идут только приметы. */
 export function splitLooks(text = '') {
-  const m = String(text).match(/\s*Looks like:\s*(boy|girl|unclear)\W*$/i);
-  return { face: m ? String(text).slice(0, m.index).trim() : String(text), looks: m && m[1].toLowerCase() !== 'unclear' ? m[1].toLowerCase() : '' };
+  const m = String(text).match(/\s*Looks like:\s*(boy|girl|unclear|no child)\W*$/i);
+  const kind = m ? m[1].toLowerCase() : '';
+  return { face: m ? String(text).slice(0, m.index).trim() : String(text), looks: kind === 'boy' || kind === 'girl' ? kind : '', noChild: kind === 'no child' };
 }
 
 export async function describeFace(env, photos = [], { log = console.warn, timeoutMs = 45_000 } = {}) {

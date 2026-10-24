@@ -905,6 +905,50 @@ test('похожесть: проверка недоступна — книга �
   } finally { ai.restore(); }
 });
 
+test('похожесть: на всё превью — не больше 2 перерисовок (лист берёт обе — обложке и сцене не остаётся)', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  const checker = stubChecker(() => 3); // чужие фото: «непохожа» каждая картинка
+  try {
+    const id = await order(env);
+    const job = await createStore(env.BUCKET).getJob(id);
+    assert.deepEqual(ai.calls.map((c) => c.kind).sort(), ['cover', 'scene', 'sheet', 'sheet', 'sheet'], '5 картинок вместо 7');
+    assert.equal(job.likeness.cover.tries, 1);
+    assert.equal(job.likeness['scene-0'].tries, 1);
+  } finally { checker.restore(); ai.restore(); }
+});
+
+test('нет ребёнка на фото (рисунок, мем, взрослые) — превью не рисуется, клиенту — понятная ошибка', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  const inner = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (!String(url).endsWith('/chat/completions')) return inner(url, init);
+    if (!/helping an illustrator draw this child/.test(init.body)) return new Response('{"error":{"message":"nope"}}', { status: 400 });
+    return new Response(JSON.stringify({ choices: [{ message: { content: 'A cartoon drawing of a cat. Looks like: no child' } }] }), { status: 200 });
+  };
+  try {
+    const id = await order(env);
+    const job = await createStore(env.BUCKET).getJob(id);
+    assert.equal(ai.calls.length, 0, 'ни одной картинки');
+    assert.equal(job.status, 'failed');
+    const { NO_CHILD_MESSAGE } = await import('../book.js');
+    assert.equal((await status(env, id)).error, NO_CHILD_MESSAGE);
+  } finally { globalThis.fetch = inner; ai.restore(); }
+});
+
+test('предохранитель: бесплатных превью в сутки на весь сайт — не больше PREVIEW_DAY_MAX', async () => {
+  const env = fakeEnv({ PREVIEW_DAY_MAX: '2' });
+  const ai = stubOpenAI();
+  try {
+    await order(env);
+    await order(env);
+    const res = await api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, photos: [PHOTO] }, headers: { 'cf-connecting-ip': nextIp() } });
+    assert.equal(res.status, 429);
+    assert.match((await res.json()).error, /превью закончились/);
+  } finally { ai.restore(); }
+});
+
 test('лицо на обложке: box_2d → центр и высота долями; мусор — undefined, нет лица — null', async () => {
   const { parseFaceBox } = await import('../art.js');
   assert.deepEqual(parseFaceBox('{"box_2d": [188, 381, 387, 616]}'), { x: 0.499, y: 0.288, h: 0.199 });

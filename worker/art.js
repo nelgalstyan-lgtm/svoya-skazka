@@ -19,7 +19,9 @@ async function withRetries(retries, delayMs, call) {
     try {
       return await call();
     } catch (error) {
-      const temporary = error.temporary || /timed? ?out|aborted|fetch failed|network/i.test(error?.message || '');
+      // долгий ответ не повторяем: OpenAI мог дорисовать картинку и взять за неё деньги — повтор оплачивается второй раз
+      const timedOut = error?.name === 'TimeoutError' || /timed? ?out|aborted/i.test(error?.message || '');
+      const temporary = error.temporary || (!timedOut && /fetch failed|network/i.test(error?.message || ''));
       if (!temporary || attempt >= retries) throw error;
       await sleep(delayMs * (attempt + 1));
     }

@@ -164,6 +164,9 @@ export async function captchaPassed(env, token, ip) {
 // нравится ли); с одного адреса — 3 (17.10: иначе инкогнито или другой браузер дают до 10; запас — на мобильных
 // операторов, у которых один адрес на многих людей). Хозяйка (заголовок x-admin-key) — без лимита.
 export const PREVIEW_LIMITS = { device: 1, ip: 2 };
+// Предохранитель на весь сайт (после $3,10 за 23.10 на хулигана): бесплатных превью в сутки со всех адресов вместе —
+// превью ≈ $0,4, худший случай ≈ $0,8. Поменять без выкладки кода — переменная PREVIEW_DAY_MAX в Cloudflare.
+const PREVIEW_DAY_MAX = 20;
 const DEVICE_RE = /^[a-z0-9-]{16,64}$/i;
 
 /** Счётчики превью за сутки: R2 limits/<дата>/<хэш>. Адрес и id браузера храним только хэшем; правило R2 удаляет limits/ через 3 дня. */
@@ -174,15 +177,16 @@ async function visitorHash(env, value) {
 
 async function previewCounters(env, request, device) {
   const day = new Date().toISOString().slice(0, 10);
-  const keys = { ip: `limits/${day}/ip-${await visitorHash(env, `ip:${clientIp(request, env)}`)}` };
+  const keys = { ip: `limits/${day}/ip-${await visitorHash(env, `ip:${clientIp(request, env)}`)}`, all: `limits/${day}/all` };
   if (DEVICE_RE.test(device || '')) keys.device = `limits/${day}/dev-${await visitorHash(env, `device:${device}`)}`;
+  const max = { ...PREVIEW_LIMITS, all: Number(env.PREVIEW_DAY_MAX) || PREVIEW_DAY_MAX };
   const counts = {};
   await Promise.all(Object.entries(keys).map(async ([kind, key]) => {
     const obj = await env.BUCKET.get(key);
     counts[kind] = obj ? Number((await obj.json()).n) || 0 : 0;
   }));
   return {
-    exceeded: Object.keys(keys).find((kind) => counts[kind] >= PREVIEW_LIMITS[kind]) || null,
+    exceeded: Object.keys(keys).find((kind) => counts[kind] >= max[kind]) || null,
     count: () => Promise.all(Object.entries(keys).map(([kind, key]) => env.BUCKET.put(key, JSON.stringify({ n: counts[kind] + 1 }))))
   };
 }
@@ -201,7 +205,8 @@ async function blocked(env, request, device) {
 
 const LIMIT_MESSAGES = {
   device: 'Бесплатное превью на сегодня уже сделано — это дневной лимит. Готовое превью можно открыть по ссылке и оплатить, а новое сделать завтра.',
-  ip: 'Из вашей сети сегодня сделано много бесплатных превью. Попробуйте завтра или напишите нам — поможем.'
+  ip: 'Из вашей сети сегодня сделано много бесплатных превью. Попробуйте завтра или напишите нам — поможем.',
+  all: 'Сегодня бесплатные превью закончились — очень много заказов. Попробуйте завтра или напишите нам на support@geroenok.online — сделаем превью вручную.'
 };
 
 /**

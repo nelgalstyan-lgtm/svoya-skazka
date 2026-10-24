@@ -36,6 +36,10 @@ const QUICK_STEP = { retries: { limit: 3, delay: '5 seconds', backoff: 'exponent
 const CHECK_STEP = { retries: { limit: 1, delay: '5 seconds', backoff: 'constant' }, timeout: '4 minutes' };
 // сколько раз перерисовывать непохожую картинку (likeness.js): лист героя — основа всей книги, ему две попытки
 const MAX_FIXES = { sheet: 2, family: 1, cover: 1, scene: 1 };
+// перерисовок на всё бесплатное превью (хулиганский заказ 23.10: чужие фото — «непохожа» каждая картинка, $3,10 за день):
+// лист героя по-прежнему может взять обе, остаток — обложке, потом первой иллюстрации; худший случай — 5 картинок вместо 7
+const PREVIEW_FIXES = 2;
+export const NO_CHILD_MESSAGE = 'На фото не получилось найти ребёнка — превью не рисуем. Загрузите, пожалуйста, обычное фото ребёнка, где хорошо видно лицо. Если это ошибка — напишите нам на support@geroenok.online, сделаем превью вручную.';
 const CONCURRENCY = 3;
 const MAX_COLORING = 3; // решение владелицы 01.10: раскраска — 3 страницы (сайт обещает ровно 3)
 
@@ -62,7 +66,7 @@ export async function runBook(env, { id, mode }, step, { log = console.warn } = 
  * Картинка с проверкой похожести: рисуем → проверяющий сравнивает с фото → ниже LIKENESS_MIN — перерисовка с его
  * замечанием (до MAX_FIXES раз), остаётся самый похожий вариант. Итог — в ctx.likeness[name]. Каждое действие — свой шаг.
  */
-async function drawChecked(ctx, name, kind, { attempt, references, childName = '', childAge = '', childless = false }) {
+async function drawChecked(ctx, name, kind, { attempt, references, childName = '', childAge = '', childless = false, maxFixes = MAX_FIXES[kind] || 1 }) {
   const { env, store, step, log } = ctx;
   // упавшая проверка (лимит процессора и т.п.) не должна ронять книгу — считаем картинку непроверенной
   const check = (stepName, src) => step.do(`likeness-${stepName}`, CHECK_STEP, async () => {
@@ -73,7 +77,7 @@ async function drawChecked(ctx, name, kind, { attempt, references, childName = '
   if (!best.src) return null;
   best.check = await check(name, best.src);
   let last = best.check, tries = 1;
-  for (let n = 1; n <= (MAX_FIXES[kind] || 1) && last && last.score < LIKENESS_MIN; n++) {
+  for (let n = 1; n <= maxFixes && last && last.score < LIKENESS_MIN; n++) {
     const fixName = `${name}-fix${n}`;
     const src = await attempt(fixName, last.fix || 'Make every face match the references much more closely.');
     if (!src) break;
@@ -90,7 +94,7 @@ async function drawChecked(ctx, name, kind, { attempt, references, childName = '
  * Иллюстрации книги по шагам: лист персонажа (если его ещё нет), потом обложка и сцены по три одновременно,
  * вторая попытка для не получившихся. Возвращает адреса: { sheet, cover, scenes: [src|null] }.
  */
-async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only = null, sheet = null, sheetTried = false, familySheet = null }) {
+async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only = null, sheet = null, sheetTried = false, familySheet = null, fixBudget = null }) {
   const { env, store, id, step, log, progress } = ctx;
   const style = { styleLabel: input.style, eyes: normalizeInput(input).eyes, look, face, age: input.age };
   // родные по фото: их лист прикладывается к сценам (к листу ребёнка и обложке — нет: на обложке только ребёнок)
@@ -123,11 +127,12 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only 
     const familyRefs = !withFamily ? [] : familyPhotos.length ? familyPhotos : [await store.loadImage(familySheet)].filter(Boolean);
     return { refs, familyRefs, family: withFamily ? family : [] };
   };
-  const draw = (name, kind, brief) => drawChecked(ctx, name, kind, {
+  const draw = (name, kind, brief, maxFixes) => drawChecked(ctx, name, kind, {
     attempt: (fixName, fix) => attempt(fixName, kind, brief, fix),
     references: () => references(kind),
     childName: input.name,
-    childAge: input.age
+    childAge: input.age,
+    maxFixes
   });
 
   // sheetTried — лист уже рисовали отдельно (превью: одновременно с текстом); не вышел — второй раз не пробуем
@@ -137,11 +142,15 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only 
     ...(coverBrief ? [{ name: 'cover', kind: 'cover', brief: coverBrief }] : []),
     ...briefs.map((brief, i) => ({ name: `scene-${i}`, kind: 'scene', brief, i })).filter((j) => wanted[j.i])
   ];
+  // fixBudget — сколько перерисовок осталось на превью: делим заранее по порядку (картинки рисуются одновременно,
+  // а при возобновлении Workflow решение должно выйти тем же)
+  let left = fixBudget ?? Infinity;
+  for (const j of jobs) { j.maxFixes = Math.min(MAX_FIXES[j.kind] || 1, left); left -= j.maxFixes; }
   const results = new Map();
   const runAll = async (list, suffix = '') => {
     for (let k = 0; k < list.length; k += CONCURRENCY) {
       const batch = list.slice(k, k + CONCURRENCY);
-      const srcs = await Promise.all(batch.map((j) => draw(j.name + suffix, j.kind, j.brief)));
+      const srcs = await Promise.all(batch.map((j) => draw(j.name + suffix, j.kind, j.brief, j.maxFixes)));
       batch.forEach((j, n) => { if (srcs[n]) results.set(j.name, srcs[n]); });
     }
   };
@@ -237,7 +246,8 @@ async function previewFlow(ctx) {
   // одежда берётся с фото, а look из текста — только питомцы и игрушки, на листе героя их нет.
   const heroTask = (async () => {
     // приметы ребёнка по фото — до первого рисунка (правило владелицы: главное — чтобы герой был похож)
-    const { face, looks } = splitLooks(await step.do('face', QUICK_STEP, async () => describeFace(ctx.env, await store.loadPhotos(id), { log })));
+    const { face, looks, noChild } = splitLooks(await step.do('face', QUICK_STEP, async () => describeFace(ctx.env, await store.loadPhotos(id), { log })));
+    if (noChild) return { noChild }; // не фото ребёнка (рисунок, мем, взрослые) — ни одной картинки не рисуем
     const { sheet } = await drawBook(ctx, { input, briefs: [], coverBrief: '', look: '', face });
     return { face, looks, sheet };
   })();
@@ -277,7 +287,20 @@ async function previewFlow(ctx) {
     }
     return text;
   })();
-  const [text, { face, looks, sheet }] = await Promise.all([textTask, heroTask]);
+  const [text, { face, looks, sheet, noChild }] = await Promise.all([textTask, heroTask]);
+  if (noChild) {
+    log(`[book] ${id}: на фото нет ребёнка — превью не рисуем`);
+    await step.do('finish', QUICK_STEP, async () => {
+      await store.updateJob(id, (job) => {
+        if (job.status === 'completed') return;
+        job.status = 'failed';
+        job.error = NO_CHILD_MESSAGE;
+        job.finishedAt = Date.now();
+        job.progress = '';
+      });
+    });
+    return;
+  }
 
   // иллюстрации превью: лист персонажа, обложка и первая сцена
   const heroBlocks = big ? text.book.chapters.flatMap((ch) => ch.blocks.filter((b) => b.t === 'image')) : null;
@@ -286,7 +309,8 @@ async function previewFlow(ctx) {
     ? text.plan?.coverBrief || `The child at the heart of the story "${text.plan?.logline || text.book.title}", looking ahead with excitement.`
     : text.coverBrief;
   const look = big ? text.plan?.look || '' : text.look;
-  const art = await drawBook(ctx, { input, briefs, coverBrief, look, face, only: [0], sheet, sheetTried: true });
+  const sheetFixes = (ctx.likeness.sheet?.tries || 1) - 1;
+  const art = await drawBook(ctx, { input, briefs, coverBrief, look, face, only: [0], sheet, sheetTried: true, fixBudget: Math.max(0, PREVIEW_FIXES - sheetFixes) });
   const titlePlace = await coverPlaceStep(ctx, art.cover);
   const faceBox = await coverFaceStep(ctx, art.cover);
 
