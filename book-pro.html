@@ -91,7 +91,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     var result = (status && status.result) || {};
     var locked = result.locked ? {
       text: window.SkazkaExtras.lockedText({ chapters: result.lockedChapters, images: result.lockedImages, coloring: true, name: name, girl: girl }),
-      button: window.SkazkaExtras.payButton({ jobId: jobId, price: result.price, apiBase: API_BASE })
+      button: window.SkazkaExtras.payButton({ jobId: jobId, price: result.price, apiBase: API_BASE, canRedo: status && status.canRedo, answers: result.answers })
     } : null;
     if (jobId) window.SkazkaExtras.showOrderNo(jobId);
     if (jobId) window.SkazkaExtras.photoLooksNote(status, jobId);

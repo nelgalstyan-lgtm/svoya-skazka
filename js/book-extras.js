@@ -617,7 +617,14 @@
       '.sk-pay{border:none;border-radius:999px;padding:16px 30px;background:#D79A3A;color:#232C4D;font:700 18px Arial,sans-serif;cursor:pointer;box-shadow:0 10px 24px -10px rgba(120,70,10,.6)}' +
       '.sk-pay[disabled]{opacity:.7;cursor:wait}' +
       '.sk-pay-note{display:block;margin-top:10px;font:13px/1.4 Arial,sans-serif;opacity:.8}.sk-pay-note a{color:inherit}' +
-      '@media print{.sk-redraw,.sk-toast,.sk-pay,.sk-pay-note{display:none!important}}';
+      '.redo-note{margin:14px auto;max-width:760px;padding:16px 20px;border-radius:16px;background:#FFFDF7;border:2px solid #C99A4B;box-shadow:0 10px 26px -14px rgba(46,34,25,.45);color:#2E2219;display:flex;gap:14px 16px;align-items:center;flex-wrap:wrap;box-sizing:border-box;font:16px/1.45 Arial,sans-serif}' +
+      '.redo-ico{flex:0 0 auto;width:46px;height:46px;border-radius:50%;background:#F1E6D0;display:grid;place-items:center;font-size:24px}' +
+      '.redo-text{flex:1 1 260px;display:grid;gap:3px}.redo-text strong{font-size:17.5px}.redo-text span{color:#5E4B3C;font-size:15px}' +
+      '.redo-btn{flex:0 0 auto;padding:12px 22px;border-radius:999px;background:#1E3354;color:#FAF6EC;font-weight:700;text-decoration:none;white-space:nowrap}' +
+      '.redo-btn:hover{background:#2A4570}.redo-btn:focus-visible{outline:3px solid #C99A4B;outline-offset:2px}' +
+      '.sk-redo-link{display:block;margin-top:12px;font:600 15px/1.4 Arial,sans-serif;color:inherit}' +
+      '@media (max-width:560px){.redo-note{margin:12px 16px}.redo-btn{flex:1 1 100%;text-align:center}}' +
+      '@media print{.sk-redraw,.sk-toast,.sk-pay,.sk-pay-note,.redo-note,.sk-redo-link{display:none!important}}';
     document.head.appendChild(css);
   }
 
@@ -785,18 +792,18 @@
    */
   function redoOffer(status, jobId, answers) {
     if (!status || !status.canRedo || status.paid || document.querySelector('.redo-note')) return;
+    injectEditorStyles();
     var box = document.createElement('div');
     box.className = 'redo-note';
-    box.style.cssText = 'margin:12px auto; max-width:720px; padding:14px 18px; border-radius:14px; background:#f3e8d0; color:#4a3826; border:1px solid #d8c39b; font-size:15.5px; line-height:1.5; display:flex; gap:14px; align-items:center; flex-wrap:wrap; box-sizing:border-box;';
-    var text = document.createElement('div');
-    text.style.cssText = 'flex:1 1 320px;';
-    text.textContent = 'Ребёнок вышел не очень похожим или есть фото получше? Загрузите другое фото — переделаем превью бесплатно (один раз). Ответы анкеты сохранятся, их можно поправить.';
+    box.setAttribute('role', 'note');
+    box.innerHTML = '<div class="redo-ico" aria-hidden="true">📷</div>'
+      + '<div class="redo-text"><strong>Ребёнок вышел не очень похожим?</strong>'
+      + '<span>Загрузите другое фото — переделаем превью бесплатно, один раз. Ответы анкеты сохранятся.</span></div>';
     var go = document.createElement('a');
+    go.className = 'redo-btn';
     go.href = redoUrl(jobId, answers);
     go.textContent = 'Загрузить другое фото';
-    go.style.cssText = 'flex:0 0 auto; padding:9px 18px; border-radius:999px; border:1px solid #b9935a; background:#e9d6ae; color:#4a3826; font-weight:600; text-decoration:none;';
     go.addEventListener('click', function () { redoUrl(jobId, answers); }); // ответы — свежие, на момент нажатия
-    box.appendChild(text);
     box.appendChild(go);
     var bar = document.querySelector('.toolbar');
     if (bar && bar.parentNode) bar.parentNode.insertBefore(box, bar.nextSibling); else document.body.insertBefore(box, document.body.firstChild);
@@ -854,6 +861,14 @@
     var frag = document.createDocumentFragment();
     frag.appendChild(btn);
     frag.appendChild(note);
+    if (opts.canRedo) {
+      var redo = document.createElement('a');
+      redo.className = 'sk-redo-link';
+      redo.href = redoUrl(opts.jobId, opts.answers);
+      redo.textContent = '📷 Ребёнок не очень похож? Загрузить другое фото — бесплатно';
+      redo.addEventListener('click', function () { redoUrl(opts.jobId, opts.answers); });
+      frag.appendChild(redo);
+    }
     return frag;
   }
 
