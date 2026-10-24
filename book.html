@@ -346,11 +346,24 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     box.querySelector('p').textContent = text || 'Это займёт несколько минут. Страницу можно не закрывать — книга появится сама.';
   }
 
+  // под сообщением «превью не получилось» — кнопка в анкету с другим фото (ответы там уже есть — их сохранила анкета)
+  function redoLink(jobId) {
+    const box = document.getElementById('waitNote');
+    if (!box || box.querySelector('.gw-btn')) return;
+    const a = el('a', 'gw-btn', 'Загрузить другое фото');
+    a.href = window.SkazkaExtras.redoUrl(jobId);
+    box.appendChild(a);
+  }
+
   async function loadFromServer(jobId) {
     const r = await fetch(API_BASE + '/api/book/' + encodeURIComponent(jobId) + '/result');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
-    if (d.failed) { waitNote(d.error || 'Превью не получилось. Сделайте его заново в анкете.', 'Превью не получилось'); return new Promise(function () {}); }
+    if (d.failed) {
+      waitNote(d.error || 'Превью не получилось. Сделайте его заново в анкете.', 'Превью не получилось');
+      if (d.canRedo) redoLink(jobId); // не нашли ребёнка на фото — загрузить другое фото можно бесплатно
+      return new Promise(function () {});
+    }
     if (!d.ready || d.finishing) {
       waitNote(d.finishing ? (d.progress || 'Оплата прошла — дорисовываем остальные иллюстрации. Это займёт несколько минут.') : d.progress);
       await new Promise(function (resolve) { setTimeout(resolve, 3000); });
@@ -359,7 +372,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     const note = document.getElementById('waitNote');
     if (note) note.remove();
     if (!d.result || !Array.isArray(d.result.pages)) throw new Error('not ready');
-    return { answers: d.result.answers || {}, book: d.result, jobId: jobId, canRedraw: d.canRedraw, redrawsLeft: d.redrawsLeft, locked: Boolean(d.result.locked), photoLooks: d.photoLooks || '' };
+    return { answers: d.result.answers || {}, book: d.result, jobId: jobId, canRedraw: d.canRedraw, redrawsLeft: d.redrawsLeft, locked: Boolean(d.result.locked), photoLooks: d.photoLooks || '', canRedo: Boolean(d.canRedo) };
   }
 
   function loadBook() {
@@ -921,6 +934,7 @@ body{ margin:0; background:var(--ink); font-family:var(--font-body); color:var(-
     const book = data.book;
     if (data.jobId && !params.get('demo')) window.SkazkaExtras.showOrderNo(data.jobId);
     if (data.jobId && !params.get('demo')) window.SkazkaExtras.photoLooksNote(data, data.jobId);
+    if (data.jobId && !params.get('demo') && data.locked) window.SkazkaExtras.redoOffer(data, data.jobId, data.answers);
     // «← К анкете» — анкета этой книги, заполненная (create.html?again=1 берёт ответы из geroenok:formDraft)
     const back = document.querySelector('.toolbar-actions a[href="create.html"]');
     if (back && data.answers && data.answers.name) back.addEventListener('click', function (e) {

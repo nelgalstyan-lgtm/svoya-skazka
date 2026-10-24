@@ -905,6 +905,7 @@
         style: readChoiceText('style'),
         theme: readChoiceText('theme'),
         sequel: sequel ? sequel.sequel : '',
+        redo: redoJob,
         from: readInput('from'),
         dedication: readInput('dedication'),
         tariff: readChoiceValue('tariff') === 'big' ? 'big' : '',
@@ -972,6 +973,12 @@
         no.className = 'story-ready-meta';
         no.textContent = 'Номер заказа: ' + window.SkazkaExtras.orderNo(jobId) + ' — назовите его, если будете писать нам. Ссылку на книгу сохраните — по ней книга откроется с любого устройства.';
         previewBox.appendChild(no);
+      }
+      if (book.locked && redoJob) {
+        const redo = document.createElement('p');
+        redo.className = 'story-ready-meta';
+        redo.textContent = 'Ребёнок вышел не очень похожим? Замените фото в анкете и нажмите «Создать ещё раз» — переделаем превью бесплатно, один раз.';
+        previewBox.appendChild(redo);
       }
 
       if (saved || jobId) {
@@ -1166,9 +1173,13 @@
             setStatus(data.error || 'Не получилось сделать превью. Попробуйте ещё раз чуть позже.', 'error');
             generateBtn.disabled = false;
             generateBtn.textContent = 'Показать бесплатное превью';
+            // не нашли ребёнка на фото — следующая отправка с другим фото будет переделкой (без дневного лимита)
+            redoJob = data.canRedo ? jobId : '';
+            if (redoJob) showRedoBanner();
             return;
           }
           if (data.ready && data.result && Array.isArray(data.result.pages) && data.result.pages.length) {
+            redoJob = data.canRedo ? jobId : ''; // «Создать ещё раз» с другим фото — переделка этого превью
             return finish(data.result, answers, jobId);
           }
           setStatus(data.progress || progressMessage(elapsed, data.position));
@@ -1187,6 +1198,8 @@
 
     // ?sequel=1 — продолжение прошлой книги: анкета заполняется по ней, в запрос уходит краткое содержание первой книги
     let sequel = new URLSearchParams(location.search).get('sequel') === '1' && window.SkazkaExtras ? window.SkazkaExtras.readSequel() : null;
+    // ?redo=<номер превью> — переделка превью с другим фото: 1 раз бесплатно, дневной лимит не мешает (сервер решает, можно ли)
+    let redoJob = /^[0-9a-f-]{36}$/i.test(new URLSearchParams(location.search).get('redo') || '') ? new URLSearchParams(location.search).get('redo') : '';
     function selectCard(group, text) {
       if (!text) return;
       document.querySelectorAll('.choice-card[data-choice-group="' + group + '"]').forEach(function (card) {
@@ -1287,6 +1300,13 @@
       document.getElementById('againBanner').hidden = false;
     }
     restoreDraft();
+    function showRedoBanner() {
+      const banner = document.getElementById('againBanner');
+      banner.querySelector('strong').textContent = 'Переделываем превью с другим фото';
+      banner.querySelector('span').textContent = 'Загрузите другое фото ребёнка — лучше, где лицо видно крупно и чётко. Ответы можно поправить. Это бесплатно, один раз.';
+      banner.hidden = false;
+    }
+    if (redoJob) showRedoBanner();
 
     // Имя: явный мусор не пропускаем (так же проверяет сервер), имя латиницей — переспрашиваем один раз
     const nameInput = document.getElementById('name');

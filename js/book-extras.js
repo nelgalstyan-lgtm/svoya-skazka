@@ -771,6 +771,37 @@
     if (bar && bar.parentNode) bar.parentNode.insertBefore(box, bar.nextSibling); else document.body.insertBefore(box, document.body.firstChild);
   }
 
+  /** Адрес анкеты для переделки превью с другим фото: ответы этой книги — в geroenok:formDraft, номер — в ?redo= (create.html). */
+  function redoUrl(jobId, answers) {
+    if (answers && answers.name) {
+      try { localStorage.setItem('geroenok:formDraft', JSON.stringify({ answers: answers, savedAt: Date.now() })); } catch (e) { /* хранилище недоступно */ }
+    }
+    return 'create.html?again=1&redo=' + encodeURIComponent(jobId);
+  }
+
+  /**
+   * «Загрузить другое фото» на превью (решение владелицы 24.10): попробовали и хотят заказать с нужным фото — переделываем
+   * бесплатно 1 раз, дневной лимит превью не мешает (сервер: canRedo в worker/view.js).
+   */
+  function redoOffer(status, jobId, answers) {
+    if (!status || !status.canRedo || status.paid || document.querySelector('.redo-note')) return;
+    var box = document.createElement('div');
+    box.className = 'redo-note';
+    box.style.cssText = 'margin:12px auto; max-width:720px; padding:14px 18px; border-radius:14px; background:#f3e8d0; color:#4a3826; border:1px solid #d8c39b; font-size:15.5px; line-height:1.5; display:flex; gap:14px; align-items:center; flex-wrap:wrap; box-sizing:border-box;';
+    var text = document.createElement('div');
+    text.style.cssText = 'flex:1 1 320px;';
+    text.textContent = 'Ребёнок вышел не очень похожим или есть фото получше? Загрузите другое фото — переделаем превью бесплатно (один раз). Ответы анкеты сохранятся, их можно поправить.';
+    var go = document.createElement('a');
+    go.href = redoUrl(jobId, answers);
+    go.textContent = 'Загрузить другое фото';
+    go.style.cssText = 'flex:0 0 auto; padding:9px 18px; border-radius:999px; border:1px solid #b9935a; background:#e9d6ae; color:#4a3826; font-weight:600; text-decoration:none;';
+    go.addEventListener('click', function () { redoUrl(jobId, answers); }); // ответы — свежие, на момент нажатия
+    box.appendChild(text);
+    box.appendChild(go);
+    var bar = document.querySelector('.toolbar');
+    if (bar && bar.parentNode) bar.parentNode.insertBefore(box, bar.nextSibling); else document.body.insertBefore(box, document.body.firstChild);
+  }
+
   // ---------------------------------------------------------------- ожидание
   // Пока книга пишется и рисуется (минуты), под строкой «что сейчас делаем» сменяются тёплые фразы — ожидание
   // становится частью сказки (идея владелицы 05.10). active() — показывать ли сейчас (например, пока идёт ожидание).
@@ -859,6 +890,8 @@
     orderNo: orderNo,
     showOrderNo: showOrderNo,
     photoLooksNote: photoLooksNote,
+    redoOffer: redoOffer,
+    redoUrl: redoUrl,
     downloadUrl: downloadUrl,
     attachAudioDownload: attachAudioDownload,
     payButton: payButton,

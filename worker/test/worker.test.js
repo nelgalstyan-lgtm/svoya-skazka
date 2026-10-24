@@ -937,6 +937,52 @@ test('нет ребёнка на фото (рисунок, мем, взросл�
   } finally { globalThis.fetch = inner; ai.restore(); }
 });
 
+test('переделка превью с другим фото: 1 раз без дневного лимита; второй раз, оплаченное и чужой номер — по лимиту', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  try {
+    const dev = 'cccccccc-0000-4000-8000-000000000001';
+    const send = (extra = {}) => api(env, '/api/book/generate', { method: 'POST', body: { ...FORM, photos: [PHOTO], device: dev, ...extra }, headers: { 'cf-connecting-ip': '3.3.3.3' } });
+    const first = (await (await send()).json()).jobId;
+    assert.equal((await status(env, first)).canRedo, true);
+    assert.equal((await send()).status, 429, 'новое превью — по дневному лимиту');
+    assert.equal((await send({ redo: '00000000-0000-4000-8000-000000000000' })).status, 429, 'несуществующий номер — по лимиту');
+
+    const res = await send({ redo: first });
+    assert.equal(res.status, 200, 'переделка — без дневного лимита');
+    const second = (await res.json()).jobId;
+    const store = createStore(env.BUCKET);
+    assert.equal((await store.getJob(second)).input.redoOf, first);
+    assert.equal((await status(env, first)).canRedo, false, 'второй раз то же превью не переделать');
+    assert.equal((await status(env, second)).canRedo, false, 'переделку не переделать (без цепочек)');
+    assert.equal((await send({ redo: first })).status, 429);
+    assert.equal((await send({ redo: second })).status, 429);
+
+    // оплаченное — не переделывается
+    const other = await order(env);
+    await store.updateJob(other, (j) => { j.paid = true; });
+    assert.equal((await status(env, other)).canRedo, false);
+    assert.equal((await send({ redo: other })).status, 429);
+  } finally { ai.restore(); }
+});
+
+test('нет ребёнка на фото — такое превью можно переделать с другим фото', async () => {
+  const env = fakeEnv();
+  const ai = stubOpenAI();
+  const inner = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (!String(url).endsWith('/chat/completions')) return inner(url, init);
+    if (!/helping an illustrator draw this child/.test(init.body)) return new Response('{"error":{"message":"nope"}}', { status: 400 });
+    return new Response(JSON.stringify({ choices: [{ message: { content: 'A meme picture. Looks like: no child' } }] }), { status: 200 });
+  };
+  try {
+    const id = await order(env);
+    const st = await status(env, id);
+    assert.equal(st.failed, true);
+    assert.equal(st.canRedo, true);
+  } finally { globalThis.fetch = inner; ai.restore(); }
+});
+
 test('предохранитель: бесплатных превью в сутки на весь сайт — не больше PREVIEW_DAY_MAX', async () => {
   const env = fakeEnv({ PREVIEW_DAY_MAX: '2' });
   const ai = stubOpenAI();

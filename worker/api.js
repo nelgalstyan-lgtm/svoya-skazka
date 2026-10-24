@@ -7,7 +7,7 @@ import { MAX_PHOTOS, MAX_FAMILY } from '../server/lib/illustrate.js';
 import { createStore, isJobId } from './store.js';
 import { drawImage, artOff, ART_OFF_MESSAGE } from './art.js';
 import { fromBase64 } from './bytes.js';
-import { jobView, bookImages, REDRAW_LIMIT } from './view.js';
+import { jobView, bookImages, canRedo, REDRAW_LIMIT } from './view.js';
 import { notifyOwner } from './notify.js';
 import template from '../js/story-template.js';
 
@@ -175,10 +175,12 @@ async function visitorHash(env, value) {
   return [...new Uint8Array(digest)].slice(0, 16).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function previewCounters(env, request, device) {
+/** onlyAll — переделка превью (redoSource): лимиты браузера и адреса не действуют, общий на сайт — да. */
+async function previewCounters(env, request, device, { onlyAll = false } = {}) {
   const day = new Date().toISOString().slice(0, 10);
-  const keys = { ip: `limits/${day}/ip-${await visitorHash(env, `ip:${clientIp(request, env)}`)}`, all: `limits/${day}/all` };
-  if (DEVICE_RE.test(device || '')) keys.device = `limits/${day}/dev-${await visitorHash(env, `device:${device}`)}`;
+  const keys = { all: `limits/${day}/all` };
+  if (!onlyAll) keys.ip = `limits/${day}/ip-${await visitorHash(env, `ip:${clientIp(request, env)}`)}`;
+  if (!onlyAll && DEVICE_RE.test(device || '')) keys.device = `limits/${day}/dev-${await visitorHash(env, `device:${device}`)}`;
   const max = { ...PREVIEW_LIMITS, all: Number(env.PREVIEW_DAY_MAX) || PREVIEW_DAY_MAX };
   const counts = {};
   await Promise.all(Object.entries(keys).map(async ([kind, key]) => {
@@ -201,6 +203,13 @@ async function blocked(env, request, device) {
   const list = await obj.json().catch(() => ({}));
   if ((list.ip || []).includes(await visitorHash(env, `ip:${clientIp(request, env)}`))) return true;
   return DEVICE_RE.test(device || '') && (list.device || []).includes(await visitorHash(env, `device:${device}`));
+}
+
+// Переделка превью с другим фото (решение владелицы 24.10): 1 раз на превью, условия — canRedo в view.js
+async function redoSource(store, id) {
+  if (!isJobId(id)) return null;
+  const job = await store.getJob(id);
+  return canRedo(job) ? job : null;
 }
 
 const LIMIT_MESSAGES = {
@@ -268,7 +277,8 @@ async function generate(request, env, store) {
   if (!owner && !(await captchaPassed(env, order.captcha, ip))) return fail(403, CAPTCHA_MESSAGE);
   // в OpenAI кончились деньги — превью вышло бы без ребёнка на картинках, поэтому не принимаем (хозяйке — можно, для проверки)
   if (!owner && await artOff(env)) return fail(503, ART_OFF_MESSAGE);
-  const counters = owner ? null : await previewCounters(env, request, order.device);
+  const redo = await redoSource(store, body.redo);
+  const counters = owner ? null : await previewCounters(env, request, order.device, { onlyAll: Boolean(redo) });
   if (counters?.exceeded) return fail(429, LIMIT_MESSAGES[counters.exceeded]);
 
   const input = {};
@@ -286,6 +296,7 @@ async function generate(request, env, store) {
   if (big || body.song === true) input.song = true;
   // заказчик сам отметил, что книгу можно показать в примерах на сайте (необязательно)
   if (body.showcase === true) input.showcase = true;
+  if (redo) input.redoOf = redo.id;
   // родные по фото: рисуются после оплаты, в превью — только ребёнок
   const family = familyFromOrder(body, order.familyPhotos || []);
   if (family.error) return fail(400, family.error);
@@ -301,6 +312,7 @@ async function generate(request, env, store) {
   if (input.family) await store.savePhotos(id, order.familyPhotos.slice(0, input.family.length), { family: true });
   if (order.chunkKeys?.length) await env.BUCKET.delete(order.chunkKeys);
   await store.saveJob(job);
+  if (redo) await store.updateJob(redo.id, (j) => { j.redoneBy = id; });
   await startBook(env, id, 'preview');
   await counters?.count();
   await notifyOwner(env, job, 'new'); // письмо владелице «новый заказ» (notify.js)

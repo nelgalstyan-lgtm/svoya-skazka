@@ -95,6 +95,7 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
     } : null;
     if (jobId) window.SkazkaExtras.showOrderNo(jobId);
     if (jobId) window.SkazkaExtras.photoLooksNote(status, jobId);
+    if (jobId && result.locked) window.SkazkaExtras.redoOffer(status, jobId, result.answers);
     if (!jobId && params.get('art') === '3d') book.art = '3d'; // образец оформления в стиле «3D-мультфильм»
     if (book.lang === 'en') englishChrome();
     window.SkazkaBook.render(book, root, {
@@ -254,7 +255,12 @@ body{ margin:0; background:var(--ink); font-family:Arial,sans-serif; }
         return r.json();
       }).then(function (d) {
         errors = 0;
-        if (d.failed) { stopTales(); box.querySelector('.gw-tale').remove(); text.textContent = d.error || 'Превью не получилось. Сделайте его заново в анкете.'; return; }
+        if (d.failed) {
+          stopTales(); box.querySelector('.gw-tale').remove(); text.textContent = d.error || 'Превью не получилось. Сделайте его заново в анкете.';
+          // не нашли ребёнка на фото — другое фото можно загрузить бесплатно (ответы анкеты уже сохранены)
+          if (d.canRedo) { var redo = document.createElement('a'); redo.className = 'gw-btn'; redo.textContent = 'Загрузить другое фото'; redo.href = window.SkazkaExtras.redoUrl(jobId); box.appendChild(redo); }
+          return;
+        }
         if (d.ready && !d.finishing && d.result && d.result.book) { stopTales(); root.textContent = ''; start(d.result.book, d.result.answers, jobId, d); return; }
         text.textContent = d.progress || (d.finishing ? 'Оплата прошла — дорисовываем иллюстрации…' : d.position > 1 ? 'Ваша книга в очереди…' : 'Пишем книгу…');
         setTimeout(poll, 2500);

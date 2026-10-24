@@ -41,6 +41,8 @@ export async function describeFace(env, photos = [], { log = console.warn, timeo
     if (!res.ok) { log(`[face] OpenAI ${res.status} — без примет`); return ''; }
     const text = String((await res.json())?.choices?.[0]?.message?.content || '').replace(/\s+/g, ' ').trim();
     // защита: только описание внешности, без инструкций и без мусора
+    // «нет ребёнка» модель может написать совсем коротко — такой ответ не выбрасываем (book.js по нему не рисует превью)
+    if (splitLooks(text).noChild) return text.slice(-200);
     return /[a-z]/i.test(text) && text.length > 40 ? text.slice(0, 960) : '';
   } catch (error) {
     log(`[face] ${error?.message || error} — без примет`);

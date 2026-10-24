@@ -295,6 +295,7 @@ async function previewFlow(ctx) {
         if (job.status === 'completed') return;
         job.status = 'failed';
         job.error = NO_CHILD_MESSAGE;
+        job.noChild = true; // такое превью можно переделать с другим фото (api.js, canRedo)
         job.finishedAt = Date.now();
         job.progress = '';
       });

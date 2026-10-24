@@ -64,6 +64,16 @@ export function genderMismatch(job) {
   return job.looks !== (boy ? 'boy' : 'girl');
 }
 
+/**
+ * Переделать превью с другим фото (решение владелицы 24.10: попробовал и хочет заказать с нужным фото — не упираться в
+ * дневной лимит): 1 раз, только неоплаченное, готовое или не нарисованное из-за «нет ребёнка на фото» (book.js),
+ * и не сама переделка — иначе цепочка бесконечных бесплатных превью.
+ */
+export function canRedo(job) {
+  if (!job || job.paid || job.redoneBy || job.input?.redoOf) return false;
+  return job.status === 'completed' || (job.status === 'failed' && Boolean(job.noChild));
+}
+
 export function jobView(job, now = Date.now()) {
   const done = job.status === 'completed';
   return {
@@ -78,6 +88,8 @@ export function jobView(job, now = Date.now()) {
     finishing: Boolean(job.finishing), // оплачено, дорисовываем иллюстрации
     redrawsLeft: done ? Math.max(0, REDRAW_LIMIT - (job.redraws || 0)) : null,
     canRedraw: done ? Boolean(job.result.sheet || job.result.book?.sheet) : false,
+    // переделать превью с другим фото — 1 раз (api.js, canRedo)
+    canRedo: canRedo(job),
     elapsedMs: (job.finishedAt || now) - job.createdAt,
     // на фото, похоже, ребёнок другого пола, чем в анкете: превью мягко переспрашивает ('boy' | 'girl')
     ...(done && !job.paid && genderMismatch(job) ? { photoLooks: job.looks } : {}),
