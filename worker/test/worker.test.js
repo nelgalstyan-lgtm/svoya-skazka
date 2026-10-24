@@ -985,6 +985,29 @@ test('нет ребёнка на фото — такое превью можно
   } finally { globalThis.fetch = inner; ai.restore(); }
 });
 
+test('лучшее фото: лист героя — по всем фото, обложка и страница — по лучшему + лист; без ответа ИИ — по первым двум', async () => {
+  const photos = [PHOTO, `data:image/jpeg;base64,${Buffer.from('photo-2').toString('base64')}`, `data:image/jpeg;base64,${Buffer.from('photo-3').toString('base64')}`];
+  for (const answer of ['Oval face, straight brown hair, brown eyes. Best photo: 2\nLooks like: girl', null]) {
+    const env = fakeEnv();
+    const ai = stubOpenAI();
+    const inner = globalThis.fetch;
+    globalThis.fetch = async (url, init) => {
+      if (!String(url).endsWith('/chat/completions')) return inner(url, init);
+      if (!answer || !/helping an illustrator draw this child/.test(init.body)) return new Response('{"error":{"message":"nope"}}', { status: 400 });
+      return new Response(JSON.stringify({ choices: [{ message: { content: answer } }] }), { status: 200 });
+    };
+    try {
+      const id = await order(env, { photos });
+      const job = await createStore(env.BUCKET).getJob(id);
+      const count = (kind) => ai.calls.find((c) => c.kind === kind).images;
+      assert.equal(count('sheet'), 3, 'лист — по всем фото');
+      assert.equal(count('cover'), answer ? 2 : 3, 'обложка — лучшее фото + лист (без ответа — 2 фото + лист)');
+      assert.equal(count('scene'), answer ? 2 : 3);
+      assert.equal(job.bestPhoto, answer ? 1 : undefined);
+    } finally { globalThis.fetch = inner; ai.restore(); }
+  }
+});
+
 test('предохранитель: бесплатных превью в сутки на весь сайт — не больше PREVIEW_DAY_MAX', async () => {
   const env = fakeEnv({ PREVIEW_DAY_MAX: '2' });
   const ai = stubOpenAI();

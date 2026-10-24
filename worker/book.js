@@ -94,7 +94,7 @@ async function drawChecked(ctx, name, kind, { attempt, references, childName = '
  * Иллюстрации книги по шагам: лист персонажа (если его ещё нет), потом обложка и сцены по три одновременно,
  * вторая попытка для не получившихся. Возвращает адреса: { sheet, cover, scenes: [src|null] }.
  */
-async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only = null, sheet = null, sheetTried = false, familySheet = null, fixBudget = null }) {
+async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only = null, sheet = null, sheetTried = false, familySheet = null, fixBudget = null, bestPhoto = null }) {
   const { env, store, id, step, log, progress } = ctx;
   const style = { styleLabel: input.style, eyes: normalizeInput(input).eyes, look, face, age: input.age };
   // родные по фото: их лист прикладывается к сценам (к листу ребёнка и обложке — нет: на обложке только ребёнок)
@@ -102,6 +102,12 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only 
   const wanted = briefs.map((_, i) => !only || only.includes(i));
   const total = wanted.filter(Boolean).length + (coverBrief ? 1 : 0) + (sheet || sheetTried ? 0 : 1);
   let started = 0;
+  // Лист героя — по всем фото (основа похожести всей книги). Обложка и страницы — по одному лучшему фото + лист
+  // (решение владелицы 24.10: 4 образца → 2, каждый образец — самая дорогая часть картинки); лучшее не известно — первые два.
+  const pickRefs = (photos, kind) => {
+    if (kind === 'sheet' || photos.length < 2) return photos;
+    return Number.isInteger(bestPhoto) && photos[bestPhoto] ? [photos[bestPhoto]] : photos.slice(0, 2);
+  };
 
   const attempt = (name, kind, brief, fix = '') => step.do(name, IMAGE_STEP, async () => {
     if (!fix) started += 1;
@@ -116,14 +122,16 @@ async function drawBook(ctx, { input, briefs, coverBrief, look, face = '', only 
       kind === 'sheet' ? null : store.loadImage(sheet),
       withFamily ? store.loadImage(familySheet) : null
     ]);
-    const image = await drawImage(env, { kind, refs, sheet: sheetImage, family: familyImage ? family : [], familySheet: familyImage, brief, fix, ...style, log });
+    const image = await drawImage(env, { kind, refs: pickRefs(refs, kind), sheet: sheetImage, family: familyImage ? family : [], familySheet: familyImage, brief, fix, ...style, log });
     return image ? store.putImage(id, name, image) : null;
   });
   // эталон похожести — фото; если их уже нет (истёк срок) — лист персонажа и лист родных
   const references = async (kind) => {
     const withFamily = kind === 'scene' && family.length > 0;
     const [photos, familyPhotos] = await Promise.all([store.loadPhotos(id), withFamily ? store.loadPhotos(id, { family: true }) : []]);
-    const refs = photos.length ? photos : kind === 'sheet' ? [] : [await store.loadImage(sheet)].filter(Boolean);
+    // проверяющий смотрит на 2 фото — лучшее первым
+    const ordered = Number.isInteger(bestPhoto) && photos[bestPhoto] ? [photos[bestPhoto], ...photos.filter((_, i) => i !== bestPhoto)] : photos;
+    const refs = ordered.length ? ordered : kind === 'sheet' ? [] : [await store.loadImage(sheet)].filter(Boolean);
     const familyRefs = !withFamily ? [] : familyPhotos.length ? familyPhotos : [await store.loadImage(familySheet)].filter(Boolean);
     return { refs, familyRefs, family: withFamily ? family : [] };
   };
@@ -246,10 +254,10 @@ async function previewFlow(ctx) {
   // одежда берётся с фото, а look из текста — только питомцы и игрушки, на листе героя их нет.
   const heroTask = (async () => {
     // приметы ребёнка по фото — до первого рисунка (правило владелицы: главное — чтобы герой был похож)
-    const { face, looks, noChild } = splitLooks(await step.do('face', QUICK_STEP, async () => describeFace(ctx.env, await store.loadPhotos(id), { log })));
+    const { face, looks, noChild, bestPhoto } = splitLooks(await step.do('face', QUICK_STEP, async () => describeFace(ctx.env, await store.loadPhotos(id), { log })));
     if (noChild) return { noChild }; // не фото ребёнка (рисунок, мем, взрослые) — ни одной картинки не рисуем
     const { sheet } = await drawBook(ctx, { input, briefs: [], coverBrief: '', look: '', face });
-    return { face, looks, sheet };
+    return { face, looks, sheet, bestPhoto };
   })();
 
   // текст: фото в генераторы текста не передаём — картинки рисуются отдельными шагами
@@ -287,7 +295,7 @@ async function previewFlow(ctx) {
     }
     return text;
   })();
-  const [text, { face, looks, sheet, noChild }] = await Promise.all([textTask, heroTask]);
+  const [text, { face, looks, sheet, noChild, bestPhoto }] = await Promise.all([textTask, heroTask]);
   if (noChild) {
     log(`[book] ${id}: на фото нет ребёнка — превью не рисуем`);
     await step.do('finish', QUICK_STEP, async () => {
@@ -311,7 +319,7 @@ async function previewFlow(ctx) {
     : text.coverBrief;
   const look = big ? text.plan?.look || '' : text.look;
   const sheetFixes = (ctx.likeness.sheet?.tries || 1) - 1;
-  const art = await drawBook(ctx, { input, briefs, coverBrief, look, face, only: [0], sheet, sheetTried: true, fixBudget: Math.max(0, PREVIEW_FIXES - sheetFixes) });
+  const art = await drawBook(ctx, { input, briefs, coverBrief, look, face, only: [0], sheet, sheetTried: true, fixBudget: Math.max(0, PREVIEW_FIXES - sheetFixes), bestPhoto });
   const titlePlace = await coverPlaceStep(ctx, art.cover);
   const faceBox = await coverFaceStep(ctx, art.cover);
 
@@ -357,6 +365,7 @@ async function previewFlow(ctx) {
       job.result = result;
       job.likeness = { ...job.likeness, ...ctx.likeness };
       if (looks) job.looks = looks; // кто на фото, по мнению ИИ — для вопроса «всё верно?» на превью (view.js)
+      if (Number.isInteger(bestPhoto)) job.bestPhoto = bestPhoto; // по нему дорисовываются страницы после оплаты
       job.finishedAt = Date.now();
       job.progress = '';
     });
@@ -430,7 +439,8 @@ async function completeFlow(ctx) {
       look: target.look || '',
       face: target.face || '',
       sheet: target.sheet || null,
-      familySheet: target.familySheet || null
+      familySheet: target.familySheet || null,
+      bestPhoto: Number.isInteger(job.bestPhoto) ? job.bestPhoto : null
     };
   });
 
@@ -441,7 +451,7 @@ async function completeFlow(ctx) {
   const only = familySheet && !todo.familySheet ? todo.briefs.map((_, i) => i) : todo.missing;
 
   // фото могли уже удалиться (истёк срок) — тогда рисуем по листу персонажа, он держит и лицо, и одежду
-  const art = await drawBook(ctx, { input: todo.input, briefs: todo.briefs, coverBrief: todo.coverBrief, look: todo.look, face: todo.face, only, sheet: todo.sheet, familySheet });
+  const art = await drawBook(ctx, { input: todo.input, briefs: todo.briefs, coverBrief: todo.coverBrief, look: todo.look, face: todo.face, only, sheet: todo.sheet, familySheet, bestPhoto: todo.bestPhoto });
   const srcs = todo.srcs.map((src, i) => art.scenes[i] || src);
   const titlePlace = art.cover ? await coverPlaceStep(ctx, art.cover) : null;
   const faceBox = art.cover ? await coverFaceStep(ctx, art.cover) : null;

@@ -13,15 +13,25 @@ const PROMPT = 'You are helping an illustrator draw this child so that parents i
   + 'Then add one short sentence starting with "Avoid:" naming the most likely mistakes an illustrator could make with this face (for example: "making the hair curly", "a round doll face", "eyes too big"). '
   + 'Do not describe clothes or background. Do not guess age, ethnicity or name. Plain text only. '
   // сверка с анкетой (просьба владелицы 23.10: прислали фото девочки, а в анкете «мальчик»)
+  // лучшее фото (решение владелицы 24.10): обложка и страницы рисуются по нему одному + лист героя — вместо всех фото
+  + 'If there are several photos, on a separate line before the last one write "Best photo: N" — the number (in the order given) of the photo where the face of the child is seen best: large, sharp, facing the camera, well lit, not covered. '
   + 'Finally, on a separate last line write exactly one of: "Looks like: boy", "Looks like: girl", "Looks like: unclear", '
   // хулиганский заказ 23.10 ($3,10 за день): не фото ребёнка → все картинки «непохожи» и перерисовываются — такие превью не рисуем
   + 'or "Looks like: no child" — only if the photos show no real child or teenager at all (a drawing, cartoon, toy, object, animal, text, a meme, or only clearly grown-up adults over 20).';
 
-/** Отделяет от примет строку «Looks like: …» → { face, looks: 'boy' | 'girl' | '', noChild }. В рисунки идут только приметы. */
+/**
+ * Отделяет от примет строки «Best photo: N» и «Looks like: …» → { face, looks: 'boy' | 'girl' | '', noChild, bestPhoto: 0… | null }.
+ * В рисунки идут только приметы.
+ */
 export function splitLooks(text = '') {
-  const m = String(text).match(/\s*Looks like:\s*(boy|girl|unclear|no child)\W*$/i);
+  let face = String(text);
+  const m = face.match(/\s*Looks like:\s*(boy|girl|unclear|no child)\W*$/i);
   const kind = m ? m[1].toLowerCase() : '';
-  return { face: m ? String(text).slice(0, m.index).trim() : String(text), looks: kind === 'boy' || kind === 'girl' ? kind : '', noChild: kind === 'no child' };
+  if (m) face = face.slice(0, m.index);
+  const best = face.match(/\s*Best photo:\s*#?(\d)\W*$/i);
+  if (best) face = face.slice(0, best.index);
+  const n = best ? Number(best[1]) - 1 : -1;
+  return { face: face.trim(), looks: kind === 'boy' || kind === 'girl' ? kind : '', noChild: kind === 'no child', bestPhoto: n >= 0 && n < 3 ? n : null };
 }
 
 export async function describeFace(env, photos = [], { log = console.warn, timeoutMs = 45_000 } = {}) {
